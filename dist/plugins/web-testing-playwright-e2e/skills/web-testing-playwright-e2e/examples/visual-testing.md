@@ -1,14 +1,13 @@
-# Playwright E2E Testing - Visual Testing
+# Playwright E2E Testing — Visual Comparison
 
-> Visual regression testing patterns with screenshot comparison. See [core.md](core.md) for foundational patterns.
+> Screenshot baselines with `toHaveScreenshot()`. See [core.md](core.md) for the foundations.
 
-**Prerequisites**: Understand Complete User Flow and Basic Page Objects from core examples first.
+The first run writes the baseline; later runs compare against it. `npx playwright test
+--update-snapshots` accepts a change deliberately.
 
 ---
 
-## Pattern: Screenshot Comparison
-
-### Full Page Screenshots
+## Page and element screenshots
 
 ```typescript
 // tests/e2e/visual/homepage.spec.ts
@@ -16,95 +15,63 @@ import { test, expect } from "@playwright/test";
 
 const MAX_DIFF_PIXELS = 100;
 
-test.describe("Homepage Visual Regression", () => {
-  test("homepage matches baseline", async ({ page }) => {
+test.describe("Homepage", () => {
+  test("matches the baseline", async ({ page }) => {
     await page.goto("/");
+    // Assert on something visible first: the assertion's own retry is the wait.
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-    // Wait for all images to load
-    await page.waitForLoadState("networkidle");
-
-    await expect(page).toHaveScreenshot("homepage.png");
-  });
-
-  test("homepage hero section", async ({ page }) => {
-    await page.goto("/");
-
-    const hero = page.getByRole("region", { name: /hero/i });
-    await expect(hero).toHaveScreenshot("hero-section.png");
-  });
-
-  test("homepage with masked dynamic content", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(page).toHaveScreenshot("homepage-masked.png", {
+    await expect(page).toHaveScreenshot("homepage.png", {
+      // Anything that changes on its own would fail on content rather than layout.
       mask: [
         page.getByTestId("current-date"),
         page.getByTestId("live-counter"),
         page.getByRole("img", { name: /advertisement/i }),
       ],
-    });
-  });
-
-  test("homepage with fuzzy comparison", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(page).toHaveScreenshot("homepage-fuzzy.png", {
       maxDiffPixels: MAX_DIFF_PIXELS,
     });
   });
+
+  test("hero section only", async ({ page }) => {
+    await page.goto("/");
+    // A narrower shot has fewer reasons to change than a full page.
+    await expect(page.getByRole("region", { name: /hero/i })).toHaveScreenshot(
+      "hero.png",
+    );
+  });
 });
 ```
 
-**Why good:** Waits for network idle to ensure images loaded, masks dynamic content to prevent false positives, uses fuzzy comparison for minor variations
+**Why good:** masking is what separates a real regression from a timestamp, and an element-scoped
+screenshot fails only when that element changes.
 
 ---
 
-## Pattern: Component Visual Testing
-
-### Button States
+## Interaction states
 
 ```typescript
-// tests/e2e/visual/buttons.spec.ts
-import { test, expect } from "@playwright/test";
+test("primary button states", async ({ page }) => {
+  await page.goto("/components/buttons");
+  const button = page.getByRole("button", { name: /primary/i });
 
-test.describe("Button Component Visual Regression", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/components/buttons");
+  await expect(button).toHaveScreenshot("button-default.png", {
+    animations: "disabled",
   });
 
-  test("primary button states", async ({ page }) => {
-    const primaryButton = page.getByRole("button", { name: /primary/i });
-
-    // Default state
-    await expect(primaryButton).toHaveScreenshot("button-primary-default.png");
-
-    // Hover state
-    await primaryButton.hover();
-    await expect(primaryButton).toHaveScreenshot("button-primary-hover.png");
-
-    // Focus state
-    await primaryButton.focus();
-    await expect(primaryButton).toHaveScreenshot("button-primary-focus.png");
+  await button.hover();
+  await expect(button).toHaveScreenshot("button-hover.png", {
+    animations: "disabled",
   });
 
-  test("button sizes", async ({ page }) => {
-    const buttonsContainer = page.getByTestId("button-sizes");
-
-    await expect(buttonsContainer).toHaveScreenshot("button-sizes.png");
-  });
-
-  test("button with disabled animations", async ({ page }) => {
-    const animatedButton = page.getByRole("button", { name: /animated/i });
-
-    await expect(animatedButton).toHaveScreenshot("button-animated.png", {
-      animations: "disabled",
-    });
+  await button.focus();
+  await expect(button).toHaveScreenshot("button-focus.png", {
+    animations: "disabled",
   });
 });
 ```
 
-**Why good:** Tests visual states (hover, focus) that are hard to test otherwise, disables animations for deterministic screenshots, element-specific screenshots reduce noise
+**Why good:** hover and focus styling is otherwise only checked by eye. `animations: "disabled"`
+freezes transitions so the capture is deterministic.
 
----
-
-_See [core.md](core.md) for foundational patterns: User Flows, Basic Page Objects, Network Mocking, and Configuration._
+**Environment:** baselines are byte-comparable only against the same OS, browser build and font
+rendering — generate and update them in the same environment CI runs, not on a developer machine.

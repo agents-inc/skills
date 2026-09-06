@@ -1,447 +1,389 @@
 ---
 name: web-editor-tiptap
-description: Rich text editor framework with TipTap and ProseMirror
+description: Headless rich text editor framework built on ProseMirror. Use when building an editor with TipTap — setup, extensions, custom nodes and marks, menus, node views, serialization.
 ---
 
 # TipTap Editor Patterns
 
-> **Quick Guide:** TipTap is a headless, framework-agnostic rich text editor built on ProseMirror. Everything is an extension -- nodes define block/inline content, marks define formatting, extensions add functionality. Use `useEditor` hook (React/Vue) or the `Editor` class directly. Prefer JSON serialization over HTML. Set `immediatelyRender: false` for SSR. **Current: v3.x** -- Floating UI replaces Tippy.js, menus import from `/menus` sub-path, StarterKit includes Link/Underline by default.
+> **Quick Guide:** TipTap is a headless editor: it owns the schema, the state and the behaviour, and
+> hands the UI entirely to you. Everything is an extension — Nodes define content that lives in the
+> document, Marks define formatting applied to ranges of text, and Extensions add behaviour without
+> touching the schema. Commands are chained and applied by `.run()`. JSON is the persistence format.
+> **Current: v3.x** — Floating UI replaced Tippy.js, menus moved to a `/menus` sub-path, and
+> StarterKit now includes Link and Underline.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — editor setup, toolbars, serialization and persistence, `useEditorState`, `EditorContext`
+- [examples/custom-extensions.md](examples/custom-extensions.md) — custom nodes and marks, input and paste rules, keyboard shortcuts, node views, extending built-ins
+- [examples/menus.md](examples/menus.md) — BubbleMenu, FloatingMenu, multiple menus, slash commands, fixed toolbars
+- [reference.md](reference.md) — StarterKit contents, schema and extension API tables, content expressions, v2 → v3 migration
+
+---
+
+## Which path applies
+
+- **React** — `useEditor` returns the editor and `EditorContent` renders the editable area. Start at
+  [examples/core.md](examples/core.md).
+- **Vue or vanilla** — construct the `Editor` class from `@tiptap/core` directly. Every extension in
+  [examples/custom-extensions.md](examples/custom-extensions.md) is unchanged; only the adapter and
+  the node-view renderer differ.
+- **Server-rendered** — the editor cannot render on the server at all. Set
+  `immediatelyRender: false` and let it mount on the client.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing TipTap code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Set `immediatelyRender: false` in `useEditor` under any server-rendering framework.** The editor
+builds a DOM view on construction, so rendering it on the server produces a hydration mismatch.
 
-**(You MUST set `immediatelyRender: false` in useEditor when using SSR/SSG frameworks -- TipTap must never render on the server)**
+**Import `BubbleMenu` and `FloatingMenu` from the `/menus` sub-path** — `@tiptap/react/menus` in v3.
+The root export no longer carries them.
 
-**(You MUST import BubbleMenu and FloatingMenu from the `/menus` sub-path -- e.g. `@tiptap/react/menus` in v3)**
+**Give every custom Node a `name`, a `group`, a `parseHTML` and a `renderHTML`.** Schema resolution
+needs all four; content saved by a node missing `parseHTML` cannot be loaded back.
 
-**(You MUST define `name`, `group`, `parseHTML`, and `renderHTML` on every custom Node -- missing any breaks schema resolution)**
-
-**(You MUST use `editor.chain().focus()...run()` for chained commands -- forgetting `.focus()` loses cursor position, forgetting `.run()` silently does nothing)**
+**Write chained commands as `editor.chain().focus()...run()`.** `.focus()` returns the cursor to the
+editor before the command applies, and `.run()` is what dispatches the transaction — a chain without
+it builds a transaction and discards it.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** TipTap, tiptap, @tiptap/core, @tiptap/react, @tiptap/vue-3, @tiptap/starter-kit, useEditor, EditorContent, BubbleMenu, FloatingMenu, Node.create, Mark.create, Extension.create, NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer, ProseMirror, editor.chain, editor.commands, addKeyboardShortcuts, addInputRules, addNodeView
+**Auto-detection:** TipTap, tiptap, `@tiptap/core`, `@tiptap/react`, `@tiptap/vue-3`, `@tiptap/starter-kit`, `@tiptap/pm`, useEditor, useEditorState, EditorContent, EditorContext, BubbleMenu, FloatingMenu, Node.create, Mark.create, Extension.create, NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer, editor.chain, editor.commands, editor.isActive, mergeAttributes, addKeyboardShortcuts, addInputRules, addPasteRules, addNodeView, addProseMirrorPlugins
 
-**When to use:**
+**Applies to:**
 
-- Building rich text editors with custom formatting and block types
-- Creating WYSIWYG editors with toolbar, bubble menu, or floating menu UIs
-- Implementing custom nodes (embeds, mentions, code blocks with syntax highlighting)
-- Serializing editor content to JSON or HTML for persistence
-- Adding keyboard shortcuts, input rules, or paste rules to an editor
+- Rich text editors with custom formatting and block types
+- Custom content types — embeds, mentions, callouts, syntax-highlighted code — as extensions
+- Contextual editing UI: bubble menus, floating menus, slash commands
+- Interactive blocks rendered as framework components through node views
+- Automatic formatting through input rules and paste rules
+- Serializing the document to JSON or HTML
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Plain text input or textarea (use native HTML elements)
-- Markdown-only editors without rich text rendering (use a markdown parser)
-- Read-only content display (use a static renderer or HTML)
-
-**Key patterns covered:**
-
-- Editor setup with useEditor hook and EditorContent component
-- Extension architecture: Node, Mark, and Extension types
-- Custom node and mark creation with schema, commands, and keyboard shortcuts
-- BubbleMenu and FloatingMenu for contextual toolbars
-- React node views for complex interactive blocks
-- Content serialization (JSON preferred) and persistence
-- Input rules and paste rules for automatic formatting
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Editor setup, extensions, serialization, toolbar
-- [examples/custom-extensions.md](examples/custom-extensions.md) - Custom nodes, marks, input rules, keyboard shortcuts
-- [examples/menus.md](examples/menus.md) - BubbleMenu, FloatingMenu, slash commands
-- [reference.md](reference.md) - Decision frameworks, StarterKit contents, anti-patterns
+- Everything the editor renders around itself — TipTap is headless, so buttons, popovers, layout and
+  visual design are settled by whatever owns components and styling
+- Where the document goes after `getJSON()` — the transport and the store are not the editor's
+  concern
+- Real-time sync between clients — the editor exposes the state to bind and settles none of the
+  transport
+- Sanitizing HTML before `setContent` — the parser maps what it is given onto the schema and does
+  not clean it
 
 ---
 
 <philosophy>
 
-## Philosophy
+**Headless.** TipTap provides behaviour, schema and state, and imposes no UI. Every toolbar, menu
+and control in this skill is ordinary component code reading `editor.isActive(...)` and dispatching
+commands.
 
-TipTap is a **headless editor framework** -- it provides behavior, schema, and state management without imposing any UI. You build the UI (toolbars, menus, formatting controls) yourself using your preferred component framework and styling solution.
+**Everything is an extension**, including paragraphs, bold and undo. So the schema is exactly what
+you assembled: nothing is present that you did not add, and any built-in can be configured or
+extended rather than worked around.
 
-**Everything is an extension.** Even core features like paragraphs, bold text, and undo/redo are extensions. This means:
+**ProseMirror underneath.** The schema system, transaction model and plugin architecture are
+ProseMirror's, reached through `@tiptap/pm/*`. Where TipTap's API runs out, `addProseMirrorPlugins()`
+is the escape hatch rather than a rewrite.
 
-1. **You control the schema** -- only include what your editor needs
-2. **Extensions are composable** -- combine, configure, or extend any extension
-3. **Custom content types are first-class** -- creating a custom node is the same API as built-in nodes
-
-**ProseMirror under the hood.** TipTap wraps ProseMirror, so you get its battle-tested schema system, transaction model, and plugin architecture. When TipTap's API isn't enough, drop down to ProseMirror directly via `addProseMirrorPlugins()`.
-
-**Framework-agnostic core.** `@tiptap/core` works with vanilla JS. Framework adapters (`@tiptap/react`, `@tiptap/vue-3`) add hooks and components but the editor logic is shared.
+**One core, several adapters.** `@tiptap/core` is framework-free; `@tiptap/react` and
+`@tiptap/vue-3` add hooks and components over the same editor.
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Editor Setup
-
-The `useEditor` hook initializes the editor with extensions and content. `EditorContent` renders the editable area.
-
-```typescript
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-
-const INITIAL_CONTENT = "<p>Start typing...</p>";
-
-function RichTextEditor() {
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: INITIAL_CONTENT,
-    immediatelyRender: false, // Required for SSR frameworks
-  });
-
-  return <EditorContent editor={editor} />;
-}
-```
-
-**Why good:** StarterKit bundles common extensions (paragraphs, headings, lists, bold, italic, etc.), `immediatelyRender: false` prevents SSR hydration mismatch
-
-**Key useEditor options:** `extensions` (required), `content` (HTML string or JSON), `editable`, `autofocus` (`"start"`, `"end"`, `"all"`, number, boolean), `editorProps` (ProseMirror props like `attributes` for CSS classes), `onUpdate` callback
-
-See [examples/core.md](examples/core.md) for full setup with toolbar and configuration options.
-
----
-
-### Pattern 2: Extension Types
-
-TipTap has three extension types that map to ProseMirror's schema model:
-
-| Type          | Purpose                              | Examples                                     |
-| ------------- | ------------------------------------ | -------------------------------------------- |
-| **Node**      | Content blocks and inline elements   | Paragraph, Heading, Image, CodeBlock, Table  |
-| **Mark**      | Formatting applied to text ranges    | Bold, Italic, Link, Highlight, Code          |
-| **Extension** | Functionality without schema changes | UndoRedo, CharacterCount, Placeholder, Focus |
-
-```typescript
-import { Node } from "@tiptap/core";
-import { Mark } from "@tiptap/core";
-import { Extension } from "@tiptap/core";
-
-// Each type uses the same .create() factory
-const CustomNode = Node.create({ name: "customNode" /* ... */ });
-const CustomMark = Mark.create({ name: "customMark" /* ... */ });
-const CustomExt = Extension.create({ name: "customExt" /* ... */ });
-```
-
-**Key distinction:** Nodes and Marks define schema (parseHTML/renderHTML). Extensions add behavior only.
-
-See [examples/custom-extensions.md](examples/custom-extensions.md) for complete custom node and mark examples.
-
----
-
-### Pattern 3: Commands and Chaining
-
-Commands modify editor state. Chain multiple commands and call `.run()` to execute.
-
-```typescript
-// Single command
-editor.commands.toggleBold();
-
-// Chained commands -- focus() keeps cursor in editor
-editor.chain().focus().toggleBold().run();
-
-// Check if a command can execute (without running it)
-const canToggleBold = editor.can().toggleBold();
-
-// Conditional formatting
-editor.chain().focus().toggleHeading({ level: 2 }).run();
-```
-
-**Why `.focus()` matters:** Without it, clicking a toolbar button moves focus out of the editor. `.focus()` restores it before applying the command.
-
-**Why `.run()` matters:** Chain builds a transaction but does not apply it until `.run()` is called. Forgetting `.run()` silently does nothing.
-
-See [examples/core.md](examples/core.md) for toolbar integration with `isActive` checks.
-
----
-
-### Pattern 4: Content Serialization
-
-TipTap supports JSON and HTML output. **JSON is recommended** -- it preserves the document structure, is easier to parse, and allows external edits without an HTML parser.
-
-```typescript
-// Get content as JSON (recommended for persistence)
-const json = editor.getJSON();
-
-// Get content as HTML
-const html = editor.getHTML();
-
-// Get plain text
-const text = editor.getText({ blockSeparator: "\n\n" });
-
-// Set content from JSON or HTML
-editor.commands.setContent(jsonData);
-editor.commands.setContent("<p>HTML content</p>");
-```
-
-**Why JSON over HTML:** JSON maps directly to the ProseMirror document tree. HTML requires parsing and may lose information if the schema changes. JSON also enables easier diffing, validation, and migration.
-
-See [examples/core.md](examples/core.md) for persistence patterns with localStorage and API.
-
----
-
-### Pattern 5: Custom Node Creation
-
-Custom nodes define new content types in the editor schema. Every node needs `name`, `group`, `parseHTML`, and `renderHTML`.
-
-```typescript
-import { Node, mergeAttributes } from "@tiptap/core";
-
-const Callout = Node.create({
-  name: "callout",
-  group: "block",
-  content: "block+",
-
-  addAttributes() {
-    return {
-      type: { default: "info" },
-    };
-  },
-
-  parseHTML() {
-    return [{ tag: 'div[data-type="callout"]' }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "div",
-      mergeAttributes({ "data-type": "callout" }, HTMLAttributes),
-      0,
-    ];
-  },
-});
-```
-
-**Key schema properties:** `group` ("block" or "inline"), `content` (ProseMirror content expression like "block+", "inline*", "text*"), `inline` (boolean), `atom` (true = non-editable unit), `selectable`, `draggable`
-
-**The `0` in renderHTML:** Represents the content hole where child content renders. Omit for atom/leaf nodes.
-
-See [examples/custom-extensions.md](examples/custom-extensions.md) for complete nodes with commands, keyboard shortcuts, and input rules.
-
----
-
-### Pattern 6: Custom Mark Creation
-
-Marks apply formatting to text ranges. They need `parseHTML` and `renderHTML` like nodes but use `addAttributes` for styling properties.
-
-```typescript
-import { Mark, mergeAttributes } from "@tiptap/core";
-
-const Highlight = Mark.create({
-  name: "highlight",
-
-  addAttributes() {
-    return {
-      color: { default: "yellow" },
-    };
-  },
-
-  parseHTML() {
-    return [{ tag: "mark" }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ["mark", mergeAttributes(HTMLAttributes), 0];
-  },
-
-  addCommands() {
-    return {
-      toggleHighlight:
-        (attrs) =>
-        ({ commands }) => {
-          return commands.toggleMark(this.name, attrs);
-        },
-    };
-  },
-});
-```
-
-**Mark-specific options:** `inclusive` (whether typing at mark boundary extends the mark), `excludes` (marks that cannot coexist -- e.g. bold excludes itself), `spanning` (whether mark can span multiple nodes)
-
-See [examples/custom-extensions.md](examples/custom-extensions.md) for marks with keyboard shortcuts and input rules.
-
----
-
-### Pattern 7: BubbleMenu and FloatingMenu
-
-BubbleMenu appears on text selection. FloatingMenu appears on empty lines. Both use Floating UI for positioning in v3.
-
-```typescript
-import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
-
-// BubbleMenu -- appears when text is selected
-<BubbleMenu editor={editor}>
-  <button onClick={() => editor.chain().focus().toggleBold().run()}>Bold</button>
-</BubbleMenu>
-
-// FloatingMenu -- appears on empty lines
-<FloatingMenu editor={editor}>
-  <button onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}>H1</button>
-</FloatingMenu>
-```
-
-**Key props:** `editor` (required), `shouldShow` callback for custom visibility logic, `pluginKey` for multiple menu instances, Floating UI middleware options (`placement`, `offset`, `flip`)
-
-See [examples/menus.md](examples/menus.md) for shouldShow patterns, multiple menus, and slash command implementation.
-
----
-
-### Pattern 8: React Node Views
-
-For complex interactive blocks (widgets, embeds, counters), use React components as node views.
-
-```tsx
-import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
-import { ReactNodeViewRenderer } from "@tiptap/react";
-
-// The React component receives props from TipTap
-function CalloutView({ node, updateAttributes }) {
-  return (
-    <NodeViewWrapper className="callout" data-type={node.attrs.type}>
-      <select
-        contentEditable={false}
-        value={node.attrs.type}
-        onChange={(e) => updateAttributes({ type: e.target.value })}
-      >
-        <option value="info">Info</option>
-        <option value="warning">Warning</option>
-      </select>
-      <NodeViewContent className="callout-content" />
-    </NodeViewWrapper>
-  );
-}
-
-// Register in the node extension
-const CalloutNode = Node.create({
-  name: "callout",
-  // ... schema config ...
-  addNodeView() {
-    return ReactNodeViewRenderer(CalloutView);
-  },
-});
-```
-
-**Props available:** `editor`, `node`, `selected`, `extension`, `getPos()`, `updateAttributes()`, `deleteNode()`, `decorations`
-
-**NodeViewWrapper is required** -- it sets up the DOM structure TipTap expects. `NodeViewContent` renders editable child content. Use `contentEditable={false}` on non-editable parts (buttons, selects).
-
-See [examples/custom-extensions.md](examples/custom-extensions.md) for complete React node view examples.
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
-
-### Extension Type Selection
+### Which extension type
 
 ```
-What are you adding to the editor?
-|
-+-> New content type (renders in document)?
-|   +-> Block-level (paragraph, heading, image)? -> Node with group: "block"
-|   +-> Inline element (mention, emoji)? -> Node with group: "inline", inline: true
-|   +-> Text formatting (bold, highlight, link)? -> Mark
-|
-+-> New behavior (no schema change)?
-    +-> Keyboard shortcut? -> Extension with addKeyboardShortcuts
-    +-> Character count, placeholder? -> Extension
-    +-> ProseMirror plugin? -> Extension with addProseMirrorPlugins
+New content that lives in the document?
+├─ Block-level (paragraph, heading, image)?  → Node, group: "block"
+├─ Inline element (mention, emoji)?          → Node, group: "inline", inline: true
+└─ Formatting over a text range?             → Mark
+
+Behaviour with no schema change?
+├─ Keyboard shortcut?                        → Extension + addKeyboardShortcuts
+├─ Character count, placeholder, focus?      → Extension
+└─ Lower-level control?                      → Extension + addProseMirrorPlugins
 ```
 
-### Node Interactivity
+### How interactive is the node
 
 ```
-How interactive is the node?
-|
-+-> Static content (just renders HTML)?
-|   -> renderHTML only, no node view needed
-|
-+-> Needs editable child content?
-|   -> NodeViewContent inside NodeViewWrapper
-|
-+-> Complex interactive UI (buttons, inputs)?
-    -> ReactNodeViewRenderer with contentEditable={false} on controls
+Just renders HTML?                    → renderHTML alone, no node view
+Needs editable child content?         → node view with NodeViewContent inside NodeViewWrapper
+Buttons, inputs, live UI?             → node view, contentEditable={false} on the controls
 ```
 
-### Content Serialization
+### StarterKit or individual extensions
 
 ```
-How will you store editor content?
-|
-+-> Database / API? -> JSON (getJSON) -- structured, diffable, migratable
-+-> Display as HTML elsewhere? -> HTML (getHTML) -- for rendering outside editor
-+-> Search indexing? -> Plain text (getText) -- for full-text search
+Do you need most of the standard formatting?
+├─ YES → StarterKit, disabling what you do not want: StarterKit.configure({ codeBlock: false })
+└─ NO  → Individual extensions, for a schema with nothing spare in it
+```
+
+### Which menu
+
+```
+On text selection?          → BubbleMenu
+On empty lines?             → FloatingMenu
+Always visible?             → an ordinary component reading editor state, no menu primitive
+On a trigger character?     → an Extension wrapping the suggestion plugin
+```
+
+### How the content is stored
+
+```
+Database or API?            → getJSON()  — structured, diffable, migratable
+Rendered elsewhere as HTML? → getHTML()  — for display outside the editor
+Search index?               → getText()  — plain text
 ```
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues:**
+### Pattern 1: Editor setup
 
-- Missing `immediatelyRender: false` with SSR frameworks -- causes hydration mismatch and server rendering errors
-- Importing BubbleMenu/FloatingMenu from `@tiptap/react` instead of `@tiptap/react/menus` in v3 -- wrong import path
-- Forgetting `.run()` on command chains -- builds transaction but never applies it, silently does nothing
-- Forgetting `.focus()` before commands in toolbar buttons -- cursor leaves editor, commands may target wrong position
-- Missing `parseHTML`/`renderHTML` on custom nodes/marks -- content cannot be loaded from or exported to HTML/JSON
-- Using `editor.state.doc` directly to modify content instead of commands/transactions -- bypasses TipTap's update cycle
+`useEditor` builds the editor from a list of extensions; `EditorContent` renders the editable area.
+The editor is `null` on the first render, so every consumer guards it.
 
-**Medium Priority Issues:**
+```typescript
+const editor = useEditor({
+  extensions: [StarterKit],
+  content: "<p>Start typing...</p>",
+  immediatelyRender: false,
+});
 
-- Not checking `editor.can()` before rendering toolbar buttons as active/disabled -- buttons appear clickable when command would fail
-- Creating one monolithic extension instead of composable smaller ones -- harder to reuse and configure
-- Using HTML for persistence when JSON would work -- JSON is more structured, diffable, and schema-aware
-- Inline `editor.getJSON()` on every keystroke without debouncing -- performance issue on large documents
+if (!editor) return null;
+return <EditorContent editor={editor} />;
+```
 
-**Gotchas & Edge Cases:**
+Options worth knowing: `editable`, `autofocus` (`"start" | "end" | "all" | number | boolean`),
+`editorProps.attributes` for classes on the editable element, and `onUpdate`.
 
-- `getPos()` in node views can return `undefined` in v3 -- always check before using
-- `editor` from `useEditor` is `null` on first render and during SSR -- guard all `editor.` access
-- StarterKit v3 includes Link and Underline by default -- adding them separately causes duplicate extension errors
-- `NodeViewContent` tag cannot change at runtime -- set `as` prop once (e.g. `as="p"`)
-- `mergeAttributes` is required in `renderHTML` to preserve user-added attributes (class, style, data-\*)
-- `addInputRules` regex must end with `$` (caret at cursor position); `addPasteRules` regex should NOT end with `$` but must use `/g` flag
-- Multiple input rules matching the same pattern -- only the first match in extension order fires
-- ProseMirror content expressions: `"block+"` means one-or-more blocks, `"inline*"` means zero-or-more inline, `"text*"` means text only -- mismatches cause schema validation errors
-
-</red_flags>
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-<critical_reminders>
+### Pattern 2: The three extension types
 
-## CRITICAL REMINDERS
+| Type          | Defines                            | Examples                                     |
+| ------------- | ---------------------------------- | -------------------------------------------- |
+| **Node**      | Content blocks and inline elements | Paragraph, Heading, Image, CodeBlock, Table  |
+| **Mark**      | Formatting over a text range       | Bold, Italic, Link, Highlight, Code          |
+| **Extension** | Behaviour, with no schema change   | UndoRedo, CharacterCount, Placeholder, Focus |
 
-> **All code must follow project conventions in CLAUDE.md**
+```typescript
+const CustomNode = Node.create({ name: "customNode" /* ... */ });
+const CustomMark = Mark.create({ name: "customMark" /* ... */ });
+const CustomExt = Extension.create({ name: "customExt" /* ... */ });
+```
 
-**(You MUST set `immediatelyRender: false` in useEditor when using SSR/SSG frameworks -- TipTap must never render on the server)**
+Nodes and Marks carry `parseHTML`/`renderHTML` because they are part of the schema. Extensions do
+not.
 
-**(You MUST import BubbleMenu and FloatingMenu from the `/menus` sub-path -- e.g. `@tiptap/react/menus` in v3)**
+Full code: [examples/custom-extensions.md](examples/custom-extensions.md)
 
-**(You MUST define `name`, `group`, `parseHTML`, and `renderHTML` on every custom Node -- missing any breaks schema resolution)**
+---
 
-**(You MUST use `editor.chain().focus()...run()` for chained commands -- forgetting `.focus()` loses cursor position, forgetting `.run()` silently does nothing)**
+### Pattern 3: Commands and chaining
 
-**Failure to follow these rules will cause SSR crashes, import errors, silent command failures, and broken editor schemas.**
+A chain builds one transaction and `.run()` dispatches it.
 
-</critical_reminders>
+```typescript
+editor.chain().focus().toggleBold().run();
+editor.chain().focus().toggleHeading({ level: 2 }).run();
+
+editor.can().toggleBold(); // would it apply here — use it to disable the button
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 4: Serialization
+
+```typescript
+const json = editor.getJSON(); // persistence
+const html = editor.getHTML(); // display outside the editor
+const text = editor.getText({ blockSeparator: "\n\n" }); // indexing
+
+editor.commands.setContent(jsonData);
+```
+
+JSON maps straight onto the document tree, so it diffs, validates and migrates. HTML has to be
+re-parsed against the current schema, and anything the schema no longer recognises is dropped.
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 5: Custom nodes
+
+A node's schema is its `group`, its `content` expression and its HTML mapping. `mergeAttributes` is
+what preserves attributes the caller added.
+
+```typescript
+const Callout = Node.create({
+  name: "callout",
+  group: "block",
+  content: "block+",
+  addAttributes: () => ({ type: { default: "info" } }),
+  parseHTML: () => [{ tag: 'div[data-type="callout"]' }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "div",
+    mergeAttributes({ "data-type": "callout" }, HTMLAttributes),
+    0,
+  ],
+});
+```
+
+The `0` is the content hole where children render — omit it on atom and leaf nodes. Other schema
+keys: `inline`, `atom` (a non-editable unit), `selectable`, `draggable`.
+
+Full code: [examples/custom-extensions.md](examples/custom-extensions.md)
+
+---
+
+### Pattern 6: Custom marks
+
+Marks look like nodes minus the content expression, and gain the boundary options.
+
+```typescript
+const Highlight = Mark.create({
+  name: "highlight",
+  addAttributes: () => ({ color: { default: "yellow" } }),
+  parseHTML: () => [{ tag: "mark" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "mark",
+    mergeAttributes(HTMLAttributes),
+    0,
+  ],
+  addCommands() {
+    return {
+      toggleHighlight:
+        (attrs) =>
+        ({ commands }) =>
+          commands.toggleMark(this.name, attrs),
+    };
+  },
+});
+```
+
+`inclusive` decides whether typing at the boundary extends the mark, `excludes` names marks that
+cannot coexist with it, and `spanning` whether it crosses node boundaries.
+
+Full code: [examples/custom-extensions.md](examples/custom-extensions.md)
+
+---
+
+### Pattern 7: BubbleMenu and FloatingMenu
+
+BubbleMenu follows a text selection; FloatingMenu appears on empty lines. Both position through
+Floating UI in v3.
+
+```typescript
+import { BubbleMenu } from "@tiptap/react/menus";
+
+<BubbleMenu editor={editor} shouldShow={({ state }) => !state.selection.empty}>
+  <button onClick={() => editor.chain().focus().toggleBold().run()}>Bold</button>
+</BubbleMenu>;
+```
+
+`shouldShow` is what keeps a menu off selections it has nothing to offer, and `pluginKey`
+distinguishes several menus on one editor.
+
+Full code: [examples/menus.md](examples/menus.md)
+
+---
+
+### Pattern 8: Node views
+
+A node view replaces a node's rendering with a component, for blocks that need live UI.
+
+```tsx
+function CalloutView({ node, updateAttributes }) {
+  return (
+    <NodeViewWrapper className="callout">
+      <select
+        contentEditable={false}
+        value={node.attrs.type}
+        onChange={(e) => updateAttributes({ type: e.target.value })}
+      >
+        <option value="info">Info</option>
+      </select>
+      <NodeViewContent />
+    </NodeViewWrapper>
+  );
+}
+
+Node.create({
+  name: "callout",
+  addNodeView: () => ReactNodeViewRenderer(CalloutView),
+});
+```
+
+`NodeViewWrapper` is the outer element the editor expects, `NodeViewContent` marks the editable
+region, and `contentEditable={false}` keeps the editor's hands off the controls. Props available:
+`editor`, `node`, `selected`, `extension`, `getPos()`, `updateAttributes()`, `deleteNode()`,
+`decorations`.
+
+Full code: [examples/custom-extensions.md](examples/custom-extensions.md)
+
+</patterns>
+
+---
+
+<red_flags>
+
+## Red flags
+
+**Breaks at runtime:**
+
+- `immediatelyRender` left unset under a server-rendering framework — hydration mismatch and server
+  render errors — set it to `false`
+- `BubbleMenu`/`FloatingMenu` imported from `@tiptap/react` in v3 — the export is not there — use
+  `@tiptap/react/menus`
+- `editor` used before a null guard — it is `null` on the first render and during SSR — return early
+  until it exists
+- A chain with no `.run()` — the transaction is built and dropped, so the command silently does
+  nothing
+- A custom node or mark missing `parseHTML`/`renderHTML` — its content cannot be loaded back or
+  exported
+- `Link` or `Underline` added beside StarterKit v3 — duplicate extension error, since StarterKit now
+  includes both — configure them through StarterKit, or disable them there first
+- Mutating `editor.state.doc`, or writing into the rendered `.ProseMirror` DOM, directly — both
+  bypass the transaction pipeline, so the view and the state diverge and the next transaction
+  overwrites the change — go through commands
+
+**Surprising behaviour:**
+
+- A command chain without `.focus()` runs against a stale cursor once focus has left the editor, so
+  a toolbar click lands somewhere the user did not select
+- `getPos()` can return `undefined` in v3 — check it before using the position
+- `NodeViewContent`'s tag is fixed at mount; `as` cannot change at runtime
+- `renderHTML` without `mergeAttributes` silently drops the class, style and `data-*` attributes the
+  caller passed
+- Input-rule regexes must end with `$`; paste-rule regexes must not, and must carry `/g`
+- When several input rules match the same text, only the first in extension order fires
+- A `content` expression mismatch — `"block+"`, `"inline*"`, `"text*"` — surfaces as a schema
+  validation error rather than as a rendering problem
+- `editor.getJSON()` on every keystroke serializes the whole document each time; debounce it on
+  large documents
+- A toolbar button that ignores `editor.can()` looks clickable while the command would fail
+
+</red_flags>

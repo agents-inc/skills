@@ -1,6 +1,6 @@
 # web-data-fetching-swr
 
-SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll
+SWR data fetching patterns — keys and fetchers, isLoading vs isValidating, revalidation strategy, useSWRMutation, useSWRInfinite, conditional fetching
 
 ## Installation
 

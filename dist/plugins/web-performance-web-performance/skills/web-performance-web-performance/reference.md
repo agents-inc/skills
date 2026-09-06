@@ -1,137 +1,72 @@
 # Performance Reference
 
-> Decision frameworks, anti-patterns, and red flags for performance optimization.
+> Thresholds, budgets and format comparisons. Decisions and red flags are in [SKILL.md](SKILL.md); code is in [examples/](examples/).
 
 ---
 
-## Decision Framework
+## Core Web Vitals thresholds
 
-### Should I optimize this?
+Measured at the 75th percentile of real sessions, split by device class.
 
-```
-Have you measured the performance issue?
-├─ NO → Profile first with browser DevTools or framework profiler
-└─ YES → Is it actually slow (user-perceivable)?
-    ├─ NO → Don't optimize (premature optimization)
-    └─ YES → Is it runtime or bundle size?
-        ├─ Bundle → Check bundle budgets, analyze with bundler tools
-        │   ├─ Over budget → Code split, tree shake, find lighter alternatives
-        │   └─ Under budget → Focus elsewhere
-        └─ Runtime → Which Core Web Vital is failing?
-            ├─ LCP (> 2.5s) → Optimize images, preload critical assets
-            ├─ INP (> 200ms) → Code split, use web workers, break up long tasks
-            └─ CLS (> 0.1) → Set image dimensions, reserve space
-```
+| Metric | Good     | Needs improvement | Poor     | What it measures                         |
+| ------ | -------- | ----------------- | -------- | ---------------------------------------- |
+| LCP    | ≤ 2.5 s  | 2.5–4.0 s         | > 4.0 s  | When the largest visible element renders |
+| INP    | ≤ 200 ms | 200–500 ms        | > 500 ms | Responsiveness across all interactions   |
+| CLS    | ≤ 0.1    | 0.1–0.25          | > 0.25   | Unexpected layout movement               |
 
-### Should I memoize this?
+Supporting metrics, useful for diagnosis rather than as targets in themselves:
 
-```
-Are you using React Compiler (React 19+)?
-├─ YES → Let the compiler handle it (automatic memoization)
-│   └─ Only add manual memo for: third-party interop, non-pure computations
-└─ NO → Is the component/calculation expensive?
-    ├─ NO (< 5ms) → Don't memoize (overhead > benefit)
-    └─ YES (> 5ms) → Does it re-render frequently?
-        ├─ NO → Don't memoize (rarely helps)
-        └─ YES → Which memoization?
-            ├─ Component → React.memo
-            ├─ Calculation → useMemo
-            └─ Function → useCallback (if passed to memoized child)
-```
+| Metric | Target   | Reads as                                           |
+| ------ | -------- | -------------------------------------------------- |
+| TTFB   | ≤ 800 ms | Server and network before anything can render      |
+| FCP    | ≤ 1.8 s  | First pixel of content — LCP's lower bound         |
+| TBT    | ≤ 200 ms | Main-thread blocking in a lab run; INP's lab proxy |
 
-### Should I use virtual scrolling?
+INP replaced FID as a Core Web Vital in March 2024, and covers every interaction rather than the
+first. The `web-vitals` library dropped `onFID` entirely in v5, so an upgrade from v4 that still
+imports it fails at build time — replace it with `onINP`.
 
-```
-How many items are you rendering?
-├─ < 100 → Regular rendering (virtual scrolling unnecessary)
-└─ > 100 → Are items consistent height?
-    ├─ YES → FixedSizeList (react-window or TanStack Virtual)
-    └─ NO → Dynamic height virtualizer (react-virtuoso or TanStack Virtual)
-```
+## What moves each metric
 
-### Should I lazy load this?
+| Metric | Remedies, in the order usually worth trying                                                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LCP    | Preload and right-size the LCP image; serve a modern format; remove render-blocking CSS and JS; cut TTFB; render critical content on the server                 |
+| INP    | Break tasks over 50 ms; move computation to a worker; ship less JavaScript on the interactive path; yield between units of work                                 |
+| CLS    | Set width and height on every image and video; reserve space for late content; use `font-display: swap` with `size-adjust`; never insert above existing content |
 
-```
-Is this component critical for initial render?
-├─ YES (above-fold, error boundaries) → Don't lazy load
-└─ NO → Is it used conditionally?
-    ├─ Route component → lazy() with Suspense
-    ├─ Heavy library → Dynamic import
-    ├─ Below-fold image → loading="lazy"
-    └─ Modal/Dialog → lazy() with Suspense
-```
+## Bundle budgets
 
----
+| Artifact             | Budget, gzipped | Reasoning                                     |
+| -------------------- | --------------- | --------------------------------------------- |
+| Main bundle          | 200 KB          | Roughly one second of download on slow 3G     |
+| Vendor bundle        | 150 KB          | Cached across deploys; still blocks the first |
+| Per-route bundle     | 100 KB each     | Navigation should feel instant                |
+| Total initial load   | 500 KB          | Everything before the page is usable          |
+| Main CSS             | 50 KB           | Render-blocking by default                    |
+| Inlined critical CSS | 14 KB           | Fits the first TCP round trip                 |
 
-## Anti-Patterns
+State the compression the budget is measured under, since raw, gzip and brotli figures for one file
+differ by a factor of three or more.
 
-### Premature Optimization
+## Image formats
 
-Optimizing before measuring leads to complexity without benefit. Always profile first.
+| Format | Size against JPEG | Notes                                                 |
+| ------ | ----------------- | ----------------------------------------------------- |
+| AVIF   | 30–50% smaller    | Best compression; slowest to encode; needs a fallback |
+| WebP   | 25–35% smaller    | Effectively universal support                         |
+| JPEG   | baseline          | The fallback everything falls back to                 |
 
-```typescript
-// ❌ WRONG - Memoizing without measuring
-const MemoizedComponent = React.memo(SimpleComponent);
-const value = useMemo(() => a + b, [a, b]); // Simple math doesn't need memo
+| Role       | Weight budget |
+| ---------- | ------------- |
+| Hero image | 200 KB        |
+| Thumbnail  | 50 KB         |
 
-// ✅ CORRECT - Profile first, optimize measured bottlenecks
-// Profiler shows Component takes 50ms to render
-const MemoizedComponent = React.memo(ExpensiveComponent);
-```
+## Memoisation thresholds
 
-### Memoizing Everything
-
-Wrapping every component in `React.memo` and every callback in `useCallback` adds overhead and complexity.
-
-```typescript
-// ❌ WRONG - Memo overhead exceeds render cost
-const handleClick = useCallback(() => setCount(c => c + 1), []);
-const label = useMemo(() => `Count: ${count}`, [count]);
-
-// ✅ CORRECT - Only memoize when passing to memoized children
-const MemoizedChild = React.memo(ExpensiveChild);
-const handleClick = useCallback(() => setCount(c => c + 1), []);
-<MemoizedChild onClick={handleClick} />
-```
-
-### Importing Full Libraries
-
-Using full library imports bundles everything, even unused code.
-
-```typescript
-// ❌ WRONG - Imports entire lodash (~70KB)
-import _ from "lodash";
-_.debounce(fn, 300);
-
-// ✅ CORRECT - Tree-shakeable ESM import (~2KB)
-import { debounce } from "lodash-es";
-debounce(fn, 300);
-```
-
-### Lazy Loading Above-Fold Content
-
-Using `loading="lazy"` on hero images delays LCP. Critical content should load eagerly.
-
-```html
-<!-- ❌ WRONG - Hero image lazy loaded -->
-<img src="/hero.jpg" loading="lazy" />
-
-<!-- ✅ CORRECT - Hero loads eagerly, below-fold lazy -->
-<img src="/hero.jpg" loading="eager" fetchpriority="high" />
-<img src="/below-fold.jpg" loading="lazy" />
-```
-
-### Ignoring Real User Monitoring
-
-Lab metrics (Lighthouse) differ from real-world performance. Always track production metrics.
-
-```typescript
-// ❌ WRONG - Only checking Lighthouse scores
-// "Lighthouse says 95, ship it!"
-
-// ✅ CORRECT - Track real user metrics
-import { onLCP, onINP, onCLS } from "web-vitals";
-onLCP(sendToAnalytics);
-onINP(sendToAnalytics);
-onCLS(sendToAnalytics);
-```
+| Constant                 | Value     | Meaning                                              |
+| ------------------------ | --------- | ---------------------------------------------------- |
+| Expensive render         | 5 ms      | Below this, the memo comparison outweighs the saving |
+| Virtualisation threshold | 100 items | Below this, the DOM is not the bottleneck            |
+| Long task                | 50 ms     | Above this the main thread is blocking interaction   |
+| Search debounce          | 500 ms    | Long enough to mean "stopped typing"                 |
+| Scroll throttle          | 100 ms    | Roughly six frames — smooth without saturating       |

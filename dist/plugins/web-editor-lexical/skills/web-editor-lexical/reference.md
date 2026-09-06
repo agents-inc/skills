@@ -1,6 +1,8 @@
 # Lexical Quick Reference
 
-> Decision frameworks, command priorities, package map, and anti-patterns. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code. **Current: v0.42.x (pre-1.0)**
+> Package map, command priorities, node hierarchy, plugin list and the custom-node checklist. See
+> [SKILL.md](SKILL.md) for the decisions and the red flags, [examples/](examples/) for code.
+> **Current: v0.42.x (pre-1.0)**
 
 ---
 
@@ -21,6 +23,7 @@
 | `@lexical/clipboard` | Copy/paste handling                                         |
 | `@lexical/selection` | Selection utilities                                         |
 | `@lexical/utils`     | General utilities ($insertNodeToNearestRoot, mergeRegister) |
+| `@lexical/yjs`       | Collaboration binding (Yjs)                                 |
 
 ---
 
@@ -123,9 +126,3 @@ For every custom node, verify:
 - [ ] Node registered in `initialConfig.nodes`
 - [ ] All properties use `__` prefix convention
 - [ ] All properties are JSON-serializable (no functions, Maps, Sets)
-
----
-
-## Anti-Patterns
-
-See [SKILL.md RED FLAGS](SKILL.md#red-flags) for the complete anti-patterns list.

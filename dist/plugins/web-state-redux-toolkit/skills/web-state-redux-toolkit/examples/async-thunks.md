@@ -151,6 +151,6 @@ export const selectAuthError = (state: RootState) => state.auth.error;
 export const authReducer = authSlice.reducer;
 ```
 
-**Why good:** Typed thunk with rejectValue for error handling, getState access for token refresh, extraReducers handles all lifecycle actions, rejectWithValue provides typed errors, named exports
+**Why good:** `rejectWithValue` carries a payload of your own shape, where an uncaught throw arrives as a serialised error with no structure to branch on. `getState` inside the thunk is what lets the request read the current token rather than one captured at dispatch, and handling all three lifecycle actions is what keeps the loading flag from sticking on a failure.
 
 ---

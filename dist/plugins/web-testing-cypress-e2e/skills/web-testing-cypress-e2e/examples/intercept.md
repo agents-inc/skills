@@ -1,17 +1,13 @@
-# Cypress cy.intercept() Patterns
+# Cypress — `cy.intercept()` Patterns
 
-> API mocking and network interception patterns. See [core.md](core.md) for foundational patterns.
-
-**Prerequisites**: Understand [Pattern 3: Network Mocking](../SKILL.md#pattern-3-network-mocking-with-cyintercept) from SKILL.md first.
+> Network stubbing, verification and sequencing. See [core.md](core.md) for the foundations and
+> [fixtures-data.md](fixtures-data.md) for serving a stub from a fixture file.
 
 ---
 
-## Pattern 1: Basic Request Mocking
-
-### Stubbing GET Requests
+## Pattern 1: Stubbing a response
 
 ```typescript
-const API_USERS_ENDPOINT = "/api/users";
 const MOCK_USERS = [
   { id: "1", name: "John Doe", email: "john@example.com" },
   { id: "2", name: "Jane Smith", email: "jane@example.com" },
@@ -19,13 +15,12 @@ const MOCK_USERS = [
 
 describe("User List", () => {
   beforeEach(() => {
-    cy.intercept("GET", API_USERS_ENDPOINT, {
-      statusCode: 200,
-      body: MOCK_USERS,
-    }).as("getUsers");
+    cy.intercept("GET", "/api/users", { statusCode: 200, body: MOCK_USERS }).as(
+      "getUsers",
+    );
   });
 
-  it("displays users from API", () => {
+  it("renders the users the API returned", () => {
     cy.visit("/users");
     cy.wait("@getUsers");
 
@@ -35,196 +30,133 @@ describe("User List", () => {
 });
 ```
 
-### Stubbing POST Requests
-
 ```typescript
-const API_CREATE_USER = "/api/users";
-const CREATED_USER = {
-  id: "new-123",
-  name: "New User",
-  email: "new@example.com",
-};
-
-it("creates a new user", () => {
-  cy.intercept("POST", API_CREATE_USER, {
+it("sends the form values and reports success", () => {
+  cy.intercept("POST", "/api/users", {
     statusCode: 201,
-    body: CREATED_USER,
+    body: { id: "new-123", name: "New User" },
   }).as("createUser");
 
   cy.visit("/users/new");
   cy.getBySel("name-input").type("New User");
-  cy.getBySel("email-input").type("new@example.com");
   cy.getBySel("submit-button").click();
 
-  cy.wait("@createUser").its("request.body").should("deep.include", {
-    name: "New User",
-    email: "new@example.com",
-  });
-
+  // The alias carries the request too, so the payload is assertable.
+  cy.wait("@createUser")
+    .its("request.body")
+    .should("deep.include", { name: "New User" });
   cy.getBySel("success-message").should("contain", "User created");
 });
 ```
 
+**Why good:** `beforeEach` establishes the default and each test overrides only what it is about.
+Waiting on the alias rather than a duration means the test is as fast as the stub and never racy.
+
 ---
 
-## Pattern 2: Error State Testing
-
-### HTTP Error Responses
+## Pattern 2: Error and failure states
 
 ```typescript
-const HTTP_NOT_FOUND = 404;
-const HTTP_SERVER_ERROR = 500;
-const HTTP_UNAUTHORIZED = 401;
-const HTTP_FORBIDDEN = 403;
+const HTTP = { NOT_FOUND: 404, UNAUTHORIZED: 401, SERVER_ERROR: 500 } as const;
 
-describe("Error Handling", () => {
-  it("shows not found message on 404", () => {
+describe("Error handling", () => {
+  it("shows a not-found message", () => {
     cy.intercept("GET", "/api/users/*", {
-      statusCode: HTTP_NOT_FOUND,
+      statusCode: HTTP.NOT_FOUND,
       body: { error: "User not found" },
     }).as("getUser");
 
     cy.visit("/users/nonexistent-id");
     cy.wait("@getUser");
-
     cy.getBySel("error-message").should("contain", "User not found");
-    cy.getBySel("back-button").should("be.visible");
-  });
-
-  it("shows server error message on 500", () => {
-    cy.intercept("GET", "/api/users", {
-      statusCode: HTTP_SERVER_ERROR,
-      body: { error: "Internal server error" },
-    }).as("getUsers");
-
-    cy.visit("/users");
-    cy.wait("@getUsers");
-
-    cy.getBySel("error-message").should("contain", "Something went wrong");
-    cy.getBySel("retry-button").should("be.visible");
   });
 
   it("redirects to login on 401", () => {
-    cy.intercept("GET", "/api/users", {
-      statusCode: HTTP_UNAUTHORIZED,
-      body: { error: "Unauthorized" },
-    }).as("getUsers");
+    cy.intercept("GET", "/api/users", { statusCode: HTTP.UNAUTHORIZED }).as(
+      "getUsers",
+    );
 
     cy.visit("/users");
     cy.wait("@getUsers");
-
     cy.url().should("include", "/login");
   });
 
-  it("shows forbidden message on 403", () => {
-    cy.intercept("GET", "/api/admin/settings", {
-      statusCode: HTTP_FORBIDDEN,
-      body: { error: "Forbidden" },
-    }).as("getSettings");
+  it("offers a retry on 500", () => {
+    cy.intercept("GET", "/api/users", { statusCode: HTTP.SERVER_ERROR }).as(
+      "getUsers",
+    );
 
-    cy.visit("/admin/settings");
-    cy.wait("@getSettings");
+    cy.visit("/users");
+    cy.wait("@getUsers");
+    cy.getBySel("retry-button").should("be.visible");
+  });
 
-    cy.getBySel("error-message").should("contain", "Access denied");
+  it("handles the request failing outright", () => {
+    // No response at all, as opposed to an error response.
+    cy.intercept("GET", "/api/users", { forceNetworkError: true }).as(
+      "getUsers",
+    );
+
+    cy.visit("/users");
+    cy.getBySel("error-message").should("contain", "Network error");
   });
 });
 ```
 
-### Network Failures
-
-```typescript
-it("handles network failure gracefully", () => {
-  cy.intercept("GET", "/api/users", { forceNetworkError: true }).as("getUsers");
-
-  cy.visit("/users");
-
-  cy.getBySel("error-message").should("contain", "Network error");
-  cy.getBySel("retry-button").should("be.visible");
-});
-
-it("handles timeout gracefully", () => {
-  cy.intercept("GET", "/api/users", {
-    delay: 30000, // 30 second delay to simulate timeout
-    body: [],
-  }).as("getUsers");
-
-  cy.visit("/users");
-
-  // App should show loading state
-  cy.getBySel("loading-spinner").should("be.visible");
-});
-```
+**Why good:** these are the paths a real backend cannot be asked to produce on demand, which is the
+whole reason to stub. `forceNetworkError` covers the case that has no status code at all.
 
 ---
 
-## Pattern 3: Request Verification
-
-### Verifying Request Body
+## Pattern 3: Verifying what was sent
 
 ```typescript
-const NEW_USER_DATA = {
-  name: "Test User",
-  email: "test@example.com",
-  role: "member",
-};
-
-it("sends correct data when creating user", () => {
-  cy.intercept("POST", "/api/users", {
-    statusCode: 201,
-    body: { id: "123", ...NEW_USER_DATA },
-  }).as("createUser");
+it("sends the values the form collected", () => {
+  cy.intercept("POST", "/api/users").as("createUser"); // no stub — observe only
 
   cy.visit("/users/new");
-  cy.getBySel("name-input").type(NEW_USER_DATA.name);
-  cy.getBySel("email-input").type(NEW_USER_DATA.email);
-  cy.getBySel("role-select").select(NEW_USER_DATA.role);
+  cy.getBySel("name-input").type("Test User");
+  cy.getBySel("role-select").select("member");
   cy.getBySel("submit-button").click();
 
-  cy.wait("@createUser").then((interception) => {
-    expect(interception.request.body).to.deep.equal(NEW_USER_DATA);
-    expect(interception.request.headers).to.have.property("content-type");
+  cy.wait("@createUser").then(({ request }) => {
+    expect(request.body).to.deep.equal({ name: "Test User", role: "member" });
+    expect(request.headers).to.have.property("content-type");
   });
 });
-```
 
-### Verifying Query Parameters
-
-```typescript
-const SEARCH_TERM = "john";
-const PAGE_SIZE = 20;
-
-it("sends correct query parameters", () => {
+it("sends the search term and page size as query parameters", () => {
   cy.intercept("GET", "/api/users*").as("searchUsers");
 
   cy.visit("/users");
-  cy.getBySel("search-input").type(SEARCH_TERM);
+  cy.getBySel("search-input").type("john");
   cy.getBySel("search-button").click();
 
-  cy.wait("@searchUsers").then((interception) => {
-    const url = new URL(interception.request.url);
-    expect(url.searchParams.get("q")).to.eq(SEARCH_TERM);
-    expect(url.searchParams.get("limit")).to.eq(String(PAGE_SIZE));
+  cy.wait("@searchUsers").then(({ request }) => {
+    const url = new URL(request.url);
+    expect(url.searchParams.get("q")).to.eq("john");
+    expect(url.searchParams.get("limit")).to.eq("20");
   });
 });
 ```
 
+**Why good:** an intercept with no response body observes without changing behaviour, so the test
+covers the contract the UI sends while the real API still answers.
+
 ---
 
-## Pattern 4: Response Modification
-
-### Intercepting and Modifying Responses
+## Pattern 4: Modifying a real response
 
 ```typescript
-const DISCOUNT_PERCENTAGE = 0.2;
+const DISCOUNT = 0.2;
 
-it("applies discount to product prices", () => {
+it("shows a discount badge on every product", () => {
   cy.intercept("GET", "/api/products", (req) => {
     req.continue((res) => {
-      // Modify each product's price
       res.body = res.body.map((product: { price: number }) => ({
         ...product,
         originalPrice: product.price,
-        price: product.price * (1 - DISCOUNT_PERCENTAGE),
+        price: product.price * (1 - DISCOUNT),
         hasDiscount: true,
       }));
     });
@@ -232,163 +164,69 @@ it("applies discount to product prices", () => {
 
   cy.visit("/products");
   cy.wait("@getProducts");
-
   cy.getBySel("discount-badge").should("be.visible");
-  cy.getBySel("original-price").should("be.visible");
 });
-```
 
-### Conditional Response Based on Request
-
-```typescript
-it("returns different users based on role filter", () => {
+it("answers differently depending on the request", () => {
   cy.intercept("GET", "/api/users*", (req) => {
-    const url = new URL(req.url);
-    const role = url.searchParams.get("role");
-
-    if (role === "admin") {
-      req.reply({
-        statusCode: 200,
-        body: [{ id: "1", name: "Admin User", role: "admin" }],
-      });
-    } else {
-      req.reply({
-        statusCode: 200,
-        body: [
-          { id: "2", name: "Regular User 1", role: "user" },
-          { id: "3", name: "Regular User 2", role: "user" },
-        ],
-      });
-    }
+    const role = new URL(req.url).searchParams.get("role");
+    req.reply({
+      statusCode: 200,
+      body: role === "admin" ? ADMIN_USERS : REGULAR_USERS,
+    });
   }).as("getUsers");
 
-  // Test admin filter
   cy.visit("/users?role=admin");
   cy.wait("@getUsers");
-  cy.getBySel("user-row").should("have.length", 1);
-
-  // Test regular users
-  cy.visit("/users?role=user");
-  cy.wait("@getUsers");
-  cy.getBySel("user-row").should("have.length", 2);
+  cy.getBySel("user-row").should("have.length", ADMIN_USERS.length);
 });
 ```
+
+**Why good:** `req.continue()` keeps everything the real API returns and rewrites only the field
+under test, so the stub cannot drift out of shape. `req.reply()` inside the handler is what makes a
+single route serve several scenarios.
 
 ---
 
-## Pattern 5: Using Fixtures with Intercept
-
-### Loading Fixture Files
+## Pattern 5: Delay and throttling
 
 ```typescript
-// cypress/fixtures/products.json
-// [
-//   { "id": "1", "name": "Product A", "price": 99.99 },
-//   { "id": "2", "name": "Product B", "price": 149.99 }
-// ]
-
-describe("Product List with Fixtures", () => {
-  it("displays products from fixture", () => {
-    cy.intercept("GET", "/api/products", { fixture: "products.json" }).as(
-      "getProducts",
-    );
-
-    cy.visit("/products");
-    cy.wait("@getProducts");
-
-    cy.getBySel("product-card").should("have.length", 2);
-    cy.getBySel("product-card").first().should("contain", "Product A");
-  });
-
-  it("uses different fixtures for scenarios", () => {
-    // Empty state
-    cy.intercept("GET", "/api/products", { fixture: "empty-products.json" }).as(
-      "getProducts",
-    );
-    cy.visit("/products");
-    cy.wait("@getProducts");
-    cy.getBySel("empty-state").should("be.visible");
-
-    // Error state
-    cy.intercept("GET", "/api/products", {
-      statusCode: 500,
-      fixture: "error.json",
-    }).as("getProductsError");
-    cy.visit("/products");
-    cy.wait("@getProductsError");
-    cy.getBySel("error-message").should("be.visible");
-  });
-});
-```
-
-### Dynamic Fixture Selection
-
-```typescript
-it("uses different fixtures based on test scenario", () => {
-  const scenario = "many-products"; // Could be parameterized
-
-  cy.intercept("GET", "/api/products", { fixture: `${scenario}.json` }).as(
-    "getProducts",
-  );
-
-  cy.visit("/products");
-  cy.wait("@getProducts");
-});
-```
-
----
-
-## Pattern 6: Delays and Throttling
-
-### Simulating Slow Network
-
-```typescript
-const DELAY_MS = 2000;
-const THROTTLE_KBPS = 1000; // Simulate 3G
-
-it("shows loading state during slow request", () => {
+it("shows the loading state while the request is slow", () => {
   cy.intercept("GET", "/api/products", {
-    delay: DELAY_MS,
+    delay: 2000,
     body: [{ id: "1", name: "Product" }],
   }).as("getProducts");
 
   cy.visit("/products");
-
-  // Loading should appear
   cy.getBySel("loading-spinner").should("be.visible");
 
   cy.wait("@getProducts");
-
-  // Loading should disappear
   cy.getBySel("loading-spinner").should("not.exist");
-  cy.getBySel("product-card").should("be.visible");
 });
 
-it("simulates slow download", () => {
+it("shows download progress on a slow connection", () => {
   cy.intercept("GET", "/api/large-file", {
-    throttleKbps: THROTTLE_KBPS,
+    throttleKbps: 1000,
     fixture: "large-response.json",
   }).as("getLargeFile");
 
   cy.visit("/downloads");
   cy.getBySel("download-button").click();
-
-  // Progress indicator should be visible during slow download
   cy.getBySel("download-progress").should("be.visible");
 });
 ```
 
+**Why good:** a loading state is otherwise unobservable — the stub answers too fast to see it. Note
+the option is `delay`; `delayMs` was removed in Cypress 14.
+
 ---
 
-## Pattern 7: Multiple Sequential Requests
-
-### Handling Pagination
+## Pattern 6: Sequencing several requests
 
 ```typescript
 const PAGE_SIZE = 10;
 
-it("loads more items on scroll", () => {
-  // First page
+it("loads the next page on scroll", () => {
   cy.intercept("GET", "/api/products?page=1*", {
     body: {
       products: Array(PAGE_SIZE).fill({ id: "1", name: "Product" }),
@@ -396,7 +234,6 @@ it("loads more items on scroll", () => {
     },
   }).as("getPage1");
 
-  // Second page
   cy.intercept("GET", "/api/products?page=2*", {
     body: {
       products: Array(PAGE_SIZE).fill({ id: "2", name: "Product" }),
@@ -408,89 +245,55 @@ it("loads more items on scroll", () => {
   cy.wait("@getPage1");
   cy.getBySel("product-card").should("have.length", PAGE_SIZE);
 
-  // Scroll to bottom to trigger infinite scroll
   cy.getBySel("product-list").scrollTo("bottom");
   cy.wait("@getPage2");
   cy.getBySel("product-card").should("have.length", PAGE_SIZE * 2);
 });
 ```
 
-### Chained Requests
-
-```typescript
-it("handles dependent API calls", () => {
-  // First request returns user
-  cy.intercept("GET", "/api/user/me", {
-    body: { id: "user-123", teamId: "team-456" },
-  }).as("getUser");
-
-  // Second request uses data from first
-  cy.intercept("GET", "/api/teams/team-456", {
-    body: { id: "team-456", name: "Engineering Team" },
-  }).as("getTeam");
-
-  cy.visit("/profile");
-
-  cy.wait("@getUser");
-  cy.wait("@getTeam");
-
-  cy.getBySel("team-name").should("contain", "Engineering Team");
-});
-```
+**Why good:** separate aliases per page make the assertion after each wait unambiguous about which
+response it is describing.
 
 ---
 
-## Pattern 8: Request Counting and One-Time Mocks
-
-### Asserting Request Count
+## Pattern 7: One-time stubs and call counts
 
 ```typescript
-it("only fetches data once", () => {
+it("recovers when a retry succeeds", () => {
+  // times: 1 applies this stub to the first matching request only.
+  cy.intercept("GET", "/api/users", { times: 1, forceNetworkError: true }).as(
+    "firstAttempt",
+  );
+  cy.intercept("GET", "/api/users", { body: [{ id: "1", name: "User" }] }).as(
+    "retry",
+  );
+
+  cy.visit("/users");
+  cy.getBySel("error-message").should("be.visible");
+  cy.getBySel("retry-button").click();
+
+  cy.wait("@retry");
+  cy.getBySel("user-row").should("have.length", 1);
+});
+
+it("fetches once and serves the rest from cache", () => {
   let requestCount = 0;
 
   cy.intercept("GET", "/api/users", (req) => {
-    requestCount++;
+    requestCount += 1;
     req.reply({ body: [] });
   }).as("getUsers");
 
   cy.visit("/users");
   cy.wait("@getUsers");
 
-  // Navigate away and back
   cy.getBySel("home-link").click();
   cy.getBySel("users-link").click();
 
-  // Should use cached data, not refetch
-  cy.then(() => {
-    expect(requestCount).to.eq(1);
-  });
+  // Inside cy.then, so the check runs after the queued commands rather than before them.
+  cy.then(() => expect(requestCount).to.eq(1));
 });
 ```
 
-### One-Time Error Then Success
-
-```typescript
-it("retries after error and succeeds", () => {
-  // First request fails
-  cy.intercept("GET", "/api/users", { times: 1, forceNetworkError: true }).as(
-    "getUsersError",
-  );
-
-  // Subsequent requests succeed
-  cy.intercept("GET", "/api/users", { body: [{ id: "1", name: "User" }] }).as(
-    "getUsersSuccess",
-  );
-
-  cy.visit("/users");
-
-  cy.getBySel("error-message").should("be.visible");
-  cy.getBySel("retry-button").click();
-
-  cy.wait("@getUsersSuccess");
-  cy.getBySel("user-row").should("have.length", 1);
-});
-```
-
----
-
-_See [core.md](core.md) for foundational patterns: User Flows, Test Structure, and Selectors._
+**Why good:** `times` expresses "fail once, then work" without a stateful handler, and the counter
+assertion sits inside `cy.then()` because everything above it is queued rather than executed.

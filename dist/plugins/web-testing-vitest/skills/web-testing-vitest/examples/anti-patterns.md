@@ -1,73 +1,93 @@
-# Testing - Anti-Patterns
+# Vitest — What Not to Test
 
-> What NOT to test. Reference from [SKILL.md](../SKILL.md).
+> Cases where a passing test buys nothing. Referenced from [SKILL.md](../SKILL.md). See
+> [core.md](core.md) for the patterns that do.
 
 ---
 
-## Don't Test Third-Party Libraries
+## A dependency's own behaviour
 
 ```typescript
-// Bad Example - Testing data fetching library behavior
-test("data fetching hook returns data", () => {
-  const { result } = renderHook(() => useDataFetchingHook(["key"], fetchFn));
-  // Testing the library, not your code
+// Asserts that the library caches — which is the library's own test suite's job.
+it("caches the second call", async () => {
+  const cache = new LruCache({ max: 10 });
+  cache.set("a", 1);
+  expect(cache.get("a")).toBe(1);
 });
 ```
 
 ```typescript
-// Good Example - Test YOUR behavior
-test('displays user data when loaded', async () => {
-  render(<UserProfile />);
-  expect(await screen.findByText('John Doe')).toBeInTheDocument();
+// Asserts what YOUR code does with the library.
+it("looks a rate up once per currency", async () => {
+  const fetchRate = vi.fn().mockResolvedValue(1.1);
+  const convert = createConverter({ fetchRate });
+
+  await convert(10, "EUR");
+  await convert(20, "EUR");
+
+  expect(fetchRate).toHaveBeenCalledOnce();
 });
 ```
 
-**Why bad (first example):** Testing library code wastes time, library already has tests, doesn't verify your application logic
-
-**Why good (second example):** Tests your component's behavior with the library, verifies actual user-facing outcome, focuses on application logic not library internals
+**Why the first is wasted:** it fails only when the dependency is upgraded, and then it reports a
+break in a file that owns none of the behaviour.
 
 ---
 
-## Don't Test TypeScript Guarantees
+## What the type system already refuses
 
 ```typescript
-// Bad Example - TypeScript already prevents this
-test('Button requires children prop', () => {
+it("rejects a missing argument", () => {
   // @ts-expect-error
-  render(<Button />);
+  expect(() => formatCurrency()).toThrow();
 });
 ```
 
-**Why bad:** TypeScript already enforces this at compile time, test adds no value, wastes execution time
+**Why it is wasted:** the call is a compile error, so the only way to reach the assertion is to
+switch type checking off for that line. The test costs run time and asserts nothing about any code
+path a caller can reach.
+
+**The exception:** a boundary that genuinely receives unvalidated input — parsed JSON, argv,
+a request body — where a runtime guard is real behaviour and worth a test.
 
 ---
 
-## Don't Test Implementation Details
+## A private detail rather than the result
 
 ```typescript
-// Bad Example - Testing internal state
-test("counter state increments", () => {
-  const { result } = renderHook(() => useCounter());
-  expect(result.current.count).toBe(1); // Internal detail
+// Pins the internal shape: renaming `items` reddens a test about totals.
+it("stores items on the instance", () => {
+  const cart = new Cart();
+  cart.add({ price: 10, quantity: 1 });
+  expect(cart.items).toHaveLength(1);
 });
 ```
 
 ```typescript
-// Good Example - Test observable behavior
-test('displays incremented count', () => {
-  render(<Counter />);
-  fireEvent.click(screen.getByRole('button', { name: /increment/i }));
-  expect(screen.getByText('Count: 1')).toBeInTheDocument();
+// Pins the observable outcome.
+it("includes the added item in the total", () => {
+  const cart = new Cart();
+  cart.add({ price: 10, quantity: 1 });
+  expect(cart.total()).toBe(10);
 });
 ```
 
-**Why bad (first example):** Testing internal state breaks when refactoring, not testing what users see, fragile and coupled to implementation
-
-**Why good (second example):** Tests what users observe and interact with, resilient to refactoring, verifies actual behavior not implementation
+**Why the first is worse:** it reddens on every refactor that preserves behaviour, which trains
+everyone to update assertions without reading them.
 
 ---
 
-_For more patterns, see:_
+## A test that is mostly mocks
 
-- [core.md](core.md) - E2E and Unit testing essentials
-- [integration.md](integration.md) - Integration tests with network mocking
+Where the file under test needs four `vi.mock()` calls before it can run, the test is asserting that
+the mocks were wired correctly. Move the assertion down to the pure function the module wraps, or up
+to a level where the collaborators are real — see the boundary discussion in
+[integration.md](integration.md).
+
+---
+
+## A snapshot of everything
+
+`toMatchSnapshot()` over a large structure records the current behaviour, correct or not, and its
+diffs are approved unread. Prefer `toMatchInlineSnapshot()` on a small value, or an explicit
+`toStrictEqual` against the fields the test is actually about.

@@ -4,11 +4,12 @@
 
 **Additional Examples:**
 
-- [controlled-components.md](controlled-components.md) - Controller for controlled components
-- [validation.md](validation.md) - Zod resolver integration
-- [arrays.md](arrays.md) - useFieldArray for dynamic forms
-- [performance.md](performance.md) - Performance optimization patterns
-- [wizard.md](wizard.md) - Multi-step wizard forms
+- [controlled-components.md](controlled-components.md) - Controller for components that own their value
+- [validation.md](validation.md) - schema validation through resolver
+- [arrays.md](arrays.md) - useFieldArray for repeatable rows
+- [performance.md](performance.md) - isolated subscriptions and FormStateSubscribe
+- [form-options.md](form-options.md) - values, disabled, the Form component
+- [wizard.md](wizard.md) - multi-step forms
 
 ---
 
@@ -101,7 +102,9 @@ export function LoginForm() {
 }
 ```
 
-**Why good:** TypeScript generics provide type safety, mode: "onBlur" validates only on blur for better UX, aria-invalid and role="alert" ensure accessibility, named constant for MIN_PASSWORD_LENGTH, defaultValues prevent undefined values, isSubmitting disables button during submission
+**Why good:** the generic types every field path and the submit payload, `mode: "onBlur"` holds
+errors back until the user leaves the field, `aria-invalid` with `role="alert"` announces the error
+to a screen reader, and `defaultValues` mounts every input controlled.
 
 ### Bad Example - Missing types and poor patterns
 
@@ -134,6 +137,9 @@ export function LoginForm() {
 }
 ```
 
-**Why bad:** no TypeScript generics means no autocomplete or type checking, mode: "onChange" shows errors while user is still typing which is jarring, magic number 8 is not documented or maintainable, missing aria attributes breaks accessibility, formState.errors destructured incorrectly in newer RHF versions
+**Why bad:** `errors` is destructured off the hook result rather than off `formState`, where it is
+`undefined`, so no error ever renders. Without the generic, `data` is `any` and a mistyped field
+name is accepted. `mode: "onChange"` reports errors while the user is still typing, and the bare
+inputs give a screen reader nothing to announce.
 
 ---

@@ -1,14 +1,14 @@
 # Motion - Layout Animation Examples
 
-> Layout animations and shared element transitions. See [core.md](core.md) for basic patterns.
+> `layout` and `layoutId`, continuing the numbering from [core.md](core.md).
 
-**Prerequisites**: Understand AnimatePresence from [core.md](core.md) Pattern 3 first.
+**Prerequisites:** `AnimatePresence` from [core.md](core.md) Pattern 3.
 
 ---
 
-## Expandable Card
+## Pattern 6: Expandable Card
 
-### Good Example - Card with Animated Expansion
+### Good Example - Card Grown by Its Own Content
 
 ```typescript
 import { motion, AnimatePresence } from "motion/react";
@@ -68,23 +68,27 @@ export const ExpandableCard = ({
 };
 ```
 
-**Why good:** layout="position" on children prevents text distortion, AnimatePresence handles content exit, keyboard accessible with aria-expanded
+**Why good:** `layout` needs no from-height — it measures the card before and after the commit. The
+`layout="position"` on the heading and summary moves them without scaling them, which is what stops
+the type stretching as the card grows. `aria-expanded` carries the state to assistive technology,
+which the animation alone does not.
 
 ---
 
-## Shared Element Transition
+## Pattern 7: Shared Element Between Siblings
 
-### Good Example - Animated Tab Indicator
+### Good Example - Tab Indicator That Travels
 
 ```typescript
 import { motion, LayoutGroup } from "motion/react";
 
-const INDICATOR_SPRING = { type: "spring" as const, stiffness: 500, damping: 35 };
-
-type Tab = {
-  id: string;
-  label: string;
+const INDICATOR_SPRING = {
+  type: "spring" as const,
+  stiffness: 500,
+  damping: 35,
 };
+
+type Tab = { id: string; label: string };
 
 type TabsProps = {
   tabs: Tab[];
@@ -93,7 +97,12 @@ type TabsProps = {
   layoutGroupId?: string;
 };
 
-export const Tabs = ({ tabs, activeId, onTabChange, layoutGroupId }: TabsProps) => {
+export const Tabs = ({
+  tabs,
+  activeId,
+  onTabChange,
+  layoutGroupId,
+}: TabsProps) => {
   return (
     <LayoutGroup id={layoutGroupId}>
       <div role="tablist">
@@ -127,4 +136,6 @@ export const Tabs = ({ tabs, activeId, onTabChange, layoutGroupId }: TabsProps) 
 };
 ```
 
-**Why good:** LayoutGroup isolates layoutId to this component instance, layoutId enables seamless indicator movement, proper ARIA attributes for tabs
+**Why good:** Only one indicator is mounted at a time — the shared `layoutId` is what makes the new
+one animate from where the old one was rather than fading in. `LayoutGroup` scopes that id, so two
+tab strips on one page do not pull each other's indicators across the screen.

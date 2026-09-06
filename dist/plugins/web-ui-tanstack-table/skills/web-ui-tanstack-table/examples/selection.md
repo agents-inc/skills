@@ -142,7 +142,11 @@ export function TaskTable({ tasks }: { tasks: Task[] }) {
 }
 ```
 
-**Why good:** indeterminate checkbox state for partial selection, `getRowId` ensures selection persists across data updates, bulk action bar shows only when items selected, aria-labels for accessibility
+**Why good:** `indeterminate` is a DOM property with no HTML attribute, which is why the select-all
+box sets it through a ref callback rather than a prop — without it, a partial selection reads as
+"none selected". `getRowId` keys the selection map by record id, so it survives sorting, filtering
+and a refetch. Each row checkbox is labelled with the row's own title, since a column of identically
+named checkboxes tells a screen reader user nothing about which row they are on.
 
 ---
 
@@ -156,7 +160,7 @@ const table = useReactTable({
   enableRowSelection: true, // Enable selection
   enableMultiRowSelection: true, // Default: true
   enableSubRowSelection: true, // For hierarchical data
-  getRowId: (row) => row.id, // CRITICAL: stable IDs
+  getRowId: (row) => row.id, // keys the selection map; without it, array position does
 });
 
 // Selection utilities

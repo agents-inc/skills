@@ -5,73 +5,100 @@ description: TanStack Form patterns - useForm, form.Field, validators, arrays, l
 
 # TanStack Form Patterns
 
-> **Quick Guide:** Use `useForm` with `defaultValues` and typed generics. Render fields with `form.Field` using the render-prop `children` pattern. Validation lives in the `validators` prop on both form and field level — use `onChange`, `onBlur`, `onSubmit` (sync) and their `Async` variants. Use `mode="array"` for dynamic field lists with `pushValue`/`removeValue`. Use `onChangeListenTo` for cross-field validation. For app-wide consistency, create a shared `useAppForm` via `createFormHook`. Always provide `defaultValues` — TanStack Form infers types from them.
+> **Quick Guide:** `useForm` takes `defaultValues`, and every field name, value type and the submit
+> payload are inferred from that object. Fields render through `form.Field` with a `children` render
+> prop that supplies `field.state.value`, `field.handleChange` and `field.handleBlur`. Validation
+> lives in the `validators` prop — keyed by event (`onChange`, `onBlur`, `onSubmit`) with an `Async`
+> variant of each, on the field or on the form. `mode="array"` unlocks `pushValue`/`removeValue`,
+> `onChangeListenTo` re-runs a validator when another field changes, and `form.Subscribe` narrows
+> which state changes re-render what.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — a form end to end: fields, typing, submission, reset
+- [examples/validation.md](examples/validation.md) — sync, async and cross-field validators; schema objects in validators
+- [examples/arrays.md](examples/arrays.md) — dynamic field groups with `mode="array"`
+- [examples/composition.md](examples/composition.md) — `createFormHook`, `useAppForm`, listeners
+- [reference.md](reference.md) — validator events, field and form state tables, API methods, framework packages
+
+---
+
+## Which path applies
+
+- **A single form** — `useForm` plus `form.Field` render props, nothing else to set up. Follow
+  [examples/core.md](examples/core.md).
+- **Forms across an app that should behave alike** — `createFormHook` registers shared field and
+  form components once, and `useAppForm` replaces `useForm` at each call site. Follow
+  [examples/composition.md](examples/composition.md).
+- **A framework other than React** — the form core is shared and only the package and the field
+  binding differ; reference.md's Framework Packages table names both for each.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing TanStack Form code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Give `useForm` a `defaultValues` entry for every field.** Field names, value types and the submit
+payload are all inferred from that object, so a field missing from it is a field the types do not
+know about.
 
-**(You MUST provide `defaultValues` to `useForm` — TanStack Form infers field types from them)**
+**Render every field through `form.Field` and its `children` render prop.** The render prop receives
+the value and the handlers explicitly — this library has no field-registration helper and does no
+ref forwarding, so an input wired any other way never joins the form.
 
-**(You MUST use `form.Field` with the `children` render prop — TanStack Form does not use `register` or `Controller`)**
+**Put validation in the `validators` prop, keyed by the event that should run it.** `onChange`,
+`onBlur` and `onSubmit` each have an `Async` counterpart, and the same prop exists on the field and
+on the form.
 
-**(You MUST use the `validators` prop for validation — NOT inline `rules` or external resolver wrappers)**
+**Read `field.state.meta.errors` as an array.** It holds every current error for the field, so
+`.map()` over it or check `.length`; compared against a string it is always unequal.
 
-**(You MUST handle `field.state.meta.errors` as an array — always `.map()` over errors)**
-
-**(You MUST call `form.handleSubmit()` inside the form's `onSubmit` handler with `e.preventDefault()`)**
+**Call `e.preventDefault()` in the form's `onSubmit` before `form.handleSubmit()`.** The library
+does not intercept the native submit, so without it the browser navigates away mid-submission.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** TanStack Form, @tanstack/react-form, @tanstack/vue-form, @tanstack/solid-form, @tanstack/angular-form, @tanstack/lit-form, useForm from tanstack, form.Field, createFormHook, createFormHookContexts, useAppForm, fieldContext, formContext, handleSubmit tanstack, pushValue, removeValue, onChangeListenTo, field.handleChange, field.handleBlur, field.state, formDevtoolsPlugin
+**Auto-detection:** @tanstack/react-form, @tanstack/vue-form, @tanstack/solid-form,
+@tanstack/angular-form, @tanstack/lit-form, @tanstack/form-core, form.Field, form.Subscribe,
+createFormHook, createFormHookContexts, useAppForm, withForm, fieldContext, formContext,
+field.handleChange, field.handleBlur, field.state.meta, pushValue, removeValue, swapValues,
+onChangeListenTo, onBlurListenTo, setErrorMap, formDevtoolsPlugin
 
-**When to use:**
+**Applies to:**
 
-- Building type-safe forms where field types are inferred from `defaultValues`
-- Managing complex validation with sync, async, and cross-field rules
-- Dynamic forms with add/remove field groups (array fields)
-- Multi-framework projects (React, Vue, Solid, Angular, Lit)
-- Projects already using the TanStack ecosystem
+- Form state, validation timing and submission
+- Cross-field rules, where one field's validity depends on another's value
+- Dynamic lists of field groups that add, remove and reorder
+- Sharing field and form components across an app through the factory
+- Forms in Vue, Solid, Angular or Lit as well as React
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Single input without validation (use native state)
-- Server-only forms with server actions (use native form + action)
-- Read-only data display (not a form scenario)
-
----
-
-## Table of Contents
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Basic form, Field component, TypeScript, form submission
-- [examples/validation.md](examples/validation.md) - Sync/async validation, validator adapters, form-level validation
-- [examples/arrays.md](examples/arrays.md) - Dynamic array fields with pushValue/removeValue
-- [examples/composition.md](examples/composition.md) - createFormHook, useAppForm, listeners, side effects
-- [reference.md](reference.md) - API tables, validator events, decision frameworks
+- Authoring the validation schema — a validator accepts any Standard Schema object, and how that
+  schema states its rules is settled by whatever owns it.
+- Rendering and styling the inputs — this library owns no UI; the render prop hands over the value
+  and the handlers, and the markup is yours.
+- Where the initial values came from — `defaultValues` is a plain object, and the form fetches
+  nothing.
 
 ---
 
 <philosophy>
 
-## Philosophy
+The form is headless and its types run on inference. `defaultValues` is the schema of record: field
+names autocomplete from it, `field.state.value` is typed by it, and the `onSubmit` payload matches
+it — without a generic parameter, and without a second type declaration that could drift.
 
-TanStack Form is **headless and type-safe by design**. It owns zero UI — you render every input yourself. The library provides form state, validation orchestration, and field management. Types flow from `defaultValues` through every field name, value, and error — no manual generics required (though you can provide them).
+Validation is bound to events rather than to a mode. Each validator declares when it runs, at the
+level it belongs to, so a cheap format check can sit on `onChange` while the expensive uniqueness
+check waits for `onBlurAsync` on the same field.
 
-**Core Principles:**
-
-1. **Type inference from defaults** - `defaultValues` defines the form shape; field names and values are fully typed
-2. **Headless** - Zero UI opinions; works with any component library or native inputs
-3. **Validation-event-driven** - Validators attach to specific events (`onChange`, `onBlur`, `onSubmit`) per field or per form
-4. **Framework-agnostic core** - Same mental model across React, Vue, Solid, Angular, and Lit
-5. **Composition via factory** - `createFormHook` shares field/form components across an app
+State is read by subscription. `form.Subscribe` and `useStore` take a selector and re-render only
+when what the selector returns changes, so reading `form.state` directly in a component body opts
+out of the whole design.
 
 </philosophy>
 
@@ -79,15 +106,13 @@ TanStack Form is **headless and type-safe by design**. It owns zero UI — you r
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic useForm + form.Field
+### Pattern 1: useForm and form.Field
 
-Every form starts with `useForm` and renders fields via `form.Field`. The `children` render prop receives the field API with `state`, `handleChange`, and `handleBlur`.
+The render prop is the whole field API — value in, handlers out, nothing implicit.
 
 ```tsx
-import { useForm } from "@tanstack/react-form";
-
 const form = useForm({
   defaultValues: { name: "", email: "" },
   onSubmit: async ({ value }) => {
@@ -95,36 +120,35 @@ const form = useForm({
   },
 });
 
-return (
-  <form
-    onSubmit={(e) => {
-      e.preventDefault();
-      form.handleSubmit();
-    }}
-  >
-    <form.Field
-      name="email"
-      children={(field) => (
-        <input
-          value={field.state.value}
-          onBlur={field.handleBlur}
-          onChange={(e) => field.handleChange(e.target.value)}
-        />
-      )}
-    />
-  </form>
-);
+<form
+  onSubmit={(e) => {
+    e.preventDefault();
+    form.handleSubmit();
+  }}
+>
+  <form.Field
+    name="email"
+    children={(field) => (
+      <input
+        value={field.state.value}
+        onBlur={field.handleBlur}
+        onChange={(e) => field.handleChange(e.target.value)}
+      />
+    )}
+  />
+</form>;
 ```
 
-**Key difference from other form libraries:** No `register`, no `Controller`, no `ref` forwarding. You always use `field.handleChange` and `field.state.value` explicitly.
+`onBlur={field.handleBlur}` is what marks the field touched — omit it and `isTouched` stays false
+and any `onBlur` validator never runs.
 
-See [examples/core.md](examples/core.md) for complete form with error display and accessibility.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Field-Level Validation
+### Pattern 2: Field-level validators
 
-Validators are functions on the `validators` prop. Sync validators return a string (error) or `undefined` (valid). Async validators use `onChangeAsync`, `onBlurAsync`, `onSubmitAsync`.
+A sync validator returns a message string, or `undefined` when the value passes.
 
 ```tsx
 <form.Field
@@ -132,90 +156,70 @@ Validators are functions on the `validators` prop. Sync validators return a stri
   validators={{
     onChange: ({ value }) => (value < 13 ? "Must be 13 or older" : undefined),
     onBlurAsync: async ({ value }) => {
-      const exists = await checkAge(value);
-      return exists ? undefined : "Age not valid on server";
-    },
-  }}
-  children={(field) => (
-    <div>
-      <input
-        type="number"
-        value={field.state.value}
-        onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.valueAsNumber)}
-      />
-      {field.state.meta.errors.map((err) => (
-        <em key={err} role="alert">
-          {err}
-        </em>
-      ))}
-    </div>
-  )}
-/>
-```
-
-**Sync-first gating:** When both `onBlur` and `onBlurAsync` exist, the async validator only runs if the sync validator passes. Same for `onChange`/`onChangeAsync`.
-
-See [examples/validation.md](examples/validation.md) for all validation patterns and adapter integration.
-
----
-
-### Pattern 3: Linked Fields (Cross-Field Validation)
-
-Use `onChangeListenTo` to re-run a field's validator when another field changes. This solves the stale-validation problem (e.g., confirm password).
-
-```tsx
-<form.Field
-  name="confirm_password"
-  validators={{
-    onChangeListenTo: ["password"],
-    onChange: ({ value, fieldApi }) => {
-      if (value !== fieldApi.form.getFieldValue("password")) {
-        return "Passwords do not match";
-      }
-      return undefined;
+      const ok = await checkAge(value);
+      return ok ? undefined : "Age not valid on server";
     },
   }}
   children={(field) => (/* ... */)}
 />
 ```
 
-**Why this matters:** Without `onChangeListenTo`, changing the `password` field does not re-validate `confirm_password`. The error stays stale until the user interacts with the confirm field again.
+Sync gates async: when `onBlur` and `onBlurAsync` are both present, the async one runs only after
+the sync one passes — so a network call never fires on a value already known to be invalid.
 
-See [examples/validation.md](examples/validation.md) Pattern 4 for a complete linked fields example.
+Full code: [examples/validation.md](examples/validation.md)
 
 ---
 
-### Pattern 4: Array Fields
+### Pattern 3: Linked fields
 
-Use `mode="array"` on `form.Field` to get `pushValue`, `removeValue`, `swapValues`, `moveValue`, and `insertValue` for dynamic field groups.
+`onChangeListenTo` names the fields whose changes should re-run this field's validators.
+
+```tsx
+<form.Field
+  name="confirm_password"
+  validators={{
+    onChangeListenTo: ["password"],
+    onChange: ({ value, fieldApi }) =>
+      value !== fieldApi.form.getFieldValue("password")
+        ? "Passwords do not match"
+        : undefined,
+  }}
+  children={(field) => (/* ... */)}
+/>
+```
+
+Without it, editing `password` leaves the error on `confirm_password` showing the verdict from the
+old comparison until the user touches the confirm field again.
+
+Full code: [examples/validation.md](examples/validation.md)
+
+---
+
+### Pattern 4: Array fields
+
+`mode="array"` gives the field `pushValue`, `removeValue`, `insertValue`, `swapValues` and
+`moveValue`. Nested fields address items by index.
 
 ```tsx
 <form.Field
   name="hobbies"
   mode="array"
-  children={(hobbiesField) => (
+  children={(hobbies) => (
     <div>
-      {hobbiesField.state.value.map((_, i) => (
-        <div key={i}>
-          <form.Field
-            name={`hobbies[${i}].name`}
-            children={(field) => (
-              <input
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-            )}
-          />
-          <button type="button" onClick={() => hobbiesField.removeValue(i)}>
-            Remove
-          </button>
-        </div>
+      {hobbies.state.value.map((_, i) => (
+        <form.Field
+          key={i}
+          name={`hobbies[${i}].name`}
+          children={(field) => (
+            <input
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+            />
+          )}
+        />
       ))}
-      <button
-        type="button"
-        onClick={() => hobbiesField.pushValue({ name: "" })}
-      >
+      <button type="button" onClick={() => hobbies.pushValue({ name: "" })}>
         Add hobby
       </button>
     </div>
@@ -223,15 +227,14 @@ Use `mode="array"` on `form.Field` to get `pushValue`, `removeValue`, `swapValue
 />
 ```
 
-**Important:** `pushValue` requires a complete object matching the array item shape. Partial objects will cause type errors.
-
-See [examples/arrays.md](examples/arrays.md) for a complete dynamic list form.
+Full code: [examples/arrays.md](examples/arrays.md)
 
 ---
 
-### Pattern 5: Form-Level Validation
+### Pattern 5: Form-level validators
 
-Validators on `useForm` apply to the entire form. Use `onSubmitAsync` for server-side validation that returns field-specific errors.
+Validators on `useForm` see every value at once, which is where server-side validation belongs
+because it can attribute errors back to individual fields.
 
 ```tsx
 const form = useForm({
@@ -239,85 +242,74 @@ const form = useForm({
   validators: {
     onSubmitAsync: async ({ value }) => {
       const errors = await validateOnServer(value);
-      if (errors) {
-        return {
-          form: "Submission failed",
-          fields: {
-            username: errors.username,
-            age: errors.age,
-          },
-        };
-      }
-      return null;
+      if (!errors) return null;
+      return {
+        form: "Submission failed",
+        fields: { username: errors.username, age: errors.age },
+      };
     },
   },
 });
 ```
 
-**Return shape:** `{ form?: string, fields: Record<string, string> }` — the `form` key is optional for form-level errors, `fields` maps field names to their error messages. Return `null` when valid.
+The return shape is `{ form?: string, fields: Record<string, string> }`, and `null` means valid.
+This differs from a field validator, which returns a bare string.
 
-See [examples/validation.md](examples/validation.md) Pattern 3 for complete form-level validation.
+Full code: [examples/validation.md](examples/validation.md)
 
 ---
 
-### Pattern 6: createFormHook (App-Wide Composition)
+### Pattern 6: createFormHook
 
-Use `createFormHook` to share custom field components and form components across the app. This eliminates boilerplate and enforces consistency.
+The factory registers field and form components once, so each form reaches them as `form.AppField`
+and `form.AppForm` instead of repeating the render-prop markup.
 
 ```tsx
-import { createFormHookContexts, createFormHook } from "@tanstack/react-form";
-
 export const { fieldContext, formContext, useFieldContext } =
   createFormHookContexts();
 
 export const { useAppForm, withForm } = createFormHook({
   fieldContext,
   formContext,
-  fieldComponents: {
-    TextField: TextFieldComponent,
-    SelectField: SelectFieldComponent,
-  },
-  formComponents: {
-    SubmitButton: SubmitButtonComponent,
-  },
+  fieldComponents: { TextField, SelectField },
+  formComponents: { SubmitButton },
 });
 ```
 
-**Usage:** `useAppForm` accepts all `useForm` options. Registered `fieldComponents` and `formComponents` are available on the returned form instance: `form.AppField` for custom field components, `form.AppForm` for form-level components.
+`useAppForm` accepts everything `useForm` does.
 
-See [examples/composition.md](examples/composition.md) for the full factory setup and custom component patterns.
+Full code: [examples/composition.md](examples/composition.md)
 
 ---
 
-### Pattern 7: Listeners (Side Effects)
+### Pattern 7: Listeners
 
-Listeners react to field events and perform side effects like resetting related fields. Use the `listeners` prop on `form.Field`.
+Listeners react to a field event and cause an effect. They return nothing — a validator is what
+returns errors.
 
 ```tsx
 <form.Field
   name="country"
   listeners={{
-    onChange: ({ value }) => {
-      form.setFieldValue("province", "");
-    },
+    onChange: () => form.setFieldValue("province", ""),
   }}
   children={(field) => (/* ... */)}
 />
 ```
 
-**Available events:** `onChange`, `onBlur`, `onMount`, `onSubmit`. Listeners are for side effects only — they do not return validation errors.
+Available events: `onChange`, `onBlur`, `onMount`, `onSubmit`.
 
-See [examples/composition.md](examples/composition.md) Pattern 3 for a complete country/province cascade.
+Full code: [examples/composition.md](examples/composition.md)
 
 ---
 
-### Pattern 8: form.Subscribe for Reactive UI
+### Pattern 8: form.Subscribe
 
-Use `form.Subscribe` to reactively render UI based on form state without re-rendering the entire form. Takes a `selector` to pick specific state.
+The `selector` decides what re-renders. Narrow it to the state actually rendered.
 
 ```tsx
 <form.Subscribe
-  selector={(state) => [state.canSubmit, state.isSubmitting]}
+  selector={(state) => [state.canSubmit, state.isSubmitting] as const}
   children={([canSubmit, isSubmitting]) => (
     <button type="submit" disabled={!canSubmit || isSubmitting}>
       {isSubmitting ? "Submitting..." : "Submit"}
@@ -326,7 +318,7 @@ Use `form.Subscribe` to reactively render UI based on form state without re-rend
 />
 ```
 
-**Why this matters:** Without `form.Subscribe`, reading `form.state` directly causes the parent component to re-render on every state change. The selector narrows the subscription.
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -334,52 +326,35 @@ Use `form.Subscribe` to reactively render UI based on form state without re-rend
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `register` or `Controller` patterns — TanStack Form uses `form.Field` with `children` render prop, not register/Controller
-- Missing `defaultValues` in `useForm` — types cannot be inferred, fields start as `undefined`
-- Calling `form.handleSubmit()` without `e.preventDefault()` — causes page reload
-- Reading `form.state` directly in the component body — causes full re-render on every change; use `form.Subscribe` or `useStore`
+- `form.handleSubmit()` without `e.preventDefault()` — the browser submits the form natively and the
+  page reloads mid-submission.
+- `defaultValues` missing a field — its `field.state.value` is `undefined`, the input mounts
+  uncontrolled, and the field's type is unknown.
+- `field.state.meta.errors` compared as a string — it is an array, so the comparison is always false
+  and the message never renders. `.map()` over it.
+- A partial object handed to `pushValue` — it does not match the array's element type, and the
+  absent keys leave their inputs uncontrolled.
+- An error thrown inside `onSubmit` — `form.handleSubmit()` does not catch it. Catch inside the
+  callback and surface it with `form.setErrorMap()`.
+- Dot notation for an array item — the field path is `items[0].name`, and `items.0.name` addresses
+  nothing.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using `onChange` validator for expensive checks — use `onChangeAsync` with debounce or `onBlurAsync` instead
-- Providing partial objects to `pushValue` in array fields — must provide complete objects matching the array item type
-- Not using `onChangeListenTo` for cross-field validation — related field errors go stale
-- Wrapping `form.handleSubmit()` in another async function without error handling — `handleSubmit` does not catch errors thrown in `onSubmit`
+- `form.state` read in a component body subscribes to every state change. `form.Subscribe` with a
+  selector, or `useStore(form.store, selector)`, narrows it.
+- `form.Subscribe` with no `selector` subscribes to everything, which is the same cost.
+- A sync validator failing stops its async counterpart from running at all — deliberate, and it means
+  an async validator alone carries no cheap pre-check.
+- A form-level validator returns `{ form?, fields }` while a field validator returns a string — the
+  field shape returned from the form level is ignored in silence.
+- Components registered through `createFormHook` live on `form.AppField` and `form.AppForm`;
+  `form.Field` still exists and still takes a plain render prop.
 
-**Gotchas & Edge Cases:**
-
-- `field.state.meta.errors` is always an array — never compare with `===`, always `.map()` or `.length`
-- Sync validators gate async validators — if `onChange` fails, `onChangeAsync` does not run
-- Form-level `onSubmitAsync` validator returns `{ fields: { fieldName: "error" } }` — not the same shape as field-level validators
-- `field.state.meta.isTouched` only becomes `true` after `handleBlur` fires — not on first `handleChange`
-- Array field access uses bracket notation: `name={`items[${i}].name`}` — not dot notation like `items.${i}.name`
-- `form.Subscribe` uses a `selector` prop to pick state — passing no selector subscribes to everything
-- `createFormHook` components are available as `form.AppField` and `form.AppForm` — not on `form.Field`
+Worked before/after code for the most common of these is in [reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST provide `defaultValues` to `useForm` — TanStack Form infers field types from them)**
-
-**(You MUST use `form.Field` with the `children` render prop — TanStack Form does not use `register` or `Controller`)**
-
-**(You MUST use the `validators` prop for validation — NOT inline `rules` or external resolver wrappers)**
-
-**(You MUST handle `field.state.meta.errors` as an array — always `.map()` over errors)**
-
-**(You MUST call `form.handleSubmit()` inside the form's `onSubmit` handler with `e.preventDefault()`)**
-
-**Failure to follow these rules will break form state, lose type safety, and produce incorrect validation behavior.**
-
-</critical_reminders>

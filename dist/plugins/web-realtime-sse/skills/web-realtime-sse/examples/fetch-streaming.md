@@ -1,13 +1,6 @@
 # SSE Examples - Fetch Streaming Patterns
 
-> Fetch-based streaming for Server-Sent Events when EventSource limitations apply. See [SKILL.md](../SKILL.md) for concepts.
-
-**When to use fetch streaming instead of EventSource:**
-
-- Need to send custom HTTP headers (Authorization, custom headers)
-- Need to use POST or other HTTP methods
-- Need request body (JSON payload, etc.)
-- Need more control over connection lifecycle
+> Fetch-based streaming for Server-Sent Events, for what `EventSource` cannot do: custom headers, a POST body, or cancellation you control. Everything it gave you for free — reconnection, `Last-Event-ID`, field parsing — is built by hand here. See [SKILL.md](../SKILL.md) for concepts and [core.md](core.md) for `EventSource` itself.
 
 ---
 
@@ -170,7 +163,7 @@ export { parseSSEMessage, type SSEParsedMessage };
 
 ```typescript
 // ✅ Good Example - Parse SSE stream
-import { parseSSEMessage } from "./utils/sse-parser";
+import { parseSSEMessage, type SSEParsedMessage } from "./utils/sse-parser";
 
 async function* parseSSEStream(
   url: string,
@@ -183,16 +176,25 @@ async function* parseSSEStream(
 
 async function consumeParsedStream() {
   for await (const message of parseSSEStream(SSE_URL)) {
+    if (!message.data) continue;
+
+    let payload: unknown;
+    try {
+      payload = JSON.parse(message.data);
+    } catch {
+      continue; // one malformed message must not end the whole stream
+    }
+
     if (message.event === "notification") {
-      handleNotification(JSON.parse(message.data));
-    } else if (message.data) {
-      handleDefaultMessage(JSON.parse(message.data));
+      handleNotification(payload);
+    } else {
+      handleDefaultMessage(payload);
     }
   }
 }
 ```
 
-**Why good:** Handles all SSE fields (data, event, id, retry), supports multi-line data, handles comments (keep-alive), proper field parsing with optional space
+**Why good:** Handles every SSE field, joins multi-line data, skips keep-alive comments, and strips the optional space after the colon. Parsing inside a `try` keeps one malformed payload from ending the loop.
 
 ---
 
@@ -227,6 +229,7 @@ async function createAuthenticatedSSEStream(
 // Usage with token refresh
 class AuthenticatedSSEClient {
   private abortController: AbortController | null = null;
+  private retriedAfterAuthFailure = false;
   private url: string;
   private getToken: () => Promise<string>;
   private onMessage: (message: SSEParsedMessage) => void;
@@ -254,23 +257,25 @@ class AuthenticatedSSEClient {
       });
 
       for await (const message of stream) {
+        this.retriedAfterAuthFailure = false;
         this.onMessage(message);
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         console.log("SSE stream aborted");
       } else if (error instanceof Error && error.message.includes("401")) {
-        // Token expired - refresh and retry
-        await this.reconnectWithFreshToken();
+        await this.retryWithFreshToken(error);
       } else {
         throw error;
       }
     }
   }
 
-  private async reconnectWithFreshToken(): Promise<void> {
-    console.log("Token expired, reconnecting...");
-    await this.connect();
+  private async retryWithFreshToken(error: Error): Promise<void> {
+    // One retry only — a 401 that survives a fresh token is not a stale token
+    if (this.retriedAfterAuthFailure) throw error;
+    this.retriedAfterAuthFailure = true;
+    await this.connect(); // connect() calls getToken() again at the top
   }
 
   disconnect(): void {
@@ -282,7 +287,7 @@ class AuthenticatedSSEClient {
 export { AuthenticatedSSEClient };
 ```
 
-**Why good:** Supports custom Authorization header (impossible with EventSource), AbortController enables clean cancellation, token refresh on 401, async token getter supports refresh tokens
+**Why good:** Carries an `Authorization` header, which `EventSource` cannot. `AbortController` cancels cleanly, the async token getter supports refresh tokens, and the single-retry guard stops a permanently rejected token from looping forever.
 
 ---
 
@@ -454,6 +459,7 @@ class FetchSSEClient {
   private lastEventId: string | null = null;
   private reconnectAttempts = 0;
   private isConnecting = false;
+  private intentionalClose = false;
   private url: string;
   private onMessage: (message: SSEParsedMessage) => void;
   private onStatusChange?: (status: string) => void;
@@ -472,6 +478,7 @@ class FetchSSEClient {
     if (this.isConnecting) return;
 
     this.isConnecting = true;
+    this.intentionalClose = false;
     this.abortController = new AbortController();
     this.onStatusChange?.("connecting");
 
@@ -544,6 +551,8 @@ class FetchSSEClient {
   private async handleDisconnect(reason: string): Promise<void> {
     console.log("Disconnected:", reason);
 
+    if (this.intentionalClose) return;
+
     if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       this.onStatusChange?.("failed");
       return;
@@ -559,12 +568,14 @@ class FetchSSEClient {
 
     await new Promise((resolve) => setTimeout(resolve, delay));
 
-    if (!this.abortController?.signal.aborted) {
+    // Re-checked after the wait: disconnect() may have been called during it
+    if (!this.intentionalClose) {
       this.connect();
     }
   }
 
   disconnect(): void {
+    this.intentionalClose = true;
     this.abortController?.abort();
     this.abortController = null;
     this.onStatusChange?.("disconnected");
@@ -574,7 +585,7 @@ class FetchSSEClient {
 export { FetchSSEClient };
 ```
 
-**Why good:** Manual reconnection with exponential backoff, Last-Event-ID header for message recovery, AbortController for clean cancellation, status callbacks, retry limit prevents infinite loops
+**Why good:** Exponential backoff with a retry ceiling, `Last-Event-ID` for message recovery, `AbortController` for clean cancellation, and status callbacks for the UI. The `intentionalClose` flag is what stops a `disconnect()` during the backoff wait from reconnecting anyway — the aborted signal alone cannot say that, because `disconnect()` drops the controller.
 
 ---
 
@@ -707,6 +718,7 @@ export function useFetchSSE(options: UseFetchSSEOptions): UseFetchSSEReturn {
 // components/streaming-response.tsx
 import { useState, useCallback } from "react";
 import { useFetchSSE } from "../hooks/use-fetch-sse";
+import type { SSEParsedMessage } from "../utils/sse-parser";
 
 const API_URL = "/api/generate";
 

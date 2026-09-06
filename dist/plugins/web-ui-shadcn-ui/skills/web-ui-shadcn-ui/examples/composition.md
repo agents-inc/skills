@@ -1,15 +1,17 @@
 # shadcn/ui - Composition Examples
 
-> Extending components and responsive patterns.
+> Extending an owned component, and switching between two components on viewport width. See
+> [core.md](core.md) for `cn()` and [dialogs.md](dialogs.md) for the overlays used here.
 
 ---
 
-## Extended Button with Loading State
+## Adding a Prop to an Owned Component
 
-### Adding isLoading Prop to Button Component (React 19)
+Behaviour every call site should get belongs in the component source. Here `isLoading` both shows a
+spinner and disables the button, so no caller has to remember the pairing.
 
 ```tsx
-// components/ui/button.tsx (extended for React 19)
+// components/ui/button.tsx
 import * as React from "react";
 import { Slot } from "radix-ui";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -38,10 +40,7 @@ const buttonVariants = cva(
         icon: "h-10 w-10",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "default", size: "default" },
   },
 );
 
@@ -50,10 +49,9 @@ export interface ButtonProps
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
-  isLoading?: boolean;
+  isLoading?: boolean; // added
 }
 
-// React 19: No forwardRef needed - ref is a regular prop
 function Button({
   className,
   variant,
@@ -83,20 +81,23 @@ function Button({
 export { Button, buttonVariants };
 ```
 
-### Usage
-
 ```tsx
-<Button isLoading>Saving...</Button>
+<Button isLoading>Saving…</Button>
 <Button isLoading={isSubmitting}>Submit</Button>
 ```
 
-**Why good:** Loading state built into component, disabled while loading prevents double-submission, Spinner component (`npx shadcn@latest add spinner`) provides visual feedback
+**Why good:** `disabled || isLoading` is the whole point — a loading button that stays clickable
+submits twice, and leaving that to each call site guarantees one of them forgets. The variant map is
+untouched, so the addition survives a later `--diff` against the registry as a readable change rather
+than a rewrite. `buttonVariants` stays exported because other components compose the same classes
+onto non-button elements.
 
 ---
 
-## Responsive Dialog/Drawer
+## One Overlay on Wide Screens, Another on Narrow
 
-### Dialog on Desktop, Drawer on Mobile
+A centred dialog is wrong on a phone and a bottom sheet is wrong on a desktop. Render whichever the
+viewport calls for, with the same content in both.
 
 ```tsx
 "use client";
@@ -170,8 +171,6 @@ export function ResponsiveDialog({ children }: { children: React.ReactNode }) {
 }
 ```
 
-### useMediaQuery Hook
-
 ```tsx
 // hooks/use-media-query.ts
 import { useEffect, useState } from "react";
@@ -181,16 +180,18 @@ export function useMediaQuery(query: string): boolean {
 
   useEffect(() => {
     const media = window.matchMedia(query);
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
-    const listener = () => setMatches(media.matches);
+    setMatches(media.matches);
+
+    const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
     media.addEventListener("change", listener);
     return () => media.removeEventListener("change", listener);
-  }, [matches, query]);
+  }, [query]);
 
   return matches;
 }
 ```
 
-**Why good:** Dialog on desktop for quick interaction, Drawer on mobile for touch-friendly UI, same content rendered in both, hook encapsulates media query logic
+**Why good:** `open` lives in the wrapper rather than in either branch, so a viewport crossing the
+breakpoint while the overlay is open keeps it open in the other form. The hook starts at `false` and
+corrects itself in the effect, which is what makes it safe to render on a server that has no
+`matchMedia` — and why the first paint is always the narrow branch.

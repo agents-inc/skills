@@ -4,6 +4,14 @@
 
 ---
 
+## Packages and Entry Points
+
+- **`react-router`** — everything in this document, plus a non-DOM `RouterProvider` for Node and test environments.
+- **`react-router/dom`** — the DOM-specific exports. Take `RouterProvider` from here: this is the copy that wires up `react-dom`'s `flushSync`.
+- **`react-router-dom`** — deprecated in v7, where it only re-exports `react-router`. Still installable, so a stale import keeps working and gives no signal that it is wrong; v8 deletes the package, and that is when it breaks.
+
+---
+
 ## Route Object Properties
 
 Properties available on route objects passed to `createBrowserRouter`.
@@ -105,6 +113,8 @@ type ActionFunction = (args: ActionFunctionArgs) => Promise<any> | any;
 | `formAction`    | `string \| undefined`                 | Action URL being submitted to             |
 | `formData`      | `FormData \| undefined`               | Form data being submitted                 |
 
+**On `reset()`:** v7 ships it as `fetcher.unstable_reset()`. The unprefixed name does not exist yet, so call the prefixed one and expect to rename it when the API settles.
+
 ---
 
 ## Components
@@ -167,6 +177,7 @@ type ActionFunction = (args: ActionFunctionArgs) => Promise<any> | any;
 | Option                    | Type                          | Purpose                                                  |
 | ------------------------- | ----------------------------- | -------------------------------------------------------- |
 | `basename`                | `string`                      | Base path prefix for all routes                          |
+| `future`                  | `FutureConfig`                | Opt into behaviour slated for the next major             |
 | `hydrationData`           | `HydrationData`               | Server-rendered data for SSR hydration                   |
 | `getContext`              | `() => RouterContextProvider` | Context provided to loaders, actions, middleware (v7.9+) |
 | `patchRoutesOnNavigation` | `PatchFunction`               | Lazily add routes on navigation (fog of war)             |

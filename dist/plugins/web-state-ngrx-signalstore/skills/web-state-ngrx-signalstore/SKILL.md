@@ -5,410 +5,289 @@ description: NgRx SignalStore patterns for Angular state management. Use when ma
 
 # NgRx SignalStore Patterns
 
-> **Quick Guide:** Use NgRx SignalStore for reactive client state in Angular 17+. Compose stores with `withState`, `withComputed`, `withMethods`. Use `patchState` for immutable updates. Use `withEntities` for collections. NEVER use traditional NgRx patterns (actions, reducers, effects) in new SignalStore code.
+> **Quick Guide:** A SignalStore is an Angular service assembled from features — `withState`, `withComputed`, `withMethods`, `withHooks` — applied in that order, since each one sees only what came before it. Every update goes through `patchState`; state is protected from outside writes from v18 and deep-frozen in development from v19, which is why a `FormGroup` or any other mutable object belongs in `withProps` rather than in state.
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - signalStore, withState, withComputed, withMethods, withProps
-- [examples/entities.md](examples/entities.md) - withEntities, CRUD operations, prependEntity/upsertEntity (v20+)
-- [examples/effects.md](examples/effects.md) - rxMethod, signalMethod (v19+), side effects
-- [examples/features.md](examples/features.md) - signalStoreFeature, custom features, DevTools
-- [examples/testing.md](examples/testing.md) - Unit tests, unprotected(), mocking strategies
-- [examples/migration.md](examples/migration.md) - Migration from traditional NgRx
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, red flags
+- [examples/core.md](examples/core.md) — `signalStore`, `withState`, `withComputed`, `withMethods`, `withProps`, DI and component-scoped stores
+- [examples/entities.md](examples/entities.md) — `withEntities`, the CRUD updaters, `prependEntity` / `upsertEntity` (v20+)
+- [examples/effects.md](examples/effects.md) — `rxMethod`, `signalMethod` (v19+), side effects
+- [examples/features.md](examples/features.md) — `signalStoreFeature`, custom features, call state, DevTools
+- [examples/testing.md](examples/testing.md) — unit tests, `unprotected()`, mocking strategies
+- [examples/migration.md](examples/migration.md) — migrating from actions, reducers and effects
+- [reference.md](reference.md) — comparison tables, anti-pattern code, TypeScript recipes, migration steps
+
+---
+
+## Which path applies
+
+- **A store scoped to the whole app** — `signalStore({ providedIn: "root" })`; follow [examples/core.md](examples/core.md).
+- **A store scoped to a component** — listed in the component's `providers`, so it is destroyed with the component and its `rxMethod` subscriptions go with it; follow [examples/core.md](examples/core.md).
+- **A collection keyed by id** — `withEntities` rather than an array in state; follow [examples/entities.md](examples/entities.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Managing State with NgRx SignalStore
+## Before writing SignalStore code
 
-**(You MUST use `patchState()` for ALL state updates - NEVER mutate state directly)**
+**Update state through `patchState()`.** It produces a new state object and notifies the signals; assigning into the existing one changes a value nothing is watching — and from v18 the state is protected, so the assignment is rejected outright.
 
-**(You MUST wrap async operations in `rxMethod()` from `@ngrx/signals/rxjs-interop` for RxJS integration)**
+**Order the features so each one has what it needs.** A feature can only see members declared before it, so `withState` precedes `withComputed`, which precedes the `withMethods` that reads it.
 
-**(You MUST use `withEntities()` from `@ngrx/signals/entities` for entity collections - NOT arrays in state)**
+**Hold collections in `withEntities()`.** It maintains an `entityMap` and an `ids` array, giving lookup by id in constant time and the CRUD updaters; an array in state gives a scan per lookup and update logic written by hand.
 
-**(You MUST use named exports ONLY - NO default exports in any store files)**
+**Put mutable objects in `withProps()`, not in state.** From v19 development builds freeze state recursively, so a `FormGroup` or a class instance stored there throws on its first internal write.
 
-**(You MUST use named constants for ALL numbers - NO magic numbers in state code)**
+**Drive cancellable async through `rxMethod()`.** It ties the subscription to the store's lifetime and gives `switchMap` somewhere to live, which is what makes a superseded request stop rather than land late.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** NgRx SignalStore, signalStore, withState, withComputed, withMethods, patchState, withEntities, rxMethod, signalStoreFeature, @ngrx/signals
+**Auto-detection:** `signalStore`, `signalStoreFeature`, `withState`, `withComputed`, `withMethods`, `withHooks`, `withProps`, `withEntities`, `withFeature`, `withLinkedState`, `patchState`, `rxMethod`, `signalMethod`, `entityConfig`, `unprotected`, `@ngrx/signals`
 
-**When to use:**
+**Applies to:**
 
-- Managing reactive client state in Angular 17+ applications
-- Building composable, reusable store features
-- Handling entity collections with CRUD operations
-- Integrating RxJS operators for side effects
-- Applications requiring fine-grained reactivity with Angular Signals
+- Composing a store out of features, and the order they go in
+- State updates, computed values and entity collections
+- Side effects, whether they need RxJS operators or not
+- Reusable features, lifecycle hooks and call-state tracking
+- Testing a store, and moving one over from actions and reducers
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Store creation with `signalStore()` and `providedIn` options
-- State, computed, and methods composition
-- Entity management with `withEntities`
-- RxJS integration with `rxMethod` and signal-only `signalMethod`
-- Custom features with `signalStoreFeature` and context-aware `withFeature` (v20+)
-- Derived reactive state with `withLinkedState` (v20+)
-- Call state patterns (loading, loaded, error)
-
-**When NOT to use:**
-
-- Server/API data as primary source (use HTTP services with rxMethod for caching)
-- Simple component-local state (use Angular signals directly)
-- Projects still on Angular < 17 (requires signals)
-- Teams unfamiliar with functional composition patterns
+- Fetching over the network — the request itself belongs to a service; this skill covers holding, deriving and cancelling around it
+- Values one component reads — a plain signal in the component is less machinery
+- Filters, search and pagination — those belong in the route's query, where they survive a reload and can be shared
 
 ---
 
 <philosophy>
 
-## Philosophy
+A store is a list of features applied left to right, each one adding members to the store the next one receives. That is the whole model: no actions, no reducers, no selectors, and no registry — the store's type is the accumulated result of the features, so a member that is not there is a compile error rather than an `undefined`.
 
-NgRx SignalStore is a lightweight, functional state management solution built on Angular Signals. It replaces traditional NgRx patterns (actions, reducers, effects, selectors) with a composable, feature-based approach that eliminates boilerplate while maintaining predictability.
-
-**Core Principles:**
-
-1. **Functional Composition** - Build stores by composing features like `withState`, `withComputed`, `withMethods`
-2. **Signal-Based Reactivity** - Leverage Angular's fine-grained reactivity for optimal performance
-3. **Immutable Updates** - Use `patchState()` for predictable state transitions
-4. **Extensibility** - Create custom features with `signalStoreFeature()` for reuse across stores
-
-**Key Architecture Decisions:**
-
-1. **`signalStore()`** creates a fully typed store as an injectable Angular service
-2. **`patchState()`** ensures immutable updates without Immer dependency
-3. **`withEntities()`** provides standardized entity management (normalized `ids`/`entityMap` structure with built-in CRUD updaters)
-4. **`rxMethod()`** bridges Angular Signals with RxJS for complex async flows
-5. **Protected state** (v18+) prevents external mutations by default; v19+ applies deep freeze recursively
-
-**State Ownership:**
-
-| State Type            | Solution                 | Reason                               |
-| --------------------- | ------------------------ | ------------------------------------ |
-| Server/API data       | HTTP services + rxMethod | Caching in store, fetch via services |
-| Shared client state   | SignalStore              | Reactivity, composition, DevTools    |
-| Component-local state | Angular signals          | Simpler, no overhead                 |
-| URL state (filters)   | Router query params      | Shareable, bookmarkable              |
+Two consequences follow. The composition is linear, so ordering is semantic rather than stylistic — a `withComputed` placed above the `withState` it reads cannot see it. And a store is an Angular service, so its lifetime is a DI question: `providedIn: "root"` for one instance, a component's `providers` for one per component, destroyed with it.
 
 </philosophy>
 
 ---
 
-<patterns>
+<decision_framework>
 
-## Core Patterns
+### withState or withEntities
 
-### Pattern 1: Basic Store with signalStore
+```
+Is it a collection of items with unique ids?
+├─ NO → withState
+└─ YES → Are items looked up or updated individually?
+    ├─ YES → withEntities — entityMap for O(1) reads, updaters for writes
+    └─ NO  → withState with an array, if it is only ever read in bulk
+```
 
-Create stores using `signalStore()` with `withState`, `withComputed`, and `withMethods`.
+### withState or withProps
 
-#### Feature Ordering
+```
+Does the value participate in reactivity?
+├─ YES → withState — signals, patchState, and the dev-mode freeze
+└─ NO → withProps — services, subjects, form groups, anything that mutates itself
+```
 
-Features execute in order. State features must come first:
+### rxMethod or signalMethod
 
-1. `withState()` - Define state
-2. `withComputed()` - Derived values from state
-3. `withMethods()` - Actions that update state
-4. `withHooks()` - Lifecycle hooks (onInit, onDestroy)
+|                                         | `rxMethod`                        | `signalMethod`   |
+| --------------------------------------- | --------------------------------- | ---------------- |
+| Needs RxJS                              | yes                               | no               |
+| Operators — `debounceTime`, `switchMap` | yes                               | no               |
+| Superseded calls cancelled              | built in                          | yours to handle  |
+| Accepts                                 | `T`, `Signal<T>`, `Observable<T>` | `T`, `Signal<T>` |
+| Injection context                       | required                          | not required     |
 
-For implementation examples, see [examples/core.md](examples/core.md).
+Anything that can race — a search-as-you-type, a request keyed on a changing id — wants `rxMethod` with `switchMap`. A side effect that only reacts to a signal wants `signalMethod` and no RxJS dependency.
+
+A plain `async` method in `withMethods` is the third option, and a legitimate one for a single fetch triggered by an explicit user action, where there is nothing to cancel and no stream to react to. It buys `try`/`catch` and costs the cancellation — so the question to settle first is whether two of these can ever be in flight at once.
+
+</decision_framework>
 
 ---
+
+<patterns>
+
+## Core patterns
+
+### Pattern 1: Store Composition
+
+Features apply in order: state, then values derived from it, then the methods that change it, then the hooks.
+
+```typescript
+export const CounterStore = signalStore(
+  { providedIn: "root" },
+  withState({ count: 0 }),
+  withComputed(({ count }) => ({ doubled: computed(() => count() * 2) })),
+  withMethods((store) => ({
+    increment: () => patchState(store, { count: store.count() + 1 }),
+  })),
+);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-1-basic-store-with-signalstore)
 
 ### Pattern 2: State Updates with patchState
 
-Use `patchState()` for all state modifications. It ensures immutability and proper signal notifications.
-
-#### When to Use
-
-- Synchronous state updates
-- Partial state updates (spread not needed)
-- Inside `withMethods()` and custom features
-
-#### Key Behaviors
-
-- Accepts partial state object or updater functions
-- Multiple updaters can be passed to single call
-- Works with entity updaters from `@ngrx/signals/entities`
-
-For implementation examples, see [examples/core.md](examples/core.md).
-
----
-
-### Pattern 3: Entity Management with withEntities
-
-Use `withEntities()` for collections of items with IDs. Provides standardized CRUD operations and efficient lookups.
-
-#### When to Use
-
-- Lists of items with unique identifiers
-- CRUD operations on collections
-- Need for efficient ID-based lookups
-- Multiple entity collections in one store
-
-#### Available Updaters
-
-- `setAllEntities()` - Replace all entities
-- `addEntity()` / `addEntities()` - Add new entities
-- `setEntity()` / `setEntities()` - Upsert entities
-- `updateEntity()` / `updateEntities()` - Partial updates
-- `removeEntity()` / `removeEntities()` - Delete entities
-
-For implementation examples, see [examples/entities.md](examples/entities.md).
-
----
-
-### Pattern 4: RxJS Integration with rxMethod
-
-Use `rxMethod()` for side effects that need RxJS operators (debounce, switchMap, etc.).
-
-#### When to Use
-
-- Debounced search/filtering
-- Cancellable HTTP requests
-- Complex async flows with multiple operators
-- Reactive streams from signals
-
-#### Key Behaviors
-
-- Accepts `Observable<T>`, `Signal<T>`, or `T` as input
-- Factory function receives `Observable<T>` for piping
-- Runs in injection context (can use `inject()`)
-- Auto-unsubscribes on store destroy
-
-For implementation examples, see [examples/effects.md](examples/effects.md).
-
----
-
-### Pattern 4b: Signal-Only Side Effects with signalMethod (v19+)
-
-Use `signalMethod()` for side effects that don't need RxJS operators.
-
-#### When to Use
-
-- Simple side effects without RxJS dependency
-- When you want to work purely with Signals
-- Side effects that don't require debounce/switchMap/cancellation
-- When injection context is not available
-
-#### Key Behaviors
-
-- Accepts `Signal<T>` or `T` as input (no Observable)
-- Processor function runs independently of injection context
-- Only parameter signals are tracked; internal signals remain untracked
-- You must handle race conditions manually (no built-in switchMap)
-
-#### rxMethod vs signalMethod
-
-| Feature                         | `rxMethod`                  | `signalMethod` |
-| ------------------------------- | --------------------------- | -------------- |
-| RxJS required                   | Yes                         | No             |
-| Operators (debounce, switchMap) | Yes                         | No             |
-| Race condition handling         | Built-in                    | Manual         |
-| Input types                     | T, Signal<T>, Observable<T> | T, Signal<T>   |
-
-For implementation examples, see [examples/effects.md](examples/effects.md).
-
----
-
-### Pattern 5: Custom Features with signalStoreFeature
-
-Use `signalStoreFeature()` to create reusable store functionality.
-
-#### When to Use
-
-- Shared patterns across multiple stores (loading state, error handling)
-- Encapsulated feature modules
-- Third-party store extensions
-- DRY principle for repeated store logic
-
-#### Type Constraints
-
-Use `type()` helper to specify required store members:
-
-- Ensures feature is only used with compatible stores
-- Provides full type inference
-- Enables composition of features
-
-For implementation examples, see [examples/features.md](examples/features.md).
-
----
-
-### Pattern 6: Lifecycle Hooks with withHooks
-
-Use `withHooks()` for initialization and cleanup logic.
-
-#### Available Hooks
-
-- `onInit()` - Called when store is instantiated
-- `onDestroy()` - Called when store is destroyed
-
-#### Common Use Cases
-
-- Loading initial data on store creation
-- Setting up subscriptions
-- Cleanup of resources
-- DevTools initialization
-
-For implementation examples, see [examples/core.md](examples/core.md).
-
----
-
-### Pattern 7: Call State Pattern
-
-Track loading, loaded, and error states for async operations using `withCallState()` from ngrx-toolkit or custom implementation.
-
-#### States
-
-- `loading` - Operation in progress
-- `loaded` - Operation completed successfully
-- `error` - Operation failed with error
-
-#### Benefits
-
-- Consistent loading UI patterns
-- Error handling standardization
-- Multiple collection support
-- DevTools visibility
-
-For implementation examples, see [examples/features.md](examples/features.md).
-
----
-
-### Pattern 8: Context-Aware Features with withFeature (v20+)
-
-Use `withFeature()` to create features that have access to the current store's methods and properties. Unlike `signalStoreFeature()`, `withFeature` receives the store instance, enabling reusable features that can call store-specific methods.
-
-#### When to Use
-
-- Features that need to call existing store methods
-- Generic patterns like entity loaders that need store-specific fetch logic
-- When `signalStoreFeature()` is insufficient because the feature needs store context
+Takes a partial object, an updater function, or several of either in one call — applied as a single notification.
 
 ```typescript
-import { withFeature } from "@ngrx/signals";
+patchState(store, { isLoading: true });
+patchState(store, (state) => ({ count: state.count + 1 }));
+patchState(store, setAllEntities(users), { isLoading: false });
+```
 
-// withFeature receives the store instance
+Full code: [examples/core.md](examples/core.md#pattern-2-store-with-patchstate-updaters)
+
+### Pattern 3: Entity Collections with withEntities
+
+Normalised storage plus updaters: `setAllEntities`, `addEntity`/`addEntities`, `setEntity`/`setEntities`, `updateEntity`/`updateEntities`, `removeEntity`/`removeEntities`.
+
+```typescript
+export const UserStore = signalStore(
+  withEntities<User>(),
+  withMethods((store) => ({
+    add: (user: User) => patchState(store, addEntity(user)),
+  })),
+);
+```
+
+`entityConfig()` names the id field where it is not `id`, and named collections need that name passed to every updater.
+
+Full code: [examples/entities.md](examples/entities.md)
+
+### Pattern 4: RxJS Side Effects with rxMethod
+
+Accepts a value, a signal or an observable; the factory pipes the stream and the subscription ends with the store.
+
+```typescript
+const search = rxMethod<string>(
+  pipe(
+    debounceTime(SEARCH_DEBOUNCE_MS),
+    switchMap((term) => api.search(term)),
+    tap((results) => patchState(store, { results })),
+  ),
+);
+```
+
+An error reaching the outer stream ends it for good, so the `catchError` goes inside the `switchMap`.
+
+Full code: [examples/effects.md](examples/effects.md)
+
+### Pattern 5: signalMethod for Signal-Only Effects (v19+)
+
+The same reactive trigger with no RxJS and no injection context, for effects that cannot race.
+
+```typescript
+const logSelection = signalMethod<string>((id) => {
+  analytics.track("selected", id);
+});
+```
+
+Only the parameter signal is tracked; signals read inside the processor are not.
+
+Full code: [examples/effects.md](examples/effects.md)
+
+### Pattern 6: Reusable Features with signalStoreFeature
+
+A named group of features, applied to any store that satisfies its declared shape.
+
+```typescript
+export function withLoading() {
+  return signalStoreFeature(
+    withState({ isLoading: false }),
+    withMethods((store) => ({
+      setLoading: (isLoading: boolean) => patchState(store, { isLoading }),
+    })),
+  );
+}
+```
+
+The `type<...>()` helper declares what the host store must already provide, which is what makes the feature's own types resolve.
+
+Full code: [examples/features.md](examples/features.md)
+
+### Pattern 7: Lifecycle with withHooks
+
+`onInit` runs as the store is constructed and `onDestroy` when its injector is destroyed — so a component-scoped store cleans up on the component's own timeline.
+
+Full code: [examples/core.md](examples/core.md#pattern-3-store-with-withhooks)
+
+### Pattern 8: Call State
+
+One feature carrying `loading` / `loaded` / `error` for a store or a named collection, so every async surface reports the same three states. A community feature library ships one; the shape is short enough to write in-house.
+
+Full code: [examples/features.md](examples/features.md)
+
+### Pattern 9: Context-Aware Features with withFeature (v20+)
+
+Where `signalStoreFeature` composes blind, `withFeature` receives the store, so a generic feature can call a method that store already has.
+
+```typescript
+// withEntityLoader here is a feature you wrote, not an NgRx export:
+// it takes a fetch function and returns signalStoreFeature(...)
 export const ProductStore = signalStore(
   { providedIn: "root" },
-  withMethods((store) => ({
-    load: rxMethod<string>(/* fetch logic */),
-  })),
+  withMethods((store) => ({ load: rxMethod<string>(/* ... */) })),
   withFeature((store) =>
     withEntityLoader((id) => firstValueFrom(store.load(id))),
   ),
 );
 ```
 
----
+`withFeature` is what makes that possible: the fetch function closes over `store.load`, which does not exist until the `withMethods` above it has been applied.
 
-### Pattern 9: Derived Reactive State with withLinkedState (v20+)
+Full code: [examples/features.md](examples/features.md)
 
-Use `withLinkedState()` to create state signals that are automatically recomputed when their source signals change. Unlike `withComputed()`, linked state is writable and can be overridden.
+### Pattern 10: withLinkedState (v20+)
 
-#### When to Use
-
-- Derived state that also needs to be independently settable
-- Maintaining selection state across data changes
-- State that has a default derived value but can be overridden by user action
+State that derives from a source signal and is still writable — a selection that follows the data by default and holds when the user picks something.
 
 ```typescript
-import { withLinkedState } from "@ngrx/signals";
-
 export const FilterStore = signalStore(
   withState({ items: [] as Item[] }),
   withLinkedState(({ items }) => ({
-    // Recomputes when items change, but can also be set independently
     selectedId: () => items()[0]?.id ?? null,
   })),
 );
 ```
 
+`withComputed` would give the same default and refuse the write.
+
+Full code: [examples/features.md](examples/features.md)
+
 </patterns>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Angular DI Integration:**
-
-SignalStore is an Angular service. Use `{ providedIn: 'root' }` for singletons or component-level `providers: [Store]` for scoped instances that are destroyed with the component.
-
-See [examples/core.md](examples/core.md) Pattern 5 and Component-Level Stores for DI patterns.
-
-**DevTools Integration:**
-
-Use `withDevtools('name')` from `@angular-architects/ngrx-toolkit` for Redux DevTools support. Place it before `withState` in the feature chain.
-
-See [examples/features.md](examples/features.md) Pattern 5 for setup.
-
-**Testing Integration:**
-
-- Use `unprotected()` from `@ngrx/signals/testing` to bypass state protection for test setup
-- Use `TestBed.configureTestingModule()` with mocked services
-- Test store methods directly or through component integration
-
-See [examples/testing.md](examples/testing.md) for patterns.
-
-</integration>
 
 ---
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Mutating state directly instead of using `patchState` - breaks reactivity and signal notifications
-- Using arrays instead of `withEntities` for entity collections - loses normalized state, O(1) lookups
-- Not wrapping async RxJS flows in `rxMethod` - loses cancellation and proper cleanup
-- Accessing store state outside computed/template - may not trigger updates
+- **Assigning into state instead of calling `patchState`** — rejected by the protection from v18, and before that it changed a value no signal was watching.
+- **A `FormGroup`, a class instance or anything else self-mutating held in `withState`** — the v19 development freeze is recursive, so the object throws the first time it updates itself. `withProps` is where it belongs.
+- **A feature reading a member declared after it** — the composition is left to right, so the member does not exist yet and the store does not compile.
+- **`catchError` outside the inner `switchMap` in an `rxMethod`** — the error reaches the outer stream, which completes, and the method silently stops working for the rest of the store's life.
+- **An entity updater used against a named collection without its `collection` option** — it operates on the default collection instead, so the write lands somewhere nothing reads.
+- **A `signalStoreFeature` that does not return its composed features** — it type-checks as a function and contributes nothing, so the members it was meant to add are simply absent.
+- **Two stores injecting each other** — a construction cycle, which surfaces as a store whose members are undefined rather than as a clear DI error.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Missing error handling in `rxMethod` pipelines
-- Deeply nested state (flatten with multiple state slices)
-- Not using `entityConfig()` for custom entity IDs (v18+)
-- Using `signalMethod` for async operations with race conditions (use `rxMethod` with `switchMap`)
-
-**Gotchas & Edge Cases:**
-
-- `withHooks.onInit()` runs during store instantiation - be careful with side effects in tests
-- `patchState` with entity updaters requires `collection` option when using named collections
-- `rxMethod` auto-unsubscribes on destroy - do not manually unsubscribe
-- Protected state (v18+) prevents external `patchState` calls by default
-- Feature execution order matters - later features can access earlier ones
-- **v19+ Deep Freeze**: State values are recursively frozen with `Object.freeze` in dev mode - use `withProps()` for mutable objects like FormGroup
-
-See [reference.md](reference.md) for detailed anti-patterns with code examples.
+- `rxMethod` unsubscribes on store destroy by itself; an extra manual unsubscribe is at best redundant.
+- `withHooks.onInit` runs during construction, so a store that fetches on init fetches in every test that injects it.
+- `signalMethod` tracks only the signal passed as its parameter — signals read inside the processor are untracked, deliberately.
+- `signalMethod` has no cancellation, so two async calls in flight resolve in whatever order they finish and the later write wins regardless of which was requested last.
+- A component-scoped store is a new instance per component instance, which is the point — and the reason state does not survive navigation away and back.
+- Deeply nested state makes every `patchState` rebuild the whole path; several flat slices update independently.
+- Mutating an entity object in place skips `updateEntity`, so the `entityMap` reference never changes and nothing reading it re-renders.
+- `entityConfig()` is what points `withEntities` at an id field that is not called `id`; without it the updaters key on `undefined`.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST use `patchState()` for ALL state updates - NEVER mutate state directly)**
-
-**(You MUST wrap async operations in `rxMethod()` from `@ngrx/signals/rxjs-interop` for RxJS integration)**
-
-**(You MUST use `withEntities()` from `@ngrx/signals/entities` for entity collections - NOT arrays in state)**
-
-**(You MUST use named exports ONLY - NO default exports in any store files)**
-
-**(You MUST use named constants for ALL numbers - NO magic numbers in state code)**
-
-**Failure to follow these rules will cause reactivity bugs, state corruption, and inconsistent behavior.**
-
-</critical_reminders>

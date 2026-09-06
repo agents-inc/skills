@@ -12,6 +12,16 @@ Chunked binary file upload with progress tracking.
 // lib/websocket-file-upload.ts
 
 const CHUNK_SIZE = 64 * 1024; // 64KB chunks
+const MAX_BUFFERED_BYTES = 1024 * 1024; // pause once 1MB is waiting on the network
+const DRAIN_POLL_MS = 50;
+
+// send() queues whatever the network has not taken, and bufferedAmount is the
+// only backpressure signal there is — without this the whole file lands in memory.
+async function waitForDrain(socket: WebSocket): Promise<void> {
+  while (socket.bufferedAmount > MAX_BUFFERED_BYTES) {
+    await new Promise((resolve) => setTimeout(resolve, DRAIN_POLL_MS));
+  }
+}
 
 interface UploadProgress {
   fileId: string;
@@ -54,9 +64,6 @@ export async function uploadFileOverWebSocket(
     }),
   );
 
-  // Set binary type for sending chunks
-  socket.binaryType = "arraybuffer";
-
   for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
     const start = chunkIndex * CHUNK_SIZE;
     const end = Math.min(start + CHUNK_SIZE, file.size);
@@ -81,6 +88,7 @@ export async function uploadFileOverWebSocket(
     message.set(new Uint8Array(header), 0);
     message.set(new Uint8Array(arrayBuffer), 40);
 
+    await waitForDrain(socket);
     socket.send(message);
 
     onProgress({
@@ -158,4 +166,6 @@ export function FileUploader({ socket }: FileUploaderProps) {
 }
 ```
 
-**Why good:** Chunked upload handles large files, progress tracking for UX, binary data for efficiency, metadata sent as JSON for readability, proper error handling
+**Why good:** Chunking keeps a large file out of one frame, `waitForDrain` keeps it out of the send buffer, metadata goes as JSON while the payload stays binary, and progress is reportable because the transfer is already in pieces.
+
+**Note:** progress counts chunks handed to `send()`. The socket reports no delivery acknowledgement, so a server-sent ack per chunk is what would make the number mean "received".

@@ -1,62 +1,78 @@
 ---
 name: web-data-fetching-graphql-urql
-description: URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions
+description: URQL GraphQL client patterns — the exchange pipeline, document and normalized caching, queries, mutations, subscriptions, and authentication
 ---
 
-# URQL GraphQL Client Patterns
+# URQL Patterns
 
-> **Quick Guide:** Use URQL for GraphQL APIs when you need a lightweight, customizable client with exchange-based architecture. Start minimal with document caching, add normalized caching via Graphcache when needed. Bundle size is ~12KB gzipped (core), ~20KB with Graphcache. Exchange order is critical: synchronous exchanges before asynchronous, fetchExchange always last. v6+ defaults to GET for small queries - set `preferGetMethod: false` if your server only supports POST. **Current version: @urql/core v6.0.1 (urql v5.0.1)**
+> **Quick Guide:** URQL is a small core plus a pipeline of exchanges, and almost every configuration
+> question is really a question about that pipeline's order — synchronous exchanges before
+> asynchronous ones, error handlers before what they catch, `fetchExchange` last. Caching is
+> document-based by default, keyed on the query and its variables; normalized caching is an opt-in
+> exchange. Hooks return a `[result, execute]` tuple, and the loading flag is `fetching`.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — client and provider, `useQuery`, mutations, error handling, per-query context
+- [examples/exchanges.md](examples/exchanges.md) — the full pipeline, Graphcache config, auth with refresh, retry, custom exchanges
+- [examples/subscriptions.md](examples/subscriptions.md) — websocket setup, accumulating events, presence, cache updates from a subscription
+- [examples/v6-features.md](examples/v6-features.md) — the GET default, `preferGetMethod`, and the v4 → v6 migration steps
+- [reference.md](reference.md) — request policy and cache method tables, `CombinedError` shape, exchange catalogue
+
+---
+
+## Which path applies
+
+- **Document caching** — the default `cacheExchange` from `urql`. A query plus its variables is one
+  cache entry, and a mutation invalidates every entry whose result shared a `__typename` with it.
+  Nothing to configure, and no way to edit the cache by hand.
+- **Normalized caching** — the `cacheExchange` from `@urql/exchange-graphcache`, replacing the
+  default one. Entities are stored once by key, so `keys`, `updates`, `resolvers` and `optimistic`
+  become available and mutations can edit the cache precisely. Adds roughly 8KB.
+
+Start with the document cache. Move to Graphcache when a mutation needs to change a list the server
+did not return, or when you want optimistic updates.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing URQL code
 
-**(You MUST configure exchange order correctly - synchronous exchanges (cacheExchange) before asynchronous (fetchExchange))**
+**Order the exchanges: error handling, then synchronous, then asynchronous, with `fetchExchange`
+last.** An operation passes through them in array order, so a cache placed after a network exchange
+never sees a request, and an error handler placed after `authExchange` never sees a failed refresh.
 
-**(You MUST include `__typename` in optimistic responses for Graphcache cache normalization)**
+**Put `__typename` in every optimistic response, along with every field a query reads.** Graphcache
+normalizes on `__typename` plus the key, and a field the optimistic object omits is a field the
+watching query cannot render.
 
-**(You MUST set `preferGetMethod: false` if your GraphQL server does NOT support GET requests - v6+ defaults to GET for queries under 2048 characters)**
+**Set `preferGetMethod` to what the server accepts.** From v6 the client sends queries under 2048
+characters as GET; `false` forces POST for everything, and `"force"` sends GET regardless of length.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** URQL, urql, useQuery, useMutation, useSubscription, cacheExchange, fetchExchange, Graphcache, exchanges, gql, Client
+**Auto-detection:** `urql`, `@urql/core`, `@urql/exchange-graphcache`, `cacheExchange`,
+`fetchExchange`, `subscriptionExchange`, `mapExchange`, `ssrExchange`, `authExchange`,
+`retryExchange`, `useQuery`, `useMutation`, `useSubscription`, `requestPolicy`, `preferGetMethod`,
+`reexecuteQuery`, `CombinedError`, `wonka`
 
-**When to use:**
+**Applies to:**
 
-- Fetching data from GraphQL APIs
-- Applications needing lightweight GraphQL client (~12KB core)
-- Projects requiring customizable middleware via exchanges
-- Progressive enhancement: start simple, add complexity as needed
-- Real-time updates with GraphQL subscriptions
+- The exchange pipeline, its order, and writing an exchange
+- Document caching and normalized caching through Graphcache
+- Queries, mutations, optimistic updates and cache edits after a write
+- Real-time data over a subscription exchange
+- Authentication with token refresh, and retry policy
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- REST APIs (use your data fetching solution instead)
-- When team already has deep expertise in another GraphQL client and no bundle concerns
-- Simple APIs without caching needs (consider fetch directly)
-
-**Key patterns covered:**
-
-- Client setup with exchange pipeline
-- useQuery for queries with loading, error, and data states
-- useMutation with optimistic updates via Graphcache
-- useSubscription for real-time WebSocket data
-- Exchange architecture and custom exchanges
-- Document caching vs normalized caching (Graphcache)
-- Request policies and caching strategies
-- Authentication with authExchange
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Client setup, useQuery, useMutation, error handling
-- [examples/exchanges.md](examples/exchanges.md) - Exchange architecture, Graphcache, auth, retry
-- [examples/subscriptions.md](examples/subscriptions.md) - Real-time WebSocket subscriptions
-- [examples/v6-features.md](examples/v6-features.md) - v6 breaking changes, GET behavior, migration
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, API reference
+- APIs addressed over REST — this client speaks one query language
+- Designing the schema and its resolvers; this skill consumes a schema
+- Client state that corresponds to no server field
+- Where errors are shipped once `mapExchange` has caught them
 
 ---
 
@@ -64,28 +80,14 @@ description: URQL GraphQL client patterns - useQuery, useMutation, exchange arch
 
 ## Philosophy
 
-URQL follows the principle of **progressive enhancement**. The core package provides document caching and basic fetching, while advanced features like normalized caching, authentication, and offline support are added through exchanges.
+The client itself does almost nothing: it turns a hook call into an operation and pushes it into a
+stream. Everything that looks like a feature — caching, auth, retries, deduplication, subscriptions,
+server rendering — is an exchange sitting in that stream, and every exchange sees the operation on
+the way out and the result on the way back.
 
-**Core Principles:**
-
-1. **Minimal by Default**: Start with ~12KB core, add features as needed
-2. **Exchange-Based Architecture**: Middleware-style plugins for extensibility
-3. **Stream-Based Operations**: All operations are Observable streams via Wonka
-4. **Document Caching Default**: Simple query+variables hash caching, opt-in normalized cache
-
-**URQL's Data Flow:**
-
-1. Component requests data via useQuery/useMutation
-2. Operation flows through exchange pipeline (cache -> auth -> retry -> fetch)
-3. Each exchange can inspect, modify, or short-circuit the operation
-4. Results flow back through exchanges in reverse
-5. Multiple results can emit over time (cache update triggers new emission)
-
-**Three Architectural Layers:**
-
-1. **Bindings** - Framework integrations (React, Vue, Svelte, Solid)
-2. **Client** - Core engine managing operations and coordinating exchanges
-3. **Exchanges** - Plugins providing functionality (caching, fetching, auth)
+Two things follow. Behaviour is added by installing an exchange rather than by configuring the
+client, so a project pays only for what it installs. And order is semantic rather than cosmetic: an
+exchange can only act on what has already reached it.
 
 </philosophy>
 
@@ -93,11 +95,9 @@ URQL follows the principle of **progressive enhancement**. The core package prov
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Client Setup
-
-Configure the Client with exchanges in the correct order. Sync exchanges (cacheExchange) before async (fetchExchange).
+### Pattern 1: Client setup
 
 ```typescript
 import { Client, cacheExchange, fetchExchange } from "urql";
@@ -105,16 +105,18 @@ import { Client, cacheExchange, fetchExchange } from "urql";
 const client = new Client({
   url: GRAPHQL_ENDPOINT,
   exchanges: [cacheExchange, fetchExchange],
+  requestPolicy: "cache-first",
 });
 ```
 
-Wrap your app with `<Provider value={client}>` to enable hooks. See [examples/core.md](examples/core.md) for full setup.
+`<Provider value={client}>` above the tree is what the hooks read; without it they throw at the
+first render rather than falling back to anything.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### useQuery
-
-Returns a `[result, reexecuteQuery]` tuple. Always handle all states: `fetching`, `error`, `data`.
+### Pattern 2: Queries
 
 ```typescript
 const [result, reexecuteQuery] = useQuery<UsersData, UsersVariables>({
@@ -125,53 +127,55 @@ const [result, reexecuteQuery] = useQuery<UsersData, UsersVariables>({
 
 const { data, fetching, error, stale } = result;
 
-if (fetching && !data) return <Skeleton />; // Initial load only
+if (fetching && !data) return <Skeleton />;
 if (error && !data) return <Error message={error.message} />;
 ```
 
-Key: check `fetching && !data` for initial load vs background refresh. Use `pause: !userId` for conditional queries. See [examples/core.md](examples/core.md) for full examples.
+`fetching` is true for the first load and for every background refresh, so `fetching && !data` is
+what distinguishes them. `stale` marks cached data being revalidated — an "updating" hint rather
+than a spinner. `pause: !userId` holds a query back until its variables are real.
+
+Default policy is `cache-first`; `cache-and-network` is the stale-while-revalidate one. The full
+table is in [reference.md](reference.md).
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### useMutation
-
-Returns a `[result, executeMutation]` tuple. The execute function returns a Promise.
+### Pattern 3: Mutations
 
 ```typescript
 const [result, executeMutation] = useMutation<CreatePostData>(CREATE_POST);
 
 const response = await executeMutation({ input });
-if (response.error) {
-  // Handle error
-  return;
-}
+if (response.error) return;
 ```
 
-Disable form inputs during `result.fetching`. See [examples/core.md](examples/core.md) for create/update/delete patterns.
+The execute function returns a promise carrying the result, so the error is handled at the call site
+rather than in a callback. `result.fetching` is what disables the form while it is in flight.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Exchange Pipeline
-
-Exchanges are middleware that process operations and results. Order matters critically.
+### Pattern 4: The exchange pipeline
 
 ```typescript
 exchanges: [
-  mapExchange, // 1. Error handling (catches all errors)
-  cacheExchange, // 2. Sync cache (fast path)
-  authExchange, // 3. Auth headers
-  retryExchange, // 4. Retry logic
-  fetchExchange, // 5. Network (always last)
+  mapExchange, // errors, before anything whose failures it must see
+  cacheExchange, // synchronous, so it can answer without a request
+  authExchange, // headers, and refresh on a 401
+  retryExchange, // network failures only
+  fetchExchange, // always last
 ];
 ```
 
-See [examples/exchanges.md](examples/exchanges.md) for auth, retry, Graphcache, and custom exchange patterns.
+Full code: [examples/exchanges.md](examples/exchanges.md) — auth with token refresh, retry
+configuration, TTL-based policy upgrades, and a custom exchange
 
 ---
 
-### Graphcache (Normalized Caching)
-
-Upgrade from document cache to normalized cache when you need automatic entity deduplication, optimistic updates, or cache manipulation after mutations.
+### Pattern 5: Graphcache
 
 ```typescript
 import { cacheExchange } from "@urql/exchange-graphcache";
@@ -180,9 +184,8 @@ cacheExchange({
   keys: { Product: (data) => data.sku as string },
   updates: {
     Mutation: {
-      createTodo: (result, _args, cache) => {
-        /* update list */
-      },
+      createTodo: (result, _args, cache) =>
+        cache.updateQuery(/* add to the list */),
     },
   },
   optimistic: {
@@ -195,26 +198,15 @@ cacheExchange({
 });
 ```
 
-Always include `__typename` in optimistic responses. See [examples/exchanges.md](examples/exchanges.md) for full Graphcache configuration.
+Four keys, four jobs: `keys` says what identifies an entity, `updates` edits the cache after a
+mutation or a subscription event, `resolvers` invents fields on read, and `optimistic` writes a
+provisional entity into a separate layer that is discarded when the real result lands.
+
+Full code: [examples/exchanges.md](examples/exchanges.md)
 
 ---
 
-### Request Policies
-
-| Policy              | Behavior                                         | Use Case               |
-| ------------------- | ------------------------------------------------ | ---------------------- |
-| `cache-first`       | Return cached if available, else fetch (default) | Most queries           |
-| `cache-only`        | Only return cached, never fetch                  | Offline-first          |
-| `network-only`      | Always fetch, skip cache read                    | Critical fresh data    |
-| `cache-and-network` | Return cached immediately, then fetch and update | Stale-while-revalidate |
-
-Use `cache-and-network` for best UX in most cases. Force refetch with `reexecuteQuery({ requestPolicy: "network-only" })`.
-
----
-
-### Subscriptions
-
-Real-time data via WebSocket using `subscriptionExchange` with `graphql-ws`.
+### Pattern 6: Subscriptions
 
 ```typescript
 const [result] = useSubscription<NotificationData>({
@@ -224,27 +216,55 @@ const [result] = useSubscription<NotificationData>({
 });
 ```
 
-Subscriptions auto-unsubscribe on unmount. Accumulate events with a reducer and memoized handler. See [examples/subscriptions.md](examples/subscriptions.md) for setup and advanced patterns.
+Each event replaces `data` — accumulating a list takes the second argument, a handler that receives
+the previous value and the new event. Unsubscription happens on unmount without any cleanup.
+
+Full code: [examples/subscriptions.md](examples/subscriptions.md)
 
 ---
 
-### Error Handling
+### Pattern 7: Error handling
 
-URQL wraps all errors in `CombinedError`, which can contain both `networkError` and `graphQLErrors`. GraphQL allows partial data with errors - don't discard useful data.
+`CombinedError` carries both kinds at once, and they mean different things: `networkError` is a
+request that never completed, `graphQLErrors` is a response that arrived carrying failures.
 
 ```typescript
 if (error?.networkError) {
-  // Network failed entirely - show retry
+  // nothing came back — offer a retry
 }
 if (error?.graphQLErrors.length) {
-  // Some fields failed, data may be partial
+  // some fields failed; `data` may still hold the rest
 }
 if (data && error) {
-  // Show partial data with warning banner
+  // render what arrived, with a warning
 }
 ```
 
-See [examples/core.md](examples/core.md) for component-level error handling patterns.
+A single `if (error)` branch throws away a page that mostly worked.
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 8: Per-query context
+
+```typescript
+const [result] = useQuery({
+  query: ADMIN_DATA_QUERY,
+  context: {
+    fetchOptions: {
+      headers: { "X-Admin-Token": process.env.ADMIN_TOKEN ?? "" },
+    },
+    url: process.env.ADMIN_GRAPHQL_URL ?? "",
+    requestPolicy: "network-only",
+  },
+});
+```
+
+`context` overrides the client's own settings for one operation — including the URL, which is how a
+second endpoint is reached without a second client.
+
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -252,50 +272,37 @@ See [examples/core.md](examples/core.md) for component-level error handling patt
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **fetchExchange before cacheExchange** - Cache is bypassed, all requests hit network
-- **Missing Provider wrapper** - All hooks throw runtime errors (v4+)
-- **Missing `__typename` in optimistic responses** - Graphcache normalization fails silently
-- **mapExchange after authExchange** - Auth refresh failures not caught by error handler
+- Hooks used with no `Provider` above them — they throw rather than degrading.
+- `fetchExchange` before `cacheExchange` — every operation reaches the network and the cache is
+  never read.
+- `mapExchange` after `authExchange` — a failed token refresh passes it and reaches no handler.
+- An optimistic response without `__typename` — normalization fails silently and the UI does not
+  move.
+- Rendering `data` with no `fetching` or `error` branch — the first render has neither.
+- A server that rejects GET, on v6 with `preferGetMethod` left at its default — short queries fail
+  and long ones succeed, which reads as an intermittent fault.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Missing `pause` for conditional queries** - Unnecessary network requests with undefined variables
-- **Not using `cache-and-network`** - Missing stale-while-revalidate UX benefit
-- **Incomplete optimistic response fields** - Queries referencing missing fields won't update
-- **Not handling all query states** - Crashes when `data` is undefined
-
-**Gotchas & Edge Cases:**
-
-- `fetching` is true during both initial load AND background refresh - check `fetching && !data` for initial load only
-- `stale` indicates cached data is being revalidated - show "updating" indicator, don't show spinner
-- Document cache uses query + variables hash - same query with different variables = different cache entry
-- Graphcache stores entities by `id` or `_id` by default - configure `keys` for custom identifiers
-- Optimistic responses are stored in a separate layer - never pollute real cache
-- Subscriptions auto-unsubscribe on component unmount - no manual cleanup needed
-- `pollInterval` is not built-in - use `requestPolicyExchange` for TTL-based refresh
-- Retrying GraphQL errors is pointless (they won't succeed on retry) - only retry network errors
-- **v6 BREAKING:** Default uses GET for queries under 2048 characters - set `preferGetMethod: false` if server only supports POST
-- **v6.0.1:** Fixed `preferGetMethod: false` being ignored (nullish coalescing fix)
-- **v5 BREAKING:** `dedupExchange` removed - deduplication is built into the core client (just remove from exchanges array)
+- `fetching` covers background refreshes too, so a bare `if (fetching)` blanks the screen on every
+  revalidation.
+- Document cache entries are keyed on query plus variables, so the same query with two variable sets
+  is two entries that never share anything.
+- Graphcache keys entities on `id` or `_id` — anything else needs a `keys` entry, and without one
+  the entity is not normalized at all.
+- An optimistic response missing a field some query reads leaves that query unable to render the
+  entity.
+- Retrying a GraphQL error achieves nothing, since the same request produces the same failure —
+  `retryIf` should test `networkError`.
+- There is no `pollInterval` option; TTL-based refresh comes from `requestPolicyExchange`.
+- A subscription handler recreated on every render resubscribes on every render — memoize it.
+- (v6) Queries under 2048 characters go out as GET, which puts the query text in URLs and logs.
+- (v6.0.1) Fixed `preferGetMethod: false` being ignored — on 6.0.0 the opt-out does not take.
+- (v5) `dedupExchange` was removed and deduplication moved into the core client; delete it from the
+  array rather than replacing it.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST configure exchange order correctly - synchronous exchanges (cacheExchange) before asynchronous (fetchExchange))**
-
-**(You MUST include `__typename` in optimistic responses for Graphcache cache normalization)**
-
-**(You MUST set `preferGetMethod: false` if your GraphQL server does NOT support GET requests - v6+ defaults to GET for queries under 2048 characters)**
-
-**Failure to follow these rules will cause cache corruption, stale data, and production bugs.**
-
-</critical_reminders>

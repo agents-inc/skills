@@ -230,29 +230,16 @@ export const numberFormats: NumberFormats = {
       maximumFractionDigits: 0,
     },
   },
+  // Every locale defines the same five names. Only the entries that genuinely
+  // differ are shown here; percent, compact and integer match "en-US".
   "de-DE": {
-    currency: {
-      style: "currency",
-      currency: "EUR",
-      notation: "standard",
-    },
+    currency: { style: "currency", currency: "EUR", notation: "standard" },
     decimal: {
       style: "decimal",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     },
-    percent: {
-      style: "percent",
-      useGrouping: false,
-    },
-    compact: {
-      notation: "compact",
-      compactDisplay: "short",
-    },
-    integer: {
-      style: "decimal",
-      maximumFractionDigits: 0,
-    },
+    // percent, compact, integer as above
   },
   "ja-JP": {
     currency: {
@@ -263,26 +250,16 @@ export const numberFormats: NumberFormats = {
     },
     decimal: {
       style: "decimal",
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 0, // yen has no minor unit
       maximumFractionDigits: 2,
     },
-    percent: {
-      style: "percent",
-      useGrouping: false,
-    },
-    compact: {
-      notation: "compact",
-      compactDisplay: "short",
-    },
-    integer: {
-      style: "decimal",
-      maximumFractionDigits: 0,
-    },
+    // percent, compact, integer as above
   },
 };
 ```
 
-**Why good:** locale-specific currencies (USD, EUR, JPY), compact notation for large numbers, consistent format names across locales
+**Why good:** every locale defines the same format names, so `n(value, "currency")` resolves in all
+of them — a name missing from one locale renders nothing there and nowhere else
 
 ### Good Example - Number Usage in Components
 

@@ -176,7 +176,12 @@ export function PinnedColumnTable({ data }: { data: User[] }) {
 }
 ```
 
-**Why good:** `ColumnPinningState` provides controlled pinning state, `getIsPinned()` returns "left" | "right" | false, sticky positioning with calculated offsets, shadows provide visual separation, background prevents content overlap
+**Why good:** the library reports which side a column is pinned to and nothing else, so all three
+visual pieces are hand-applied and all three are needed. `position: sticky` with a computed offset is
+what holds the column — the offset accumulates across earlier pinned columns, which is why it is
+calculated rather than fixed. The opaque background is not decoration: without it the scrolling
+content is visible straight through the pinned cell. The shadow is what marks where the frozen region
+ends, which is otherwise invisible once the colours match.
 
 ---
 

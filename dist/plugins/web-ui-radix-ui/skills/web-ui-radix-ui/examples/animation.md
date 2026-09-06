@@ -1,36 +1,28 @@
 # Radix UI - Animation Examples
 
-> CSS animations using data-state attributes for enter/exit transitions.
+> Enter and exit animation driven by `data-state`. See [navigation.md](navigation.md) for the
+> accordion height animation this file's Pattern 2 points at.
 
 ---
 
 ## Pattern 1: CSS Animations with data-state
 
-Radix components expose `data-state` attributes that enable CSS-driven animations without JavaScript.
-
-### Good Example - CSS Animation with data-state
+Radix sets `data-state="open"` and `"closed"` on the animatable parts and holds the unmount until
+`animationend` fires. The markup needs nothing beyond a class to hang the animation on.
 
 ```typescript
 import { Dialog } from "radix-ui";
 
-export function AnimatedDialog() {
-  return (
-    <Dialog.Root>
-      <Dialog.Trigger>Open</Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content">
-          <Dialog.Title>Animated Dialog</Dialog.Title>
-          <Dialog.Description>This dialog animates in and out.</Dialog.Description>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
+<Dialog.Portal>
+  <Dialog.Overlay className="dialog-overlay" />
+  <Dialog.Content className="dialog-content">
+    <Dialog.Title>Animated Dialog</Dialog.Title>
+    <Dialog.Description>This dialog animates in and out.</Dialog.Description>
+  </Dialog.Content>
+</Dialog.Portal>;
 ```
 
 ```css
-/* CSS animations - Radix suspends unmount until animation completes */
 @keyframes overlayShow {
   from {
     opacity: 0;
@@ -88,10 +80,15 @@ export function AnimatedDialog() {
 }
 ```
 
-**Why good:** data-state attribute automatically set by Radix, exit animation triggers on close, Radix detects animation end and then unmounts
+**Why good:** the exit keyframes are what keep the element alive long enough to be seen — declaring
+only the `open` pair gives a dialog that fades in and vanishes. Overlay and Content animate
+separately so the backdrop can outlast the panel. The `-48%` start on the Y translate makes the
+panel rise into place rather than scaling from dead centre.
 
 ---
 
 ## Pattern 2: Accordion Height Animation
 
-CSS custom properties exposed by Radix (`--radix-accordion-content-height`) enable smooth height animations. See [navigation.md](navigation.md) for the complete accordion example with height animation CSS.
+Height cannot be animated from `auto`, so Radix measures the content and publishes the result as
+`--radix-accordion-content-height` for the duration of the animation. The full keyframes are in
+[navigation.md](navigation.md).

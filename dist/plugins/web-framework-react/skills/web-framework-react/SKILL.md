@@ -1,90 +1,75 @@
 ---
 name: web-framework-react
-description: Component architecture, hooks, patterns
+description: Component architecture, hooks and React 19 patterns. Load when building or refactoring React components, custom hooks, forms, or async UI.
 ---
 
-# React Components
+# React Patterns
 
-> **Quick Guide:** Tiered components (Primitives -> Components -> Patterns -> Templates). React 19: pass `ref` as a prop directly (no `forwardRef` needed). Expose `className` prop for styling flexibility. Use `useActionState` for forms, `useOptimistic` for instant feedback, `use()` for conditional promise/context reading. Ref callbacks can return cleanup functions.
+> **Quick Guide:** React 19 settles four things this skill turns on — `ref` is a regular prop and `forwardRef` is redundant, form submission state comes from `useActionState`, `useFormStatus` reads the enclosing form only from a child component, and a ref callback may return a cleanup function. Components stay styling-agnostic by exposing `className` and expressing variants as `data-*` attributes.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — component shape, variant props, event handlers, accessible controls
+- [examples/hooks.md](examples/hooks.md) — usePagination, useDebounce, useLocalStorage
+- [examples/react-19-hooks.md](examples/react-19-hooks.md) — useActionState, useFormStatus, useOptimistic, use(), ref cleanup
+- [reference.md](reference.md) — decision trees, anti-patterns with corrected code, component and hook checklists
+
+---
+
+## Which path applies
+
+- **React rendered in the browser** — every pattern below applies as written, and form submission goes through `useActionState` in [examples/react-19-hooks.md](examples/react-19-hooks.md).
+- **React rendered by a server framework** — submission and data loading belong to that framework's own server primitives, so skip Pattern 6 and take the component, hook, ref and error-boundary patterns unchanged.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing React code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Pass `ref` as a regular prop.** React 19 forwards it without `forwardRef`, which removes the wrapper and the manual `displayName`.
 
-**(You MUST pass `ref` as a regular prop in React 19 - `forwardRef` is deprecated)**
+**Expose `className` on every reusable component.** It is the one seam a consumer has for styling a component this skill knows nothing about.
 
-**(You MUST expose `className` prop on ALL reusable components for customization)**
+**Call `useFormStatus` from a component rendered inside the `<form>`.** Called in the component that renders the form it returns `pending: false` forever, with no error to show for it.
 
-**(You MUST use `useActionState` for form submissions with pending/error state)**
-
-**(You MUST call `useFormStatus` from a child component inside `<form>`, NOT in the component that renders the form)**
+**Reach for `useActionState` when a form needs pending or error state.** It carries both, and `<form action={...}>` keeps working before hydration.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** React 19, components, hooks, use(), useActionState, useFormStatus, useOptimistic, Actions, ref as prop, ref cleanup, forwardRef migration, component variants, error boundary
+**Auto-detection:** React 19, useActionState, useFormStatus, useOptimistic, use(), ref as prop, ref cleanup, forwardRef migration, React.ComponentProps, getDerivedStateFromError, componentDidCatch, useCallback, custom hook
 
-**When to use:**
+**Applies to:**
 
-- Building React components with type-safe props
-- Migrating from forwardRef to React 19 ref-as-prop
-- Handling form submissions with React 19 Actions API
-- Creating custom hooks for reusable logic
-- Implementing error boundaries with retry
+- Component props, composition and variant APIs
+- Migrating `forwardRef` components to ref-as-prop
+- Form submission, optimistic updates and promise reading with the React 19 hooks
+- Custom hooks for reusable stateful logic
+- Error boundaries with retry
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Simple one-off components without variants (skip variant abstractions)
-- Static content without interactivity
-
-**Key patterns covered:**
-
-- Component architecture tiers and variant props
-- React 19 ref as prop (replaces forwardRef)
-- React 19 hooks: `use()`, `useActionState`, `useFormStatus`, `useOptimistic`
-- Ref callback cleanup functions
-- Error boundaries with retry and custom fallbacks
-- Custom hooks (pagination, debounce, localStorage)
-- Event handler naming conventions
-
----
-
-<philosophy>
-
-## Philosophy
-
-React components follow a tiered architecture from low-level primitives to high-level templates. Components should be composable, type-safe, and expose necessary customization points (`className`, refs). Use variant abstractions only when components have multiple variant dimensions to avoid over-engineering. React is styling-agnostic -- apply styles via the `className` prop.
-
-**React 19 Changes:** `forwardRef` is deprecated -- pass `ref` as a regular prop directly. New hooks (`use()`, `useActionState`, `useFormStatus`, `useOptimistic`) simplify data fetching and form handling with the Actions API. Ref callbacks can return cleanup functions, eliminating the need for separate `useEffect` cleanup.
-
-</philosophy>
+- Styling — a component takes `className` and exposes variants as `data-*`; which CSS approach fills them in is not its concern
+- Client state that outlives a component, and server data with its caching and invalidation — components receive both as props and stay unaware of the source
+- Routing, and the data a route loads
+- Test doubles for the network
 
 ---
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Component Architecture Tiers
+### Pattern 1: Component shape
 
-Components are organized in a tiered hierarchy:
-
-1. **Primitives** (`src/primitives/`) - Low-level building blocks (skeleton)
-2. **Components** (`src/components/`) - Reusable UI (button, switch, select)
-3. **Patterns** (`src/patterns/`) - Composed patterns (feature, navigation)
-4. **Templates** (`src/templates/`) - Page layouts (frame)
+A reusable component spreads its element's own props, accepts `ref` directly, and expresses variants as `data-*` attributes any styling layer can target.
 
 ```typescript
-// React 19: ref as a regular prop, no forwardRef needed
 export type ButtonProps = React.ComponentProps<"button"> & {
   variant?: "default" | "ghost" | "link";
   size?: "default" | "large" | "icon";
-  asChild?: boolean;
   ref?: React.Ref<HTMLButtonElement>;
 };
 
@@ -93,15 +78,13 @@ export function Button({ variant = "default", size = "default", className, ref, 
 }
 ```
 
-**Why good:** ref as regular prop eliminates forwardRef boilerplate, className enables external styling, data-attributes enable CSS selectors for variants
-
-See [examples/core.md](examples/core.md) for complete component examples with good/bad comparisons.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Component Variant Props
+### Pattern 2: Typed variant props
 
-Components with 2+ visual dimensions (variant, size) should expose type-safe variant props via TypeScript unions. Use `data-*` attributes so any styling solution can target them.
+Give a component variant props once it has two or more visual dimensions. A component with one visual style takes `className` and nothing else — a union with a single member is an abstraction with no second case.
 
 ```typescript
 export type AlertVariant = "info" | "warning" | "error" | "success";
@@ -111,50 +94,31 @@ export function Alert({ variant = "info", className, ref, ...props }: AlertProps
 }
 ```
 
-**When not to use:** Components with a single visual style -- skip variant abstraction.
-
-See [examples/core.md](examples/core.md) for variant props with good/bad examples.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Event Handler Naming
+### Pattern 3: Event handler naming
 
-- `handle` prefix for internal handlers: `handleSubmit`, `handleNameChange`
-- `on` prefix for callback props: `onClick`, `onSubmit`
-- Type events explicitly: `FormEvent<HTMLFormElement>`, `ChangeEvent<HTMLInputElement>`
+`handle` prefixes an internal handler (`handleNameChange`), `on` prefixes a callback prop (`onSelect`), and each handler types its event — `FormEvent<HTMLFormElement>`, `ChangeEvent<HTMLInputElement>` — so a wrong field access fails at compile time.
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 4: Custom hooks
+
+Logic that calls hooks and renders nothing is a `use`-prefixed hook rather than a component: pagination state, debounced values, persisted preferences.
+
+Full code: [examples/hooks.md](examples/hooks.md)
+
+---
+
+### Pattern 5: Error boundaries with retry
+
+A boundary catches render errors and hands back a reset function, so a transient failure costs one section rather than the page. Place one around each feature area, not only the root.
 
 ```typescript
-const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-};
-
-const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-  setName(e.target.value);
-};
-```
-
-See [examples/core.md](examples/core.md) for full event handler examples.
-
----
-
-### Pattern 4: Custom Hooks
-
-Extract reusable logic into custom hooks following the `use` prefix convention.
-
-- `usePagination` - Pagination state and navigation
-- `useDebounce` - Debounce values for search inputs
-- `useLocalStorage` - Type-safe localStorage persistence with SSR safety
-
-See [examples/hooks.md](examples/hooks.md) for complete implementations.
-
----
-
-### Pattern 5: Error Boundaries with Retry
-
-Error boundaries catch render errors and provide retry capability. Place them around feature sections, not just the root.
-
-```typescript
-// Key interface -- accepts custom fallback and error callback
 interface Props {
   children: ReactNode;
   fallback?: (error: Error, reset: () => void) => ReactNode;
@@ -162,21 +126,15 @@ interface Props {
 }
 ```
 
-**Limitation:** Error boundaries do not catch event handler errors, async errors, or SSR errors -- use try/catch for those.
-
-See [examples/error-boundaries.md](examples/error-boundaries.md) for full implementation.
+A boundary is a class because there is no hook form of `getDerivedStateFromError`. Placement, recovery and fallback design are a subject of their own and are settled outside this skill.
 
 ---
 
-### Pattern 6: useActionState for Form Submissions
+### Pattern 6: useActionState for form submission
 
-**Skip if your framework provides its own server-side form handling (Server Actions) — use that instead.**
-
-Use `useActionState` for form submissions with automatic pending state and error handling. Replaces manual `useState` for loading/error.
+The hook returns the action's last result, the action to hand `<form action={...}>`, and a pending flag — replacing three `useState` calls and their reset logic.
 
 ```typescript
-import { useActionState } from "react";
-
 async function updateProfile(prevState: string | null, formData: FormData) {
   try {
     await saveProfile({ name: formData.get("name") as string });
@@ -186,185 +144,115 @@ async function updateProfile(prevState: string | null, formData: FormData) {
   }
 }
 
-export function ProfileForm() {
-  const [error, submitAction, isPending] = useActionState(updateProfile, null);
-
-  return (
-    <form action={submitAction}>
-      <input type="text" name="name" disabled={isPending} />
-      <button type="submit" disabled={isPending}>
-        {isPending ? "Saving..." : "Save"}
-      </button>
-      {error && <p role="alert">{error}</p>}
-    </form>
-  );
-}
+const [error, submitAction, isPending] = useActionState(updateProfile, null);
 ```
 
-**Why good:** hook manages pending and error state automatically, form action works with progressive enhancement, no manual useState for loading/error
-
-See [examples/react-19-hooks.md](examples/react-19-hooks.md) for extended examples with success state.
+Full code: [examples/react-19-hooks.md](examples/react-19-hooks.md)
 
 ---
 
-### Pattern 7: useFormStatus for Submit Buttons
+### Pattern 7: useFormStatus for submit buttons
 
-`useFormStatus` reads parent form's pending state without prop drilling. **Must** be called from a child component inside the `<form>`.
+A submit button reads the enclosing form's pending state itself, so one button component serves every form and no form passes the flag down.
 
 ```typescript
 import { useFormStatus } from "react-dom";
 
-function SubmitButton() {
+function SubmitButton({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending}>
-      {pending ? "Submitting..." : "Submit"}
+    <button type="submit" disabled={pending} aria-busy={pending}>
+      {pending ? "Submitting..." : children}
     </button>
   );
 }
 ```
 
-**Gotcha:** Calling `useFormStatus` in the component that renders `<form>` returns `pending: false` always -- it must be a descendant component.
-
-See [examples/react-19-hooks.md](examples/react-19-hooks.md) for reusable submit button patterns.
+Full code: [examples/react-19-hooks.md](examples/react-19-hooks.md)
 
 ---
 
-### Pattern 8: useOptimistic for Instant UI Feedback
+### Pattern 8: useOptimistic for instant feedback
 
-Show immediate UI updates while async operations complete. State automatically reverts if the request fails.
+Render the expected result immediately and let React revert it if the request fails. The setter is called inside `startTransition`.
 
 ```typescript
-import { useOptimistic, startTransition } from "react";
-
 const [optimisticItems, addOptimistic] = useOptimistic(
   items,
   (state, update: Item) => [...state, { ...update, pending: true }],
 );
 
-// In handler -- setter MUST be called inside startTransition:
 startTransition(async () => {
   addOptimistic(newItem);
   await saveItem(newItem);
 });
 ```
 
-See [examples/react-19-hooks.md](examples/react-19-hooks.md) for todo list and chat examples.
+Full code: [examples/react-19-hooks.md](examples/react-19-hooks.md)
 
 ---
 
-### Pattern 9: use() Hook for Promises and Context
+### Pattern 9: use() for promises and context
 
-`use()` reads promises and context conditionally in render -- unlike `useContext`, it can be called after early returns.
+`use()` reads a promise or a context during render and, unlike `useContext`, may be called after an early return. A promise suspends until it resolves, so the caller sits under `<Suspense>` and a rejection is caught by an error boundary.
 
 ```typescript
-import { use, Suspense } from "react";
-
 function Comments({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
-  const comments = use(commentsPromise); // Suspends until resolved
+  const comments = use(commentsPromise);
   return <ul>{comments.map((c) => <li key={c.id}>{c.text}</li>)}</ul>;
 }
 
-// Wrap in Suspense boundary
 <Suspense fallback={<p>Loading...</p>}>
   <Comments commentsPromise={fetchComments()} />
 </Suspense>
 ```
 
-**Gotcha:** `use()` cannot be called in try-catch blocks -- use Error Boundaries for rejected promise handling.
-
-See [examples/react-19-hooks.md](examples/react-19-hooks.md) for conditional context reading.
+Full code: [examples/react-19-hooks.md](examples/react-19-hooks.md)
 
 ---
 
-### Pattern 10: Ref Callback Cleanup Functions
+### Pattern 10: Ref callback cleanup
 
-React 19 ref callbacks can return cleanup functions, replacing the need for separate `useEffect` cleanup.
+A ref callback may return a cleanup function, which runs on unmount — replacing the `useRef` + `useEffect` pair for DOM setup.
 
 ```typescript
-function VideoPlayer({ src }: { src: string }) {
-  return (
-    <video
-      ref={(video) => {
-        if (!video) return;
-        video.play();
-        return () => {
-          video.pause();
-          video.currentTime = 0;
-        };
-      }}
-      src={src}
-    />
-  );
-}
+<video
+  ref={(video) => {
+    if (!video) return;
+    video.play();
+    return () => {
+      video.pause();
+      video.currentTime = 0;
+    };
+  }}
+  src={src}
+/>
 ```
 
-**Why good:** cleanup runs automatically on unmount, no separate useEffect needed, simpler than useRef + useEffect combination
-
-**Note:** With ref cleanup functions, TypeScript rejects non-null/undefined return values from ref callbacks. The callback is no longer called with `null` on unmount -- the cleanup function handles that.
-
-See [examples/react-19-hooks.md](examples/react-19-hooks.md) for IntersectionObserver cleanup example.
+Full code: [examples/react-19-hooks.md](examples/react-19-hooks.md)
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Component architecture, variants, event handlers
-- [examples/hooks.md](examples/hooks.md) - usePagination, useDebounce, useLocalStorage
-- [examples/react-19-hooks.md](examples/react-19-hooks.md) - useActionState, useFormStatus, useOptimistic, use(), ref cleanup
-- [examples/error-boundaries.md](examples/error-boundaries.md) - Error boundary implementation and recovery
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, checklists
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `forwardRef` in React 19 -- deprecated, pass `ref` as a regular prop
-- Calling `useFormStatus` in the component that renders `<form>` -- will always return `pending: false`
-- Using `useState` for form loading/error when `useActionState` exists -- unnecessary boilerplate
-- Not exposing `className` prop on reusable components -- prevents external styling
-- Calling `use()` inside try-catch blocks -- use Error Boundaries instead
+- `useFormStatus` called in the component that renders `<form>` — `pending` stays false and the button never disables; call it from a child
+- `use()` inside `try`/`catch` — it throws to suspend, so the catch swallows the suspension; wrap the caller in an error boundary instead
+- The `useOptimistic` setter called outside a transition or a form action — React rejects the call, so the optimistic value never lands
+- Browser APIs read during render under SSR — guard with `typeof window !== "undefined"` or move the read into an effect
+- An error boundary relied on for event-handler, async or SSR errors — it catches render errors only, so those paths carry their own `try`/`catch`
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Adding variant abstractions for components without multiple variant dimensions
-- Using `useCallback` on every handler regardless of child memoization (premature optimization)
-- Wrapping ref callbacks in `useCallback` when the React Compiler handles memoization automatically
-- Generic event handler names (`click`, `change`) instead of descriptive names (`handleNameChange`)
-
-**Gotchas & Edge Cases:**
-
-- Ref cleanup functions: TypeScript rejects non-null/undefined returns from ref callbacks -- use the cleanup pattern explicitly
-- `useOptimistic` state reverts automatically on failure -- no manual rollback needed
-- `use()` can be called conditionally (after early returns), unlike `useContext`
-- Error boundaries do not catch event handler errors, async errors, or SSR errors
-- `useCallback` without memoized children adds overhead without benefit
-- SSR requires `typeof window !== "undefined"` before accessing browser APIs
+- A ref callback returning anything but a cleanup function is a type error in React 19, and the callback is no longer called with `null` on unmount
+- `useOptimistic` reverts on failure by itself, so a manual rollback fights it
+- `useCallback` around a handler passed to a child that is not memoised costs an allocation and buys nothing; the React Compiler makes the wrapper redundant either way
+- `forwardRef` still compiles, so nothing flags the wrapper and its `displayName` as dead weight
+- A component without `className` cannot be styled by its consumer at all
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST pass `ref` as a regular prop in React 19 - `forwardRef` is deprecated)**
-
-**(You MUST expose `className` prop on ALL reusable components for customization)**
-
-**(You MUST use `useActionState` for form submissions with pending/error state)**
-
-**(You MUST call `useFormStatus` from a child component inside `<form>`, NOT in the component that renders the form)**
-
-**Failure to follow these rules will break component composition, form state management, and styling flexibility.**
-
-</critical_reminders>

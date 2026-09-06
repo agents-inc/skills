@@ -126,7 +126,7 @@ const TodoApp: Component = () => {
 export { TodoApp };
 ```
 
-**Why good:** Path syntax for granular updates, filter function finds item to update, derived state via functions, classList for conditional classes
+**Why good:** the path form reaches one property of one row, so flipping a checkbox touches that row and nothing else. `filteredTodos` needs no memo — reading `store.filter` inside JSX already subscribes.
 
 ---
 
@@ -280,7 +280,7 @@ const SettingsForm: Component = () => {
 export { SettingsForm };
 ```
 
-**Why good:** Path syntax reaches deeply nested properties, fine-grained updates only re-render affected parts, type-safe paths
+**Why good:** every path segment is type-checked, so a renamed field fails to compile rather than silently creating a new one — and toggling one notification updates that checkbox alone, five levels down.
 
 ---
 
@@ -402,7 +402,7 @@ const Cart: Component = () => {
 export { Cart };
 ```
 
-**Why good:** `produce` enables mutable-style updates, complex logic is readable, array operations (push, splice) work naturally
+**Why good:** `produce` hands you a draft whose mutations are recorded and applied through the store, so `push` and `splice` notify only the indices they touched. The path form would need the index found first and one call per field.
 
 ---
 
@@ -466,7 +466,7 @@ const UserList: Component = () => {
 export { UserList };
 ```
 
-**Why good:** `reconcile` efficiently diffs incoming data, unchanged items keep references (no unnecessary re-renders), polling with proper cleanup
+**Why good:** without `reconcile`, each poll replaces the array and re-creates every row. `reconcile` diffs by `id` and writes only the fields that differ, so an unchanged user keeps its reference and its DOM node.
 
 ---
 
@@ -571,7 +571,9 @@ const Header = () => {
 export { AppProvider, useApp };
 ```
 
-**Why good:** Store + Context for global state, actions encapsulated, type-safe hook with error handling, fine-grained updates
+**Why good:** the context value hands over the store proxy itself, so `state.theme` in any consumer still reads through the proxy and stays fine-grained. Destructuring `{ state, actions }` out of the hook is safe for the same reason — both are stable references, and every reactive read happens after the dot.
+
+Exposing an individual field instead — `{ user: state.user }` — would copy the value out of the graph at creation and never update again. That shape needs a getter: `{ get user() { return state.user; } }`, which is the form [SKILL.md](../SKILL.md) shows.
 
 ---
 
@@ -592,7 +594,7 @@ const BadExample = () => {
   };
 
   const badReplace = () => {
-    // BAD: Replacing entire store loses reactivity
+    // BAD: hands over a whole new array, so every row is re-created
     setStore({ ...store, items: [...store.items, { id: 3, name: 'Another' }] });
   };
 
@@ -600,7 +602,7 @@ const BadExample = () => {
 };
 ```
 
-**Why bad:** Direct mutation bypasses proxy tracking, spreading store loses fine-grained updates
+**Why bad:** `badUpdate` goes around the proxy entirely, so nothing is notified and the UI never changes. `badReplace` does notify, but the proxy cannot tell which row is new, so it re-creates all of them instead of appending one.
 
 ---
 

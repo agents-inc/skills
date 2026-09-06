@@ -1,6 +1,6 @@
 # Base UI Reference
 
-> Lookup tables, decision trees, checklists and anti-patterns with code. See [SKILL.md](SKILL.md) for concepts and red flags, and [examples/](examples/) for full implementations. **Current: v1.7.0 (August 2026)** — package `@base-ui/react`.
+> Lookup tables, checklists, migration notes and version history. See [SKILL.md](SKILL.md) for the decision trees, concepts and red flags, and [examples/](examples/) for full implementations and anti-patterns with code. **Current: v1.7.0** — package `@base-ui/react`.
 
 ---
 
@@ -16,62 +16,22 @@
 
 ---
 
-## Decision Frameworks
+## Utilities
 
-### Which popup component?
+| Utility             | Subpath                             | Purpose                                                            |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------------ |
+| `useRender`         | `@base-ui/react/use-render`         | Give your own components the same `render` prop API                |
+| `mergeProps`        | `@base-ui/react/merge-props`        | Merge prop sets with handler chaining and className/style joining  |
+| `DirectionProvider` | `@base-ui/react/direction-provider` | Declare RTL/LTR so positioning and keyboard order follow           |
+| `CSPProvider`       | `@base-ui/react/csp-provider`       | Supply a nonce for injected styles under a Content Security Policy |
 
-```
-Does it block the rest of the page until answered?
-├─ YES → is it a destructive or irreversible confirmation?
-│   ├─ YES → Alert Dialog
-│   └─ NO  → Dialog (or Drawer for an edge-anchored panel)
-└─ NO → what opens it?
-    ├─ Hover or focus, short text        → Tooltip
-    ├─ Hover or focus, rich content      → Preview Card
-    ├─ Right-click                       → Context Menu
-    ├─ Click, list of commands           → Menu (Menubar when in a bar)
-    ├─ Click, arbitrary content          → Popover
-    ├─ Click, pick one/many from a list  → Select
-    └─ Typing, filter a list             → Combobox (Autocomplete for free text)
-```
+`Field.Root` labels and validates any control of this library placed inside it — `Input`, `Select`, `Combobox`, `NumberField`, `Radio`, `Switch` — not only `Field.Control`.
 
-### Which composition mechanism?
+---
 
-```
-Need to change the element a part renders?
-├─ NO → className / style, done
-└─ YES → does the output depend on the part's state?
-    ├─ NO  → render={<YourElement />}
-    └─ YES → render={(props, state) => …}
+## Component Coverage (v1.7.0)
 
-Building your own part that should accept `render`?
-└─ useRender({ defaultTagName, render, props: mergeProps(...) })
-```
-
-### Which animation approach?
-
-```
-Is the motion a single interpolation between two states?
-├─ YES → CSS transition + [data-starting-style] / [data-ending-style]   (preferred)
-└─ NO → multi-step motion?
-    ├─ YES → CSS @keyframes on [data-open] / [data-closed]
-    └─ Driven by an external animation library?
-        ├─ Popup unmounts    → keepMounted on Portal + presence wrapper
-        ├─ Popup stays in DOM → render={(props, state) => …}, animate on state.open
-        └─ Library animates outside the Web Animations API → actionsRef.unmount()
-```
-
-### Controlled or uncontrolled?
-
-```
-Does anything outside need to SET the value?
-├─ YES → controlled: value/open + onValueChange/onOpenChange
-└─ NO → does anything outside need to OBSERVE it?
-    ├─ YES → uncontrolled + handler only
-    └─ NO → do you need to FORBID some changes?
-        ├─ YES → uncontrolled + eventDetails.cancel()
-        └─ NO → defaultValue / defaultOpen
-```
+Accordion, Alert Dialog, Autocomplete, Avatar, Button, Checkbox, Checkbox Group, Collapsible, Combobox, Context Menu, Dialog, Drawer, Field, Fieldset, Form, Input, Menu, Menubar, Meter, Navigation Menu, Number Field, OTP Field, Popover, Preview Card, Progress, Radio, Scroll Area, Select, Separator, Slider, Switch, Tabs, Toast, Toggle, Toggle Group, Toolbar, Tooltip.
 
 ---
 
@@ -169,155 +129,25 @@ Takes up to five argument sets; use `mergePropsN` with an array beyond that. `ev
 
 ## Anti-Patterns
 
-### Positioning Props on Popup
+Each one is written out as a "Bad Example" beside the pattern it belongs to:
 
-Positioning lives on `Positioner`. Props placed on `Popup` are not part of its API and fall through to the DOM.
-
-```tsx
-// WRONG — no Positioner, unknown attributes on the DOM node
-<Popover.Portal>
-  <Popover.Popup side="top" sideOffset={8}>Content</Popover.Popup>
-</Popover.Portal>
-
-// CORRECT
-<Popover.Portal>
-  <Popover.Positioner side="top" sideOffset={8}>
-    <Popover.Popup>Content</Popover.Popup>
-  </Popover.Positioner>
-</Popover.Portal>
-```
-
-### Transforming the Positioner
-
-The positioner carries the computed placement transform.
-
-```css
-/* WRONG — overwrites the placement transform */
-.positioner {
-  transform: translateY(-4px);
-}
-
-/* CORRECT — animate the popup, express the gap as sideOffset */
-.popup {
-  transition: transform 150ms;
-}
-.popup[data-starting-style] {
-  transform: translateY(-4px);
-}
-```
-
-### Reaching for asChild
-
-There is no `asChild` and no `Slot` in this library.
-
-```tsx
-// WRONG — asChild is not a prop here
-<Menu.Trigger asChild>
-  <Button>Open</Button>
-</Menu.Trigger>
-
-// CORRECT
-<Menu.Trigger render={<Button />}>Open</Menu.Trigger>
-```
-
-### A render Target That Swallows Props
-
-```tsx
-// WRONG — no ref, no prop spreading; the menu silently never opens
-function Button({ children }: { children: React.ReactNode }) {
-  return <button className="button">{children}</button>;
-}
-
-// CORRECT
-function Button({ className, ref, ...props }: React.ComponentProps<"button">) {
-  return <button ref={ref} className={className} {...props} />;
-}
-```
-
-### Returning Early Instead of Canceling
-
-```tsx
-// WRONG — the return value is ignored; an uncontrolled component still updates
-onOpenChange={(open) => {
-  if (shouldStayClosed) return;
-  setOpen(open);
-}}
-
-// CORRECT
-onOpenChange={(open, eventDetails) => {
-  if (shouldStayClosed) {
-    eventDetails.cancel();
-  }
-}}
-```
-
-### Duplicating State for Styling
-
-```tsx
-// WRONG — data-popup-open already exists, and the copy drifts
-const [open, setOpen] = useState(false);
-<Popover.Trigger className={open ? "trigger trigger--open" : "trigger"} />
-
-// CORRECT
-<Popover.Trigger className="trigger" />
-```
-
-```css
-.trigger[data-popup-open] {
-  background: var(--color-accent);
-}
-```
-
-### A Transition With No Boundary States
-
-```css
-/* WRONG — nothing to transition from on mount, and the base state leaks */
-.popup {
-  transition: opacity 150ms;
-  opacity: 0;
-}
-.popup[data-open] {
-  opacity: 1;
-}
-
-/* CORRECT */
-.popup {
-  transition: opacity 150ms;
-}
-.popup[data-starting-style],
-.popup[data-ending-style] {
-  opacity: 0;
-}
-```
-
-### Animating a Child and Expecting Unmount to Wait
-
-```tsx
-// WRONG — Popup reports no running animations and unmounts immediately
-<Popover.Popup>
-  <AnimatedBox exit={{ opacity: 0 }}>Content</AnimatedBox>
-</Popover.Popup>
-
-// CORRECT — animate Popup itself, or drive unmount with actionsRef
-<Popover.Popup render={<AnimatedBox exit={{ opacity: 0 }} />}>Content</Popover.Popup>
-```
-
-### Server Errors Rendered Away From Their Field
-
-```tsx
-// WRONG — no association, no focus target, no onClearErrors
-{
-  serverError && <div className="banner">{serverError}</div>;
-}
-
-// CORRECT — Form maps errors onto fields by name
-<Form errors={{ url: serverError }} onClearErrors={setErrors}>
-  <Field.Root name="url">
-    <Field.Control type="url" />
-    <Field.Error />
-  </Field.Root>
-</Form>;
-```
+| Anti-pattern                                          | Where                                                        |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| Positioning props on `Popup`                          | [examples/core.md](examples/core.md) Pattern 1               |
+| A ref object read during render as `container`        | [examples/core.md](examples/core.md) Pattern 1a              |
+| An anchor wrapped inside `Menu.Item`                  | [examples/core.md](examples/core.md) Pattern 2               |
+| Transforming the `Positioner`                         | [examples/core.md](examples/core.md) Pattern 3               |
+| `asChild`, and a `render` target that swallows props  | [examples/composition.md](examples/composition.md) Pattern 4 |
+| Forgetting to spread in the function form             | [examples/composition.md](examples/composition.md) Pattern 5 |
+| Assuming left-to-right `mergeProps` precedence        | [examples/composition.md](examples/composition.md) Pattern 7 |
+| Mirroring state into React to drive styles            | [examples/styling.md](examples/styling.md) Pattern 8         |
+| A transition with no boundary attributes              | [examples/styling.md](examples/styling.md) Pattern 11        |
+| Animating a child and expecting unmount to wait       | [examples/styling.md](examples/styling.md) Pattern 11        |
+| Controlling for no reason, controlled with no handler | [examples/state.md](examples/state.md) Patterns 12–13        |
+| Returning early instead of cancelling                 | [examples/state.md](examples/state.md) Pattern 14            |
+| Hand-rolled label and error wiring                    | [examples/forms.md](examples/forms.md) Pattern 16            |
+| `onChange` validation without a debounce              | [examples/forms.md](examples/forms.md) Pattern 18            |
+| Server errors rendered away from their field          | [examples/forms.md](examples/forms.md) Pattern 19            |
 
 ---
 
@@ -355,6 +185,35 @@ const [open, setOpen] = useState(false);
 - [ ] `validationMode="onChange"` paired with `validationDebounceTime`
 - [ ] Field state styled from `Field.Root`'s data attributes, not React state
 - [ ] `Fieldset.Legend` selected by class, not by `legend` tag
+
+---
+
+## Migrating From Radix Primitives
+
+Several of the same authors, so the mental model transfers; the API does not. The differences are structural.
+
+| Concern         | Radix                                           | Base UI                                                                                                       |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Package         | `radix-ui` or `@radix-ui/react-*`               | `@base-ui/react`, one subpath per component                                                                   |
+| Polymorphism    | `asChild` boolean + `Slot`                      | `render` prop, element or `(props, state)` function                                                           |
+| Custom parts    | `Slot` / `Slottable`                            | `useRender` + `mergeProps`                                                                                    |
+| Positioning     | props on `Content`                              | separate `Positioner` part wrapping `Popup`                                                                   |
+| Open state attr | `data-state="open" \| "closed"`                 | separate `data-open` / `data-closed`                                                                          |
+| Trigger state   | `data-state` on trigger                         | `data-popup-open`, `data-pressed`                                                                             |
+| Exit animation  | CSS `@keyframes` only — `transition` is ignored | CSS `transition` is recommended, via `data-starting-style` / `data-ending-style`; `@keyframes` also supported |
+| Keeping mounted | `forceMount` per part                           | `keepMounted` on `Portal`, plus `actionsRef.unmount()`                                                        |
+| Change handlers | `(value)`                                       | `(value, eventDetails)` with `reason` and `cancel()`                                                          |
+| Forms           | unstable/preview                                | `Field`, `Fieldset`, `Form` shipped stable                                                                    |
+
+**Mechanical rewrites when porting a component:**
+
+1. `<X.Content side="top" sideOffset={8}>` becomes `<X.Positioner side="top" sideOffset={8}><X.Popup>`.
+2. `asChild` plus a child element becomes `render={<child />}`; the child's ref-forwarding and prop-spreading requirement is unchanged, so custom trigger components port as-is.
+3. `[data-state="open"]` selectors split into `[data-open]` and `[data-closed]`.
+4. Enter/exit `@keyframes` collapse into one `transition` rule plus `[data-starting-style]` / `[data-ending-style]` blocks, and gain mid-flight cancelation.
+5. `forceMount` on Portal/Overlay/Content collapses to `keepMounted` on `Portal` alone.
+
+Both can be installed side by side — separate packages, separate contexts, no shared globals — so migration goes component by component. What they cannot share is one styled wrapper: a dialog styled for `data-state` does not react to `data-open`, so port the CSS alongside each component rather than writing selectors that satisfy both.
 
 ---
 

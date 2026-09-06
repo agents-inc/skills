@@ -1,12 +1,13 @@
-# Service Worker - Caching Examples
+# Service Worker — Caching Examples
 
-> Advanced caching strategy examples for Service Workers. See [SKILL.md](../SKILL.md) for concepts and [core.md](core.md) for core lifecycle patterns.
+> Strategies beyond the four in [core.md](core.md). Decisions are in [SKILL.md](../SKILL.md).
 
 ---
 
-## Pattern 5: Cache-First with Background Refresh
+## Pattern 5: Cache-first with background refresh
 
-Return cached immediately but refresh in background for next request. Useful for content that's acceptable stale for current visit but should be fresh on next.
+Serve the cached copy now and refresh it for the next visit. Suits content where staleness within a
+session is acceptable but staleness across sessions is not.
 
 ```typescript
 async function cacheFirstWithBackgroundRefresh(
@@ -16,25 +17,17 @@ async function cacheFirstWithBackgroundRefresh(
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
 
-  // Always try to refresh in background
   const refreshPromise = fetch(request)
     .then((networkResponse) => {
-      if (networkResponse.ok) {
-        cache.put(request, networkResponse.clone());
-      }
+      if (networkResponse.ok) cache.put(request, networkResponse.clone());
       return networkResponse;
     })
     .catch(() => null);
 
-  if (cachedResponse) {
-    return cachedResponse; // Return stale, refresh happens in background
-  }
+  if (cachedResponse) return cachedResponse;
 
-  // No cache - wait for network
   const networkResponse = await refreshPromise;
-  if (networkResponse) {
-    return networkResponse;
-  }
+  if (networkResponse) return networkResponse;
 
   throw new Error("No cached or network response available");
 }
@@ -42,22 +35,21 @@ async function cacheFirstWithBackgroundRefresh(
 export { cacheFirstWithBackgroundRefresh };
 ```
 
-**Why good:** Immediate response from cache, background refresh keeps cache fresh for next visit, handles cache miss gracefully
-
 ---
 
-## Pattern 6: Cache with Expiration
+## Pattern 6: Cache with expiration
 
-Track cache entry timestamps via IndexedDB and expire old entries. Useful when content has a known maximum staleness tolerance.
+The Cache API stores no timestamps, so age has to be tracked alongside. Keep the timestamps in
+IndexedDB rather than in memory — the worker is terminated between events.
 
 ```typescript
 const EXPIRATION_DB_NAME = "cache-expiration";
 const EXPIRATION_STORE_NAME = "timestamps";
 
 const MAX_AGE_SECONDS = {
-  api: 5 * 60, // 5 minutes
-  images: 30 * 24 * 60 * 60, // 30 days
-  static: 7 * 24 * 60 * 60, // 7 days
+  api: 5 * 60,
+  images: 30 * 24 * 60 * 60,
+  static: 7 * 24 * 60 * 60,
 } as const;
 
 async function cacheFirstWithExpiration(
@@ -68,19 +60,14 @@ async function cacheFirstWithExpiration(
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
 
-  if (cachedResponse) {
-    const expired = await isCacheExpired(request.url, maxAgeSeconds);
-    if (!expired) {
-      return cachedResponse;
-    }
+  if (cachedResponse && !(await isCacheExpired(request.url, maxAgeSeconds))) {
+    return cachedResponse;
   }
 
   const networkResponse = await fetch(request);
-
   if (networkResponse.ok) {
     await cacheWithTimestamp(cache, request, networkResponse);
   }
-
   return networkResponse;
 }
 
@@ -109,11 +96,9 @@ async function isCacheExpired(
     const entry = await tx.objectStore(EXPIRATION_STORE_NAME).get(url);
 
     if (!entry) return true;
-
-    const ageMs = Date.now() - entry.timestamp;
-    return ageMs > maxAgeSeconds * 1000;
+    return Date.now() - entry.timestamp > maxAgeSeconds * 1000;
   } catch {
-    return true; // On error, treat as expired
+    return true; // an unreadable timestamp means refetch, never serve stale
   }
 }
 
@@ -134,13 +119,12 @@ function openExpirationDB(): Promise<IDBDatabase> {
 export { cacheFirstWithExpiration, MAX_AGE_SECONDS };
 ```
 
-**Why good:** Per-content-type expiration, IndexedDB for persistent timestamps, handles missing timestamps, named constants
-
 ---
 
-## Pattern 7: Selective API Caching
+## Pattern 7: Per-endpoint routing
 
-Route API requests to different caching strategies based on endpoint patterns. First matching config wins.
+A declarative table beats a chain of `if`s once more than two endpoints differ. First match wins, so
+order from most specific to least.
 
 ```typescript
 type ApiCacheConfig = {
@@ -187,7 +171,6 @@ async function handleApiRequest(request: Request): Promise<Response> {
   const config = findCacheConfig(request.url);
   if (!config) return fetch(request);
 
-  // Dispatch to strategy implementation (see core.md Pattern 2)
   switch (config.strategy) {
     case "cache-first":
       return cacheFirst(request, API_CACHE_NAME);
@@ -202,20 +185,18 @@ export { handleApiRequest, API_CACHE_CONFIG };
 export type { ApiCacheConfig };
 ```
 
-**Why good:** Declarative config, pattern-based routing, first match wins, typed config, clean dispatch
-
 ---
 
-## Pattern 8: Navigation Preload
+## Pattern 8: Navigation preload
 
-Fetch navigation requests in parallel with service worker bootup. Eliminates the latency penalty of SW startup for network-first HTML pages.
+Enable in activate, consume in fetch. Skip this for a precached app shell; there is no network
+request to overlap with.
 
 ```typescript
 declare const self: ServiceWorkerGlobalScope;
 
 const PAGES_CACHE = "pages-v1";
 
-// Enable navigation preload in activate
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
@@ -227,7 +208,6 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
   );
 });
 
-// Use preloaded response in fetch handler
 self.addEventListener("fetch", (event: FetchEvent) => {
   if (event.request.mode !== "navigate") return;
 
@@ -236,14 +216,12 @@ self.addEventListener("fetch", (event: FetchEvent) => {
       const cache = await caches.open(PAGES_CACHE);
 
       try {
-        // Use preloaded response if available (avoids double fetch)
         const preloadResponse = await event.preloadResponse;
         if (preloadResponse) {
           cache.put(event.request, preloadResponse.clone());
           return preloadResponse;
         }
 
-        // Fallback to normal fetch
         const networkResponse = await fetch(event.request);
         if (networkResponse.ok) {
           cache.put(event.request, networkResponse.clone());
@@ -263,19 +241,20 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 });
 ```
 
-**When to use:** Network-first HTML pages with dynamic/authenticated content. Not needed for precached app shells.
-
-**Warning:** If you enable navigation preload, you MUST use `event.preloadResponse`. Using `fetch(event.request)` instead results in two network requests for the same resource.
+The `fetch` fallback runs only when preload is unavailable — a browser without support, or a request
+that arrived before activate finished. Keeping both paths is what makes the handler safe to ship
+before checking support.
 
 ---
 
-## Pattern 9: Storage Cleanup
+## Pattern 9: Storage cleanup
 
-Monitor storage quota and clean caches when approaching limits. Prevents quota exceeded errors.
+Watch the quota and evict before a write throws. `navigator.storage.estimate()` needs a secure
+context and returns zeros without one.
 
 ```typescript
-const STORAGE_QUOTA_THRESHOLD = 0.9; // 90% of quota
-const CLEANUP_PERCENTAGE = 0.3; // Remove 30% when cleaning
+const STORAGE_QUOTA_THRESHOLD = 0.9;
+const CLEANUP_PERCENTAGE = 0.3;
 
 interface StorageEstimate {
   quota: number;
@@ -305,6 +284,7 @@ async function checkAndCleanup(): Promise<void> {
     const deleteCount = Math.floor(keys.length * CLEANUP_PERCENTAGE);
 
     if (deleteCount > 0) {
+      // cache.keys() returns insertion order, so the head is the oldest
       const toDelete = keys.slice(0, deleteCount);
       await Promise.all(toDelete.map((key) => cache.delete(key)));
     }
@@ -314,5 +294,3 @@ async function checkAndCleanup(): Promise<void> {
 export { checkAndCleanup, getStorageEstimate };
 export type { StorageEstimate };
 ```
-
-**Why good:** Uses Storage API for quota awareness, configurable thresholds, FIFO cleanup, prevents quota exceeded errors

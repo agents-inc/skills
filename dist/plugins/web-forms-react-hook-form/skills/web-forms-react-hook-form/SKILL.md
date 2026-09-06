@@ -5,72 +5,93 @@ description: React Hook Form patterns - useForm, Controller, useFieldArray, vali
 
 # React Hook Form Patterns
 
-> **Quick Guide:** Use `register` for native inputs, `Controller` for controlled components, `useFieldArray` for dynamic fields. Always provide `useForm<FormData>()` generics. Set `mode: "onBlur"` for optimal UX. Use resolver pattern for schema validation. Use `useWatch` instead of `watch()` in render to avoid re-rendering the whole form. Use `field.id` as key in useFieldArray -- never array index.
+> **Quick Guide:** `register` binds native inputs and keeps them uncontrolled; `Controller` wraps
+> components that hold their own value; `useFieldArray` drives repeatable rows and is keyed on
+> `field.id`. Validation arrives either as `register` rules or as a schema through `resolver`.
+> Re-renders are the thing to watch: `useWatch` and `useFormState` subscribe to named fields,
+> whereas `watch()` and a wide `formState` destructure subscribe to the whole form.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — a type-safe form with `register`, error display and accessibility attributes
+- [examples/controlled-components.md](examples/controlled-components.md) — `Controller` around a select, a date picker and a checkbox group
+- [examples/validation.md](examples/validation.md) — wiring a schema in through `resolver`
+- [examples/arrays.md](examples/arrays.md) — `useFieldArray` line items with a live total
+- [examples/performance.md](examples/performance.md) — isolated subscriptions, `FormStateSubscribe`, `useWatch` `exact` and `compute`
+- [examples/form-options.md](examples/form-options.md) — the `values` prop for async data, `disabled`, the `<Form />` component
+- [examples/wizard.md](examples/wizard.md) — multi-step form with per-step `trigger()`
+- [reference.md](reference.md) — decision trees, API tables, version-to-feature lookup
+
+---
+
+## Which path applies
+
+- **A native `input`, `select` or `textarea`** — `register` hands the ref to the form, the field
+  stays uncontrolled, and typing re-renders nothing. Follow [examples/core.md](examples/core.md).
+- **A component that owns its value** — a custom select, date picker or rich text editor exposes no
+  usable ref, so `Controller` supplies `value` and `onChange` and confines the re-render to that
+  field. Follow [examples/controlled-components.md](examples/controlled-components.md).
+- **Validation stated as a schema rather than as `register` rules** — pass it through `resolver` and
+  the field-level `rules` drop out. Follow [examples/validation.md](examples/validation.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing React Hook Form code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Call `useForm<FormData>()` with a generic and with `defaultValues` for every field.** The generic
+types each field path and the submit payload; the defaults mount every input controlled from the
+first render.
 
-**(You MUST provide generic types to `useForm<FormData>()` for type-safe form handling)**
+**Key `useFieldArray` rows on `field.id`.** It is the identity RHF assigns the row and it survives
+add, remove and reorder, which an array index does not.
 
-**(You MUST use `field.id` as key prop in useFieldArray - NEVER use array index)**
+**Reach for `Controller` as soon as a component holds its own value.** `register` needs a ref that
+reaches a native input, and a component that does not forward one never joins the form.
 
-**(You MUST use Controller for controlled components that don't expose a ref)**
+**Set `mode` to `"onBlur"` or `"onTouched"`.** The default `"onSubmit"` withholds feedback until the
+first submit, and `"onChange"` validates on every keystroke.
 
-**(You MUST use resolver pattern for schema validation - keep schemas separate from form logic)**
-
-**(You MUST set `mode: "onBlur"` or `mode: "onTouched"` for optimal UX - avoid `mode: "onChange"` unless needed)**
+**Pass schema validation through `resolver`, with the schema in its own module.** A schema outside
+the component is testable on its own and reusable across forms, and the form keeps only the wiring.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** React Hook Form, useForm, register, handleSubmit, formState, Controller, useFieldArray, useWatch, useFormContext, resolver, zodResolver, FormProvider, useFormState, FormStateSubscribe
+**Auto-detection:** react-hook-form, useForm, register, handleSubmit, formState, Controller,
+useFieldArray, useWatch, useFormContext, useFormState, FormProvider, FormStateSubscribe, SubmitHandler,
+resolver, shouldUnregister, valueAsNumber
 
-**When to use:**
+**Applies to:**
 
-- Building forms with validation requirements
-- Managing complex form state with many fields
-- Creating dynamic forms with add/remove fields
-- Integrating with controlled component libraries
-- Handling multi-step or wizard forms
+- Form state, submission and validation wiring in React
+- Repeatable field groups that add, remove and reorder
+- Components that hold their own value and need bridging into the form
+- Multi-step flows where one form spans several screens
+- Narrowing re-renders in a form with many fields
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Single input without validation (use useState)
-- Server-only forms with server actions (use native form + action)
-- Read-only data display (not a form scenario)
-
-**Key patterns covered:**
-
-- useForm hook with TypeScript generics
-- register vs Controller decision
-- useFieldArray for dynamic fields
-- Resolver integration for schema validation
-- useWatch and useFormState for performance
-- FormProvider/useFormContext for nested components
-- Form reset, async data loading, and `values` prop
-- FormStateSubscribe for targeted re-renders (v7.68+)
+- Authoring the validation schema — `resolver` accepts a schema object and this skill only wires it
+  in; how the schema states its rules is settled by whatever owns it.
+- Where the initial values came from — the form receives them as a prop or through the `values`
+  option and fetches nothing itself.
+- Markup and styling of the inputs — every example uses plain elements, so the class names are yours.
 
 ---
 
 <philosophy>
 
-## Philosophy
+Form state lives outside React state. Inputs register themselves with the form and report through a
+ref, so a keystroke updates the form's own store without re-rendering the component that owns the
+field. Everything that reads form state — an error message, a computed total, a submit button — opts
+in by subscribing to a named slice, and a component that subscribes to nothing never re-renders.
 
-React Hook Form prioritizes performance through uncontrolled inputs and subscription-based updates. Only fields that change re-render, not the entire form. The library isolates form state from component state, minimizing re-renders and keeping forms responsive even with many fields.
-
-**Core Principles:**
-
-1. **Uncontrolled by default** - Use `register` for native inputs to avoid re-renders
-2. **Controlled when needed** - Use `Controller` for UI library components that don't expose a ref
-3. **Schema validation via resolver** - Separate validation logic from form logic
-4. **Subscription-based** - Subscribe to only the form state you need (`useWatch`, `useFormState`)
-5. **Type safety** - Always provide TypeScript generics for form data
+This is why the wide reads cost so much. `watch()` in a render body and a `formState` destructure
+that pulls six properties both subscribe to the entire form, undoing the isolation the library was
+built for.
 
 </philosophy>
 
@@ -78,11 +99,12 @@ React Hook Form prioritizes performance through uncontrolled inputs and subscrip
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic useForm with TypeScript
+### Pattern 1: useForm with a generic
 
-Always provide a type parameter, `mode`, and `defaultValues`. These three prevent the most common issues (no type safety, validation noise, undefined warnings).
+The generic, `mode` and `defaultValues` together settle type safety, validation timing and
+controlled-input warnings.
 
 ```typescript
 const {
@@ -95,15 +117,15 @@ const {
 });
 ```
 
-**Why this matters:** Without generics, field names are `any`. Without `defaultValues`, values are `undefined` and cause hydration mismatches. Without `mode: "onBlur"`, the default `"onSubmit"` gives no feedback until first submit.
-
-See [examples/core.md](examples/core.md) for complete form with accessibility attributes and error display.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Controller for Controlled Components
+### Pattern 2: Controller for components that own their value
 
-Use `Controller` when a component doesn't expose a native ref (custom selects, date pickers, rich text editors). Use `register` for standard HTML inputs.
+`Controller` renders the field itself and hands it `value` and `onChange`. The test for which to
+reach for: a component whose `ref` forwards to a native input works with `register`, and anything
+else needs `Controller`.
 
 ```typescript
 <Controller
@@ -119,40 +141,36 @@ Use `Controller` when a component doesn't expose a native ref (custom selects, d
 />
 ```
 
-**Key decision:** If the component accepts a `ref` prop that forwards to a native input, `register` works. Otherwise, use `Controller`.
-
-See [examples/controlled-components.md](examples/controlled-components.md) for single select, date picker, and multi-select checkbox patterns.
+Full code: [examples/controlled-components.md](examples/controlled-components.md)
 
 ---
 
-### Pattern 3: useFieldArray for Dynamic Fields
+### Pattern 3: useFieldArray for repeatable rows
 
-Use `useFieldArray` for repeatable field groups. **Always use `field.id` as the React key** -- array index causes state corruption on add/remove.
+`fields` carries a generated `id` per row, and that is the React key. Array-level rules go on the
+hook, and their errors land at `errors.items.root`.
 
 ```typescript
 const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
 {fields.map((field, index) => (
-  <div key={field.id}> {/* CRITICAL: field.id, never index */}
+  <div key={field.id}>
     <input {...register(`items.${index}.name`)} />
     <button type="button" onClick={() => remove(index)}>Remove</button>
   </div>
 ))}
 ```
 
-**Gotcha:** `append`/`prepend`/`insert` require complete objects (not partial). Use `rules.minLength` on `useFieldArray` for minimum item validation. Array-level errors live at `errors.items.root`.
-
-See [examples/arrays.md](examples/arrays.md) for a complete invoice form with calculated totals.
+Full code: [examples/arrays.md](examples/arrays.md)
 
 ---
 
-### Pattern 4: Resolver for Schema Validation
+### Pattern 4: Schema validation through resolver
 
-Use `resolver` to integrate validation schemas. The resolver handles validation; you wire it to the form. Keep schema definition separate from form code.
+`resolver` replaces the per-field `rules`: the schema decides what is valid and reports errors
+against field paths, and the form does the wiring.
 
 ```typescript
-import { zodResolver } from "@hookform/resolvers/zod";
-
 const { register, handleSubmit } = useForm<FormData>({
   resolver: zodResolver(schema),
   mode: "onBlur",
@@ -160,15 +178,17 @@ const { register, handleSubmit } = useForm<FormData>({
 });
 ```
 
-**Why resolver over inline rules:** Schemas are testable independently, reusable across forms, support cross-field validation (e.g. confirmPassword), and generate TypeScript types via `z.infer`.
+A schema kept in its own module is testable without rendering, reusable across forms, and can state
+cross-field rules — matching passwords, a date range — that per-field `rules` cannot express.
 
-See [examples/validation.md](examples/validation.md) for resolver integration with a registration form.
+Full code: [examples/validation.md](examples/validation.md)
 
 ---
 
-### Pattern 5: useWatch for Reactive Derived Values
+### Pattern 5: useWatch for derived values
 
-Use `useWatch` in a separate component to subscribe to specific fields without re-rendering the entire form. Prefer `useWatch` over `watch()` in render.
+`useWatch` in a child component subscribes to named fields, so only that child re-renders when they
+change.
 
 ```typescript
 function PriceDisplay({ control }: { control: Control<PricingFormData> }) {
@@ -177,28 +197,20 @@ function PriceDisplay({ control }: { control: Control<PricingFormData> }) {
 }
 ```
 
-**v7.61+ `compute` option:** Transform watched values before subscription -- component only re-renders when the computed result changes.
+The `compute` option narrows the subscription further — the component re-renders when the computed
+result changes rather than when an input to it does.
 
-```typescript
-const total = useWatch({
-  control,
-  compute: ({ plan, seats, billingCycle }) => {
-    const base = PLAN_PRICES[plan] * seats;
-    return billingCycle === "annual" ? base * 12 * (1 - ANNUAL_DISCOUNT) : base;
-  },
-});
-```
-
-See [examples/v7-advanced.md](examples/v7-advanced.md) Pattern 6 for complete compute example.
+Full code: [examples/performance.md](examples/performance.md) Pattern 11 and Pattern 12
 
 ---
 
-### Pattern 6: useFormContext for Nested Components
+### Pattern 6: useFormContext for nested fields
 
-Use `FormProvider` + `useFormContext` to share form methods across deeply nested components without prop drilling. Ideal for multi-section forms and wizard steps.
+`FormProvider` puts the form methods on context so a nested or reused section reaches them without
+prop drilling. Worth it at three levels of nesting or for a section rendered more than once; below
+that, passing `control` is simpler.
 
 ```typescript
-// Parent
 <FormProvider {...methods}>
   <form onSubmit={methods.handleSubmit(onSubmit)}>
     <AddressFields prefix="shippingAddress" />
@@ -206,49 +218,40 @@ Use `FormProvider` + `useFormContext` to share form methods across deeply nested
   </form>
 </FormProvider>
 
-// Child - no props needed
 function AddressFields({ prefix }) {
   const { register } = useFormContext<CheckoutFormData>();
   return <input {...register(`${prefix}.street`)} />;
 }
 ```
 
-**When to use:** 3+ levels of nesting or reusable form sections. For 1-2 levels, passing `control`/`register` as props is simpler.
-
-See [examples/wizard.md](examples/wizard.md) for a complete multi-step wizard using FormProvider with per-step validation via `trigger()`.
+Full code: [examples/wizard.md](examples/wizard.md)
 
 ---
 
-### Pattern 7: Form Reset and Async Data
+### Pattern 7: Loading external data
 
-**Two approaches for loading external data into a form:**
-
-1. **`values` prop (v7.x+, preferred):** Reactively updates form when external data changes. Pair with `resetOptions: { keepDirtyValues: true }` to preserve user edits.
-
-2. **`reset()` in useEffect (legacy):** Manually reset when data arrives. Use `reset(data)` which updates both values AND defaultValues for proper `isDirty` tracking.
+`values` is reactive — the form follows the data as it changes — while `defaultValues` is read once
+on mount. Pair `values` with `resetOptions: { keepDirtyValues: true }` so a background refresh does
+not discard what the user has typed.
 
 ```typescript
-// Modern: values prop (reactive, auto-updates)
 useForm<FormData>({
   values: userData,
   resetOptions: { keepDirtyValues: true },
 });
-
-// Legacy: manual reset
-useEffect(() => {
-  if (data) reset(data);
-}, [data, reset]);
 ```
 
-**Cancel/save pattern:** `reset()` without args reverts to defaultValues. After save, call `reset(data)` to update defaultValues and clear `isDirty`.
+After a successful save, `reset(data)` replaces the values and the defaults together, which is what
+clears `isDirty`. `reset()` with no argument reverts to the original defaults — the cancel button.
 
-See [examples/v7-advanced.md](examples/v7-advanced.md) Pattern 1 for `values` prop with async data.
+Full code: [examples/form-options.md](examples/form-options.md) Pattern 7
 
 ---
 
-### Pattern 8: Isolated Error Display
+### Pattern 8: Isolated error display
 
-Use `useFormState` with `name` to create error components that only re-render when their specific field's error changes. For v7.68+, `FormStateSubscribe` provides the same isolation as a component.
+`useFormState` with a `name` re-renders only when that field's state changes, which keeps an error
+message from re-rendering the form around it.
 
 ```typescript
 function FieldError<T extends FieldValues>({ control, name }: Props<T>) {
@@ -259,76 +262,49 @@ function FieldError<T extends FieldValues>({ control, name }: Props<T>) {
 }
 ```
 
-See [examples/performance.md](examples/performance.md) for a complete large form with isolated subscriptions, and [examples/v7-advanced.md](examples/v7-advanced.md) Pattern 4 for `FormStateSubscribe`.
+Full code: [examples/performance.md](examples/performance.md) — Pattern 5 for the hook, Pattern 10
+for the `FormStateSubscribe` component form
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Basic form with accessibility and error display
-- [examples/controlled-components.md](examples/controlled-components.md) - Controller for select, date picker, multi-select
-- [examples/validation.md](examples/validation.md) - Resolver integration with Zod
-- [examples/arrays.md](examples/arrays.md) - useFieldArray with invoice line items
-- [examples/performance.md](examples/performance.md) - Isolated subscriptions for large forms
-- [examples/wizard.md](examples/wizard.md) - Multi-step wizard with per-step validation
-- [examples/v7-advanced.md](examples/v7-advanced.md) - values prop, Form component, FormStateSubscribe, compute
-- [reference.md](reference.md) - Decision frameworks, checklists, anti-patterns
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using array index as key in useFieldArray -- causes state corruption on add/remove/reorder
-- Missing TypeScript generics on `useForm` -- loses type safety for field names and values
-- Using `register` for components that don't expose ref -- use Controller instead
-- Not providing `defaultValues` -- causes hydration mismatches and undefined warnings
+- An array index as the `useFieldArray` key — React matches the wrong rows, so removing a middle
+  item shifts every value below it up one. Key on `field.id`.
+- `register` on a component that holds its own value — no ref arrives, the field never registers,
+  and its value is absent from the submit payload. Wrap it in `Controller`.
+- No `defaultValues` — inputs mount uncontrolled and flip to controlled on the first keystroke,
+  which React warns about and SSR reports as a hydration mismatch. Seed every field, `""` included.
+- A partial object handed to `append`, `prepend` or `insert` — the absent keys arrive as `undefined`
+  and their inputs read as uncontrolled. Pass a complete item.
+- An error thrown inside `onSubmit` — `handleSubmit` does not catch it, so the rejection escapes
+  unhandled. Catch inside the callback.
+- `setValue` against a field array's own name — the row ids do not move with the values. Use
+  `replace()`.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using `mode: "onChange"` without reason -- validates on every keystroke, noisy UX
-- Destructuring many `formState` properties -- subscribes to all, causes unnecessary re-renders
-- Using `watch()` in render body -- triggers re-render on every field change; use `useWatch` instead
-- Calling `setValue` without `shouldValidate: true` -- may leave form in invalid state
-- Not using `trigger(fieldNames)` for step validation in wizard forms
+- No generic on `useForm` leaves field paths and the submit payload as `any`, so `register("emial")`
+  is accepted in silence.
+- Destructuring several `formState` properties subscribes to all of them, and the form then
+  re-renders on any change. Take only what the component reads, or isolate it with `useFormState`.
+- `watch()` in a render body subscribes to every field; `useWatch` in a child narrows it to named ones.
+- `setValue` without `shouldValidate: true` leaves the previous error on screen.
+- Array-level errors sit at `errors.items.root`; per-item errors at `errors.items[index].field`.
+- `shouldUnregister: true` discards the values of unmounted fields. Leave it `false` (the default)
+  for anything that hides fields, wizards especially.
+- `useWatch` returns its `defaultValue` on the first render, before the subscription attaches.
+- `values` is for external data that keeps changing and `defaultValues` for static initial values;
+  supplying both makes which one wins depend on `resetOptions`.
+- Per-step validation needs `trigger(fieldNames)` — `isValid` reflects the whole form, so a wizard
+  gated on it is stuck on step one.
 
-**Gotchas & Edge Cases:**
-
-- `reset()` reverts to defaultValues; `reset(newData)` updates both values AND defaultValues
-- `handleSubmit` does not catch errors thrown in your `onSubmit` callback -- handle errors yourself with try/catch
-- `append`/`prepend`/`insert` require complete objects, not partial data
-- Array-level errors live at `errors.arrayName.root`, item errors at `errors.arrayName[index].fieldName`
-- `shouldUnregister: true` removes unmounted field values -- keep `false` (default) for wizard forms
-- `useWatch` returns `defaultValue` on first render before subscription kicks in
-- `setValue` does not directly update `useFieldArray` -- use `replace()` API instead
-- `FormStateSubscribe` works with `control` prop directly or via `FormProvider` (both are valid)
-- `values` prop (reactive external data) vs `defaultValues` (static initial values) -- do not mix their use cases
+Worked before/after code for the most common of these is in [reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST provide generic types to `useForm<FormData>()` for type-safe form handling)**
-
-**(You MUST use `field.id` as key prop in useFieldArray - NEVER use array index)**
-
-**(You MUST use Controller for controlled components that don't expose a ref)**
-
-**(You MUST use resolver pattern for schema validation - keep schemas separate from form logic)**
-
-**(You MUST set `mode: "onBlur"` or `mode: "onTouched"` for optimal UX - avoid `mode: "onChange"` unless needed)**
-
-**Failure to follow these rules will break form validation, cause re-render issues, and reduce type safety.**
-
-</critical_reminders>

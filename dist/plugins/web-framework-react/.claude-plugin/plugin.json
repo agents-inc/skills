@@ -1,8 +1,8 @@
 {
   "name": "web-framework-react",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
-  "description": "Component architecture, hooks, patterns",
+  "description": "Component architecture, hooks and React 19 patterns. Load when building or refactoring React components, custom hooks, forms, or async UI.",
   "author": {
     "name": "@vince"
   },

@@ -125,7 +125,12 @@ export function SortableProductTable({ products }: { products: Product[] }) {
 }
 ```
 
-**Why good:** controlled sorting state for persistence, `sortingFn: "datetime"` for Date objects, `invertSorting` for ratings (higher is better), `aria-sort` for accessibility, multi-sort with limit
+**Why good:** `sortingFn: "datetime"` on the `Date` column is the one that is easy to miss — the
+default comparator stringifies, so dates sort by day name. `invertSorting` with `sortDescFirst` makes
+the first click on Rating show the best first, which is what a user expects of a rating and the
+opposite of what ascending order gives. `aria-sort` carries the same state the arrow does, so the
+sort is not invisible to a screen reader, and the arrow is `aria-hidden` to avoid announcing it
+twice.
 
 ---
 

@@ -1,6 +1,6 @@
 # web-i18n-react-intl
 
-ICU message format internationalization
+ICU message format internationalization for React — FormattedMessage, useIntl, defineMessages, and the FormatJS extraction workflow. Load when a project imports react-intl.
 
 ## Installation
 

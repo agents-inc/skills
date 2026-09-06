@@ -1,206 +1,165 @@
 # Nuxt Reference
 
-> Decision frameworks and checklists for Nuxt development. See [SKILL.md](SKILL.md) for core concepts and red flags, and [examples/](examples/) for code examples.
+> Decision trees, directory and route lookups, and per-area checklists. See [SKILL.md](SKILL.md) for
+> the patterns and red flags, and [examples/](examples/) for code.
 
 ---
 
-## Decision Frameworks
+## Decision Trees
 
-### Data Fetching Method Selection
-
-```
-What kind of data operation is this?
-├─ Initial page data (SSR needed)?
-│   ├─ YES → Is it a simple API call?
-│   │   ├─ YES → useFetch('/api/...')
-│   │   └─ NO → useAsyncData with custom logic
-│   └─ NO → Is it triggered by user action?
-│       ├─ YES → $fetch (in event handler)
-│       └─ NO → Is it client-only data?
-│           ├─ YES → useFetch with server: false
-│           └─ NO → useFetch (default SSR)
-└─ Multiple parallel requests?
-    ├─ YES → useAsyncData with Promise.all
-    └─ NO → useFetch for single request
-```
-
-### useFetch vs useAsyncData
+### Which fetching composable
 
 ```
-What's the data source?
-├─ Simple HTTP endpoint → useFetch (simpler API)
-├─ Multiple endpoints combined → useAsyncData with Promise.all
-├─ Non-HTTP source (SDK, DB) → useAsyncData
-├─ Need custom cache key → useAsyncData (or useFetch with key option)
-└─ Need to transform data → Either works (both have transform option)
+What is the data source?
+├─ One HTTP endpoint → useFetch
+├─ Several endpoints combined → useAsyncData with Promise.all
+├─ Something other than HTTP (SDK, filesystem, direct query) → useAsyncData
+└─ Triggered by a user action rather than page load → useFetch with immediate: false,
+   or $fetch inside the event handler
 ```
 
-### Server Route Location
+`$fetch` on its own is correct in an event handler and in a server route; it is only in
+`<script setup>` that it double-fetches.
+
+### Which options to reach for
 
 ```
-Does the route need /api prefix?
-├─ YES → server/api/
-└─ NO → server/routes/
-
-What HTTP method?
-├─ Multiple methods same route → server/api/[resource].ts (check event.method)
-└─ Single method → server/api/[resource].[method].ts
+What is the problem?
+├─ Blocking navigation on data nobody needs yet → lazy: true, with a default
+├─ Payload larger than the page uses → transform, or pick
+├─ Sensitive fields reaching the client → server: true plus pick
+├─ Two calls colliding on one URL → key
+├─ Refetching when something changes → watch, with reactive sources
+└─ Nested mutations not rendering → replace the object, or deep: true
 ```
 
-### Middleware Type Selection
+### What middleware should return
 
 ```
-When should middleware run?
-├─ Every route → Global middleware (.global.ts suffix)
-├─ Specific pages → Named middleware (definePageMeta)
-└─ One page only → Inline middleware (definePageMeta function)
-
-What should middleware do?
-├─ Redirect → return navigateTo('/path')
-├─ Block navigation → return abortNavigation()
-├─ Continue → return nothing (undefined)
-└─ Show error → return abortNavigation(createError({ ... }))
+What should happen next?
+├─ Go somewhere else → return navigateTo('/path')
+├─ Stay where we are → return abortNavigation()
+├─ Stay, with an error page → return abortNavigation(createError({ ... }))
+└─ Carry on → return nothing
 ```
 
-### State Management Choice
+### Where state belongs
 
 ```
-What kind of state?
-├─ Server data → useFetch/useAsyncData (manages loading/error)
-├─ Shared UI state → useState (SSR-safe, simple)
-├─ Component-local state → ref/reactive (Vue standard)
-├─ Complex app state → External library via plugin
-└─ Form state → reactive() or form library
+What kind of state is it?
+├─ Server data with loading and error states → useFetch / useAsyncData
+├─ Shared across components and needed after hydration → useState, keyed
+├─ Local to one component → ref / reactive
+├─ Surviving a page reload → useCookie, synced into useState
+└─ Needing devtools, time travel or cross-store dependencies → outside this skill's scope;
+   useState is deliberately a keyed ref rather than a store
 ```
 
-### Layout Selection
+### Where the error should surface
 
 ```
-Does page need different layout than default?
-├─ NO → Don't specify (uses default.vue)
-└─ YES → definePageMeta({ layout: 'layout-name' })
+Where did it go wrong?
+├─ A server route → throw createError({ statusCode, statusMessage })
+├─ A page's own data → check error.value from useFetch, then throw createError
+├─ One component, and the rest of the page should survive → NuxtErrorBoundary
+└─ Anywhere else → the root error.vue
 
-Does layout change dynamically?
-├─ YES → setPageLayout('layout-name') in script
-└─ NO → Static definePageMeta
-```
-
-### Error Handling Strategy
-
-```
-Where is the error?
-├─ Server route → throw createError({ statusCode, message })
-├─ Page data fetch → Check error from useFetch, throw createError
-├─ Component → NuxtErrorBoundary wrapper
-└─ Global → error.vue at root
-
-What recovery?
-├─ Retry → clearError() or refresh()
-├─ Redirect → clearError({ redirect: '/path' })
-└─ Show message → Display error in UI
+How does the user recover?
+├─ Try again → refresh() for data, clearError() for the error page
+├─ Go elsewhere → clearError({ redirect: '/path' })
+└─ Read what happened → render the message
 ```
 
 ---
 
-## Quick Reference
+## Lookup Tables
 
-### File Conventions
+### Directories
 
-| Directory            | Purpose                                       |
-| -------------------- | --------------------------------------------- |
-| `pages/`             | File-based routing (auto-generates routes)    |
-| `server/api/`        | API routes (prefixed with `/api`)             |
-| `server/routes/`     | Server routes (no prefix)                     |
-| `server/middleware/` | Server middleware (runs on every request)     |
-| `middleware/`        | Route middleware (client + server navigation) |
-| `layouts/`           | Page layouts (wrap pages)                     |
-| `components/`        | Vue components (auto-imported)                |
-| `composables/`       | Composables (auto-imported, `use*` prefix)    |
-| `plugins/`           | Nuxt plugins (run before app creation)        |
-| `utils/`             | Utility functions (auto-imported)             |
-| `assets/`            | Build-processed assets (styles, images)       |
-| `public/`            | Static assets (served as-is)                  |
+| Directory            | Purpose                                        |
+| -------------------- | ---------------------------------------------- |
+| `pages/`             | File-based routing                             |
+| `server/api/`        | API routes, prefixed with `/api`               |
+| `server/routes/`     | Server routes, no prefix                       |
+| `server/middleware/` | Runs on every server request                   |
+| `middleware/`        | Route middleware, client and server navigation |
+| `layouts/`           | Page layouts                                   |
+| `components/`        | Vue components, auto-imported                  |
+| `composables/`       | Composables, auto-imported                     |
+| `plugins/`           | Run before the Vue app is created              |
+| `utils/`             | Utility functions, auto-imported               |
+| `assets/`            | Build-processed assets                         |
+| `public/`            | Served as-is                                   |
 
-### Route Patterns
+### Server route files
 
-| Pattern   | File                         | URL                      |
-| --------- | ---------------------------- | ------------------------ |
-| Static    | `pages/about.vue`            | `/about`                 |
-| Dynamic   | `pages/users/[id].vue`       | `/users/:id`             |
-| Catch-all | `pages/docs/[...slug].vue`   | `/docs/*`                |
-| Optional  | `pages/posts/[[id]].vue`     | `/posts` or `/posts/:id` |
-| Nested    | `pages/users/[id]/posts.vue` | `/users/:id/posts`       |
+| Pattern    | File                              | URL                     |
+| ---------- | --------------------------------- | ----------------------- |
+| GET        | `server/api/users.get.ts`         | `GET /api/users`        |
+| POST       | `server/api/users.post.ts`        | `POST /api/users`       |
+| PUT        | `server/api/users/[id].put.ts`    | `PUT /api/users/:id`    |
+| DELETE     | `server/api/users/[id].delete.ts` | `DELETE /api/users/:id` |
+| Any method | `server/api/users.ts`             | `* /api/users`          |
+| Dynamic    | `server/api/users/[id].ts`        | `/api/users/:id`        |
+| Catch-all  | `server/api/[...path].ts`         | `/api/*`                |
+| No prefix  | `server/routes/health.ts`         | `/health`               |
 
-### Server Route Patterns
+### Request utilities
 
-| Pattern    | File                       | URL               |
-| ---------- | -------------------------- | ----------------- |
-| GET        | `server/api/users.get.ts`  | `GET /api/users`  |
-| POST       | `server/api/users.post.ts` | `POST /api/users` |
-| Any method | `server/api/users.ts`      | `* /api/users`    |
-| Dynamic    | `server/api/users/[id].ts` | `/api/users/:id`  |
-| Catch-all  | `server/api/[...path].ts`  | `/api/*`          |
-| No prefix  | `server/routes/health.ts`  | `/health`         |
+| Utility                            | Purpose                 |
+| ---------------------------------- | ----------------------- |
+| `getQuery(event)`                  | Parse query parameters  |
+| `readBody(event)`                  | Parse the request body  |
+| `getRouterParam(event, 'name')`    | Read a route parameter  |
+| `getHeader(event, 'name')`         | Read a request header   |
+| `setResponseStatus(event, code)`   | Set the response status |
+| `createError({ statusCode, ... })` | Throw an HTTP error     |
 
-### Data Fetching Checklist
+### useFetch options
 
-- [ ] Using `useFetch` or `useAsyncData` (not raw `$fetch` in setup)
-- [ ] Handling `pending` state for loading UI
-- [ ] Handling `error` state with user feedback
-- [ ] Using `lazy: true` for non-critical data
-- [ ] Providing unique `key` for dynamic routes
-- [ ] Using `watch` option for reactive dependencies
-- [ ] Using `pick` or `transform` to minimize payload
+| Option      | Purpose                 | Reach for it when          |
+| ----------- | ----------------------- | -------------------------- |
+| `query`     | Query parameters        | Filtering, pagination      |
+| `watch`     | Refetch triggers        | Reactive dependencies      |
+| `key`       | Cache identity          | Two calls share a URL      |
+| `lazy`      | Do not block navigation | The data is not critical   |
+| `immediate` | Auto-execute            | `false` for user-triggered |
+| `transform` | Reshape the response    | Reduce the payload         |
+| `pick`      | Select fields           | Keep fields off the client |
+| `default`   | Value while loading     | Avoid null checks          |
+| `server`    | Server-only fetch       | Sensitive or SEO-only data |
+| `deep`      | Deep reactivity         | Mutating nested properties |
 
-### Server Route Checklist
+---
 
-- [ ] Using `defineEventHandler` wrapper
-- [ ] Validating request body with schema (Zod recommended)
-- [ ] Using `createError` for error responses
-- [ ] Setting appropriate status codes with `setResponseStatus`
-- [ ] Using `getQuery` for query parameters
-- [ ] Using `getRouterParam` for route parameters
-- [ ] Using `readBody` for POST/PUT body
+## Checklists
 
-### useState Checklist
+### A server route
 
-- [ ] Values are JSON-serializable (no functions, classes, Symbols)
-- [ ] Using unique string keys
-- [ ] Wrapping mutations in composables
-- [ ] Using `readonly()` when exposing to prevent external mutation
-- [ ] Providing initializer function (not direct value)
+- [ ] `defineEventHandler` as the default export
+- [ ] Body parsed through a schema before anything uses it
+- [ ] Query parameters bounded — a `limit` with no cap is a denial-of-service
+- [ ] `createError` for failures, with a status code that matches
+- [ ] `setResponseStatus` where the success code is not 200
 
-### Middleware Checklist
+### A `useState` composable
 
-- [ ] Using `to` and `from` parameters (not `useRoute()`)
-- [ ] Returning `navigateTo()` for redirects
-- [ ] Returning `abortNavigation()` to block
-- [ ] Using `.global.ts` suffix for global middleware
-- [ ] Using `import.meta.client/server` for environment-specific code
-- [ ] Attaching via `definePageMeta({ middleware: 'name' })`
+- [ ] Every value JSON-serializable
+- [ ] A unique key, since the key is the identity
+- [ ] Mutations wrapped in functions the composable exports
+- [ ] `readonly()` on the exported ref
+- [ ] `computed` for anything derived
 
-### SEO Checklist
+### Middleware
 
-- [ ] Using `useHead` or `useSeoMeta` (not manual head tags)
-- [ ] Setting `title` and `description` on all pages
-- [ ] Including Open Graph tags for social sharing
-- [ ] Using reactive values (functions) for dynamic metadata
-- [ ] Setting `canonical` URL for duplicate content prevention
-- [ ] Configuring default meta in `nuxt.config.ts`
+- [ ] `to` and `from` used instead of `useRoute()`
+- [ ] `navigateTo()` returned, not just called
+- [ ] `.global.ts` only where it genuinely runs everywhere — a numeric prefix orders them
+- [ ] `import.meta.client` / `import.meta.server` around environment-specific work
 
-### Plugin Checklist
+### SEO
 
-- [ ] Using `defineNuxtPlugin` wrapper
-- [ ] Using `.client.ts` suffix for browser-only plugins
-- [ ] Using `.server.ts` suffix for server-only plugins
-- [ ] Using `provide` to expose utilities
-- [ ] Accessing via `useNuxtApp()` in components
-
-### Error Handling Checklist
-
-- [ ] `error.vue` at root level for global error page
-- [ ] `NuxtErrorBoundary` for component-level errors
-- [ ] Using `createError` in server routes and pages
-- [ ] Checking `error.value` from `useFetch`/`useAsyncData`
-- [ ] Providing retry functionality with `refresh()` or `clearError()`
-- [ ] Logging errors to tracking service
+- [ ] `useHead` or `useSeoMeta`, never hand-written `<head>` markup
+- [ ] Getter functions for anything that depends on fetched data
+- [ ] A canonical URL where the same content is reachable by more than one path
+- [ ] Defaults set once in `nuxt.config.ts` under `app.head`

@@ -220,6 +220,8 @@ import { Fieldset } from "@base-ui/react/fieldset";
 ### Good Example - The Controlled Surface Any Form Library Can Drive
 
 ```tsx
+import { Field } from "@base-ui/react/field";
+
 // Whatever library owns the value passes it in; Field owns the presentation.
 type ControlledFieldProps = {
   name: string;
@@ -259,6 +261,6 @@ export function ControlledField({
 }
 ```
 
-**Why good:** `invalid` on `Field.Root` and `match` on `Field.Error` are the two props that let an external validity source override the built-in one, so no adapter package is needed — any runtime that can supply `value`, `onValueChange`, `onBlur`, `ref` and a validity flag plugs straight in
+**Why good:** `invalid` on `Field.Root` and `match` on `Field.Error` let an external validity source override the built-in one, so any runtime supplying `value`, `onValueChange`, `onBlur`, `ref` and a validity flag plugs in without an adapter package
 
 **When not to use:** if nothing outside the form needs the values before submit, skip the runtime entirely — `name` plus `FormData` plus `validate` already covers most forms.

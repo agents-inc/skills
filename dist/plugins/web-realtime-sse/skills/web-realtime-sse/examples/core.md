@@ -1,8 +1,220 @@
 # SSE Examples - Core Patterns
 
-> Core code examples for Server-Sent Events in React. See [SKILL.md](../SKILL.md) for concepts.
+> Core code examples for Server-Sent Events. The primary API comes first; the numbered patterns after it are the React hooks built on top. See [SKILL.md](../SKILL.md) for concepts.
 
 **Extended patterns:** See [reconnection.md](reconnection.md) for advanced reconnection and [fetch-streaming.md](fetch-streaming.md) for fetch-based streaming.
+
+---
+
+## Primary API
+
+### EventSource Lifecycle
+
+```typescript
+const SSE_URL = "/api/events";
+
+const eventSource = new EventSource(SSE_URL);
+
+eventSource.onopen = () => {
+  // Connection is ready — the server can push from here
+};
+
+eventSource.onmessage = (event: MessageEvent) => {
+  handleMessage(event.data);
+  // event.lastEventId is the id: field, replayed as Last-Event-ID on reconnect
+};
+
+eventSource.onerror = () => {
+  if (eventSource.readyState === EventSource.CLOSED) {
+    // Permanently closed — the browser will not retry an HTTP error status
+    scheduleManualReconnect();
+  } else if (eventSource.readyState === EventSource.CONNECTING) {
+    // The browser is already retrying — show a reconnecting state and wait
+  }
+};
+
+// When the consumer goes away
+eventSource.close();
+```
+
+**Why:** All three lifecycle events are handled, and the `readyState` branch is what separates a retry in progress from a stream the browser has given up on.
+
+```typescript
+// BAD — silent failure and a connection that never closes
+const eventSource = new EventSource("/api/events");
+eventSource.onmessage = (event) => console.log(event.data);
+```
+
+**Why bad:** With no `onerror`, a failed stream is indistinguishable from a quiet one. With no `close()`, the connection outlives its consumer and counts against the browser's per-domain limit.
+
+---
+
+### Custom Event Types
+
+A message carrying an `event:` field is routed to a listener of that name; messages without one go to `onmessage`.
+
+```typescript
+const eventSource = new EventSource("/api/notifications");
+
+eventSource.onmessage = (event: MessageEvent) => {
+  handleDefault(event.data);
+};
+
+eventSource.addEventListener("notification", (event: MessageEvent) => {
+  const notification = JSON.parse(event.data);
+  showNotification(notification.title, notification.body);
+});
+
+eventSource.addEventListener("user-joined", (event: MessageEvent) => {
+  updateUserList(JSON.parse(event.data));
+});
+
+eventSource.addEventListener("heartbeat", (event: MessageEvent) => {
+  markConnectionHealthy(event.data);
+});
+```
+
+---
+
+### Credentials and Cross-Origin
+
+```typescript
+const eventSource = new EventSource("https://api.example.com/events", {
+  withCredentials: true, // send cookies cross-origin
+});
+
+eventSource.onerror = () => {
+  // A CORS rejection surfaces here with nothing more specific than "error"
+};
+```
+
+**Why:** `withCredentials` is the only authentication mechanism `EventSource` offers, and the server has to allow credentials in its CORS configuration for it to work.
+
+---
+
+### Connection State Wrapper
+
+Tracks status for UI feedback and adds the manual retry `EventSource` will not perform after an HTTP error.
+
+```typescript
+const MAX_MANUAL_RETRIES = 5;
+const RETRY_DELAY_MS = 3000;
+
+type SSEStatus = "connecting" | "open" | "closed" | "error";
+
+export class SSEConnection {
+  private eventSource: EventSource | null = null;
+  private status: SSEStatus = "closed";
+  private manualRetryCount = 0;
+
+  constructor(
+    private url: string,
+    private options: {
+      onStatusChange?: (status: SSEStatus) => void;
+      onMessage?: (data: string, eventType: string) => void;
+    } = {},
+  ) {}
+
+  connect(): void {
+    if (this.eventSource) this.disconnect();
+
+    this.setStatus("connecting");
+    this.eventSource = new EventSource(this.url);
+
+    this.eventSource.onopen = () => {
+      this.setStatus("open");
+      this.manualRetryCount = 0;
+    };
+
+    this.eventSource.onmessage = (event: MessageEvent) => {
+      this.options.onMessage?.(event.data, "message");
+    };
+
+    this.eventSource.onerror = () => {
+      if (this.eventSource?.readyState === EventSource.CLOSED) {
+        this.setStatus("closed");
+        this.attemptManualReconnect();
+      } else {
+        this.setStatus("error");
+      }
+    };
+  }
+
+  private attemptManualReconnect(): void {
+    if (this.manualRetryCount >= MAX_MANUAL_RETRIES) return;
+    this.manualRetryCount++;
+    setTimeout(() => this.connect(), RETRY_DELAY_MS);
+  }
+
+  disconnect(): void {
+    this.eventSource?.close();
+    this.eventSource = null;
+    this.setStatus("closed");
+  }
+
+  private setStatus(status: SSEStatus): void {
+    this.status = status;
+    this.options.onStatusChange?.(status);
+  }
+
+  getStatus(): SSEStatus {
+    return this.status;
+  }
+}
+```
+
+**Why:** The retry counter resets on a successful open, so a flapping connection does not exhaust its budget. `disconnect()` before `connect()` is what stops a reconnect leaving the previous stream open.
+
+---
+
+### Typed Message Handling
+
+```typescript
+type SSEMessage =
+  | {
+      type: "notification";
+      title: string;
+      body: string;
+      priority: "low" | "high";
+    }
+  | { type: "user-update"; userId: string; action: "joined" | "left" }
+  | { type: "data-sync"; payload: unknown; timestamp: number }
+  | { type: "heartbeat"; serverTime: number };
+
+// Named for the payload, not the wire format — the SSE field parser in
+// fetch-streaming.md is a different function with a different job.
+function parsePayload(data: string): SSEMessage | null {
+  try {
+    return JSON.parse(data) as SSEMessage;
+  } catch {
+    return null;
+  }
+}
+
+function handleSSEMessage(message: SSEMessage): void {
+  switch (message.type) {
+    case "notification":
+      return showNotification(message.title, message.body, message.priority);
+    case "user-update":
+      return updateUserPresence(message.userId, message.action);
+    case "data-sync":
+      return syncData(message.payload, message.timestamp);
+    case "heartbeat":
+      return updateServerTime(message.serverTime);
+    default: {
+      const exhaustive: never = message;
+      return exhaustive;
+    }
+  }
+}
+
+eventSource.onmessage = (event: MessageEvent) => {
+  const message = parsePayload(event.data);
+  if (message) handleSSEMessage(message);
+};
+```
+
+**Why:** Parsing and handling are separate, so a malformed payload returns `null` instead of throwing out of the handler. The `never` assignment turns an unhandled server message type into a compile error.
 
 ---
 
@@ -164,7 +376,7 @@ export function LiveFeed() {
 }
 ```
 
-**Why good:** Hook encapsulates all EventSource complexity, typed options and return value, automatic cleanup on unmount, status exposed for UI feedback, reconnect function for manual recovery
+**Why:** The effect returns `close`, so the stream dies with the component rather than outliving it. `reconnect` exists because the `CLOSED` branch is the one the browser will not retry for you.
 
 ---
 
@@ -384,7 +596,7 @@ export function NotificationCenter() {
 }
 ```
 
-**Why good:** Supports multiple custom event types, typed generic for message data, event history with configurable limit, callbacks for real-time reactions, proper cleanup
+**Why:** Named events need a listener registered per name, so the hook takes the names as an option rather than guessing them. The history is capped because a long-lived stream would otherwise grow it without bound.
 
 ---
 
@@ -529,7 +741,7 @@ export function UserActivityFeed() {
 }
 ```
 
-**Why good:** Single SSE connection shared across components, type-based message routing, automatic cleanup with unsubscribe function, context prevents prop drilling, status exposed for all consumers
+**Why:** One connection instead of one per component, which matters because each stream counts against the browser's per-domain limit. `subscribe` returns its own unsubscribe so a consumer can return it straight from an effect.
 
 ---
 
@@ -607,4 +819,4 @@ function Dashboard() {
 }
 ```
 
-**Why good:** Connection paused when not needed (saves server resources), responds to visibility changes, proper cleanup when disabled, simple API with enabled flag
+**Why:** A hidden tab holds a connection open for nobody, and closing it frees both the server's slot and one of the browser's per-domain connections. Toggling `enabled` rather than unmounting keeps the component's own state intact across the pause. A fast tab switch will open and close the stream repeatedly — [reconnection.md](reconnection.md) adds the resume delay that damps it.

@@ -1,16 +1,14 @@
-# Apollo Client GraphQL - Suspense Patterns (v3.9+)
+# Apollo Client — Suspense Examples
 
-> Suspense-enabled data fetching patterns. See [core.md](core.md) for basic patterns.
+> Suspense-based loading. See [core.md](core.md) for client setup and the classic hooks.
 
-**Prerequisites**: Understand Pattern 1 (Client Setup), Pattern 2 (useQuery) from core examples first.
+**Prerequisites**: Pattern 1 (client setup) and Pattern 2 (queries) from core.
 
-**Version Requirements**: Apollo Client v3.9+ for `useSuspenseQuery`, `useLoadableQuery`, `useBackgroundQuery`
+**Requires** Apollo Client v3.9+.
 
 ---
 
-## Pattern 1: useSuspenseQuery for Basic Suspense
-
-Use `useSuspenseQuery` when you want the component to suspend while loading data.
+## useSuspenseQuery — loading on mount
 
 ```typescript
 // components/user-profile-suspense.tsx
@@ -61,13 +59,14 @@ function UserProfile({ userId }: { userId: string }) {
 export { UserProfile };
 ```
 
-**Why good:** Declarative loading states via Suspense boundary, no manual loading state management, integrates with React concurrent features, cleaner component code
+The fallback lives in the parent, so the component that needs the data never renders a loading
+branch at all.
 
 ---
 
-## Pattern 2: useLoadableQuery for User-Triggered Loading (v3.9+)
+## useLoadableQuery — loading on interaction
 
-Use `useLoadableQuery` when you want to start fetching in response to user interaction (hover, click, etc.).
+Starts the fetch from an event — a hover or a click — rather than from a mount.
 
 ```typescript
 // components/user-preview-link.tsx
@@ -144,13 +143,12 @@ function UserPreviewLink({ userId, userName }: { userId: string; userName: strin
 export { UserPreviewLink };
 ```
 
-**Why good:** Data fetching starts on hover (before showing UI), queryRef enables Suspense integration, reset() clears cached data when needed
+The fetch is already in flight by the time the popover renders, so the popover's own suspension is
+usually invisible.
 
 ---
 
-## Pattern 3: useBackgroundQuery + useReadQuery for Parent-Child Loading
-
-Use `useBackgroundQuery` when a parent component should trigger loading while a child reads the data.
+## useBackgroundQuery — the parent starts, the child reads
 
 ```typescript
 // components/dashboard.tsx
@@ -233,13 +231,14 @@ function Dashboard() {
 export { Dashboard };
 ```
 
-**Why good:** Parent controls when fetching starts, children suspend independently, parallel loading with independent Suspense boundaries
+Both queries leave together and each child suspends behind its own boundary, so the slower one does
+not hold up the faster one.
 
 ---
 
-## Pattern 4: createQueryPreloader for Router Integration (v3.9+)
+## createQueryPreloader — loading before React renders
 
-Use `createQueryPreloader` to start fetching before React renders (e.g., in router loaders).
+Runs outside the React tree, which is what makes it usable from a router loader.
 
 ```typescript
 // lib/apollo-preloader.ts
@@ -316,13 +315,12 @@ function UserRoute() {
 export { UserRoute };
 ```
 
-**Why good:** Data fetching starts during route transition (before React renders), eliminates loading waterfalls, integrates with React Router and TanStack Router
+The request leaves during the route transition rather than after the component mounts, which is one
+round trip removed from the waterfall.
 
 ---
 
-## Pattern 5: useQueryRefHandlers for Refetch/FetchMore (v3.9+)
-
-Use `useQueryRefHandlers` to access `refetch` and `fetchMore` for a preloaded query.
+## useQueryRefHandlers — refetch and fetchMore on a preloaded query
 
 ```typescript
 // components/user-posts.tsx
@@ -351,8 +349,6 @@ const GET_USER_POSTS = gql`
     }
   }
 `;
-
-const PAGE_SIZE = 10;
 
 function UserPostsList({ queryRef }: { queryRef: QueryRef<any> }) {
   const { data } = useReadQuery(queryRef);
@@ -397,52 +393,15 @@ function UserPostsList({ queryRef }: { queryRef: QueryRef<any> }) {
 export { UserPostsList };
 ```
 
-**Why good:** Access refetch/fetchMore without prop drilling from parent, works with preloaded queries from router loaders
+The handlers come from the `queryRef` itself, so a component deep in the tree can refetch without the
+parent passing anything down.
 
 ---
 
-## Suspense Decision Framework
+## Mixing with the classic hooks
 
-```
-When to use each Suspense pattern?
-├─ Data loads on component mount?
-│   └─ useSuspenseQuery ✓
-├─ Data loads on user interaction (hover, click)?
-│   └─ useLoadableQuery ✓
-├─ Parent triggers load, child reads data?
-│   └─ useBackgroundQuery + useReadQuery ✓
-├─ Load data before component renders (router)?
-│   └─ createQueryPreloader ✓
-└─ Need refetch/fetchMore on preloaded query?
-    └─ useQueryRefHandlers ✓
-```
-
----
-
-## Common Gotchas
-
-**Suspense Hooks vs Standard Hooks:**
-
-- `useSuspenseQuery` always suspends - no `loading` state returned
-- Standard `useQuery` still works for non-Suspense patterns
-- Don't mix Suspense and non-Suspense in same tree without proper boundaries
-
-**Error Handling with Suspense:**
-
-- Errors from Suspense hooks throw to nearest Error Boundary
-- Use `errorPolicy: "all"` to receive partial data with errors
-
-**Cache Considerations:**
-
-- Suspense hooks read from same Apollo cache
-- `queryRef` is tied to specific variables - changing variables needs new loadQuery call
-
----
-
-## Sources
-
-- [Apollo Client Suspense Documentation](https://www.apollographql.com/docs/react/data/suspense)
-- [useSuspenseQuery Reference](https://www.apollographql.com/docs/react/api/react/hooks/#usesuspensequery)
-- [useLoadableQuery Reference](https://www.apollographql.com/docs/react/api/react/hooks/#useloadablequery)
-- [useBackgroundQuery Reference](https://www.apollographql.com/docs/react/api/react/hooks/#usebackgroundquery)
-- [Apollo Client 3.9 Blog Post](https://www.apollographql.com/blog/whats-new-in-apollo-client-3-9)
+Both read the same cache, so a Suspense hook and a `useQuery` for the same entity share one entry.
+What they do not share is where the loading and the failure surface: a Suspense hook needs a
+`Suspense` boundary and an error boundary above it, and a subtree carrying both hook styles needs
+both those boundaries and the component's own `loading` branch. `errorPolicy: "all"` still delivers
+partial data alongside the thrown error.

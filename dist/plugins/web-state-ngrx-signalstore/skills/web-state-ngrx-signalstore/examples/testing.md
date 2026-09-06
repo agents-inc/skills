@@ -96,7 +96,9 @@ describe("CounterStore", () => {
 });
 ```
 
-**Why good:** TestBed for Angular DI, runInInjectionContext for store instantiation, named constants for test values, clean test structure
+**Why good:** A SignalStore is an Angular service, so `TestBed` is how it gets built and its own `inject()` calls resolve. Providing it in the testing module rather than relying on `providedIn: "root"` gives each test a fresh instance, so no case inherits state from the one before.
+
+`runInInjectionContext` is what a store needs when its features call `inject()` outside a constructor — `rxMethod` in particular. A store without one instantiates fine without it.
 
 ---
 
@@ -230,7 +232,9 @@ describe("UserStore", () => {
 });
 ```
 
-**Why good:** Mock HttpClient with mock functions, fakeAsync/tick for async tests, tests loading, success, and error states, named constants for mock data
+**Why good:** The loading test asserts `isLoading()` _before_ `tick()`, which is the only point at which the intermediate state exists — checking after it would pass whether or not the flag was ever set. `fakeAsync` is what makes that moment observable, by holding the microtask queue until told to drain.
+
+The error case asserts three things together, because the failure that matters is a store left loading forever, not the message.
 
 ---
 
@@ -363,7 +367,9 @@ describe("CartStore", () => {
 });
 ```
 
-**Why good:** unprotected() bypasses state protection for test setup, allows setting initial state for specific test scenarios, cleaner test arrangement
+**Why good:** State is protected from outside writes from v18, so a test cannot call `patchState` on a store directly. `unprotected()` re-exposes it for the arrange step, which is what lets a checkout test start from a full cart without driving the UI through adding to it.
+
+Keep it to arrangement. Asserting against state written by `unprotected` tests the test rather than the store — the act should still go through a real method.
 
 ---
 
@@ -466,7 +472,7 @@ describe("TodoStore", () => {
 });
 ```
 
-**Why good:** Tests entity operations (add, update, remove), tests computed signals, uses unprotected for setup, named constants for mock data
+**Why good:** Seeding with `setAllEntities` through `unprotected` puts the collection in the normalised shape the store expects, which assigning an array to state would not — the `entityMap` and `ids` have to agree. Asserting on `ids()` as well as `entities()` catches a removal that drops the record but leaves its id behind.
 
 ---
 
@@ -568,7 +574,7 @@ describe("CounterComponent", () => {
 });
 ```
 
-**Why good:** Tests component with real store, uses data-testid for reliable selectors, tests user interactions, fixture.detectChanges() after state changes
+**Why good:** The real store is used rather than a mock, so the test covers the wiring between template and store that a mocked store would assume. `detectChanges()` after each act is what flushes the signal update into the DOM — the assertion reads rendered text, so without it the check runs against the previous render and passes for the wrong reason.
 
 ---
 
@@ -656,13 +662,15 @@ describe("SearchStore", () => {
 });
 ```
 
-**Why good:** Tests debounce behavior with fakeAsync/tick, tests distinctUntilChanged, mock HttpClient, named constant for debounce timing
+**Why good:** `tick(DEBOUNCE_MS)` advances virtual time by exactly the debounce window, so the test proves the delay is real rather than waiting out a wall-clock timer. Ticking less than the window is what would demonstrate the request has _not_ fired yet — the assertion that actually pins the debounce down.
+
+The `distinctUntilChanged` case asserts a call count rather than a result, because a repeated query returns identical data either way; the number of requests is the only observable difference.
 
 ---
 
-## Pattern 7: Testing with withOptionalHooks
+## Pattern 7: Testing a Store Whose onInit Has Side Effects
 
-### Good Example - Avoiding onInit Side Effects in Tests
+### Good Example - Declaring a Hook-Free Store for Tests
 
 ```typescript
 // Alternative approach: disable hooks during testing
@@ -697,7 +705,7 @@ export const DataStore = signalStore(
   }),
 );
 
-// Test approach 1: Override the store
+// The test declares its own store with the same shape and no withHooks
 // stores/data.store.spec.ts
 // Use your test runner's describe, it, expect, beforeEach
 import { TestBed } from "@angular/core/testing";
@@ -740,4 +748,6 @@ describe("DataStore (without hooks)", () => {
 });
 ```
 
-**Why good:** Shows how to handle onInit side effects in tests, test-specific store without hooks, isolates behavior for testing
+**Why good:** `onInit` runs during construction, so any test that injects the real store has already triggered its fetch before the first line of the test body. Declaring a hook-free store makes the initialisation something the test opts into rather than something it has to work around.
+
+The cost is that the test store is a copy: a change to the real store's methods will not fail these tests. Keep the duplicated surface to the state and methods the case actually exercises.

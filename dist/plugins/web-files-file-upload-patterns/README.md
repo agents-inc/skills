@@ -1,6 +1,6 @@
 # web-files-file-upload-patterns
 
-File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)
+File upload patterns - drag-drop dropzones, chunked and resumable uploads, presigned URL flows, file validation (MIME type, magic bytes), progress tracking, accessibility (ARIA)
 
 ## Installation
 

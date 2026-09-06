@@ -1,25 +1,27 @@
 # shadcn/ui - Theming Examples
 
-> Custom colors, dark mode setup, and theme-aware components. See [core.md](core.md) for CSS structure basics.
+> Custom colours, dark mode, and components that follow the theme. See [core.md](core.md) for
+> `components.json` and the `cssVariables` setting this all depends on.
 
-**Prerequisites**: Understand the CSS variable naming convention (background/foreground pairs, OKLCH format) from SKILL.md Pattern 2.
+**Prerequisites:** the background/foreground pairing and the OKLCH format, from SKILL.md Pattern 2.
 
 ---
 
-## Custom Brand Colors (OKLCH)
+## Custom Brand Colours
 
-Adding colors beyond the defaults requires three things: CSS variables in `:root` and `.dark`, and the `@theme inline` mapping.
+A new colour is three declarations, not one: the variables in `:root`, their overrides in `.dark`,
+and the `@theme inline` mapping that turns them into utilities. Miss the third and `bg-brand` does
+not exist; miss the second and the colour is stuck at its light value in dark mode.
 
 ```css
 :root {
-  /* Custom brand colors - add alongside default shadcn variables */
-  --brand: oklch(0.627 0.265 303.9); /* Purple */
+  --brand: oklch(0.627 0.265 303.9);
   --brand-foreground: oklch(1 0 0);
 
-  --success: oklch(0.527 0.154 150.069); /* Green */
+  --success: oklch(0.527 0.154 150.069);
   --success-foreground: oklch(1 0 0);
 
-  --warning: oklch(0.795 0.184 86.047); /* Amber */
+  --warning: oklch(0.795 0.184 86.047);
   --warning-foreground: oklch(0.145 0 0);
 }
 
@@ -34,9 +36,8 @@ Adding colors beyond the defaults requires three things: CSS variables in `:root
   --warning-foreground: oklch(0.145 0 0);
 }
 
-/* Map to Tailwind utilities */
 @theme inline {
-  /* ...existing mappings... */
+  /* …existing mappings… */
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-success: var(--success);
@@ -46,67 +47,52 @@ Adding colors beyond the defaults requires three things: CSS variables in `:root
 }
 ```
 
-### Usage
-
 ```tsx
 <Button className="bg-brand text-brand-foreground hover:bg-brand/90">
   Brand Button
 </Button>
 
-<Badge className="bg-success text-success-foreground">
-  Success
-</Badge>
+<Badge className="bg-success text-success-foreground">Success</Badge>
 ```
 
-**Why good:** Custom colors follow same convention as defaults, opacity modifiers work (`/90`), dark mode automatic via `.dark` overrides
+**Why good:** the custom colours follow the same pairing as the built-ins, so the opacity modifier
+(`/90`) and dark mode both work without special handling. `--success` differs between the two themes
+and `--brand` does not — which is a deliberate choice per colour, since a brand colour is usually
+fixed while a status colour needs contrast against a changing surface.
 
 ---
 
-## Dark Mode Setup
+## Dark Mode
 
-### Theme Provider
+### The provider contract
+
+shadcn/ui reads the theme from a class on the document root — `.dark` — and nothing more. Any
+provider satisfying these four points works:
+
+1. Sets a class on `<html>`, rather than a data attribute or an inline style
+2. Offers light, dark and "follow the system" as distinct states
+3. Applies the class before first paint, so there is no flash of the wrong theme
+4. Pairs with `suppressHydrationWarning` on `<html>`, because a server render cannot know which class
+   the client will apply and React would otherwise report the mismatch
 
 ```tsx
-// providers.tsx
-"use client";
-
-// shadcn/ui docs recommend next-themes for Next.js projects
-// For other frameworks, see shadcn dark mode docs: ui.shadcn.com/docs/dark-mode
-import { ThemeProvider } from "next-themes";
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {children}
-    </ThemeProvider>
-  );
-}
-
-// layout.tsx - suppressHydrationWarning prevents flash
-import { Providers } from "./providers";
-
 export function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        {/* whichever provider meets the four points above */}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
 }
 ```
 
-### Theme Toggle with Dropdown
+### Theme toggle
+
+The toggle itself is shadcn components over whatever the provider exposes.
 
 ```tsx
-"use client";
-
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -115,14 +101,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ThemeToggle() {
-  const { setTheme } = useTheme();
-
+export function ThemeToggle({
+  setTheme,
+}: {
+  setTheme: (theme: "light" | "dark" | "system") => void;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon">
-          {/* Sun/Moon icons - use your icon solution */}
+          {/* Sun and moon glyphs from your icon set */}
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
@@ -142,13 +130,13 @@ export function ThemeToggle() {
 }
 ```
 
-**Why good:** Dropdown provides all theme options, system detection works automatically, `suppressHydrationWarning` prevents flash
+**Why good:** "System" is a third state rather than the absence of a choice — a user who has picked
+light explicitly should stay in light when their OS flips at sunset. `sr-only` names an
+icon-only button, which is otherwise announced as "button" and nothing else.
 
 ---
 
 ## Theme-Aware Custom Components
-
-### Using CSS Variables for Status Colors
 
 ```tsx
 import { cn } from "@/lib/utils";
@@ -164,58 +152,44 @@ export function StatusCard({
     error: "bg-destructive/10 text-destructive border-destructive/20",
   };
 
-  return (
-    <div className={cn("rounded-lg border p-4", statusColors[status])}>
-      {/* Content automatically adapts to light/dark theme */}
-    </div>
-  );
+  return <div className={cn("rounded-lg border p-4", statusColors[status])} />;
 }
 ```
 
-### Reading Theme Colors in JavaScript
+**Why good:** one colour token drives the surface, the text and the border at three opacities, so a
+change to `--success` moves all three together. Nothing here branches on the theme, because the
+variables already did.
 
-Only needed for third-party libraries (charts, canvas) that require color values programmatically.
+### Reading a theme colour in JavaScript
+
+Only needed where something outside CSS — a canvas, a charting library — wants a colour value rather
+than a class.
 
 ```tsx
-import { useTheme } from "next-themes";
-
-export function ChartWrapper() {
-  const { resolvedTheme } = useTheme();
-
-  const getColor = (variable: string) => {
-    if (typeof window === "undefined") return "";
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(variable)
-      .trim();
-  };
-
-  // OKLCH values are already complete - no wrapper needed
-  const primaryColor = getColor("--primary");
-
-  return <ThirdPartyChart color={primaryColor} />;
+function themeColor(variable: string) {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(variable)
+    .trim();
 }
+
+// OKLCH values are complete as they stand — no format wrapper
+const primaryColor = themeColor("--primary");
 ```
 
-**Why good:** Components adapt to theme automatically, JavaScript access only when truly needed, OKLCH values used directly
+**Why good:** reading from the document root picks up whichever theme class is currently applied, so
+one call covers both. The `window` guard is what keeps it from throwing during a server render.
 
 ---
 
-## Chart Configuration (Tailwind v4)
+## Chart Configuration
 
-With Tailwind v4, theme colors include the color format. Remove any `hsl()` wrapper from older configs.
+Theme colours carry their own format, so the variable is used directly. An `hsl()` wrapper — correct
+in older setups where the variables held bare channel values — now produces an invalid colour.
 
 ```typescript
-// Tailwind v4 - OKLCH values include format, no wrapper needed
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-1)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-2)",
-  },
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 ```
-
-**Why good:** Direct variable reference, no format wrapper confusion between HSL and OKLCH

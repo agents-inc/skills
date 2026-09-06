@@ -1,37 +1,30 @@
-# Cypress Accessibility Testing with cypress-axe
+# Cypress — Running an Accessibility Audit in a Spec
 
-> Accessibility testing patterns using axe-core. See [core.md](core.md) for foundational patterns.
+> Wiring an automated audit into a Cypress run and asserting on its result. See [core.md](core.md)
+> for the foundations. What the audit checks for, and which findings matter, is settled by whoever
+> owns accessibility standards — this file covers the plumbing.
 
-**Prerequisites**: Install `axe-core` and `cypress-axe`:
-
-```bash
-npm install --save-dev axe-core cypress-axe
-```
+**Prerequisites:** `npm install --save-dev axe-core cypress-axe`.
 
 ---
 
-## Pattern 1: Basic Setup
-
-### Installing and Configuring cypress-axe
+## Pattern 1: Setup
 
 ```typescript
 // cypress/support/e2e.ts
 import "cypress-axe";
-
-// cypress/support/commands.ts (add to existing commands)
-export function registerAccessibilityCommands() {
-  // Optionally add custom a11y command
-  Cypress.Commands.add(
-    "checkAccessibility",
-    (context?: string, options?: object) => {
-      cy.injectAxe();
-      cy.checkA11y(context, options);
-    },
-  );
-}
 ```
 
-### Type Declarations
+```typescript
+// cypress/support/commands.ts — inject and check in one call
+Cypress.Commands.add(
+  "checkAccessibility",
+  (context?: string, options?: object) => {
+    cy.injectAxe();
+    cy.checkA11y(context, options);
+  },
+);
+```
 
 ```typescript
 // cypress/support/index.d.ts
@@ -39,514 +32,137 @@ export function registerAccessibilityCommands() {
 
 declare namespace Cypress {
   interface Chainable {
-    /**
-     * Inject axe-core and check accessibility
-     * @param context - Optional CSS selector to scope the check
-     * @param options - axe-core run options
-     */
+    /** Inject the audit engine and check the page, or a region of it. */
     checkAccessibility(context?: string, options?: object): Chainable<void>;
   }
 }
 ```
 
+**Why good:** the engine has to be injected after every navigation, which is the step most easily
+forgotten; folding it into one command means a spec cannot check a page that was never instrumented.
+
 ---
 
-## Pattern 2: Basic Accessibility Tests
-
-### Page-Level Accessibility Check
+## Pattern 2: Whole page, and one region
 
 ```typescript
-describe("Accessibility Tests", () => {
+describe("Accessibility", () => {
   beforeEach(() => {
     cy.visit("/");
-    cy.injectAxe();
+    cy.injectAxe(); // re-injected per test, because each starts with a fresh page
   });
 
-  it("homepage has no accessibility violations", () => {
+  it("has no violations on the homepage", () => {
     cy.checkA11y();
   });
 
-  it("login page has no accessibility violations", () => {
-    cy.visit("/login");
-    cy.injectAxe();
-    cy.checkA11y();
-  });
-
-  it("dashboard has no accessibility violations", () => {
-    cy.login("user@example.com", "password123");
-    cy.visit("/dashboard");
-    cy.injectAxe();
-    cy.checkA11y();
-  });
-});
-```
-
-### Scoped Accessibility Check
-
-```typescript
-describe("Component Accessibility", () => {
-  beforeEach(() => {
-    cy.visit("/components");
-    cy.injectAxe();
-  });
-
-  it("header has no accessibility violations", () => {
-    cy.checkA11y("[data-cy=header]");
-  });
-
-  it("navigation has no accessibility violations", () => {
+  it("has no violations in the navigation", () => {
+    // Scoping reports only the region under test, so an unrelated failure elsewhere
+    // does not redden a component's own spec.
     cy.checkA11y("[data-cy=main-navigation]");
   });
-
-  it("footer has no accessibility violations", () => {
-    cy.checkA11y("[data-cy=footer]");
-  });
 });
 ```
 
 ---
 
-## Pattern 3: Filtering by WCAG Level
-
-### WCAG 2.0 Level A Only
+## Pattern 3: Narrowing what counts as a failure
 
 ```typescript
-describe("WCAG 2.0 Level A Compliance", () => {
-  beforeEach(() => {
-    cy.visit("/");
-    cy.injectAxe();
-  });
+// By rule tag — the set the project has agreed to hold itself to.
+cy.checkA11y(null, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] } });
 
-  it("meets WCAG 2.0 Level A requirements", () => {
-    cy.checkA11y(null, {
-      runOnly: {
-        type: "tag",
-        values: ["wcag2a"],
-      },
-    });
-  });
-});
+// By individual rule, when one class of issue is being worked on.
+cy.checkA11y(null, { runOnly: { type: "rule", values: ["color-contrast"] } });
+
+// By severity, so a large legacy surface can be gated on the worst findings first.
+cy.checkA11y(null, { includedImpacts: ["critical", "serious"] });
+
+// Known issues, disabled deliberately and visibly rather than by lowering the bar everywhere.
+cy.checkA11y(null, { rules: { "color-contrast": { enabled: false } } });
+
+// Third-party markup nobody here can fix.
+cy.checkA11y(null, { exclude: ["[data-cy=third-party-chat-widget]"] });
 ```
 
-### WCAG 2.1 Level AA
-
-```typescript
-describe("WCAG 2.1 Level AA Compliance", () => {
-  beforeEach(() => {
-    cy.visit("/");
-    cy.injectAxe();
-  });
-
-  it("meets WCAG 2.1 Level AA requirements", () => {
-    cy.checkA11y(null, {
-      runOnly: {
-        type: "tag",
-        values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"],
-      },
-    });
-  });
-});
-```
-
-### Filtering by Rule
-
-```typescript
-describe("Specific Accessibility Rules", () => {
-  beforeEach(() => {
-    cy.visit("/");
-    cy.injectAxe();
-  });
-
-  it("checks only color contrast", () => {
-    cy.checkA11y(null, {
-      runOnly: {
-        type: "rule",
-        values: ["color-contrast"],
-      },
-    });
-  });
-
-  it("checks keyboard accessibility", () => {
-    cy.checkA11y(null, {
-      runOnly: {
-        type: "rule",
-        values: ["keyboard", "focus-order-semantics", "tabindex"],
-      },
-    });
-  });
-});
-```
+**Why good:** each option narrows a different axis — standard, rule, severity, region — so a
+temporary exception is one line that says what it excuses, rather than a disabled test.
 
 ---
 
-## Pattern 4: Filtering by Impact
+## Pattern 4: Reporting instead of only failing
 
-### Critical and Serious Issues Only
-
-```typescript
-describe("High Impact Accessibility Issues", () => {
-  beforeEach(() => {
-    cy.visit("/");
-    cy.injectAxe();
-  });
-
-  it("has no critical accessibility violations", () => {
-    cy.checkA11y(null, {
-      includedImpacts: ["critical"],
-    });
-  });
-
-  it("has no critical or serious accessibility violations", () => {
-    cy.checkA11y(null, {
-      includedImpacts: ["critical", "serious"],
-    });
-  });
-});
-```
-
-### Excluding Minor Issues
+The fourth argument is a violation callback and the fifth makes the check non-blocking, which is
+what lets a suite report findings while a backlog is worked through.
 
 ```typescript
-it("has no high-impact accessibility violations", () => {
-  cy.checkA11y(null, {
-    // Include critical, serious, and moderate
-    // Exclude minor issues
-    includedImpacts: ["critical", "serious", "moderate"],
-  });
-});
-```
-
----
-
-## Pattern 5: Excluding Known Issues
-
-### Temporarily Excluding Rules
-
-```typescript
-describe("Accessibility with Known Issues", () => {
-  beforeEach(() => {
-    cy.visit("/legacy-page");
-    cy.injectAxe();
-  });
-
-  it("has no new accessibility violations (excluding known issues)", () => {
-    cy.checkA11y(null, {
-      rules: {
-        // Temporarily disable rules for known issues
-        "color-contrast": { enabled: false },
-        "image-alt": { enabled: false },
-      },
-    });
-  });
-});
-```
-
-### Excluding Specific Elements
-
-```typescript
-it("checks accessibility excluding third-party widgets", () => {
-  cy.checkA11y(null, {
-    exclude: [
-      "[data-cy=third-party-chat-widget]",
-      "[data-cy=advertising-banner]",
-      ".legacy-component",
-    ],
-  });
-});
-```
-
----
-
-## Pattern 6: Custom Violation Handling
-
-### Custom Logging
-
-```typescript
-function logAccessibilityViolations(violations: axe.Result[]) {
+function logViolations(violations: axe.Result[]) {
   violations.forEach((violation) => {
-    const nodes = violation.nodes
-      .map((node) => {
-        return `
-          HTML: ${node.html}
-          Target: ${node.target.join(", ")}
-          Fix: ${node.failureSummary}
-        `;
-      })
-      .join("\n");
-
-    cy.log(`
-      Rule: ${violation.id}
-      Description: ${violation.description}
-      Help: ${violation.help}
-      Help URL: ${violation.helpUrl}
-      Impact: ${violation.impact}
-      Nodes:
-      ${nodes}
-    `);
+    cy.log(
+      `${violation.id} (${violation.impact}): ${violation.help} — ${violation.nodes.length} nodes`,
+    );
   });
 }
 
-describe("Custom Violation Logging", () => {
-  it("logs detailed violation information", () => {
-    cy.visit("/");
-    cy.injectAxe();
-
-    cy.checkA11y(null, undefined, logAccessibilityViolations, true);
-  });
-});
-```
-
-### Fail on Specific Violations Only
-
-```typescript
-function failOnCriticalOnly(violations: axe.Result[]) {
-  const critical = violations.filter((v) => v.impact === "critical");
-
-  if (critical.length > 0) {
-    const message = critical
-      .map((v) => `${v.id}: ${v.description} (${v.nodes.length} occurrences)`)
-      .join("\n");
-
-    throw new Error(`Critical accessibility violations:\n${message}`);
-  }
-
-  // Log non-critical violations without failing
-  violations
-    .filter((v) => v.impact !== "critical")
-    .forEach((v) => {
-      cy.log(`Non-critical a11y issue: ${v.id} - ${v.description}`);
-    });
-}
-
-it("fails only on critical violations", () => {
+it("reports violations without failing the run", () => {
   cy.visit("/");
   cy.injectAxe();
+  cy.checkA11y(null, undefined, logViolations, true);
+});
 
+function failOnCriticalOnly(violations: axe.Result[]) {
+  const critical = violations.filter((v) => v.impact === "critical");
+  if (critical.length > 0) {
+    throw new Error(critical.map((v) => `${v.id}: ${v.help}`).join("\n"));
+  }
+  violations.forEach((v) => cy.log(`non-critical: ${v.id}`));
+}
+
+it("fails only on critical findings", () => {
+  cy.visit("/");
+  cy.injectAxe();
   cy.checkA11y(null, undefined, failOnCriticalOnly, true);
 });
 ```
 
+**Why good:** the default failure message names the rule but not the element; a callback puts the
+node count and the help text in the run log, which is what makes a finding actionable.
+
 ---
 
-## Pattern 7: Testing Interactive States
-
-### Testing After User Interactions
+## Pattern 5: Auditing after an interaction, and across routes
 
 ```typescript
-describe("Accessibility After Interactions", () => {
-  beforeEach(() => {
-    cy.visit("/");
-    cy.injectAxe();
-  });
+it("keeps the modal accessible once opened", () => {
+  cy.visit("/");
+  cy.injectAxe();
 
-  it("modal is accessible when opened", () => {
-    // Check page before modal
-    cy.checkA11y();
-
-    // Open modal
-    cy.getBySel("open-modal-button").click();
-    cy.getBySel("modal").should("be.visible");
-
-    // Check accessibility with modal open
-    cy.checkA11y();
-
-    // Specifically check the modal
-    cy.checkA11y("[data-cy=modal]");
-  });
-
-  it("dropdown menu is accessible when expanded", () => {
-    cy.checkA11y("[data-cy=dropdown]");
-
-    cy.getBySel("dropdown-trigger").click();
-    cy.getBySel("dropdown-menu").should("be.visible");
-
-    cy.checkA11y("[data-cy=dropdown]");
-  });
-
-  it("form error states are accessible", () => {
-    cy.visit("/signup");
-    cy.injectAxe();
-
-    // Initial state
-    cy.checkA11y("[data-cy=signup-form]");
-
-    // Trigger validation errors
-    cy.getBySel("submit-button").click();
-    cy.getBySel("email-error").should("be.visible");
-
-    // Check form with errors
-    cy.checkA11y("[data-cy=signup-form]");
-  });
+  cy.checkA11y(); // before
+  cy.getBySel("open-modal-button").click();
+  cy.getBySel("modal").should("be.visible");
+  cy.checkA11y("[data-cy=modal]"); // and in the state the interaction produced
 });
 ```
-
----
-
-## Pattern 8: Comprehensive Test Suite
-
-### Full Application Accessibility Test
 
 ```typescript
-const ROUTES_TO_TEST = [
-  { path: "/", name: "Homepage" },
-  { path: "/login", name: "Login Page" },
-  { path: "/signup", name: "Signup Page" },
-  { path: "/products", name: "Products List" },
-  { path: "/contact", name: "Contact Page" },
-  { path: "/about", name: "About Page" },
-];
+const PUBLIC_ROUTES = ["/", "/login", "/products", "/contact"];
 
-const AUTHENTICATED_ROUTES = [
-  { path: "/dashboard", name: "Dashboard" },
-  { path: "/profile", name: "Profile" },
-  { path: "/settings", name: "Settings" },
-];
-
-describe("Application-Wide Accessibility", () => {
-  context("Public Pages", () => {
-    ROUTES_TO_TEST.forEach(({ path, name }) => {
-      it(`${name} has no accessibility violations`, () => {
-        cy.visit(path);
-        cy.injectAxe();
-        cy.checkA11y(null, {
-          includedImpacts: ["critical", "serious"],
-        });
-      });
-    });
-  });
-
-  context("Authenticated Pages", () => {
-    beforeEach(() => {
-      cy.login("user@example.com", "password123");
-    });
-
-    AUTHENTICATED_ROUTES.forEach(({ path, name }) => {
-      it(`${name} has no accessibility violations`, () => {
-        cy.visit(path);
-        cy.injectAxe();
-        cy.checkA11y(null, {
-          includedImpacts: ["critical", "serious"],
-        });
-      });
-    });
-  });
-});
-```
-
----
-
-## Pattern 9: Component Accessibility Testing
-
-### Cypress Component Test with Accessibility
-
-```tsx
-// cypress/component/button.cy.tsx
-import { Button } from "../../src/components/button/button";
-
-describe("Button Accessibility", () => {
-  beforeEach(() => {
+PUBLIC_ROUTES.forEach((path) => {
+  it(`has no critical violations on ${path}`, () => {
+    cy.visit(path);
     cy.injectAxe();
-  });
-
-  it("primary button is accessible", () => {
-    cy.mount(<Button label="Click me" variant="primary" />);
-    cy.checkA11y();
-  });
-
-  it("disabled button is accessible", () => {
-    cy.mount(<Button label="Click me" disabled />);
-    cy.checkA11y();
-  });
-
-  it("button with icon is accessible", () => {
-    cy.mount(
-      <Button label="Add item" variant="primary">
-        <svg aria-hidden="true">...</svg>
-      </Button>,
-    );
-    cy.checkA11y();
+    cy.checkA11y(null, { includedImpacts: ["critical", "serious"] });
   });
 });
 ```
 
----
+**Why good:** a static page audit misses everything a dialog, a menu or a validation error
+introduces, and those are where accessible-name and focus problems actually live. Generating one
+test per route keeps the failure attributable to a single page.
 
-## Pattern 10: Keyboard Navigation Testing
+A component spec audits the same way — `cy.mount()` first, then `cy.injectAxe()` and `cy.checkA11y()`
+— see [component-testing.md](component-testing.md).
 
-### Manual Keyboard Tests
-
-```typescript
-describe("Keyboard Navigation", () => {
-  beforeEach(() => {
-    cy.visit("/");
-  });
-
-  it("can navigate menu with keyboard", () => {
-    // Tab to first menu item
-    cy.get("body").tab();
-    cy.focused().should("have.attr", "data-cy", "nav-home");
-
-    // Tab to next item
-    cy.focused().tab();
-    cy.focused().should("have.attr", "data-cy", "nav-products");
-
-    // Enter activates link
-    cy.focused().type("{enter}");
-    cy.url().should("include", "/products");
-  });
-
-  it("modal traps focus", () => {
-    cy.getBySel("open-modal-button").click();
-
-    // Tab through modal elements
-    cy.get("body").tab();
-    cy.focused().should("have.attr", "data-cy", "modal-close-button");
-
-    cy.focused().tab();
-    cy.focused().should("have.attr", "data-cy", "modal-confirm-button");
-
-    // Tab should wrap back to close button
-    cy.focused().tab();
-    cy.focused().should("have.attr", "data-cy", "modal-close-button");
-
-    // Escape closes modal
-    cy.get("body").type("{esc}");
-    cy.getBySel("modal").should("not.exist");
-    cy.focused().should("have.attr", "data-cy", "open-modal-button");
-  });
-
-  it("dropdown can be navigated with arrow keys", () => {
-    cy.getBySel("dropdown-trigger").click();
-
-    cy.get("body").type("{downarrow}");
-    cy.focused().should("have.attr", "data-cy", "dropdown-item-1");
-
-    cy.get("body").type("{downarrow}");
-    cy.focused().should("have.attr", "data-cy", "dropdown-item-2");
-
-    cy.get("body").type("{uparrow}");
-    cy.focused().should("have.attr", "data-cy", "dropdown-item-1");
-  });
-});
-```
-
-**Note:** For keyboard testing, you may need `cypress-real-events` plugin for better keyboard simulation.
-
----
-
-## Quick Reference: Common axe-core Rules
-
-| Rule ID             | Description                                | Impact   |
-| ------------------- | ------------------------------------------ | -------- |
-| `color-contrast`    | Text must have sufficient color contrast   | serious  |
-| `image-alt`         | Images must have alt text                  | critical |
-| `label`             | Form elements must have labels             | critical |
-| `button-name`       | Buttons must have discernible text         | critical |
-| `link-name`         | Links must have discernible text           | serious  |
-| `landmark-one-main` | Document must have one main landmark       | moderate |
-| `region`            | All content should be in landmarks         | moderate |
-| `heading-order`     | Heading levels should only increase by one | moderate |
-
----
-
-_See [core.md](core.md) for E2E patterns and [component-testing.md](component-testing.md) for component testing._
+An audit reports what the markup declares; whether the page can be operated without a mouse is a
+keyboard test. The commands for that — `cy.focused()`, the braced key syntax, and why Tab is the
+exception — are in [core.md](core.md) Pattern 7.

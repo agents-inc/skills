@@ -1,78 +1,42 @@
 # Storybook - Documentation Examples
 
-> Autodocs, MDX documentation, and docs customization. Reference from [SKILL.md](../SKILL.md).
+> Autodocs, custom docs pages, MDX, source display and descriptions. See [../SKILL.md](../SKILL.md) for the decisions, and [../reference.md](../reference.md) for the fields that changed between majors.
 
 ---
 
-## Autodocs Configuration
-
-### Enabling Autodocs
+## Autodocs
 
 ```typescript
-// button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "./button";
-
+// button.stories.tsx — this component gets a docs page
 const meta = {
-  title: "Components/Button",
   component: Button,
-  tags: ["autodocs"], // Enables automatic documentation
+  tags: ["autodocs"],
 } satisfies Meta<typeof Button>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
 ```
 
-**Why good:** Single tag generates complete documentation page with props table, source code, and controls
-
----
-
-### Global Autodocs
-
 ```typescript
-// .storybook/preview.tsx
-import type { Preview } from "@storybook/react";
-
+// .storybook/preview.tsx — every component gets one
 const preview: Preview = {
-  // Enable autodocs for ALL components (Storybook 8+ recommended approach)
   tags: ["autodocs"],
 };
 
 export default preview;
 ```
 
-> **Note:** In Storybook 8, the `docs.autodocs` setting in `main.ts` is deprecated. Use `tags: ["autodocs"]` in `preview.ts` instead.
+**Why good:** one tag produces a page carrying the props table, the source and the controls. Setting it globally and removing it per component (`tags: ["!autodocs"]`) is less repetition than adding it in every file.
 
-**Why good:** Global configuration reduces per-file boilerplate, tag-based allows selective generation
-
----
-
-## JSDoc for Autodocs
-
-JSDoc comments on component props and the component function itself appear automatically in the autodocs props table. Use `@default` to show default values. Component-level JSDoc appears as the docs page header description. This is standard JSDoc - the key insight is that Storybook reads it via `react-docgen`.
+JSDoc on the component and its props feeds that props table directly — `@default` shows the default value, and the component's own doc comment becomes the page description. Nothing Storybook-specific is involved; it reads what the docgen step extracts.
 
 ---
 
-## Custom Docs Page
+## Custom Docs Pages
 
-### Customizing Docs Layout
+### Choosing what appears, and in what order
 
 ```typescript
-// button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import {
-  Title,
-  Subtitle,
-  Description,
-  Primary,
-  Controls,
-  Stories,
-  Source,
-} from "@storybook/blocks";
-import { Button } from "./button";
+import { Title, Subtitle, Description, Primary, Controls, Stories } from "@storybook/blocks";
 
 const meta = {
-  title: "Components/Button",
   component: Button,
   tags: ["autodocs"],
   parameters: {
@@ -90,46 +54,28 @@ const meta = {
     },
   },
 } satisfies Meta<typeof Button>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
 ```
 
-**Why good:** Custom docs page controls what appears and in what order, blocks are composable
+**Why good:** the default page is a fixed composition of these blocks, so replacing it is a matter of listing the ones you want.
 
----
-
-### Adding Custom Content to Docs
+### Adding prose to the generated page
 
 ```typescript
-// avatar.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Title, Description, Primary, Controls, Stories, Markdown } from "@storybook/blocks";
-import { Avatar } from "./avatar";
+import { Markdown } from "@storybook/blocks";
 
 const USAGE_GUIDELINES = `
-## Usage Guidelines
-
-### When to use
+## Usage
 
 - To represent a user in the interface
 - In comment threads to identify authors
-- In navigation to show logged-in user
 
-### When not to use
+Not for decorative images, logos, or anywhere the size varies dramatically.
 
-- For decorative images (use regular \`<img>\`)
-- For logos or brand marks
-- When the image size will vary dramatically
-
-### Accessibility
-
-Always provide meaningful alt text. If the avatar is purely decorative
-and the user's name is visible elsewhere, use \`aria-hidden="true"\`.
+Always provide meaningful alt text. Where the avatar is decorative and the
+name is visible elsewhere, use \`aria-hidden="true"\`.
 `;
 
 const meta = {
-  title: "Components/Avatar",
   component: Avatar,
   tags: ["autodocs"],
   parameters: {
@@ -147,90 +93,46 @@ const meta = {
     },
   },
 } satisfies Meta<typeof Avatar>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
 ```
 
-**Why good:** Markdown block allows rich custom content, usage guidelines live with component
+**Why good:** guidance about when to use a component lives beside the component, so it is updated by whoever changes it.
 
 ---
 
-## MDX Documentation
+## MDX
 
-### Component Documentation with MDX
+### A component page
 
 ```mdx
 {/* button.mdx */}
-import { Meta, Canvas, Controls, Story, Source, ArgTypes } from "@storybook/blocks";
+import { Meta, Canvas, Controls, ArgTypes } from "@storybook/blocks";
 import \* as ButtonStories from "./button.stories";
 
 <Meta of={ButtonStories} />
 
 # Button
 
-Buttons trigger actions when clicked. Use the appropriate variant to communicate intent.
-
-## Overview
+Buttons trigger actions. The variant communicates intent.
 
 <Canvas of={ButtonStories.Primary} />
-
-## Interactive Controls
 
 <Controls />
 
 ## Variants
 
-Buttons come in several variants for different use cases:
-
-### Primary
-
-Use for the main action on a page.
-
-<Canvas of={ButtonStories.Primary} />
-
-### Secondary
-
-Use for less prominent actions.
-
-<Canvas of={ButtonStories.Secondary} />
-
-### Destructive
-
-Use for dangerous or irreversible actions.
+Use primary for the main action on a page, secondary for everything else, and
+destructive for anything irreversible.
 
 <Canvas of={ButtonStories.Destructive} />
-
-## Sizes
-
-<Canvas>
-  <Story of={ButtonStories.Small} />
-  <Story of={ButtonStories.Medium} />
-  <Story of={ButtonStories.Large} />
-</Canvas>
 
 ## Props
 
 <ArgTypes of={ButtonStories} />
-
-## Best Practices
-
-- Use only one primary button per section
-- Keep button text short and action-oriented
-- Use icons to clarify meaning, not replace text
-- Consider loading states for async actions
-
-## Related Components
-
-- [IconButton](?path=/docs/components-iconbutton--docs) - Button with only an icon
-- [ButtonGroup](?path=/docs/components-buttongroup--docs) - Group of related buttons
 ```
 
-**Why good:** MDX allows mixing documentation and live examples, Canvas shows interactive stories, ArgTypes generates props table
+**Why good:** the examples are the real stories rather than copies of them, so the page cannot document a component that no longer exists.
 
----
-
-### Standalone Documentation Pages
+### A page with no component
 
 ```mdx
 {/* docs/getting-started.mdx */}
@@ -238,18 +140,12 @@ import { Meta } from "@storybook/blocks";
 
 <Meta title="Getting Started/Introduction" />
 
-# Welcome to Our Design System
-
-This Storybook documents the components and patterns used in our application.
-
-{/* Rest of your documentation content */}
+# Welcome
 ```
 
-**Why good:** `<Meta title="..." />` creates docs-only pages in the sidebar without needing a component or stories file
+**Why good:** `<Meta title="…" />` with no `of` puts a documentation-only page in the sidebar, which is how introductions and conventions pages get in.
 
----
-
-### Design Token Documentation
+### Design tokens
 
 ```mdx
 {/* docs/tokens/colors.mdx */}
@@ -257,189 +153,96 @@ import { Meta, ColorPalette, ColorItem } from "@storybook/blocks";
 
 <Meta title="Design Tokens/Colors" />
 
-# Colors
-
 <ColorPalette>
   <ColorItem
     title="Primary"
     subtitle="--color-primary"
     colors={{ 500: "#3b82f6", 600: "#2563eb", 700: "#1d4ed8" }}
   />
-  <ColorItem
-    title="Success"
-    subtitle="--color-success"
-    colors={{ Default: "#10b981", Dark: "#059669" }}
-  />
 </ColorPalette>
 ```
 
-**Why good:** `ColorPalette` and `ColorItem` blocks provide visual documentation of design tokens alongside components
+**Why good:** `ColorPalette` renders the swatches and their names together, so the documented token and the value it holds cannot disagree.
 
 ---
 
-## Source Code Display
-
-### Showing Source Code
+## Source Display
 
 ```typescript
-// card.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Card } from "./card";
-
 const meta = {
-  title: "Components/Card",
   component: Card,
   tags: ["autodocs"],
   parameters: {
     docs: {
-      source: {
-        type: "code", // Shows actual source code
-        // type: "dynamic",  // Shows rendered with current args
-        // type: "auto",  // Storybook chooses (default)
-      },
+      source: { type: "code" }, // the source as written; "dynamic" renders current args
     },
   },
 } satisfies Meta<typeof Card>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    title: "Card Title",
-    description: "Card description text",
-  },
-};
-
-// Custom source code for a story
+// Show something cleaner than the story's own body
 export const CustomSource: Story = {
   parameters: {
     docs: {
       source: {
-        code: `
-<Card>
+        code: `<Card>
   <CardHeader>
     <CardTitle>Custom Title</CardTitle>
   </CardHeader>
-  <CardContent>
-    Content goes here
-  </CardContent>
-</Card>
-        `,
+</Card>`,
         language: "tsx",
       },
     },
   },
-  args: {
-    title: "Custom Title",
-  },
 };
 ```
 
-**Why good:** Source code helps developers copy-paste examples, custom source shows cleaner examples
-
----
-
-### Transforming Source Code
-
 ```typescript
-// .storybook/preview.tsx
-import type { Preview } from "@storybook/react";
-
+// .storybook/preview.tsx — drop the args spread from every snippet
 const preview: Preview = {
   parameters: {
     docs: {
       source: {
-        // Remove args spread for cleaner examples
-        transform: (src: string) => {
-          return src.replace(/\{\.\.\.args\}/g, "").trim();
-        },
+        transform: (src: string) => src.replace(/\{\.\.\.args\}/g, "").trim(),
       },
     },
   },
 };
-
-export default preview;
 ```
 
-**Why good:** Source transforms can clean up generated code for better readability
+**Why good:** the generated snippet contains the machinery that makes controls work, which a reader copying the example does not want. `transform` removes it once for every story.
 
 ---
 
-## Story Descriptions
-
-### Adding Story Descriptions
+## Descriptions
 
 ```typescript
-// form.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Form } from "./form";
-
 const meta = {
-  title: "Components/Form",
   component: Form,
   tags: ["autodocs"],
   parameters: {
     docs: {
       description: {
         component:
-          "Forms collect user input. They include validation, error handling, and submission states.",
+          "Forms collect user input, with validation and submission states.",
       },
     },
   },
 } satisfies Meta<typeof Form>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: "The default form state, ready for user input.",
-      },
-    },
-  },
-};
-
 export const WithValidationErrors: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "Shows how validation errors are displayed. Errors appear inline below each field.",
+        story: "Errors appear inline below each field.",
       },
     },
   },
-  args: {
-    initialErrors: {
-      email: "Please enter a valid email",
-      password: "Password must be at least 8 characters",
-    },
-  },
-};
-
-export const Submitting: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Form in submission state. All fields are disabled and a loading indicator shows.",
-      },
-    },
-  },
-  args: {
-    isSubmitting: true,
-  },
+  args: { initialErrors: { email: "Please enter a valid email" } },
 };
 ```
 
-**Why good:** Descriptions provide context without cluttering story code, appear in both canvas and docs
+**Why good:** `description.component` and `description.story` land in different places on the page, so the state's explanation sits with the state rather than in a preamble nobody reads twice.
 
 ---
 
-_For more patterns, see:_
-
-- [core.md](core.md) - CSF 3.0 format, args, controls
-- [testing.md](testing.md) - Play functions and interaction testing
-- [addons.md](addons.md) - Addon configuration
+_See also:_ [core.md](core.md) · [testing.md](testing.md) · [addons.md](addons.md)

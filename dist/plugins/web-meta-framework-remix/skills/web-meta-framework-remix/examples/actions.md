@@ -1,6 +1,6 @@
-# Remix - Action Examples
+# Remix — Actions
 
-> Patterns for form submissions, validation, and mutations.
+> Validation with accessible error display, and a delete that asks first.
 
 ---
 
@@ -120,7 +120,11 @@ export default function Signup() {
 }
 ```
 
-**Why good:** Comprehensive validation with typed errors, disabled fieldset during submission, accessible form with aria attributes, loading state feedback, redirect with session cookie after success
+**Why good:** Errors are returned rather than thrown, so the user keeps what they typed —
+`useActionData` renders them beside the fields that produced them, tied together by
+`aria-describedby` for a screen reader. Disabling the whole `<fieldset>` is one attribute rather than
+one per input, and the redirect carries the session cookie so the next request is already
+authenticated.
 
 ---
 
@@ -198,4 +202,7 @@ export default function PostPage() {
 }
 ```
 
-**Why good:** Authorization check in both loader (for UI) and action (for security), confirmation dialog before delete, loading state while deleting, redirect after successful delete
+**Why good:** The ownership check runs twice on purpose. In the loader it decides whether to render the
+button at all; in the action it decides whether the deletion happens — and only the second one is
+security, because nothing stops a client POSTing to the route directly. The redirect after success
+means a refresh does not resubmit.

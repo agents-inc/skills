@@ -132,7 +132,11 @@ export function ExpandableOrderTable({ orders }: { orders: Order[] }) {
 }
 ```
 
-**Why good:** `Fragment` for clean row grouping, `aria-expanded` for accessibility, expanded content uses `colSpan` for full width, `getRowCanExpand` controls which rows can expand
+**Why good:** the detail row is a second `<tr>` emitted beside the first, which is why the pair needs
+a `Fragment` — the table has no slot for it, and `getExpandedRowModel` interleaves sub-rows rather
+than nesting them. `colSpan` spans the detail across every column so it does not inherit the column
+grid. `aria-expanded` on the toggle is what tells a screen reader the control has two states, and
+`getRowCanExpand` is what keeps a toggle off rows with nothing behind them.
 
 ---
 

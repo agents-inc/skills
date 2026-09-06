@@ -1,105 +1,103 @@
 ---
 name: web-server-state-react-query
-description: React Query server state, hey-api OpenAPI codegen, type-safe data fetching
+description: React Query server state — query keys and query options, caching policy, error handling, and typed clients generated from an API schema
 ---
 
-# React Query + hey-api Patterns
+# React Query Patterns
 
-> **Quick Guide:** Generate type-safe React Query hooks from OpenAPI specs using hey-api. Never write custom query hooks or manual type definitions -- use generated query options (`getFeaturesOptions()` pattern) and generated types. Configure the client once via environment variables. All timeouts/retries use named constants.
+> **Quick Guide:** React Query owns the server cache — what was fetched, how long it stays fresh,
+> and when it is evicted. Every entry is identified by its `queryKey`, and `staleTime` and `gcTime`
+> are two separate clocks rather than one. v5 removed `onError`/`onSuccess`/`onSettled` from
+> `useQuery`, so error side effects belong in the component or on the shared `QueryCache`.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — generated client output, provider and auth setup, consuming query options, fetch timeouts
+- [examples/error-handling.md](examples/error-handling.md) — component states, global handlers, retry backoff, error boundaries
+- [reference.md](reference.md) — configuration and error-strategy lookup, v4 → v5 migration table
+
+---
+
+## Which path applies
+
+- **The API has a schema you can generate from** — generate types, service functions and query
+  options from it, then call `useQuery(generatedOptions())`. Keys and types come from one source, so
+  a schema change surfaces as a compile error. Pattern 1.
+- **No schema, or one you do not control** — write the query function by hand, validate the response
+  at the parse boundary, and design the query keys deliberately, since nothing generates them.
+  Everything from Pattern 2 onward applies unchanged.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing React Query code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Read the API base URL from the environment.** One build then runs against every environment.
 
-**(You MUST use generated query options from hey-api -- NEVER write custom React Query hooks)**
-
-**(You MUST regenerate client code when OpenAPI schema changes)**
-
-**(You MUST use named constants for ALL timeout/retry values -- NO magic numbers)**
-
-**(You MUST configure API client base URL via environment variables)**
+**Regenerate the client when the schema changes, and commit the generated output.** The regenerated
+types turn a breaking API change into a compile error in review rather than a runtime error in
+production.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** OpenAPI schema, hey-api, openapi-ts, generated React Query hooks, query options, getFeaturesOptions, useQuery, useMutation, QueryClient, QueryClientProvider, staleTime, gcTime, queryKey
+**Auto-detection:** `useQuery`, `useMutation`, `useInfiniteQuery`, `useSuspenseQuery`, `QueryClient`,
+`QueryClientProvider`, `QueryCache`, `MutationCache`, `queryKey`, `queryOptions`, `staleTime`,
+`gcTime`, `invalidateQueries`, `placeholderData`, `initialPageParam`, `openapi-ts`
 
-**When to use:**
+**Applies to:**
 
-- Generating type-safe API client from OpenAPI specs with hey-api
-- Using generated React Query query options in components
-- Configuring QueryClient defaults, error handling, retry policies
-- Debouncing queries, handling dependent/conditional fetching
+- Caching, invalidating and refetching server data
+- QueryClient defaults, retry policy and global error handling
+- Generating typed query options from an API schema
+- Dependent, conditional and debounced queries
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- No OpenAPI spec available (consider writing one or using tRPC)
-- GraphQL API (use a GraphQL client)
-- Real-time WebSocket APIs (use a WebSocket solution)
-- Simple one-off fetches where React Query overhead isn't justified
-
----
-
-<philosophy>
-
-## Philosophy
-
-OpenAPI-first development ensures a single source of truth for your API contract. The hey-api code generator (`@hey-api/openapi-ts`) transforms your OpenAPI schema into fully typed client code, React Query hooks, and query options -- eliminating manual type definitions and reducing bugs.
-
-**Core Principles:**
-
-1. **Single source of truth** -- OpenAPI schema drives types, client code, and mocks
-2. **Zero manual typing** -- Generated code eliminates type drift
-3. **Consistent patterns** -- All API calls use generated query options, never custom hooks
-4. **Centralized configuration** -- One place to configure client behavior
-
-</philosophy>
+- Client-only state that never came from a server — this skill caches responses and settles nothing
+  about state a user typed
+- Authoring the API schema; this skill consumes one
+- APIs addressed through a graph query language, whose clients cache normalised entities rather than
+  whole responses under a key
+- Long-lived socket streams — this cache is request/response shaped
 
 ---
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: hey-api Code Generation
+### Pattern 1: Generated query options
 
-Configure `@hey-api/openapi-ts` to generate TypeScript client code and React Query hooks from your OpenAPI spec. Since v0.73.0, client packages are bundled -- no separate installation needed.
+Point the generator at the schema and let it emit types, service functions and query options
+together. The query key is generated with them, so no two call sites can disagree about it.
 
 ```typescript
 // openapi-ts.config.ts
-import { defineConfig } from "@hey-api/openapi-ts";
-
 export default defineConfig({
   input: "./openapi.yaml",
   output: "src/api-client",
-  plugins: [
-    "@hey-api/typescript",
-    "@hey-api/sdk",
-    "@tanstack/react-query",
-    // "@hey-api/client-fetch" -- optional, Fetch is the default client since v0.73
-  ],
+  plugins: ["@hey-api/typescript", "@hey-api/sdk", "@tanstack/react-query"],
 });
 ```
 
-**Key points:** `@hey-api/typescript` generates types (renamed from `@hey-api/types`), `@hey-api/sdk` generates service functions (renamed from `@hey-api/services`). Fetch client is bundled by default since v0.73 -- only add `@hey-api/client-fetch` explicitly to customize its options. Run generation via `npx openapi-ts` or add as a build script.
+A fetch client is bundled from `@hey-api/openapi-ts` v0.73 — name a client plugin explicitly only to
+customise its options.
 
-See [examples/core.md](examples/core.md) Pattern 1 for generated output structure and usage.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Client Configuration
+### Pattern 2: Client and cache configuration
 
-Configure the API client base URL and QueryClient defaults **once** in a provider component. Use environment variables for the base URL so it works across environments without code changes.
+Configure the base URL and the QueryClient defaults once, in a provider. Build the client inside
+`useState` so a re-render never swaps the cache out from under the tree.
 
 ```typescript
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
-// In your provider component:
 const [queryClient] = useState(
   () =>
     new QueryClient({
@@ -112,144 +110,119 @@ const [queryClient] = useState(
 client.setConfig({ baseUrl: process.env.API_BASE_URL ?? "" });
 ```
 
-**Key points:** hey-api's `client.setConfig()` merges with existing config (doesn't replace). Named constants for all time values. Set `auth` option or use interceptors for auth headers.
+The `QueryClient` half applies however the data is fetched. `client` is the generated client, and
+its `setConfig()` merges into the existing config rather than replacing it, so auth and a custom
+`fetch` can be set from separate call sites; a hand-written query function reads its base URL
+wherever it already does.
 
-See [examples/core.md](examples/core.md) Pattern 2 for full provider setup and auth configuration.
+Full code: [examples/core.md](examples/core.md) — provider setup, static and dynamic auth, and a
+`fetch` wrapper that aborts on a timeout
 
 ---
 
-### Pattern 3: Using Generated Query Options
+### Pattern 3: Consuming and overriding query options
 
-Use generated query options directly -- never write custom React Query hooks. Options are fully typed and include generated query keys.
+Call the generated options directly, and spread them when one call site needs a different policy.
 
 ```typescript
-import { useQuery } from "@tanstack/react-query";
-import { getFeaturesOptions } from "./api-client/@tanstack/react-query.gen";
-
-// Direct usage -- fully typed
 const { data, isPending, error } = useQuery(getFeaturesOptions());
 
-// With overrides -- spread and customize
 const TEN_MINUTES_MS = 10 * 60 * 1000;
-const { data } = useQuery({
+const { data: slow } = useQuery({
   ...getFeaturesOptions(),
   staleTime: TEN_MINUTES_MS,
   enabled: someCondition,
 });
 ```
 
-**Why good:** Zero boilerplate, type-safe, consistent patterns, query keys auto-namespaced, easy to customize by spreading
+With no generator, the `queryOptions` helper defines the same thing by hand, and typed:
 
-See [examples/core.md](examples/core.md) Pattern 3 for component examples and bad patterns to avoid.
+```typescript
+import { queryOptions } from "@tanstack/react-query";
+
+const featuresOptions = () =>
+  queryOptions({ queryKey: ["features"], queryFn: getFeatures });
+```
+
+Either way the key and the function are declared in one place, which is what stops two call sites
+opening two cache entries for one endpoint and an `invalidateQueries` reaching only one of them.
+Spreading the options preserves the key, so an override shares the entry rather than adding another.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Error Handling
+### Pattern 4: Error handling
 
-React Query v5 removed `onError`/`onSuccess`/`onSettled` callbacks from `useQuery`. Use component-level `isPending`/`error` states, `useEffect` for error side effects, or global handlers via `QueryCache`/`MutationCache`.
+Component-level `error` covers the query a user is looking at; `QueryCache` and `MutationCache`
+cover everything else from one place.
 
 ```typescript
-// Global error handling (v5 pattern)
 new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      if (query.state.data !== undefined) {
-        showNotification(`Something went wrong: ${error.message}`);
-      }
+      // A query that already held data failed a background refetch — the component shows stale
+      // data and no error, so the notification is the only signal.
+      if (query.state.data !== undefined) notify(error.message);
     },
   }),
   mutationCache: new MutationCache({
-    onError: (error) => {
-      showNotification("Operation failed. Please try again.");
-    },
+    onError: () => notify("Operation failed."),
   }),
 });
 ```
 
-See [examples/error-handling.md](examples/error-handling.md) for component-level handling, retry with exponential backoff, and error boundaries.
+Full code: [examples/error-handling.md](examples/error-handling.md)
 
 ---
 
-### Pattern 5: Debounced Queries
+### Pattern 5: Conditional and debounced queries
 
-Debounce search/filter queries to prevent excessive API calls on every keystroke.
+Key the query on the debounced value, and gate it with `enabled` so an empty term never reaches the
+network.
 
 ```typescript
 const DEBOUNCE_DELAY_MS = 500;
-const MIN_SEARCH_LENGTH = 0;
 
 const debouncedTerm = useDebounce(searchTerm, DEBOUNCE_DELAY_MS);
 const { data } = useQuery({
   queryKey: ["search", debouncedTerm],
-  queryFn: () => searchAPI(debouncedTerm),
-  enabled: debouncedTerm.length > MIN_SEARCH_LENGTH,
+  queryFn: () => searchApi(debouncedTerm),
+  enabled: debouncedTerm.length > 0,
 });
 ```
 
-**Why good:** Prevents excessive API calls, query key includes debounced term for proper cache management, `enabled` prevents empty queries
+Keying on the raw term instead caches one entry per keystroke.
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Code generation, client setup, auth, query options usage
-- [examples/error-handling.md](examples/error-handling.md) - Error boundaries, retry logic, global handlers
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, React Query v5 changes
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Writing custom React Query hooks instead of using generated query options -- creates inconsistent patterns and loses type safety
-- Manual TypeScript interfaces for API responses -- drift from OpenAPI schema causes runtime errors
-- Magic numbers for timeouts/retries -- use named constants (`FIVE_MINUTES_MS`, `MAX_RETRY_ATTEMPTS`)
-- Hardcoded API URLs -- use environment variables for multi-environment deploys
-- Using `onError`/`onSuccess` callbacks on `useQuery` -- removed in React Query v5
+- `onError` / `onSuccess` / `onSettled` on `useQuery` — removed in v5, so the side effect silently
+  never runs. Use the component's `error` or `QueryCache.onError`.
+- `client.setConfig()` called inside a query function — it mutates config every in-flight request
+  shares, so concurrent queries race for the base URL.
+- An `AbortController` timeout with no `clearTimeout` on the success path — the timer keeps the
+  closure alive after the response has landed.
+- A query rendered with neither an `error` branch nor an error boundary above it — a rejected fetch
+  takes the subtree down.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Mutating global client config inside query functions -- causes race conditions in concurrent requests
-- Missing error boundaries -- unhandled query errors crash entire component tree
-- `retry: true` in development with mocks -- should be `false` to fail fast
-- Not cleaning up AbortController timeouts -- memory leak
-
-**Gotchas & Edge Cases:**
-
-- `cacheTime` was renamed to `gcTime` in v5 (garbage collection time)
-- `isLoading` was renamed to `isPending` in v5
-- `keepPreviousData` replaced with `placeholderData: (prev) => prev`
-- `useInfiniteQuery` now requires `initialPageParam` option
-- Server-side retry defaults to 0 in v5 (was 3 in v4)
-- `client.setConfig()` merges with existing config, doesn't replace it
-- Generated query keys are immutable tuples (safe for React Query key equality)
-- Fetch timeout is different from React Query's `staleTime`/`gcTime`
-- Generated types change when OpenAPI schema changes -- commit generated files to catch breaking changes in review
-- React Query v5 requires React 18.0+
+- `setConfig()` merges rather than replaces, so a partial call silently keeps the previous auth.
+- Server-side retry defaults to `0` in v5, where v4 retried three times.
+- A `fetch` timeout is unrelated to `staleTime` and `gcTime` — the first bounds one request, the
+  other two bound the cache entry.
+- `retry` left on against local mocks turns a mock that is simply missing into a slow failure.
+- Hand-written interfaces for a response the schema already types drift silently: the field the
+  backend added is absent from the type and absent from every render that needed it.
+- A hand-written `useQuery` wrapper beside a generated option gives the same endpoint two query keys
+  and two cache entries, so invalidating one leaves the other stale.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use generated query options from hey-api -- NEVER write custom React Query hooks)**
-
-**(You MUST regenerate client code when OpenAPI schema changes)**
-
-**(You MUST use named constants for ALL timeout/retry values -- NO magic numbers)**
-
-**(You MUST configure API client base URL via environment variables)**
-
-**Failure to follow these rules will cause type drift, inconsistent patterns, and production bugs.**
-
-</critical_reminders>

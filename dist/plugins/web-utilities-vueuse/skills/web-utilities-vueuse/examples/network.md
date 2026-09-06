@@ -1,14 +1,11 @@
 # VueUse Network Examples
 
-> useFetch, useWebSocket, useEventSource patterns. See [core.md](core.md) for basics.
-
-**Prerequisites**: Understand VueUse composable calling conventions from core examples first.
+> `useFetch`, `createFetch`, `useWebSocket` and `useEventSource`. See [SKILL.md](../SKILL.md) for
+> the decisions and [core.md](core.md) for the calling conventions.
 
 ---
 
-## useFetch - Reactive HTTP Requests
-
-### Good Example - Basic Fetch with Type Safety
+## useFetch
 
 ```vue
 <script setup lang="ts">
@@ -24,78 +21,64 @@ interface User {
 const userId = ref(1);
 const url = computed(() => `/api/users/${userId.value}`);
 
-// Auto-fetches on mount and when URL changes
+// Fires on mount, and again whenever `url` changes — aborting the previous request
 const { data, isFetching, error, statusCode } = useFetch(url, {
   refetch: true,
 }).json<User>();
-
-// data is Ref<User | null>
+// data: Ref<User | null>
 </script>
 
 <template>
-  <div v-if="isFetching">Loading...</div>
-  <div v-else-if="error">Error: {{ error }}</div>
-  <div v-else-if="data">
+  <p v-if="isFetching">Loading…</p>
+  <p v-else-if="error">{{ error }}</p>
+  <template v-else-if="data">
     <h2>{{ data.name }}</h2>
     <p>{{ data.email }}</p>
-  </div>
+  </template>
 </template>
 ```
 
-**Why good:** reactive URL triggers refetch, `.json<User>()` provides typed response, loading/error states built-in
+`.json<T>()` is what parses and types the body — without it `data` is `Ref<string | null>`.
+`.text()` and `.blob()` are the alternatives.
 
----
+There is no cache. Two components fetching the same URL make two requests, and re-mounting refetches.
+Where that matters, hoist the call into a shared composable.
 
-### Good Example - Manual Fetch with POST
+### Manual and non-GET
 
 ```vue
 <script setup lang="ts">
 import { useFetch } from "@vueuse/core";
 import { ref } from "vue";
 
-interface CreateUserPayload {
-  name: string;
-  email: string;
-}
-
-interface CreateUserResponse {
-  id: number;
-  name: string;
-}
-
-const formData = ref<CreateUserPayload>({ name: "", email: "" });
+const form = ref({ name: "", email: "" });
 
 const { data, execute, isFetching, error } = useFetch("/api/users", {
-  immediate: false, // don't fetch on mount
+  immediate: false, // nothing happens until execute()
 })
-  .post(formData)
-  .json<CreateUserResponse>();
+  .post(form) // a ref body is read at request time
+  .json<{ id: number }>();
 
-async function handleSubmit(): Promise<void> {
+async function submit(): Promise<void> {
   await execute();
-  if (!error.value && data.value) {
-    console.log("Created user:", data.value.id);
-  }
+  if (!error.value && data.value) onCreated(data.value.id);
 }
 </script>
 ```
 
-**Why good:** `immediate: false` prevents auto-fetch, `execute()` for manual trigger, reactive body updates automatically
+`execute()` resolves when the request settles, but it does not reject — the outcome is in `error`,
+so the check after the `await` is what branches.
 
----
-
-### Good Example - createFetch for Reusable API Client
+### createFetch for a configured client
 
 ```typescript
-// composables/api.ts
+// api.ts
 import { createFetch } from "@vueuse/core";
-
-const API_TIMEOUT_MS = 10000;
 
 export const useApi = createFetch({
   baseUrl: "/api",
   options: {
-    timeout: API_TIMEOUT_MS,
+    timeout: 10_000,
     async beforeFetch({ options }) {
       const token = getAuthToken();
       if (token) {
@@ -106,42 +89,34 @@ export const useApi = createFetch({
       }
       return { options };
     },
-    async afterFetch(ctx) {
-      // Transform response if needed
-      return ctx;
-    },
     async onFetchError(ctx) {
-      if (ctx.response?.status === 401) {
-        redirectToLogin();
-      }
-      return ctx;
+      if (ctx.response?.status === 401) redirectToLogin();
+      return ctx; // returning the context lets the caller's own error path still run
     },
   },
 });
 ```
 
 ```vue
-<!-- Usage in component -->
 <script setup lang="ts">
-import { useApi } from "@/composables/api";
+import { useApi } from "./api";
 
-// Inherits base URL, auth headers, error handling
 const { data } = useApi("/users").json<User[]>();
 </script>
 ```
 
-**Why good:** centralized auth, error handling, and timeouts; all components inherit the configuration; interceptor pattern matches industry standards
+The three hooks — `beforeFetch`, `afterFetch` and `onFetchError` — are all `async`, so
+`beforeFetch` can await a token refresh before the request goes out. Each must return its context
+object; returning nothing drops the request's options.
 
 ---
 
-## useWebSocket - Real-Time Communication
-
-### Good Example - WebSocket with Auto-Reconnect
+## useWebSocket
 
 ```vue
 <script setup lang="ts">
 import { useWebSocket } from "@vueuse/core";
-import { watch, computed, ref } from "vue";
+import { computed, ref } from "vue";
 
 interface ChatMessage {
   user: string;
@@ -149,45 +124,45 @@ interface ChatMessage {
   timestamp: number;
 }
 
-const WS_HEARTBEAT_MS = 30000;
-const MAX_RECONNECT_RETRIES = 5;
-const RECONNECT_DELAY_MS = 3000;
-
 const messages = ref<ChatMessage[]>([]);
 
-const { data, status, send, open, close } = useWebSocket(
+const { status, send, open, close } = useWebSocket(
   "wss://chat.example.com/ws",
   {
     autoReconnect: {
-      retries: MAX_RECONNECT_RETRIES,
-      delay: RECONNECT_DELAY_MS,
+      retries: 5, // bounded — the default retries indefinitely
+      delay: 3000,
+      onFailed: () => showOfflineBanner(),
     },
     heartbeat: {
       message: "ping",
-      interval: WS_HEARTBEAT_MS,
+      interval: 30_000,
+      pongTimeout: 5000, // treat a missing pong as a dead connection
     },
     onMessage(_ws, event) {
-      const msg = JSON.parse(event.data) as ChatMessage;
-      messages.value.push(msg);
+      messages.value.push(JSON.parse(event.data) as ChatMessage);
     },
   },
 );
 
 const isConnected = computed(() => status.value === "OPEN");
 
-function sendMessage(text: string): void {
+const sendMessage = (text: string) =>
   send(JSON.stringify({ text, timestamp: Date.now() }));
-}
 </script>
 ```
 
-**Why good:** auto-reconnect with configurable retries, heartbeat keeps connection alive, reactive `status` for connection state, typed messages
+Two settings decide whether this behaves in production. Unbounded `autoReconnect` against a server
+that is rejecting connections is a retry loop, so give it `retries` and an `onFailed`. And a
+`heartbeat` without a `pongTimeout` detects a closed socket but not a hung one — the case where TCP
+stays open and nothing arrives.
+
+`send` buffers by default while the socket is connecting; pass `false` as its second argument to
+drop instead.
 
 ---
 
-## useEventSource - Server-Sent Events
-
-### Good Example - Live Notifications
+## useEventSource
 
 ```vue
 <script setup lang="ts">
@@ -202,7 +177,9 @@ interface Notification {
 
 const notifications = ref<Notification[]>([]);
 
-const { data, status, error, eventSource } = useEventSource(
+// The second argument names the server's custom events; [] means the default
+// "message" event only
+const { data, status, error } = useEventSource(
   "/api/notifications/stream",
   [],
   {
@@ -210,27 +187,13 @@ const { data, status, error, eventSource } = useEventSource(
   },
 );
 
-// data updates with each SSE message
 watch(data, (raw) => {
-  if (raw) {
-    const notification = JSON.parse(raw) as Notification;
-    notifications.value.push(notification);
-  }
+  if (raw) notifications.value.push(JSON.parse(raw) as Notification);
 });
 </script>
-
-<template>
-  <div>
-    <span :class="status === 'OPEN' ? 'connected' : 'disconnected'">
-      {{ status }}
-    </span>
-    <ul>
-      <li v-for="n in notifications" :key="n.id">
-        [{{ n.type }}] {{ n.message }}
-      </li>
-    </ul>
-  </div>
-</template>
 ```
 
-**Why good:** reactive SSE data, connection status tracking, auto-reconnect built-in, `withCredentials` for authenticated streams
+Server-sent events reconnect on their own and are one-directional, which makes them the simpler
+choice than a WebSocket wherever the client has nothing to send. The trade is that `EventSource`
+carries no custom headers — authentication travels by cookie, which is what `withCredentials`
+enables.

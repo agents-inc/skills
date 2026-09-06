@@ -5,82 +5,71 @@ description: Socket.IO v4.x client patterns, connection lifecycle, reconnection,
 
 # Socket.IO Real-Time Communication Patterns
 
-> **Quick Guide:** Use Socket.IO for real-time bidirectional communication when you need rooms, namespaces, automatic reconnection, acknowledgments, or transport fallback. Socket.IO is NOT a WebSocket implementation - it adds a protocol layer with additional features. Always define typed event interfaces, use the `auth` option for tokens (never query strings), and clean up listeners on unmount.
+> **Quick Guide:** Socket.IO is a protocol layered over WebSocket, not an implementation of it — its client and a plain WebSocket server cannot talk to each other in either direction. What the layer buys is transport fallback, automatic reconnection, rooms, namespaces and acknowledgments, for about 14.5KB gzipped. The facts that change the answer: `auth` accepts a function that re-runs on every reconnection, `timeout` and `ackTimeout` are different clocks, and `socket.recovered` (v4.6.0+) tells you whether missed events were replayed or a full state refresh is owed.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — typed socket factory, connection and event hooks, emit-with-ack, offline queue, volatile events, Manager multiplexing
+- [examples/authentication.md](examples/authentication.md) — token auth, refresh on reconnect, per-namespace auth, cookie auth, auth state machine
+- [examples/rooms.md](examples/rooms.md) — room manager and hooks, multi-room chat, namespace sockets, conditional namespace access
+- [reference.md](reference.md) — client options, socket and manager events, disconnect reasons, comparison table, checklists
+
+---
+
+## Which path applies
+
+- **One connection to the default namespace** — `io(url, options)` creates the socket and its Manager together. This is the shape in [examples/core.md](examples/core.md) and covers most apps.
+- **Several namespaces over one connection** — construct `new Manager(url)` yourself and call `manager.socket("/chat")` per namespace. The namespaces share a single transport and can each carry their own `auth`, which is what makes per-namespace authorization possible. See [examples/rooms.md](examples/rooms.md).
+
+Calling `io()` more than once against the same URL opens a second transport rather than multiplexing — the Manager is what shares one.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Socket.IO code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Declare `ServerToClientEvents` and `ClientToServerEvents` and type the socket with them.** Event names are strings at runtime, so this is what turns `"mesage"` from a listener that never fires into a compile error.
 
-**(You MUST define typed interfaces for ALL Socket.IO events - ServerToClientEvents and ClientToServerEvents)**
+**Pass tokens through the `auth` option.** They travel in the handshake rather than the URL, so they stay out of server logs, browser history and proxy logs — and the function form of `auth` is re-evaluated on every reconnection, which keeps a refreshed token from going stale.
 
-**(You MUST use the `auth` option for authentication tokens - NEVER pass tokens in query strings)**
+**Remove every listener you add, with the same function reference.** `socket.off(event, handler)` in a `useEffect` cleanup is what stops handlers stacking up across re-renders and processing each message once per mount.
 
-**(You MUST clean up event listeners on component unmount using socket.off())**
+**Handle `connect_error` and the manager's `reconnect_failed`.** Between them they cover the two failures a user would otherwise experience as a screen that simply stopped updating.
 
-**(You MUST handle connection errors and implement proper reconnection state management)**
-
-**(You MUST use named constants for all timeout values, retry limits, and intervals)**
+**Check `socket.recovered` after `connect` (v4.6.0+).** It answers whether the server replayed what was missed or the client owes itself a full state refresh.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Socket.IO, socket.io-client, io(), useSocket, socket.emit, socket.on, rooms, namespaces, acknowledgments, real-time
+**Auto-detection:** socket.io-client, io(), Manager, manager.socket(), socket.emit, socket.on, socket.off, emitWithAck, socket.timeout(), ackTimeout, socket.volatile, socket.recovered, socket.active, connect_error, reconnect_attempt, reconnect_failed, ServerToClientEvents, ClientToServerEvents, autoConnect, reconnectionDelayMax
 
-**When to use:**
+**Applies to:**
 
-- Building real-time features requiring rooms or namespaces (chat, multiplayer)
-- Need automatic reconnection with connection state recovery
-- Need acknowledgments/callbacks for message delivery confirmation
-- Building applications that must work in restrictive network environments (fallback transports)
-- Need server-side broadcasting patterns (emit to room, namespace, all clients)
+- Bidirectional messaging where delivery confirmation matters
+- Rooms and namespaces for targeted broadcast
+- Reconnection with credential refresh and connection state recovery
+- Restrictive networks that need a polling fallback
+- Typed event contracts between client and server
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- TypeScript event interfaces (ServerToClientEvents, ClientToServerEvents)
-- Client connection configuration and lifecycle
-- Authentication via auth option and middleware
-- Rooms and namespaces for logical grouping
-- Acknowledgments and callbacks
-- Connection state recovery (v4.6.0+)
-- React integration hooks
-
-**When NOT to use:**
-
-- Simple WebSocket needs without rooms/namespaces (use native WebSocket)
-- Need to connect to non-Socket.IO WebSocket servers (incompatible protocols)
-- Minimal bundle size is critical (Socket.IO adds ~14.5KB gzipped overhead)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Socket factory, React hooks, event listeners, message queue, typing indicators, volatile events, namespace multiplexing
-- [examples/authentication.md](examples/authentication.md) - Token auth, cookie auth, token refresh, namespace auth, auth state machine
-- [examples/rooms.md](examples/rooms.md) - Room manager, room hooks, multi-room chat, namespace sockets, conditional namespace access
-- [reference.md](reference.md) - Decision frameworks, client options reference, checklists
+- Where the token came from and how it is refreshed — the socket sends whatever `auth` yields.
+- Where received data is stored and how it renders — a socket hook hands back messages and connection state, and nothing beyond that is its concern.
+- The server's own room membership, namespace middleware and connection-state-recovery configuration; this skill covers the client half and names what it needs enabled server-side.
+- A bidirectional channel without rooms, acknowledgments or fallback — that is the native WebSocket API underneath, which this protocol layer wraps rather than exposes.
 
 ---
 
 <philosophy>
 
-## Philosophy
+Socket.IO trades bundle size and protocol compatibility for four things that are otherwise hand-written: transport fallback, reconnection, server-side grouping and acknowledgments.
 
-Socket.IO provides a layer on top of WebSocket with additional features: automatic reconnection, room-based broadcasting, acknowledgments, and transport fallback. **It is NOT a WebSocket implementation** - a plain WebSocket client cannot connect to a Socket.IO server and vice versa.
-
-**Key Architectural Concepts:**
-
-1. **Transport Abstraction:** Socket.IO uses WebSocket when available but falls back to HTTP long-polling for restrictive networks. Default order: polling first, then upgrade to WebSocket.
-
-2. **Rooms:** Server-side grouping mechanism for targeted broadcasting. Clients don't know about rooms - they're purely a server concept for organizing sockets.
-
-3. **Namespaces:** Separate communication channels on the same connection. Used to separate concerns (e.g., `/chat`, `/admin`, `/notifications`). Each can have its own middleware.
-
-4. **Connection State Recovery (v4.6.0+):** Missed events can be automatically delivered after brief disconnections, reducing manual state sync. Server-configurable with 2-minute default window.
-
-**Connection Lifecycle:**
+- **Transport is abstract.** The client opens with HTTP long-polling and upgrades to WebSocket once one is available, so a network that blocks the upgrade degrades instead of failing.
+- **Rooms are a server concept.** A client asks to join and the server decides; the client is never told which rooms it is in.
+- **Namespaces are protocol-level.** A client connects to `/chat` or `/admin` explicitly, each with its own middleware and its own `auth`, and all of them share one transport.
+- **Connection state recovery (v4.6.0+)** replays events missed during a brief drop, within a server-configured window that defaults to two minutes.
 
 ```
 CONNECTING -> CONNECTED <-> (events) -> DISCONNECTING -> DISCONNECTED
@@ -88,177 +77,161 @@ CONNECTING -> CONNECTED <-> (events) -> DISCONNECTING -> DISCONNECTED
              (error) <- reconnect <- (disconnect)
 ```
 
-**Socket.IO vs Native WebSocket:**
-
-| Feature            | Socket.IO             | Native WebSocket     |
-| ------------------ | --------------------- | -------------------- |
-| Transport fallback | Automatic             | Manual               |
-| Reconnection       | Built-in              | Manual               |
-| Rooms              | Built-in              | Manual (server-side) |
-| Namespaces         | Built-in              | Not available        |
-| Acknowledgments    | Built-in              | Manual               |
-| Protocol           | Custom (incompatible) | Standard WebSocket   |
-| Bundle size        | ~14.5KB gzipped       | Native (0KB)         |
-
 </philosophy>
+
+---
+
+<decision_framework>
+
+## Namespace or room
+
+```
+What is being separated?
+  +-- A distinct feature area, with its own auth or middleware?
+  |     -> namespace — the client connects to it, e.g. /chat, /admin
+  +-- A set of users inside one feature, for targeted broadcast?
+  |     -> room — server-side only, joined on request
+  +-- Neither — one channel for everything?
+        -> the default namespace "/"
+```
+
+## How to authenticate
+
+The `auth` option covers the token case, and its function form is what keeps the token fresh across reconnections. For session cookies, set `withCredentials: true` and leave `auth` alone — the server's CORS config has to allow credentials for this to work. Where one namespace needs elevated rights, give that namespace its own `auth` on `manager.socket("/admin", { auth })` rather than gating in application code.
+
+## Which delivery guarantee
+
+A plain `emit` is fire-and-forget. Add an acknowledgment when the sender needs to know it arrived: `socket.timeout(ms).emitWithAck(...)` for one call, or `ackTimeout` with `retries` (v4.6.0+) to have the client retransmit on its own — which makes the server's handler responsible for being idempotent, since the same packet can arrive twice. For data whose next update supersedes it — cursor positions, presence pings — `socket.volatile.emit()` drops rather than queues.
+
+## Sending binary
+
+Binary payloads go directly in an event; the protocol serialises `ArrayBuffer`, `Buffer` and `Blob`, including inside objects mixed with JSON. Chunk large files yourself — send metadata first, then acknowledged chunks, so progress is reportable and a failure resumes.
+
+</decision_framework>
 
 ---
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: TypeScript Event Interfaces
+### Pattern 1: Typed event interfaces
 
-Define separate interfaces for each communication direction. Socket.IO v4 enforces these at compile time.
+v4 enforces both directions at compile time.
 
 ```typescript
 interface ServerToClientEvents {
   "message:received": (message: ChatMessage) => void;
-  "user:joined": (user: User) => void;
   error: (error: SocketError) => void;
 }
 
 interface ClientToServerEvents {
-  "message:send": (
-    content: string,
-    callback: (res: MessageResponse) => void,
-  ) => void;
-  "room:join": (roomId: string, callback: (result: JoinResult) => void) => void;
+  "message:send": (content: string, ack: (res: SendResult) => void) => void;
 }
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 ```
 
-**Why this matters:** Without typed events, typos in event names fail silently at runtime. Typed interfaces catch `"mesage"` vs `"message"` at compile time.
-
-See [examples/core.md](examples/core.md) Example 1 for complete type definitions.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Client Configuration
+### Pattern 2: Client configuration
 
-Token goes in `auth` object (never query string). Use named constants for all timing values. The `timeout` option controls the **connection** timeout (default 20000ms). For acknowledgment timeouts, use `ackTimeout` (v4.6.0+) or `socket.timeout(ms).emitWithAck()`.
+`timeout` is the connection timeout, default 20000ms. `ackTimeout` is the per-emit acknowledgment clock and needs `retries` beside it — the two are unrelated despite the names.
 
 ```typescript
-const RECONNECTION_DELAY_MS = 1000;
-const MAX_RECONNECTION_ATTEMPTS = 10;
-const CONNECTION_TIMEOUT_MS = 20000;
-
 const socket: TypedSocket = io(url, {
-  auth: { token }, // NOT in query string
+  auth: { token },
   reconnectionAttempts: MAX_RECONNECTION_ATTEMPTS,
   reconnectionDelay: RECONNECTION_DELAY_MS,
-  timeout: CONNECTION_TIMEOUT_MS, // Connection timeout
+  timeout: CONNECTION_TIMEOUT_MS,
   transports: ["websocket", "polling"],
 });
 ```
 
-**Key distinction:** `timeout` = connection timeout. `ackTimeout` = per-emit acknowledgment timeout (requires `retries` option, v4.6.0+).
-
-See [examples/core.md](examples/core.md) Example 1 for full factory implementation.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Connection Lifecycle
+### Pattern 3: Connection lifecycle
 
-Socket-level events (`connect`, `disconnect`, `connect_error`) track the socket. Manager-level events (`reconnect_attempt`, `reconnect`, `reconnect_failed`) track the underlying connection. Always listen to both.
+Socket-level events describe the socket; manager-level events (`socket.io`) describe the underlying connection. Reconnection progress only shows up on the second set.
 
 ```typescript
 socket.on("connect", () => {
-  /* connected */
+  if (!socket.recovered) refetchState();
 });
 socket.on("disconnect", (reason) => {
-  // socket.active === true means it will reconnect
+  // socket.active === true means a reconnect is already scheduled
 });
-socket.on("connect_error", (error) => {
-  /* handle */
-});
+socket.on("connect_error", (error) => showError(error));
 
-// Manager-level: socket.io is the Manager instance
-socket.io.on("reconnect_attempt", (attempt) => {
-  /* show UI */
-});
-socket.io.on("reconnect_failed", () => {
-  /* all attempts exhausted */
-});
+socket.io.on("reconnect_attempt", (attempt) => showReconnecting(attempt));
+socket.io.on("reconnect_failed", () => showPermanentFailure());
 ```
 
-**Critical:** Check `socket.recovered` (v4.6.0+) after `connect` to determine if missed events were automatically delivered or if you need a full state refresh.
-
-See [examples/core.md](examples/core.md) Examples 2-3 for React hooks.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 4: Acknowledgments
 
-Two approaches: automatic retries (v4.6.0+) or manual `emitWithAck`. Both confirm message delivery.
+Two forms, one guarantee. `emitWithAck` awaits a single response; `ackTimeout` with `retries` retransmits automatically.
 
 ```typescript
-// Automatic retries (v4.6.0+)
-const socket = io(url, { ackTimeout: 5000, retries: 3 });
-socket.emit("message:send", content, (response) => {
-  /* confirmed */
-});
-
-// Manual with emitWithAck
 const response = await socket
-  .timeout(5000)
+  .timeout(ACK_TIMEOUT_MS)
   .emitWithAck("message:send", content);
+
+// or: let the client retry, and make the server handler idempotent
+const socket = io(url, { ackTimeout: ACK_TIMEOUT_MS, retries: MAX_RETRIES });
+socket.emit("message:send", content, (response) => confirm(response));
 ```
 
-**Gotcha:** When using automatic retries, server handlers must be **idempotent** since the same packet may arrive multiple times.
-
-See [examples/core.md](examples/core.md) Example 4 for the emit hook pattern.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Auth Token Handling
+### Pattern 5: Auth token handling
 
-The `auth` option can be an object (evaluated once) or a **function** (called on every connection/reconnection). Use the function form to ensure fresh tokens on reconnect.
+An `auth` object is read once, at construction. An `auth` function is called before every connection attempt, including reconnections — which is the difference between a session that survives a token refresh and one that does not.
 
 ```typescript
-// Static (stale on reconnect)
-const socket = io(url, { auth: { token } });
-
-// Dynamic (fresh on every connection attempt)
 const socket = io(url, {
   auth: (cb) => {
     cb({ token: getToken() });
   },
 });
 
-// Or update before reconnection
+// or update it just before the retry
 socket.io.on("reconnect_attempt", () => {
   socket.auth = { token: getToken() };
 });
 ```
 
-See [examples/authentication.md](examples/authentication.md) for full auth patterns, token refresh, and auth state machine.
+Full code: [examples/authentication.md](examples/authentication.md)
 
 ---
 
-### Pattern 6: Rooms and Namespaces
+### Pattern 6: Namespaces over one connection
 
-**Rooms** are server-side only - clients request to join, server decides. **Namespaces** are protocol-level - clients connect explicitly. Multiple namespace sockets share one underlying connection via the Manager.
+A Manager owns the transport; each namespace socket rides it and can carry its own credentials.
 
 ```typescript
-// Namespaces: use Manager for connection sharing
 const manager = new Manager(url, { autoConnect: false });
 const chatSocket = manager.socket("/chat");
-const adminSocket = manager.socket("/admin", {
-  auth: { token: adminToken }, // Per-namespace auth
-});
+const adminSocket = manager.socket("/admin", { auth: { token: adminToken } });
 manager.connect();
 ```
 
-See [examples/rooms.md](examples/rooms.md) for room manager, room hooks, and namespace patterns.
+Full code: [examples/rooms.md](examples/rooms.md)
 
 ---
 
-### Pattern 7: Listener Cleanup
+### Pattern 7: Listener cleanup
 
-Every `socket.on()` must have a corresponding `socket.off()`. In React, return cleanup from `useEffect`. Pass the exact same function reference to `off()`.
+`off` matches on the function reference, so the handler has to be a stable binding rather than an inline arrow.
 
 ```typescript
 useEffect(() => {
@@ -266,11 +239,11 @@ useEffect(() => {
   socket.on("message", handler);
   return () => {
     socket.off("message", handler);
-  }; // Same reference
+  };
 }, [socket]);
 ```
 
-**Why this matters:** Without cleanup, handlers accumulate on re-renders causing memory leaks and duplicate processing.
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -278,46 +251,26 @@ useEffect(() => {
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-- **Token in query string** - Visible in server logs, browser history, proxy logs. Always use `auth` option.
-- **No event type definitions** - Typos in event names fail silently. Define `ServerToClientEvents`/`ClientToServerEvents`.
-- **Missing socket.off() cleanup** - Memory leaks and duplicate handlers accumulate.
-- **No connection error handling** - Users see blank screens with no feedback on failures.
-- **Using socket.id as user identifier** - Changes on every reconnection. Use server-provided user ID.
-- **Sending without connected check** - `socket.emit()` on a disconnected socket fails silently. Check `socket.connected` or queue messages.
-- **Confusing `timeout` with `ackTimeout`** - `timeout` is connection timeout (default 20000ms). `ackTimeout` is acknowledgment timeout (v4.6.0+, requires `retries`).
-- **Static auth with long sessions** - Token expires, reconnection fails. Use `auth` as a function or update on `reconnect_attempt`.
+**Breaks at runtime:**
 
-**Gotchas:**
+- A token in the connection URL's query string — it lands in server logs, browser history and every proxy in between — put it in `auth`.
+- `socket.on(...)` with no matching `off` — handlers accumulate per mount and each message is processed once per accumulation.
+- An inline arrow passed to `off` — it is a different reference from the one registered, so nothing is removed.
+- `socket.emit()` on a disconnected socket — it is dropped silently — check `socket.connected` or queue.
+- `socket.id` used as a user identifier — it is regenerated on every reconnection — key on a server-issued user id.
+- A static `auth` object on a long session — the token expires and every reconnection is refused — use the function form.
+- `ackTimeout` without `retries` — the retransmission behaviour it belongs to is never switched on.
 
-- Socket.IO protocol is **incompatible** with plain WebSocket - they cannot interoperate
-- Default transport order is polling-first, then upgrade to WebSocket (not WebSocket-first)
-- `socket.recovered` only works when server has connection state recovery enabled (v4.6.0+)
-- Namespaces share one WebSocket connection - a transport failure affects all namespaces
-- Rooms are purely server-side - the client never knows which rooms it belongs to
-- `volatile.emit()` may silently drop messages - only use for expendable data (cursor positions)
+**Surprising behaviour:**
+
+- The protocol is incompatible with a plain WebSocket client in both directions; a non-Socket.IO server cannot be reached with this library.
+- The default transport order is polling first, then upgrade — not socket first.
+- `socket.recovered` is only ever true when the server has connection state recovery enabled.
+- Namespaces share one transport, so a transport failure takes all of them down together.
+- Rooms are invisible to the client — there is no client API that reports which rooms it is in.
+- `volatile.emit()` drops messages under congestion by design; anything that must arrive does not belong on it.
+- With `retries` enabled the same packet can be delivered more than once, so server handlers have to be idempotent.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST define typed interfaces for ALL Socket.IO events - ServerToClientEvents and ClientToServerEvents)**
-
-**(You MUST use the `auth` option for authentication tokens - NEVER pass tokens in query strings)**
-
-**(You MUST clean up event listeners on component unmount using socket.off())**
-
-**(You MUST handle connection errors and implement proper reconnection state management)**
-
-**(You MUST use named constants for all timeout values, retry limits, and intervals)**
-
-**Failure to follow these rules will result in security vulnerabilities, memory leaks, and type-unsafe code.**
-
-</critical_reminders>

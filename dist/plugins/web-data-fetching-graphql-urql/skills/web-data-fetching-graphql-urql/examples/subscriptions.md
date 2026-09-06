@@ -1,12 +1,10 @@
-# URQL GraphQL Client - Subscription Examples
+# URQL — Subscription Examples
 
-> Real-time data with WebSocket subscriptions. See [SKILL.md](../SKILL.md) for concepts.
+> Real-time data over a websocket. See [SKILL.md](../SKILL.md) for the decisions.
 
 ---
 
-## Pattern 1: Subscription Client Setup
-
-Configure the client with subscriptionExchange for WebSocket support.
+## Pattern 1: The subscription exchange
 
 ```typescript
 // lib/urql-client.ts
@@ -58,11 +56,12 @@ const client = new Client({
 export { client };
 ```
 
-**Why good:** Separate HTTP and WS URLs for different endpoints, auth token passed via connectionParams, retry configuration for resilient connections, named constants for configuration
+`connectionParams` is a function, so the token is read when the socket connects and again on every
+reconnection — a value read at module load would be the one from before the last login.
 
 ---
 
-## Pattern 2: Basic useSubscription
+## Pattern 2: Reading the latest event
 
 ```typescript
 // components/live-notifications.tsx
@@ -123,13 +122,15 @@ function LiveNotifications({ userId }: LiveNotificationsProps) {
 export { LiveNotifications };
 ```
 
-**Why good:** Pause prevents subscription when userId is missing, typed interfaces for subscription data, handles error and initial states
+`data` holds the most recent event only — each one replaces the last. This shape suits a status or a
+ticker; a feed needs Pattern 3.
 
 ---
 
-## Pattern 3: Subscription with Data Accumulation
+## Pattern 3: Accumulating events
 
-Subscriptions emit single events. Use a reducer to accumulate messages over time.
+The second argument to `useSubscription` receives the previous value and each new event, and its
+return becomes the next `data`.
 
 ```typescript
 // components/live-chat.tsx
@@ -219,11 +220,12 @@ function LiveChat({ roomId }: LiveChatProps) {
 export { LiveChat };
 ```
 
-**Why good:** useReducer for accumulating subscription events, handler callback processes each emission, memoized handler prevents unnecessary re-subscriptions
+The handler is memoized because an unmemoized one is a new reference on every render, and a new
+handler reference resubscribes — reopening the stream and losing everything accumulated.
 
 ---
 
-## Pattern 4: Subscription with Unsubscribe Control
+## Pattern 4: Pausing and resuming
 
 ```typescript
 // components/live-stock-ticker.tsx
@@ -303,13 +305,15 @@ function LiveStockTicker({ symbol }: LiveStockTickerProps) {
 export { LiveStockTicker };
 ```
 
-**Why good:** pause prop controls subscription lifecycle, toggle button for user control, proper conditional styling for price changes
+`pause` closes the stream and reopens it, so a paused ticker stops receiving rather than buffering —
+the first value after resuming is the current one, not the backlog.
 
 ---
 
-## Pattern 5: Subscription with Cache Updates
+## Pattern 5: Writing subscription events into the cache
 
-Update the cache when subscription events arrive (requires Graphcache).
+Graphcache's `updates` accepts a `Subscription` key alongside `Mutation`, so an event can edit a
+query's cached result and every component reading that query re-renders.
 
 ```typescript
 // lib/urql-client-with-subscriptions.ts
@@ -380,13 +384,14 @@ const client = new Client({
 export { client };
 ```
 
-**Why good:** Subscription updates are configured in Graphcache updates, duplicate check prevents the same message appearing twice, cache stays in sync with real-time events
+The duplicate check is not optional: a message the client just posted arrives once as the mutation's
+result and once over the subscription, and without the check it renders twice.
 
 ---
 
-## Pattern 6: Presence System
+## Pattern 6: Presence
 
-Track online users with subscriptions.
+A reducer over a `Map`, where events are joins and leaves rather than items to append.
 
 ```typescript
 // components/presence-indicator.tsx
@@ -509,88 +514,20 @@ function PresenceIndicator({ roomId }: PresenceIndicatorProps) {
 export { PresenceIndicator };
 ```
 
-**Why good:** Map-based state for efficient lookup, typed reducer actions, limits displayed avatars with overflow count, handles online/offline events
+A `Map` keyed by user id makes a leave event an O(1) delete, where an array would need a filter per
+event and could hold the same user twice after a reconnection.
 
 ---
 
-## Subscription Quick Reference
-
-### useSubscription Return Value
+## The result shape
 
 ```typescript
-const [result] = useSubscription({ query, variables, pause });
-
-// result contains:
-interface SubscriptionResult<T> {
-  data?: T; // Latest subscription data
-  error?: CombinedError; // Any errors
-  fetching: boolean; // Currently active
-  stale: boolean; // Data is stale
-}
-```
-
-### Subscription Handler Callback
-
-```typescript
-// Handler receives previous result and new data
-const handler = (prevResult: T | undefined, data: SubscriptionData) => {
-  // Process data, accumulate, etc.
-  return newResult; // Returned value becomes next prevResult
-};
-
-const [result] = useSubscription({ query, variables }, handler);
-```
-
-### Pause vs Unsubscribe
-
-```typescript
-// Pause - subscription is paused but can resume
-const [result] = useSubscription({
-  query: SUBSCRIPTION,
-  pause: !isActive, // Toggle with state
+const [{ data, error, fetching, stale }] = useSubscription({
+  query,
+  variables,
+  pause,
 });
-
-// Component unmount - automatically unsubscribes
-// No manual cleanup needed
 ```
 
----
-
-## Common Subscription Pitfalls
-
-```typescript
-// BAD: Missing pause for optional variables
-const [result] = useSubscription({
-  query: SUBSCRIPTION,
-  variables: { roomId }, // What if roomId is undefined?
-});
-
-// GOOD: Pause when variables are invalid
-const [result] = useSubscription({
-  query: SUBSCRIPTION,
-  variables: { roomId },
-  pause: !roomId,
-});
-
-// BAD: Handler creates new reference every render
-function BadComponent() {
-  const [result] = useSubscription(
-    { query: SUBSCRIPTION },
-    // This handler is recreated every render!
-    (prev, data) => [...(prev || []), data],
-  );
-}
-
-// GOOD: Memoize handler
-function GoodComponent() {
-  const [items, dispatch] = useReducer(reducer, []);
-  const handler = useMemo(
-    () => (prev, data) => {
-      dispatch({ type: "ADD", item: data });
-      return items;
-    },
-    [items],
-  );
-  const [result] = useSubscription({ query: SUBSCRIPTION }, handler);
-}
-```
+`fetching` means the subscription is active rather than that something is in flight, and unmounting
+unsubscribes with no cleanup of your own.

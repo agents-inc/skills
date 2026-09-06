@@ -1,6 +1,6 @@
-# Pinia - Code Examples
+# Pinia - Core Examples
 
-All code examples for Pinia state management patterns with good/bad comparisons.
+> Store definition and store access. See [SKILL.md](../SKILL.md) for the decision trees and red flags, and [reference.md](../reference.md) for the syntax comparison and TypeScript recipes.
 
 **Extended Examples:**
 
@@ -12,23 +12,6 @@ All code examples for Pinia state management patterns with good/bad comparisons.
 ---
 
 ## Pattern 1: Options Store
-
-### Constants Example
-
-```typescript
-// stores/constants.ts
-// All magic numbers extracted to named constants
-
-export const DEFAULT_PAGE_SIZE = 20;
-export const MAX_CART_ITEMS = 100;
-export const DEBOUNCE_DELAY_MS = 300;
-export const DEFAULT_THEME = "light" as const;
-export const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-```
-
----
-
-## Pattern 2: Options Store Definition
 
 ### Good Example - Complete Options Store
 
@@ -83,17 +66,17 @@ export const useCounterStore = defineStore("counter", {
 });
 ```
 
-**Why good:** Named constants for initial values, explicit TypeScript types, state function returns typed object, getters use state parameter for type inference, actions use `this` context, named export follows conventions
+**Why good:** Typing the `state` function's return is what gives `this` its shape inside every action, and taking `state` as a getter parameter keeps the inference working where `this` would not be typed yet. The parameterised getter returns a function, which is the only way a getter takes an argument.
 
-### Bad Example - Missing Types and Magic Numbers
+### Bad Example - Untyped State
 
 ```typescript
-// Bad Example - Missing types and magic numbers
+// Bad Example - no declared state type
 import { defineStore } from "pinia";
 
 export default defineStore("counter", {
   state: () => ({
-    count: 0, // Magic number
+    count: 0,
     name: "Counter",
   }),
 
@@ -112,11 +95,11 @@ export default defineStore("counter", {
 });
 ```
 
-**Why bad:** Default export violates project conventions, magic numbers make values unclear, missing state parameter in getter loses type inference, no TypeScript interfaces
+**Why bad:** With no declared state type, `this.count` in the getter is inferred from a chain the compiler cannot close, so the getter's own return type degrades and every consumer inherits the loss.
 
 ---
 
-## Pattern 3: Setup Store Definition
+## Pattern 2: Setup Store
 
 ### Good Example - Setup Store with Composables
 
@@ -254,7 +237,7 @@ export const useBrokenStore = defineStore("broken", () => {
 
 ---
 
-## Pattern 4: Accessing Store State
+## Pattern 3: Accessing Store State
 
 ### Good Example - Using storeToRefs
 
@@ -331,7 +314,7 @@ const userStore = useUserStore();
 
 ---
 
-## Pattern 5: Composing Stores
+## Pattern 4: Composing Stores
 
 ### Good Example - Store Using Another Store
 

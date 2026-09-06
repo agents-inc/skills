@@ -5,91 +5,139 @@ description: Unstyled accessible UI components by Tailwind Labs
 
 # Headless UI Patterns
 
-> **Quick Guide:** Headless UI provides completely unstyled, fully accessible UI components designed for Tailwind CSS. Use compound component patterns (Menu/MenuButton/MenuItems/MenuItem), `data-*` attributes for styling states, built-in anchor positioning for floating elements, and the `transition` prop for CSS-powered animations. All components handle ARIA, keyboard navigation, and focus management automatically. **Current: v2.2.9 (React only).**
+> **Quick Guide:** Headless UI ships behaviour with no appearance: ARIA, keyboard navigation and
+> focus management are automatic, and every visual decision is yours through `className`. v2 uses
+> flat compound components (`Menu` + `MenuButton` + `MenuItems` + `MenuItem`), publishes state as
+> `data-*` attributes rather than render props, positions floating panels through the `anchor` prop,
+> and animates through the `transition` prop with `data-closed` / `data-enter` / `data-leave`.
+> **v2 is React only** — the Vue package remains at v1.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — data-attribute styling, anchor positioning, transitions, the `as` prop, `useClose`
+- [examples/dialog.md](examples/dialog.md) — modal overlays, form dialogs, coordinated slide-over panels
+- [examples/menu.md](examples/menu.md) — dropdown action menus, sections, headings, separators
+- [examples/listbox-combobox.md](examples/listbox-combobox.md) — custom select, multi-select, autocomplete, virtual scrolling
+- [examples/tabs.md](examples/tabs.md) — horizontal and vertical tabs, controlled state, badges
+- [examples/popover-disclosure.md](examples/popover-disclosure.md) — floating panels, accordions, standalone transitions
+- [examples/switch-radio.md](examples/switch-radio.md) — toggle, option cards, checkbox
+- [examples/forms.md](examples/forms.md) — Field, Input, Label, Fieldset, cascading disabled state
+- [reference.md](reference.md) — component inventory, data-attribute and anchor tables, keyboard shortcuts, v1 → v2 migration
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Headless UI code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Assemble each component from its v2 parts** — `Menu` + `MenuButton` + `MenuItems` + `MenuItem`.
+The parts carry the ARIA wiring and the keyboard handling; a div with a click handler carries
+neither.
 
-**(You MUST use the v2 compound component anatomy - e.g. Menu/MenuButton/MenuItems/MenuItem - never render raw divs with click handlers)**
+**Style state from the `data-*` attributes** — `data-open`, `data-focus`, `data-selected`,
+`data-hover`, `data-active`. They are plain DOM attributes, so the styling stays in CSS, costs no
+re-render, and works in a server component.
 
-**(You MUST use `data-*` attributes for styling states (data-open, data-focus, data-selected, data-hover, data-active) - NOT render props for class toggling)**
+**Position floating panels with the `anchor` prop** on `MenuItems`, `ListboxOptions`,
+`ComboboxOptions` and `PopoverPanel`. It flips and shifts against the viewport, and it exposes
+`--anchor-gap`, `--button-width` and `--input-width` for the fine-tuning that hand-rolled
+positioning would need code for.
 
-**(You MUST use the `anchor` prop on floating panels (MenuItems, ListboxOptions, ComboboxOptions, PopoverPanel) instead of manual positioning)**
-
-**(You MUST use the `transition` prop with data-closed/data-enter/data-leave classes for animations - NOT the legacy Transition component enter/leave props)**
+**Animate with the `transition` prop plus `data-closed` / `data-enter` / `data-leave`.** One class
+list covers enter and leave, and the element stays mounted until the transition finishes.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Headless UI, headlessui, @headlessui/react, Dialog, DialogPanel, DialogTitle, Menu, MenuButton, MenuItems, MenuItem, Listbox, ListboxButton, ListboxOptions, ListboxOption, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Popover, PopoverButton, PopoverPanel, TabGroup, TabList, Tab, TabPanel, Disclosure, DisclosureButton, DisclosurePanel, Switch, RadioGroup, Radio, Transition, Field, Label, Description, Input, Fieldset, Legend, Checkbox, CloseButton, data-closed, data-open, anchor positioning
+**Auto-detection:** Headless UI, headlessui, @headlessui/react, DialogPanel, DialogBackdrop,
+MenuButton, MenuItems, MenuSection, ListboxButton, ListboxOptions, ComboboxInput, ComboboxOptions,
+PopoverPanel, PopoverGroup, TabGroup, TabList, TabPanels, DisclosureButton, DisclosurePanel, Switch,
+RadioGroup, Fieldset, Legend, CloseButton, useClose, data-closed, data-enter, data-leave,
+anchor positioning, --anchor-gap, --button-width
 
-**When to use:**
+**Applies to:**
 
-- Building accessible overlay components (dialogs, popovers, dropdowns, menus) with utility-class styling
-- Creating fully custom select/combobox/listbox controls with keyboard navigation
-- Implementing tabs, disclosure/accordion, switch, radio group, or checkbox with custom styling
-- Needing automatic ARIA attributes, focus trapping, and keyboard handling without visual opinions
+- Accessible overlays — dialogs, popovers, dropdown menus — where you own every pixel
+- Custom select, multi-select and autocomplete controls with keyboard navigation and type-ahead
+- Tabs, accordions, switches, radio groups and checkboxes built from scratch
+- Form fields that need `id`, `aria-labelledby` and `aria-describedby` wired without doing it by hand
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Pre-styled component library desired (use a design system or pre-built component kit)
-- Simple native HTML elements suffice (plain `<select>`, `<input type="checkbox">`, `<details>`)
-- Non-React projects (v2 is React-only; Vue version remains at v1)
-- Need `asChild` polymorphism or more granular primitive control (consider alternative headless libraries)
-
-**Package Installation:**
-
-```bash
-npm install @headlessui/react
-```
-
-**Examples:**
-
-- [Core Patterns](examples/core.md) - Data-attribute styling, anchor positioning, transitions, `as` prop, `useClose`
-- [Dialog & Modal](examples/dialog.md) - Modal overlays, form dialogs, slide-over panels, transitions
-- [Menu & Dropdowns](examples/menu.md) - Dropdown action menus, sections, icons, keyboard shortcuts
-- [Listbox & Combobox](examples/listbox-combobox.md) - Custom select, autocomplete, virtual scrolling
-- [Tabs](examples/tabs.md) - Horizontal/vertical tabs, controlled state, badges
-- [Popover & Disclosure](examples/popover-disclosure.md) - Floating panels, accordion, standalone transitions
-- [Switch, RadioGroup & Checkbox](examples/switch-radio.md) - Toggle, option selection, checkbox
-- [Form Components](examples/forms.md) - Field, Input, Label, Fieldset, cascading disabled state
-
-**Quick API reference:** [reference.md](reference.md)
+- Appearance — every part takes a `className` and the library ships no CSS, so which CSS approach
+  produces those class names is not this skill's concern
+- Pre-styled components — this library has no visual opinions at all, and a project that wants them
+  out of the box wants a styled component kit instead
+- Design tokens and colour scales — the attributes below are the contract; what the values are is
+  settled by whatever owns your visual language
+- Non-React usage — v2 is React-only
 
 ---
 
 <philosophy>
 
-## Philosophy
+Headless UI supplies behaviour and supplies no appearance. Three things follow.
 
-Headless UI provides **behavior-only** components: accessibility, keyboard navigation, focus management, and state handling are built in, while **all visual styling is your responsibility**. Style entirely via `className` using utility classes or any CSS approach.
+**Each pattern is several elements, not one.** A dropdown is `Menu` (state and context),
+`MenuButton`, `MenuItems` (the floating panel) and `MenuItem`. Each part is separately styleable,
+and the parts coordinate through context rather than through props you thread.
 
-**Core Design Principles:**
+**State is published to the DOM.** Components write their state onto their own elements as `data-*`
+attributes. Reading state from an attribute selector is cheaper and more correct than a render prop
+that re-renders the subtree to swap a class.
 
-- **Unstyled by default**: No CSS shipped. Style entirely via `className`.
-- **Accessible out of the box**: ARIA roles, attributes, and keyboard interactions are automatic.
-- **Compound components**: Each UI pattern is composed of multiple coordinated parts (e.g., `Menu` + `MenuButton` + `MenuItems` + `MenuItem`).
-- **Data attributes for state**: Components expose `data-open`, `data-focus`, `data-selected`, `data-hover`, `data-active`, `data-disabled`, `data-checked` for CSS-based state styling.
-- **Built-in anchor positioning**: Floating panels (menus, listboxes, comboboxes, popovers) use Floating UI internally for automatic viewport-aware positioning.
-- **Transition support**: The `transition` prop enables CSS transitions using `data-closed`, `data-enter`, `data-leave` attributes.
+**Positioning and transitions are built in.** Floating panels use Floating UI internally through the
+`anchor` prop, and the `transition` prop drives CSS transitions off `data-closed`, so neither needs
+a second library.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which component
+
+A native element that already does the job — `<select>`, `<input type="checkbox">`, `<details>` —
+needs none of this. Reach for a component below when you must style what native will not let you
+style, or extend what it does not do.
+
+```
+Modal that blocks the page          → Dialog (Escape, outside click, focus trapped)
+Dropdown of actions                 → Menu (arrow keys, type-ahead, closes on select)
+Custom select, single or multiple   → Listbox
+Searchable select                   → Combobox (virtual={{ options }} past ~1000 items)
+Floating non-modal content          → Popover (closes on outside click and tab-away)
+Tabbed content                      → TabGroup
+Show/hide toggle                    → Disclosure
+Boolean toggle                      → Switch
+One of a small visible set          → RadioGroup
+Checked / unchecked / indeterminate → Checkbox
+A field needing ARIA wiring         → Field + Label + Description + Input/Select/Textarea
+```
+
+## Which transition
+
+```
+Fade or scale                       → transition prop + data-closed classes
+Different enter and leave motion    → stack data-closed:data-enter: and data-closed:data-leave:
+Backdrop and panel together         → Transition + TransitionChild
+An external animation library       → static prop, and render conditionally yourself
+```
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Dialog (Modal)
+### Pattern 1: Dialog
 
-Dialogs are always controlled components. You manage `open` state and pass `onClose`. Focus is automatically trapped within the dialog panel.
+Always controlled: you own `open` and pass `onClose`. Focus is trapped in the panel, and the dialog
+portals itself.
 
 ```tsx
 <Dialog
@@ -101,40 +149,38 @@ Dialogs are always controlled components. You manage `open` state and pass `onCl
     transition
     className="fixed inset-0 bg-black/30 duration-300 data-[closed]:opacity-0"
   />
-  <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+  <div className="fixed inset-0 flex items-center justify-center p-4">
     <DialogPanel
       transition
-      className="max-w-lg rounded-xl bg-white p-12 duration-300 data-[closed]:scale-95 data-[closed]:opacity-0"
+      className="max-w-lg rounded-xl bg-white p-12 duration-300 data-[closed]:opacity-0"
     >
-      <DialogTitle className="text-lg font-bold">Title</DialogTitle>
+      <DialogTitle>Title</DialogTitle>
       <Description>Description text</Description>
     </DialogPanel>
   </div>
 </Dialog>
 ```
 
-**Key points:** `open`/`onClose` are required, `DialogTitle` sets aria-labelledby, `transition` enables CSS animations via `data-[closed]`
+`DialogTitle` sets `aria-labelledby` and `Description` sets `aria-describedby`.
 
-Full examples: [examples/dialog.md](examples/dialog.md)
+Full code: [examples/dialog.md](examples/dialog.md)
 
 ---
 
-### Pattern 2: Menu (Dropdown)
+### Pattern 2: Menu
 
-Menus provide dropdown behavior: arrow key navigation, type-ahead search, auto-close on selection.
+A dropdown of actions: arrow keys, type-ahead search, and close-on-select.
 
 ```tsx
 <Menu>
-  <MenuButton className="rounded-md bg-gray-800 px-4 py-2 text-white">
-    Options
-  </MenuButton>
+  <MenuButton>Options</MenuButton>
   <MenuItems
     anchor="bottom start"
     transition
-    className="w-52 rounded-xl bg-white p-1 shadow-lg [--anchor-gap:8px] data-[closed]:scale-95 data-[closed]:opacity-0"
+    className="w-52 [--anchor-gap:8px] data-[closed]:opacity-0"
   >
     <MenuItem>
-      <button className="block w-full rounded-lg px-3 py-1.5 text-left data-[focus]:bg-gray-100">
+      <button className="block w-full px-3 py-1.5 text-left data-[focus]:bg-gray-100">
         Edit
       </button>
     </MenuItem>
@@ -142,28 +188,27 @@ Menus provide dropdown behavior: arrow key navigation, type-ahead search, auto-c
 </Menu>
 ```
 
-**Key points:** `anchor` handles positioning, `data-[focus]` styles keyboard/mouse focus, items auto-close menu on click, use `MenuSection`/`MenuSeparator` for grouped menus
+`data-focus` covers keyboard and pointer focus together. `MenuSection`, `MenuHeading` and
+`MenuSeparator` group items with the matching ARIA semantics.
 
-Full examples: [examples/menu.md](examples/menu.md)
+Full code: [examples/menu.md](examples/menu.md)
 
 ---
 
-### Pattern 3: Listbox (Custom Select)
+### Pattern 3: Listbox
 
-Listbox replaces the native `<select>` with full styling control and keyboard navigation.
+A `<select>` replacement you style completely.
 
 ```tsx
 <Listbox value={selected} onChange={setSelected}>
-  <ListboxButton className="w-full rounded-lg py-2 pl-3 pr-10 text-left shadow-md">
-    {selected.name}
-  </ListboxButton>
+  <ListboxButton>{selected.name}</ListboxButton>
   <ListboxOptions
     anchor="bottom"
-    className="w-[var(--button-width)] rounded-xl bg-white p-1 shadow-lg [--anchor-gap:4px]"
+    className="w-[var(--button-width)] [--anchor-gap:4px]"
   >
     <ListboxOption
       value={item}
-      className="px-3 py-1.5 data-[focus]:bg-blue-100 data-[selected]:font-semibold"
+      className="data-[focus]:bg-blue-100 data-[selected]:font-semibold"
     >
       {item.name}
     </ListboxOption>
@@ -171,15 +216,17 @@ Listbox replaces the native `<select>` with full styling control and keyboard na
 </Listbox>
 ```
 
-**Key points:** Objects compared by `id` field by default (use `by` prop for custom), `multiple` prop for multi-select, `name` for form submission, `--button-width` matches dropdown to trigger width
+Objects are compared by their `id` field unless you pass `by`. `multiple` switches the value to an
+array, `name` renders hidden inputs for native form submission, and `--button-width` matches the
+panel to its trigger.
 
-Full examples: [examples/listbox-combobox.md](examples/listbox-combobox.md)
+Full code: [examples/listbox-combobox.md](examples/listbox-combobox.md)
 
 ---
 
-### Pattern 4: Combobox (Autocomplete)
+### Pattern 4: Combobox
 
-Combobox combines a text input with a filterable dropdown. Filtering logic is your responsibility.
+A text input plus a filtered dropdown. You own the filtering.
 
 ```tsx
 <Combobox value={selected} onChange={setSelected} onClose={() => setQuery("")}>
@@ -187,39 +234,33 @@ Combobox combines a text input with a filterable dropdown. Filtering logic is yo
     displayValue={(item: Item | null) => item?.name ?? ""}
     onChange={(e) => setQuery(e.target.value)}
   />
-  <ComboboxOptions
-    anchor="bottom"
-    className="w-[var(--input-width)] rounded-xl bg-white shadow-lg [--anchor-gap:4px]"
-  >
-    <ComboboxOption
-      value={item}
-      className="px-3 py-1.5 data-[focus]:bg-blue-100"
-    >
+  <ComboboxOptions anchor="bottom" className="w-[var(--input-width)]">
+    <ComboboxOption value={item} className="data-[focus]:bg-blue-100">
       {item.name}
     </ComboboxOption>
   </ComboboxOptions>
 </Combobox>
 ```
 
-**Key points:** `onClose` resets query state, `displayValue` formats selected item in input, `virtual={{ options }}` for 1000+ items (built-in virtualization), `--input-width` matches dropdown to input
+`onClose` is where the query resets — `onChange` fires on selection, which is a different moment.
+`virtual={{ options }}` turns on built-in virtualisation, and `ComboboxOptions` then takes a render
+function instead of children.
 
-Full examples: [examples/listbox-combobox.md](examples/listbox-combobox.md)
+Full code: [examples/listbox-combobox.md](examples/listbox-combobox.md)
 
 ---
 
 ### Pattern 5: Popover
 
-Popovers display floating non-modal content. They close on outside click, Escape, or tab-away.
+Floating non-modal content, closed by outside click, Escape or tabbing out.
 
 ```tsx
 <Popover>
-  <PopoverButton className="text-sm font-semibold data-[open]:text-blue-600">
-    Solutions
-  </PopoverButton>
+  <PopoverButton className="data-[open]:text-blue-600">Solutions</PopoverButton>
   <PopoverPanel
     anchor="bottom start"
     transition
-    className="w-80 rounded-xl bg-white p-4 shadow-lg [--anchor-gap:8px] data-[closed]:opacity-0"
+    className="w-80 [--anchor-gap:8px] data-[closed]:opacity-0"
   >
     <CloseButton as="a" href="/analytics">
       Analytics
@@ -228,21 +269,20 @@ Popovers display floating non-modal content. They close on outside click, Escape
 </Popover>
 ```
 
-**Key points:** `CloseButton` closes popover on click (useful for nav links), `PopoverGroup` manages sibling popover focus, `modal` prop for focus trapping
+`CloseButton` closes the panel when it is activated, which is what navigation links inside a popover
+need. `PopoverGroup` keeps sibling popovers from closing each other on tab, and `modal` traps focus.
 
-Full examples: [examples/popover-disclosure.md](examples/popover-disclosure.md)
+Full code: [examples/popover-disclosure.md](examples/popover-disclosure.md)
 
 ---
 
 ### Pattern 6: Tabs
 
-Tab components manage tabbed content with keyboard navigation (arrow keys, Home/End).
-
 ```tsx
 <TabGroup>
-  <TabList className="flex gap-4 border-b">
-    <Tab className="px-3 py-2 text-sm data-[selected]:border-blue-500 data-[selected]:text-blue-600">
-      Tab Name
+  <TabList>
+    <Tab className="px-3 py-2 data-[selected]:border-blue-500 data-[selected]:text-blue-600">
+      Recent
     </Tab>
   </TabList>
   <TabPanels>
@@ -251,89 +291,72 @@ Tab components manage tabbed content with keyboard navigation (arrow keys, Home/
 </TabGroup>
 ```
 
-**Key points:** `vertical` prop switches to Up/Down arrows, `selectedIndex`/`onChange` for controlled mode, `manual` requires Enter/Space to activate, Tab/TabPanel order matches automatically
+Tab and TabPanel are matched by order. `vertical` switches navigation to Up/Down, `manual` requires
+Enter or Space instead of activating on focus, and `selectedIndex` / `onChange` make it controlled.
 
-Full examples: [examples/tabs.md](examples/tabs.md)
+Full code: [examples/tabs.md](examples/tabs.md)
 
 ---
 
-### Pattern 7: Disclosure (Accordion)
-
-Disclosure provides show/hide toggle for accordion-style content.
+### Pattern 7: Disclosure
 
 ```tsx
 <Disclosure>
-  <DisclosureButton className="flex w-full items-center justify-between rounded-lg bg-gray-100 px-4 py-2">
+  <DisclosureButton className="group flex w-full justify-between px-4 py-2">
     Question text
-    <span className="size-5 data-[open]:rotate-180" aria-hidden="true">
+    <span className="group-data-[open]:rotate-180" aria-hidden="true">
       &#9662;
     </span>
   </DisclosureButton>
-  <DisclosurePanel
-    transition
-    className="px-4 pb-2 text-sm duration-200 data-[closed]:opacity-0"
-  >
+  <DisclosurePanel transition className="duration-200 data-[closed]:opacity-0">
     Answer text
   </DisclosurePanel>
 </Disclosure>
 ```
 
-**Key points:** Each Disclosure manages its own state independently, `defaultOpen` for initial state, `data-[open]` on button for icon rotation
+Each Disclosure owns its own state, so an accordion is a list of them and several can be open at
+once. `defaultOpen` sets the initial state.
 
-Full examples: [examples/popover-disclosure.md](examples/popover-disclosure.md)
+Full code: [examples/popover-disclosure.md](examples/popover-disclosure.md)
 
 ---
 
-### Pattern 8: Switch, RadioGroup & Checkbox
-
-Toggle, option selection, and checkbox controls with form integration.
+### Pattern 8: Switch, RadioGroup and Checkbox
 
 ```tsx
-// Switch
-<Field className="flex items-center justify-between">
-  <Label passive>Email notifications</Label>
-  <Switch checked={enabled} onChange={setEnabled} name="notifications"
-    className="group h-6 w-11 rounded-full bg-gray-200 data-[checked]:bg-blue-600">
-    <span className="size-5 rounded-full bg-white group-data-[checked]:translate-x-5" />
-  </Switch>
-</Field>
+<Switch checked={enabled} onChange={setEnabled} name="notifications"
+  className="group h-6 w-11 rounded-full bg-gray-200 data-[checked]:bg-blue-600">
+  <span className="size-5 rounded-full bg-white group-data-[checked]:translate-x-5" />
+</Switch>
 
-// RadioGroup
 <RadioGroup value={selected} onChange={setSelected}>
   <Radio value={option} className="data-[checked]:border-blue-500 data-[focus]:ring-2">
     <Label>{option.name}</Label>
   </Radio>
 </RadioGroup>
 
-// Checkbox
-<Checkbox checked={agreed} onChange={setAgreed} name="terms"
-  className="group size-5 rounded border data-[checked]:bg-blue-500">
-  <svg className="size-4 text-white opacity-0 group-data-[checked]:opacity-100" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
-  </svg>
-</Checkbox>
+<Checkbox checked={agreed} onChange={setAgreed} name="terms" indeterminate={isPartial}
+  className="group size-5 rounded border data-[checked]:bg-blue-500" />
 ```
 
-**Key points:** `passive` on Label prevents toggle on click (when label is distant from control), `name` enables form submission, `data-[checked]`/`group-data-[checked]` for state styling, `indeterminate` on Checkbox for third state
+`name` renders the hidden input that makes the control part of native form submission. A parent-scoped
+variant (`group-data-[checked]:`) is how a child element reacts to the control's state.
 
-Full examples: [examples/switch-radio.md](examples/switch-radio.md)
+Full code: [examples/switch-radio.md](examples/switch-radio.md)
 
 ---
 
-### Pattern 9: Form Components
+### Pattern 9: Form fields
 
-Headless UI v2 form primitives auto-generate IDs and wire ARIA attributes.
+`Field` generates the ids and wires the ARIA relationships between label, description and control.
 
 ```tsx
-<Fieldset className="space-y-6">
-  <Legend className="text-lg font-semibold">Shipping Details</Legend>
+<Fieldset>
+  <Legend>Shipping Details</Legend>
   <Field>
-    <Label className="text-sm font-medium">Full name</Label>
-    <Description className="text-sm text-gray-500">Helper text</Description>
-    <Input
-      name="name"
-      className="data-[focus]:outline-2 data-[focus]:outline-blue-500"
-    />
+    <Label>Full name</Label>
+    <Description>Helper text</Description>
+    <Input name="name" className="data-[focus]:outline-2" />
   </Field>
   <Field disabled>
     <Label className="data-[disabled]:opacity-50">Promo code</Label>
@@ -342,188 +365,81 @@ Headless UI v2 form primitives auto-generate IDs and wire ARIA attributes.
 </Fieldset>
 ```
 
-**Key points:** Field auto-generates `id`/`aria-labelledby`/`aria-describedby` (no manual `htmlFor`), disabled Field cascades to all children, Fieldset+Legend group related fields
+No `htmlFor` and no manual `id`. `disabled` on the `Field` cascades to every child, and each one
+gets `data-disabled` to style from.
 
-Full examples: [examples/forms.md](examples/forms.md)
+Full code: [examples/forms.md](examples/forms.md)
 
 ---
 
-### Pattern 10: Anchor Positioning
-
-Floating panels accept an `anchor` prop for viewport-aware positioning.
+### Pattern 10: Anchor positioning
 
 ```tsx
-// Position values: "top", "top start", "top end", "bottom", "bottom start", "bottom end",
-//                  "left", "left start", "left end", "right", "right start", "right end"
-
-<MenuItems anchor="bottom start" className="[--anchor-gap:8px] [--anchor-offset:4px] [--anchor-padding:12px]">
-
-// Match trigger width
+<MenuItems anchor="bottom start" className="[--anchor-gap:8px]">
+<MenuItems anchor={{ to: "bottom start", gap: 8, offset: 4, padding: 12 }}>
 <ListboxOptions className="w-[var(--button-width)]">
 <ComboboxOptions className="w-[var(--input-width)]">
-
-// Object syntax for full control
-<MenuItems anchor={{ to: "bottom start", gap: 8, offset: 4, padding: 12 }}>
 ```
 
-**CSS Variables:** `--anchor-gap` (space between trigger/panel), `--anchor-offset` (horizontal offset), `--anchor-padding` (viewport edge minimum), `--button-width`/`--input-width` (trigger dimensions)
+A position is a side (`top`, `bottom`, `left`, `right`) optionally followed by `start` or `end`.
+The string form reads the `--anchor-*` custom properties off the panel, so a media query can change
+the gap without changing the markup; the object form takes the same values as numbers.
+
+Full table: [reference.md](reference.md)
 
 ---
 
-### Pattern 11: Data Attributes for Styling
+### Pattern 11: Styling from data attributes
 
-Headless UI v2 exposes data attributes on all components for CSS-based state styling. Preferred over render props.
-
-| Attribute       | Components                                           | Purpose                           |
-| --------------- | ---------------------------------------------------- | --------------------------------- |
-| `data-open`     | Dialog, Menu, Popover, Disclosure, Listbox, Combobox | Component is open                 |
-| `data-closed`   | All with transition support                          | Closed state (for transitions)    |
-| `data-focus`    | MenuItem, ListboxOption, ComboboxOption, Tab, inputs | Has keyboard/mouse focus          |
-| `data-selected` | ListboxOption, ComboboxOption, Tab                   | Currently selected                |
-| `data-checked`  | Checkbox, Switch, Radio                              | Control is checked/on             |
-| `data-disabled` | All interactive components                           | Component is disabled             |
-| `data-hover`    | All interactive components                           | Mouse hover (ignored on touch)    |
-| `data-active`   | All interactive components                           | Mouse press (cleared on drag-off) |
+Every component publishes its state as attributes, and the same eight cover most of the library:
+`data-open`, `data-closed`, `data-focus`, `data-selected`, `data-checked`, `data-disabled`,
+`data-hover`, `data-active`.
 
 ```tsx
-// Direct styling
 <MenuItem><button className="data-[focus]:bg-blue-100 data-[disabled]:opacity-50">Edit</button></MenuItem>
-
-// Parent state styling with group
-<Switch className="group ...">
-  <span className="group-data-[checked]:translate-x-5" />
-</Switch>
-
-// Transition styling
 <DialogPanel transition className="duration-200 data-[closed]:opacity-0 data-[closed]:scale-95">
 ```
+
+**The attribute names are the contract; the selector syntax is your styling layer's.** Plain CSS
+writes `[data-focus] { … }`; a utility-class framework writes the same thing through its
+attribute-variant syntax, which is what the examples in this skill use.
+
+Full table, including which component publishes which attribute:
+[reference.md](reference.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Component Selection
-
-```
-What interaction pattern do you need?
-
-Modal blocking interaction?
-  -> Dialog (close on Escape, outside click, focus trapped)
-
-Dropdown with actions?
-  -> Menu (arrow key navigation, type-ahead, auto-close on select)
-
-Custom select (single/multi)?
-  -> Listbox (keyboard navigation, form integration)
-
-Searchable select?
-  -> Combobox (text input + filterable dropdown)
-  -> Large list (1000+)? -> Use virtual prop
-
-Floating non-modal content?
-  -> Popover (click to toggle, close on outside click)
-
-Tabbed content?
-  -> TabGroup (arrow key navigation, automatic ARIA)
-
-Show/hide toggle?
-  -> Disclosure (single toggle, accordion-style)
-
-Boolean toggle?
-  -> Switch (on/off, form integration)
-
-Option selection from small set?
-  -> RadioGroup (arrow key cycling, card-style options)
-
-Custom checkbox?
-  -> Checkbox (checked/unchecked/indeterminate)
-
-Form field with auto ARIA?
-  -> Field + Label + Description + Input/Select/Textarea
-```
-
-### Transition Approach
-
-```
-How to animate components?
-
-Simple fade/scale?
-  -> transition prop + data-[closed] classes (recommended)
-
-Different enter/leave animations?
-  -> Stack data attributes: data-[closed]:data-[enter]: / data-[closed]:data-[leave]:
-
-Coordinated multi-element animations?
-  -> Transition + TransitionChild components
-
-JavaScript animation library?
-  -> Use static prop to disable internal state management
-  -> Conditionally render based on your animation library's presence detection
-```
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using render props for class toggling instead of `data-*` attributes (breaks RSC compatibility, verbose code)
-- Missing controlled state for Dialog (`open` and `onClose` are both required)
-- Building manual dropdown/popover positioning instead of using the `anchor` prop
-- Not providing DialogTitle (screen readers have no context for the dialog)
+- A `Dialog` without both `open` and `onClose` — it never opens, or never closes
+- A dialog with no `DialogTitle` — nothing announces what the dialog is
+- Filtering Combobox options inside the render without deriving them from the query state — the list
+  goes stale against what was typed
+- `transition` with no `duration-*` — the state flips with no animation, and the element can unmount
+  before anything is visible
+- Hand-rolled positioning on a floating panel instead of `anchor` — it does not flip or shift, so it
+  clips at the viewport edge
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using the legacy Transition component `enter`/`enterFrom`/`enterTo`/`leave`/`leaveFrom`/`leaveTo` class props instead of `data-[closed]`/`data-[enter]`/`data-[leave]` (v2.1+ pattern is simpler)
-- Manually wiring `id`, `htmlFor`, `aria-labelledby`, `aria-describedby` when Field/Label/Description auto-handle this
-- Not using `onClose` callback to reset Combobox query state
-- Forgetting `multiple` prop when Listbox/Combobox should support multiple selection
-
-**Common Mistakes:**
-
-- Filtering Combobox options inside the component instead of deriving from state (causes stale filter results)
-- Using `data-[state]` with CSS `transition` but forgetting `duration-*` class (no visible animation)
-- Nesting a Popover inside a Dialog without considering focus trap implications
-- Using Menu for navigation (Menu is for actions; use links/buttons directly for navigation, or Popover for nav panels)
-
-**Gotchas and Edge Cases:**
-
-- `data-hover` is intelligently ignored on touch devices to prevent sticky hover states (this is intentional, not a bug)
-- `data-active` is removed when dragging off the element (unlike CSS `:active` which persists)
-- `data-changing` on Switch/Checkbox is only true for two animation frames (used for transition timing)
-- Dialog renders in a `#headlessui-portal-root` container automatically (no explicit Portal component needed)
-- Combobox `onClose` fires when dropdown closes (use it to reset query, not `onChange`)
-- Listbox/Combobox compare objects by `id` field by default; use `by` prop for custom comparison
-- Tab component renders as `Fragment` by default, not `button` (wrap content or use `as="button"`)
-- Virtual scrolling in Combobox uses a render function on `ComboboxOptions`, not mapping `ComboboxOption` children
-- Headless UI v2 is React-only; the Vue version remains at v1.x
+- Render props for class toggling still work but re-render the subtree and cannot be used in a server
+  component; the `data-*` attributes are the v2 answer
+- The v1 `Transition` class props — `enter`, `enterFrom`, `enterTo`, `leave`, `leaveFrom`, `leaveTo` —
+  are superseded by `data-closed` / `data-enter` / `data-leave`
+- `data-hover` is deliberately not applied on touch devices, so hover styling never sticks
+- `data-active` clears when the pointer drags off the element, unlike CSS `:active`
+- `data-changing` on Switch and Checkbox is true for two frames only
+- Dialog portals into `#headlessui-portal-root` on its own — there is no Portal component to add
+- Listbox and Combobox compare objects by `id`; anything else needs `by`
+- `Tab` renders a Fragment by default, so `as="button"` is what gives it an element to style
+- `Menu` is for actions — a navigation panel is a `Popover`, and plain links are plain links
+- Wiring `id`, `htmlFor`, `aria-labelledby` or `aria-describedby` by hand fights `Field`, which has
+  already set them
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST use the v2 compound component anatomy - e.g. Menu/MenuButton/MenuItems/MenuItem - never render raw divs with click handlers)**
-
-**(You MUST use `data-*` attributes for styling states (data-open, data-focus, data-selected, data-hover, data-active) - NOT render props for class toggling)**
-
-**(You MUST use the `anchor` prop on floating panels (MenuItems, ListboxOptions, ComboboxOptions, PopoverPanel) instead of manual positioning)**
-
-**(You MUST use the `transition` prop with data-closed/data-enter/data-leave classes for animations - NOT the legacy Transition component enter/leave props)**
-
-**Failure to follow these rules will break accessibility, keyboard navigation, and viewport-aware positioning.**
-
-</critical_reminders>

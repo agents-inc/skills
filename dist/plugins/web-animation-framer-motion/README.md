@@ -1,6 +1,6 @@
 # web-animation-framer-motion
 
-Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility
+Motion (formerly Framer Motion) patterns - motion components, variants, AnimatePresence, gestures, layout animations, scroll-linked motion, reduced-motion handling
 
 ## Installation
 

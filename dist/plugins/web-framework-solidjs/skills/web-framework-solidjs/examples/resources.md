@@ -41,8 +41,6 @@ export const route: RouteDefinition = {
 const UserPage: Component = () => {
   const params = useParams();
 
-  // createAsync is the recommended async primitive (thin wrapper over createResource)
-  // Will be the standard in Solid 2.0
   const user = createAsync(() => getUserQuery(params.id));
 
   return (
@@ -64,7 +62,7 @@ const UserPage: Component = () => {
 export default UserPage; // SolidStart file-based routing requires default export for pages
 ```
 
-**Why good:** `query` provides caching and deduplication, `createAsync` is recommended for Solid 2.0, preload enables SSR data fetching, `'use server'` runs on server only
+**Why good:** `query` deduplicates concurrent calls carrying the same key, so the route's `preload` and the component's `createAsync` share one request rather than firing two. `'use server'` keeps the fetch — and any credential it closes over — out of the client bundle entirely.
 
 ### Good Example - Multiple queries with actions
 
@@ -147,30 +145,9 @@ const TodoApp: Component = () => {
 export { TodoApp };
 ```
 
-**Why good:** `action` for server mutations with automatic revalidation, `useAction` for calling actions, queries deduplicate across components
+**Why good:** an `action` revalidates every active `query` when it resolves, so the list refreshes without the component asking for it. `useAction` is what turns an action into something a handler can call directly, rather than wiring it to a `<form>`.
 
-### Bad Example - Using deprecated cache API
-
-```typescript
-// BAD: 'cache' is deprecated since Solid Router v0.15.0
-import { cache, createAsync } from "@solidjs/router";
-
-// DEPRECATED - will be removed
-const getUser = cache(async (id: string) => {
-  const response = await fetch(`/api/users/${id}`);
-  return response.json();
-}, "user");
-
-// Use 'query' instead:
-import { query } from "@solidjs/router";
-
-const getUserQuery = query(async (id: string) => {
-  const response = await fetch(`/api/users/${id}`);
-  return response.json();
-}, "user");
-```
-
-**Why bad:** `cache` is deprecated since Solid Router v0.15.0, use `query` instead for the same functionality
+Code that calls `cache()` predates Solid Router v0.15.0, where it was renamed `query()` — same signature, same behaviour.
 
 ---
 
@@ -249,7 +226,7 @@ const UserProfilePage: Component<{ userId: string }> = (props) => {
 export { UserProfile, UserProfilePage };
 ```
 
-**Why good:** Source signal auto-refetches when userId changes, Switch handles all states, refetch available for manual refresh, ErrorBoundary wraps Suspense
+**Why good:** the source function is tracked, so a changed `userId` refetches and the superseded response is discarded — the race a hand-rolled effect loses. `<ErrorBoundary>` sits outside `<Suspense>`, because a rejection has to be caught above the boundary that is still showing a fallback.
 
 ---
 
@@ -335,7 +312,7 @@ const ProductCatalog: Component = () => {
 export { ProductCatalog };
 ```
 
-**Why good:** Products resource depends on selectedCategory, null source skips fetch, separate Suspense boundaries for independent loading
+**Why good:** a source returning `null`, `undefined` or `false` means the fetcher is not called at all, which is how a resource stays idle until its input exists. The two `<Suspense>` boundaries are separate so the category list paints while the products are still in flight.
 
 ---
 
@@ -460,7 +437,7 @@ const TodoList: Component = () => {
 export { TodoList };
 ```
 
-**Why good:** `mutate` for instant optimistic updates, revert on error, temporary IDs for new items, loading state via classList
+**Why good:** `mutate` writes the resource's value without refetching, which is what makes the change instant. There is no automatic revert, so each `catch` has to put the previous value back by hand — and the temporary id is what lets the server's response replace the right row.
 
 ---
 
@@ -555,7 +532,7 @@ const SearchPage: Component = () => {
 export { SearchPage };
 ```
 
-**Why good:** Debounced input prevents excessive API calls, minimum query length check, loading indicator, memo for conditional fetch source
+**Why good:** the raw signal drives the input so typing stays immediate, while the resource keys on the debounced one. The memo returns `null` below the minimum length, so a one-character query never reaches the network.
 
 ---
 
@@ -667,7 +644,7 @@ const Dashboard: Component = () => {
 export { Dashboard };
 ```
 
-**Why good:** Each section fetches independently, separate Suspense boundaries for parallel streaming, fast sections show immediately
+**Why good:** three resources created in three components start three requests at once. One `<Suspense>` around all of them would hold every section back until the slowest returned.
 
 ---
 
@@ -783,7 +760,7 @@ const BadDataFetching = () => {
 };
 ```
 
-**Why bad:** Manual state management is verbose and error-prone, async in createEffect loses tracking, no Suspense/ErrorBoundary integration
+**Why bad:** the tracking scope ends at the `await`, so this effect subscribes to nothing and never runs again. Nothing cancels a superseded request either, so two rapid changes can land out of order and the older response wins.
 
 ---
 

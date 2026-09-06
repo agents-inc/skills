@@ -54,25 +54,29 @@ Are you working with a dynamic list of fields?
 
 ## Anti-Patterns
 
-### Using register/Controller Patterns
+### Binding an Input Without form.Field
 
-TanStack Form does not have `register` or `Controller`. All fields use `form.Field` with a `children` render prop.
+There is no field-registration helper and no ref forwarding. An input joins the form only by being
+rendered inside `form.Field`'s `children`, reading `field.state.value` and calling
+`field.handleChange`. Spreading anything onto an input, or wiring it to component state, leaves the
+field absent from the submit payload and unvalidated.
 
 ```tsx
-// WRONG — these APIs do not exist in TanStack Form
-<input {...register("name")} />
-<Controller name="name" control={control} render={...} />
+// WRONG — the field never joins the form
+const [name, setName] = useState("");
+<input value={name} onChange={(e) => setName(e.target.value)} />;
 
-// CORRECT — form.Field with children render prop
+// CORRECT — form.Field owns the value and the handlers
 <form.Field
   name="name"
   children={(field) => (
     <input
       value={field.state.value}
+      onBlur={field.handleBlur}
       onChange={(e) => field.handleChange(e.target.value)}
     />
   )}
-/>
+/>;
 ```
 
 ### Reading form.state Directly
@@ -211,7 +215,8 @@ hobbiesField.pushValue({ name: "", description: "", level: 0 });
 
 ## Standard Schema Adapter
 
-TanStack Form supports any validation library that implements the Standard Schema spec (Zod, Valibot, ArkType, etc.) via direct schema usage in validators — no adapter package needed.
+A validator slot accepts a schema object directly, for any validation library implementing the
+Standard Schema spec. No adapter package sits between them.
 
 ```tsx
 import { z } from "zod";
@@ -219,12 +224,15 @@ import { z } from "zod";
 <form.Field
   name="email"
   validators={{
-    onChange: z.string().email("Invalid email"),
+    onChange: z.email("Invalid email"),
   }}
   children={(field) => (/* ... */)}
 />
 ```
 
-**How it works:** When a validator receives a schema object (instead of a function), TanStack Form detects the Standard Schema interface and uses it directly. No `zodResolver` or adapter import required.
+**How it works:** a validator slot holding a schema object rather than a function is detected
+through the Standard Schema interface and run directly, and the schema's own messages become the
+field's errors.
 
-**Supported libraries:** Any library implementing Standard Schema — including Zod, Valibot, and ArkType.
+**Mixing the two:** one field can take a schema while another takes a function, and the same field
+can take a schema on `onChange` and a function on `onBlurAsync`.

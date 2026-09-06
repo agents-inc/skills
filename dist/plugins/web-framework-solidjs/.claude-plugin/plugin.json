@@ -1,8 +1,8 @@
 {
   "name": "web-framework-solidjs",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
-  "description": "SolidJS fine-grained reactivity patterns - signals, effects, memos, stores, createResource, control flow components, Suspense, SolidStart",
+  "description": "SolidJS fine-grained reactivity — signals, effects, memos, stores, resources, control-flow components. Load when writing Solid components or reactive state.",
   "author": {
     "name": "@vince"
   },

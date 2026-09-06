@@ -1,6 +1,8 @@
 # TipTap - Menu Patterns
 
-> BubbleMenu, FloatingMenu, conditional visibility, multiple menus, and slash commands. See [core.md](core.md) for editor setup, [custom-extensions.md](custom-extensions.md) for custom nodes/marks.
+> BubbleMenu, FloatingMenu, `shouldShow`, multiple menus, slash commands, fixed toolbars. See
+> [SKILL.md](../SKILL.md) for which menu applies, [core.md](core.md) for editor setup,
+> [custom-extensions.md](custom-extensions.md) for the extension the slash command is built on.
 
 ---
 
@@ -64,7 +66,9 @@ export function EditorWithBubbleMenu() {
 }
 ```
 
-**Why good:** `shouldShow` prevents menu on image selections or empty selections, `aria-pressed` for accessibility, `.chain().focus()` maintains cursor, v3 import from `@tiptap/react/menus`
+**Why good:** `shouldShow` keeps the text menu off node selections such as images, where none of its
+commands apply; the Link button is the case that most needs `.focus()`, since `window.prompt` takes
+focus out of the editor entirely
 
 ### Bad Example
 
@@ -81,7 +85,9 @@ function BadBubbleMenu({ editor }) {
 }
 ```
 
-**Why bad:** v3 imports menus from `@tiptap/react/menus`, `tippyOptions` replaced by Floating UI options, no `.chain().focus()`, no `shouldShow` means menu appears on any selection including nodes
+**Why bad:** in v3 the root export no longer carries `BubbleMenu`, `tippyOptions` is inert since
+positioning moved to Floating UI, and without `shouldShow` the menu appears on node selections where
+its commands do nothing
 
 ---
 
@@ -134,7 +140,8 @@ export function EditorWithFloatingMenu() {
 }
 ```
 
-**Why good:** `shouldShow` only displays on empty paragraphs (not inside lists or code blocks), offers block-level transformations, `.chain().focus()` maintains cursor
+**Why good:** checking the parent node type as well as its emptiness keeps the menu out of empty
+list items and code blocks, where turning the line into a heading is not what the user wants
 
 ---
 
@@ -197,13 +204,14 @@ export function EditorWithMultipleMenus() {
 }
 ```
 
-**Why good:** `pluginKey` differentiates menu instances, each menu has its own `shouldShow` for context-appropriate display, image menu only shows image-relevant controls
+**Why good:** two menus on one editor need distinct `pluginKey` values or they collide, and the two
+`shouldShow` predicates are mutually exclusive, so exactly one menu can be open at a time
 
 ---
 
 ## Pattern 4: Slash Command Pattern
 
-A slash command pattern uses TipTap's suggestion plugin to show an autocomplete popup when the user types `/`.
+A slash command is the suggestion plugin with `/` as its trigger character.
 
 ```typescript
 import { Extension } from "@tiptap/core";
@@ -279,15 +287,18 @@ export const SlashCommands = Extension.create({
 });
 ```
 
-**Why good:** uses TipTap's suggestion plugin (same foundation as mentions), `deleteRange` removes the `/` trigger text before inserting content, items filtered by query for type-ahead, commands are self-contained
+**Why good:** each item owns its own command, so adding an entry needs no change to the extension;
+`deleteRange(range)` removes the typed `/query` before the command runs, which is what stops the
+trigger text ending up in the document.
 
-**Note:** The popup UI rendering (`render` function in suggestion options) depends on your component framework and is not shown here -- it typically creates a floating list component positioned at the cursor.
+**Note:** the popup itself is the `render` function in the suggestion options, and it is ordinary
+component code — a positioned list, keyboard-navigated — so it is left out here.
 
 ---
 
 ## Pattern 5: Fixed Toolbar with Editor State
 
-For always-visible toolbars (not floating), read editor state directly:
+An always-visible toolbar needs no menu primitive — it is a component reading editor state.
 
 ```typescript
 import type { Editor } from "@tiptap/core";
@@ -345,4 +356,6 @@ export function FixedToolbar({ editor }: FixedToolbarProps) {
 }
 ```
 
-**Why good:** `useEditorState` with selector prevents full re-render on every state change, `aria-pressed` and `role="toolbar"` for accessibility, select element for heading levels avoids 3+ separate buttons
+**Why good:** the selector derives `headingLevel` once, so the select's value and the command that
+sets it read from the same source; without `useEditorState` the toolbar re-renders on every
+transaction

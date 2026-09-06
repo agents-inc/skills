@@ -1,6 +1,6 @@
-# Remix - Nested Routes Examples
+# Remix — Nested Routes
 
-> Patterns for layouts, pathless routes, and route nesting.
+> Layouts, index routes and pathless routes. The naming table is in [SKILL.md](../SKILL.md).
 
 ---
 
@@ -79,7 +79,8 @@ export default function AdminLayout() {
 }
 ```
 
-**Why good:** Parent layout handles auth check (all children inherit protection), NavLink with isActive for current page styling, Outlet renders child routes
+**Why good:** The auth check lives in the layout's loader, so every route under `/admin` is protected
+by existing — a new child route is guarded before anyone remembers to guard it.
 
 ---
 
@@ -134,7 +135,8 @@ export default function AdminOverview() {
 }
 ```
 
-**Why good:** Child loaders run in parallel with parent, parallel database queries with Promise.all, index route renders at parent path with `_index` convention
+**Why good:** This loader and the layout's run at the same time rather than one after the other, so
+nesting costs no extra latency — which is the property that makes deep route trees viable.
 
 ---
 
@@ -181,40 +183,26 @@ export default function Signup() {
 }
 ```
 
-**Why good:** Leading underscore makes layout pathless (no `/auth` in URL), login and signup share layout without URL prefix, clean URLs like `/login` instead of `/auth/login`
+**Why good:** Login and signup share a layout without sharing a URL prefix — the reader gets `/login`
+rather than `/auth/login`, and the two files still cannot drift apart visually.
 
 ---
 
-## File Structure Reference
+## The Two Underscores
 
-### Nested Routes
-
-```
-app/routes/
-├── admin.tsx              # Layout for /admin/* routes
-├── admin._index.tsx       # Renders at /admin
-├── admin.users.tsx        # Renders at /admin/users
-├── admin.users.$id.tsx    # Renders at /admin/users/:id
-└── admin_.settings.tsx    # Renders at /admin/settings WITHOUT admin layout (note the _)
-```
-
-### Pathless Layouts
+Both characters change nesting, in opposite directions.
 
 ```
 app/routes/
-├── _auth.tsx           # Pathless layout (no URL segment)
-├── _auth.login.tsx     # /login (uses _auth layout)
-├── _auth.signup.tsx    # /signup (uses _auth layout)
-├── _auth.forgot.tsx    # /forgot (uses _auth layout)
-└── dashboard.tsx       # /dashboard (does NOT use _auth layout)
+├── _auth.tsx              # leading _ : contributes a layout but no URL segment
+├── _auth.login.tsx        # /login, wrapped in _auth.tsx
+├── admin.tsx              # /admin layout
+├── admin.users.tsx        # /admin/users, wrapped in admin.tsx
+└── admin_.settings.tsx    # trailing _ : /admin/settings, NOT wrapped in admin.tsx
 ```
 
-### Key Conventions
+A trailing underscore is the escape hatch for a route that belongs to a URL hierarchy but not to its
+layout — a full-screen settings page under `/admin`, say, that should not carry the admin chrome.
+Note what it also escapes: the parent's loader, and therefore the parent's auth check.
 
-| Pattern               | Purpose                                        |
-| --------------------- | ---------------------------------------------- |
-| `admin.tsx`           | Layout (has `<Outlet />`)                      |
-| `admin._index.tsx`    | Index route (renders at parent URL)            |
-| `admin.users.tsx`     | Nested child route                             |
-| `admin_.settings.tsx` | Escapes parent layout with trailing underscore |
-| `_auth.tsx`           | Pathless layout with leading underscore        |
+The full naming table is in [SKILL.md](../SKILL.md).

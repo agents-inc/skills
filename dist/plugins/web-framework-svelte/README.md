@@ -1,6 +1,6 @@
 # web-framework-svelte
 
-Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API
+Svelte 5 runes — $state, $derived, $effect, $props, $bindable, snippets, callback props, context. Load when writing Svelte 5 components or reactive modules.
 
 ## Installation
 

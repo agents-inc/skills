@@ -3,108 +3,131 @@ name: web-state-jotai
 description: Atomic state management with auto-dependency tracking
 ---
 
-# Jotai Atomic State Management
+# Jotai Patterns
 
-> **Quick Guide:** Jotai provides atomic, bottom-up state management with automatic dependency tracking. Define atoms at module level (never inside components). Use primitive atoms for values, derived atoms for computed state, write-only atoms for actions, and async atoms with Suspense for loading. Components only re-render when their specific atoms change. The `atomFamily` utility is deprecated -- use the `jotai-family` package for new code.
+> **Quick Guide:** Jotai builds state bottom-up out of atoms, each tracking its own dependencies, so a component re-renders only for the atoms it read. Atoms are defined at module level; defining one inside a component makes a new atom on every render and the state never survives. Async atoms suspend by default, so their consumers need a Suspense boundary — `loadable()` and `unwrap()` are the ways out of that. `atomFamily` from `jotai/utils` is deprecated in favour of the `jotai-family` package.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — primitive, derived, write-only and read-write atoms
+- [examples/async.md](examples/async.md) — async atoms, Suspense, `loadable`, `unwrap`, atom families
+- [examples/persistence.md](examples/persistence.md) — `atomWithStorage`, `selectAtom`, `splitAtom`
+- [examples/testing.md](examples/testing.md) — stores, providers, reset and test isolation
+- [reference.md](reference.md) — utility lookup and anti-pattern code
+
+---
+
+## Which path applies
+
+- **The value is available synchronously** — primitive and derived atoms, no boundary needed; follow [examples/core.md](examples/core.md).
+- **The value arrives from a promise** — the atom suspends, so the consumer needs a Suspense boundary or a wrapper that turns suspension into a value; follow [examples/async.md](examples/async.md).
+- **The value has to outlive the tab** — storage-backed atoms, with a first-render caveat; follow [examples/persistence.md](examples/persistence.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using Jotai
+## Before writing Jotai code
 
-**(You MUST define atoms OUTSIDE components -- creating atoms inside render causes broken state)**
+**Define atoms at module level.** An atom is an identity, not a value — one created during render is a new identity each time, so the state resets on every render and the component appears not to respond.
 
-**(You MUST wrap async atom consumers in Suspense boundaries -- async atoms trigger Suspense by default)**
+**Give async atom consumers a Suspense boundary.** An async atom suspends the moment it is read, and a suspension with nothing to catch it propagates as an error.
 
-**(You MUST use write atoms (action atoms) to encapsulate multi-atom updates and post-async state changes)**
+**Put multi-atom updates behind a write-only atom.** The updates then land together, and the logic is reachable from anywhere without a component around it.
 
-**(You MUST use `jotai-family` package instead of deprecated `atomFamily` from `jotai/utils` for new code)**
+**Use the `jotai-family` package for parameterised atoms.** `atomFamily` in `jotai/utils` is deprecated, and families of either kind hold every atom they create until told otherwise.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Jotai, jotai, atom, useAtom, useAtomValue, useSetAtom, atomWithStorage, atomFamily, splitAtom, selectAtom, derived atom, loadable, unwrap, createStore, Provider store
+**Auto-detection:** `atom`, `useAtom`, `useAtomValue`, `useSetAtom`, `atomWithStorage`, `atomWithReset`, `splitAtom`, `selectAtom`, `loadable`, `unwrap`, `createStore`, `RESET`, `jotai/utils`, `jotai-family`, `Provider store`
 
-**When to use:**
+**Applies to:**
 
-- Fine-grained reactivity without manual memoization
-- Bottom-up state composition with automatic dependency tracking
-- Async state with React Suspense integration
-- Computed/derived state that auto-updates when dependencies change
-- Avoiding prop drilling for shared UI state
+- Composing state out of primitive, derived, write-only and read-write atoms
+- Async atoms, and choosing between suspending and handling the loading state
+- Persisting an atom, and splitting an array into per-item atoms
+- Store and Provider scoping, including isolation between tests
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Primitive, derived, write-only, and read-write atoms
-- Async atoms with Suspense and loadable/unwrap utilities
-- atomWithStorage for persistence
-- splitAtom for array item isolation
-- Store and Provider patterns for isolation and testing
-
-**When NOT to use:**
-
-- Server/API data (use your data fetching solution)
-- Simple local component state (use useState)
-- State that should be in URL (use searchParams)
+- Server data — caching, invalidation and refetching belong to whatever owns the network; an async atom fetches once and has no opinion about staleness
+- Single-value component state — one boolean in one component needs no atom
+- State that should survive a paste of the URL — filters and pagination belong in the address bar
 
 ---
 
 <philosophy>
 
-## Philosophy
+Atoms are cells in a spreadsheet. A primitive atom holds a value, a derived atom is a formula over other cells, and changing a cell recalculates exactly the formulas that read it — nothing declares a dependency, because the dependency is whatever `get` was called on while the formula ran.
 
-Jotai takes an **atomic, bottom-up approach** to state management. The core principle: **"Anything that can be derived from the application state should be derived automatically."**
-
-Consider atoms like cells in a spreadsheet:
-
-- Each atom is an independent cell holding a value
-- Derived atoms are formulas that reference other cells
-- When a cell changes, only formulas depending on it recalculate
-- This provides the minimum necessary work automatically
-
-**Key characteristics:**
-
-- **Bottom-up state design**: Build state from small, composable atoms
-- **Automatic dependency tracking**: Atoms automatically update when dependencies change
-- **Fine-grained reactivity**: Components only re-render when their specific atoms change
-- **First-class async support**: Async operations integrate seamlessly with React Suspense
-
-**Mental Model:**
-Instead of one large store, you have many small atoms that can be combined. This creates natural code splitting and enables precise re-render optimization without manual memoization.
+Two things follow. State is built bottom-up from small pieces rather than carved out of one large object, so the re-render boundary comes for free instead of from memoisation. And an atom is an **identity**, not a container: the value lives in a store, and the atom is the key. That is why the same atom read under two Providers gives two values, and why an atom created inside render is a different key each time.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+### Which atom shape
+
+```
+Does it hold a value of its own?
+├─ YES -> primitive: atom(initialValue)
+└─ NO -> Is it computed from other atoms?
+    ├─ YES -> Does it also accept writes?
+    │   ├─ YES -> read-write: atom(read, write)
+    │   └─ NO  -> derived: atom((get) => ...)
+    └─ NO -> it only performs updates
+        └─ write-only: atom(null, (get, set) => ...)
+```
+
+### Async atoms, with or without Suspense
+
+```
+Should the consumer suspend while the value is pending?
+├─ YES -> read the async atom directly, under a Suspense boundary
+└─ NO -> Does the UI need to distinguish loading from error?
+    ├─ YES -> loadable(asyncAtom) — a discriminated union on `state`
+    └─ NO  -> unwrap(asyncAtom, fallback) — a plain value throughout
+```
+
+### Arrays
+
+```
+Does each item update independently?
+├─ YES -> splitAtom, with a keyExtractor where items have ids
+└─ NO  -> a single array atom is enough
+```
+
+Reach for a derived atom before `selectAtom`. The official docs call `selectAtom` an escape hatch; a derived atom expresses the same read with the dependency tracking that is the point of the library.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
 ### Pattern 1: Primitive Atoms
 
-The simplest atom type -- holds a single value with automatic type inference. Always define at module level.
+A single value, typed by inference. Explicit types are for unions and nullables.
 
 ```typescript
 import { atom } from "jotai";
 
-const INITIAL_COUNT = 0;
-const countAtom = atom(INITIAL_COUNT);
+const countAtom = atom(0);
 const userAtom = atom<User | null>(null);
-
-export { countAtom, userAtom };
+const themeAtom = atom<"light" | "dark" | "system">("light");
 ```
 
-**Why good:** Module-level definition persists state, type inference works automatically, explicit typing only for unions/nullable
+Full code: [examples/core.md](examples/core.md#pattern-1-primitive-atoms)
 
-See [examples/core.md](examples/core.md) Pattern 1 for complete examples with type patterns.
+### Pattern 2: Derived Atoms
 
----
-
-### Pattern 2: Derived (Read-Only) Atoms
-
-Compute values from other atoms -- dependencies tracked automatically, cached until dependencies change.
+Dependencies are whatever the read function called `get` on, re-derived on each evaluation and cached until one of them changes.
 
 ```typescript
 const subtotalAtom = atom((get) => get(priceAtom) * get(quantityAtom));
@@ -112,15 +135,11 @@ const taxAtom = atom((get) => get(subtotalAtom) * get(taxRateAtom));
 const totalAtom = atom((get) => get(subtotalAtom) + get(taxAtom));
 ```
 
-**Why good:** Automatic dependency tracking, cached computation, chain of derivations is composable
+Full code: [examples/core.md](examples/core.md#pattern-2-derived-read-only-atoms)
 
-See [examples/core.md](examples/core.md) Pattern 2 for derived atom chains and conditional derivations.
+### Pattern 3: Write-Only Atoms
 
----
-
-### Pattern 3: Write-Only Atoms (Action Atoms)
-
-Encapsulate side effects and multi-atom updates. First argument is `null` (no read value).
+A `null` read function marks an atom that only performs updates. Every `set` inside one write lands together.
 
 ```typescript
 const resetAllAtom = atom(null, (get, set) => {
@@ -130,15 +149,11 @@ const resetAllAtom = atom(null, (get, set) => {
 });
 ```
 
-**Why good:** Actions are reusable, enables code splitting, multiple atoms updated atomically
-
-See [examples/core.md](examples/core.md) Pattern 3 for action atoms with arguments.
-
----
+Full code: [examples/core.md](examples/core.md#pattern-3-write-only-atoms-action-atoms)
 
 ### Pattern 4: Read-Write Atoms
 
-Atoms that can both read derived state and accept writes. Useful for lens-like property access on larger objects.
+A lens onto part of a larger value: the read narrows, the write puts the whole value back.
 
 ```typescript
 const nameAtom = atom(
@@ -149,148 +164,97 @@ const nameAtom = atom(
 );
 ```
 
-**Why good:** Granular read/write access to object properties, keeps parent intact
-
-See [examples/core.md](examples/core.md) Pattern 4 for lens patterns and transformations.
-
----
+Full code: [examples/core.md](examples/core.md#pattern-4-read-write-atoms)
 
 ### Pattern 5: Async Atoms with Suspense
 
-Async atoms trigger Suspense by default. Use `loadable()` for manual loading states or `unwrap()` for fallback values.
+An async read function makes the atom suspend when read.
 
 ```typescript
-// Triggers Suspense -- wrap consumer in <Suspense>
 const userAtom = atom(async (get) => {
   const id = get(userIdAtom);
   const response = await fetch(`/api/users/${id}`);
   return response.json() as Promise<User>;
 });
 
-// Non-Suspense alternative
+// Or, to handle the states by hand:
 const loadableUserAtom = loadable(userAtom);
-// Returns { state: 'loading' } | { state: 'hasData', data } | { state: 'hasError', error }
+// { state: "loading" } | { state: "hasData", data } | { state: "hasError", error }
 ```
 
-**Why good:** First-class Suspense integration, loadable provides type-safe discriminated union
-
-See [examples/async.md](examples/async.md) for Suspense setup, loadable/unwrap patterns, and AbortController support.
-
----
+Full code: [examples/async.md](examples/async.md)
 
 ### Pattern 6: atomWithStorage for Persistence
 
-Persist atom values to localStorage, sessionStorage, or custom storage. Use `RESET` symbol to restore defaults.
+Backs an atom with `localStorage`, `sessionStorage` or a storage object of your own. Setting it to `RESET` restores the initial value.
 
 ```typescript
 import { atomWithStorage, RESET } from "jotai/utils";
 
-const STORAGE_KEY = "app-theme";
-const themeAtom = atomWithStorage<Theme>(STORAGE_KEY, "light");
-// setTheme(RESET) restores to "light"
+const themeAtom = atomWithStorage<Theme>("app-theme", "light");
 ```
 
-**Gotcha:** Default behavior renders initial value first, then stored value (flicker). Set `{ getOnInit: true }` for immediate stored value, but beware SSR hydration issues.
+By default the first render shows the initial value and the stored value arrives after, which flickers. `{ getOnInit: true }` reads storage immediately, at the cost of a server render that cannot agree with it.
 
-See [examples/persistence.md](examples/persistence.md) Pattern 1 for storage variants and reset patterns.
+Full code: [examples/persistence.md](examples/persistence.md)
 
----
+### Pattern 7: splitAtom for Arrays
 
-### Pattern 7: splitAtom for Array Optimization
-
-Split an array atom into individual item atoms. Each item gets its own atom -- updating one item only re-renders that item's component.
+Turns an array atom into an atom of item atoms, so editing one item re-renders one row.
 
 ```typescript
 import { splitAtom } from "jotai/utils";
 
 const todosAtom = atom<Todo[]>([]);
 const todoAtomsAtom = splitAtom(todosAtom, (todo) => todo.id);
-// keyExtractor prevents unnecessary atom recreation on reorder
 ```
 
-**Why good:** Per-item re-render isolation, dispatch for add/remove/move operations
+The key extractor is what keeps an item's atom identity stable across a reorder.
 
-See [examples/persistence.md](examples/persistence.md) Pattern 3 for list rendering with dispatch.
+Full code: [examples/persistence.md](examples/persistence.md)
 
----
+### Pattern 8: Stores and Providers
 
-### Pattern 8: Store and Provider Patterns
-
-Custom stores enable state access outside React, test isolation, and multi-store architectures.
+A store is where atom values actually live. Creating one explicitly gives access outside React, and isolation between trees.
 
 ```typescript
 import { createStore, Provider } from "jotai";
 
 const store = createStore();
-store.set(countAtom, 10); // Access outside React
-store.sub(countAtom, () => { /* react to changes */ });
+store.set(countAtom, 10);
+store.sub(countAtom, () => {
+  /* value changed */
+});
 
-// Provider with store for isolation
-<Provider store={store}><App /></Provider>
+<Provider store={store}>
+  <App />
+</Provider>;
 ```
 
-**Gotcha:** Each Provider creates isolated state. Atoms in different Providers do not share values unless given the same store instance.
-
-See [examples/testing.md](examples/testing.md) for store, provider, and test isolation patterns.
+Full code: [examples/testing.md](examples/testing.md)
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) -- Primitive, derived, write-only, and read-write atom patterns
-- [examples/async.md](examples/async.md) -- Async atoms, Suspense, loadable, unwrap, atomFamily
-- [examples/persistence.md](examples/persistence.md) -- atomWithStorage, selectAtom, splitAtom
-- [examples/testing.md](examples/testing.md) -- Store, provider, reset, and test isolation patterns
-- [reference.md](reference.md) -- Decision frameworks, red flags, anti-patterns
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Creating atoms inside components -- causes new atom every render, state never persists
-- Missing Suspense boundary for async atoms -- crashes app with React error
-- Using deprecated `atomFamily` from `jotai/utils` -- will be removed in v3, use `jotai-family` package
-- Grouping unrelated state in one atom -- defeats the purpose of atomic state, causes unnecessary re-renders
+- **An atom created inside a component** — a new identity each render, so the state resets and the UI appears frozen. Where an atom genuinely has to depend on a prop, `useMemo` over that prop is the narrow exception.
+- **An async atom read with no Suspense boundary above it** — the suspension propagates as an error rather than a fallback.
+- **`atomFamily` from `jotai/utils`** — deprecated; `jotai-family` is the current package.
+- **A family with no eviction** — every parameter ever passed keeps an atom alive. `remove()` or `setShouldRemove()` is what bounds it.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using `selectAtom` as a primary pattern -- official docs call it an "escape hatch", prefer derived atoms
-- Not using `keyExtractor` with `splitAtom` for items with IDs -- causes unnecessary atom recreation
-- Missing Provider isolation in tests -- state bleeds between tests
-- Using `atomFamily` without memory cleanup -- `remove()` or `setShouldRemove()` required to prevent leaks
-
-**Gotchas & Edge Cases:**
-
-- Async atoms suspend by default -- this is intentional, not a bug
-- Provider creates isolated state -- atoms in different Providers don't share values
-- `loadable()` returns discriminated union -- always check `state` property first
-- `RESET` symbol is special -- pass to setter to reset `atomWithStorage` to initial value
-- Default store is global -- provider-less mode shares state across entire app
-- `atomWithStorage` default renders initial value first, then stored value (flicker)
-- `getOnInit: true` avoids flicker but may cause SSR hydration mismatches
+- Each `Provider` holds its own values, so the same atom under two Providers is two pieces of state. Passing one `store` to both is what shares them.
+- With no Provider at all, atoms resolve against a single global store shared by the whole app — which is why tests bleed into one another unless each gets a fresh store.
+- `atomWithStorage` renders the initial value first and the stored value after, so a persisted theme flashes the default. `getOnInit: true` fixes the flash and introduces a hydration mismatch wherever the server rendered the default.
+- `loadable()` never throws and never suspends; it returns a union, so reading `.data` without checking `.state` is reading a field that is not always there.
+- Grouping unrelated fields into one atom re-renders every reader on every change — the same trade a single large store makes, taken inside a library built to avoid it.
+- Atoms are compared by identity, not by contents, so two atoms created from the same initial value are two independent pieces of state.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST define atoms OUTSIDE components -- creating atoms inside render causes broken state)**
-
-**(You MUST wrap async atom consumers in Suspense boundaries -- async atoms trigger Suspense by default)**
-
-**(You MUST use write atoms (action atoms) to encapsulate multi-atom updates and post-async state changes)**
-
-**(You MUST use `jotai-family` package instead of deprecated `atomFamily` from `jotai/utils` for new code)**
-
-**Failure to follow these rules will cause state corruption, Suspense errors, and deprecated API usage.**
-
-</critical_reminders>

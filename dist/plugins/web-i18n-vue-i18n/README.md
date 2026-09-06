@@ -1,6 +1,6 @@
 # web-i18n-vue-i18n
 
-Type-safe i18n for Vue 3 Composition API
+Type-safe i18n for Vue 3 Composition API — useI18n, pipe-syntax plurals, i18n-t/d/n components, lazy-loaded locales. Load when a project imports vue-i18n.
 
 ## Installation
 

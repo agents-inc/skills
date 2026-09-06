@@ -346,7 +346,7 @@ function handleConfirm() {
 ## Snackbar (Toast Notifications)
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 
 const SNACKBAR_TIMEOUT_MS = 4000;

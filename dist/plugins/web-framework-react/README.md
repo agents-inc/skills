@@ -1,6 +1,6 @@
 # web-framework-react
 
-Component architecture, hooks, patterns
+Component architecture, hooks and React 19 patterns. Load when building or refactoring React components, custom hooks, forms, or async UI.
 
 ## Installation
 

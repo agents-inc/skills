@@ -35,7 +35,7 @@ export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 ```
 
-**Why good:** Works with older versions, still provides type safety, named exports
+**Why good:** The same type safety without `.withTypes()`, for a React Redux older than 9.1.
 
 ---
 
@@ -70,7 +70,7 @@ export const TodoList = () => {
 };
 ```
 
-**Why good:** Uses typed hooks (no manual RootState typing), dispatch correctly types thunks, data-attribute for styling state, named export
+**Why good:** The selector's `state` parameter is already `RootState`, so a wrong path is a compile error rather than `undefined` at runtime, and the dispatch accepts a thunk without a cast.
 
 ---
 
@@ -87,9 +87,9 @@ function TodoList() {
   // TypeScript can't catch errors here
 }
 
-export default TodoList; // BAD: default export
+export { TodoList };
 ```
 
-**Why bad:** No type safety for state access, dispatch does not know about thunks, any type defeats TypeScript benefits, default export
+**Why bad:** `state: any` means every property access type-checks, including the misspelled ones, and the plain `useDispatch` rejects a thunk because its type only knows about plain actions.
 
 ---

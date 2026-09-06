@@ -5,78 +5,84 @@ description: date-fns patterns for TypeScript - formatting, parsing, manipulatio
 
 # date-fns Date Utility Patterns
 
-> **Quick Guide:** Use date-fns for modular, tree-shakeable date operations. Import only what you need. Use `parseISO` for ISO strings, `format` with Unicode tokens for display, and pure functions that return new Date objects. For timezones, use `@date-fns/tz` with `TZDate` (v4+) or `date-fns-tz` with `formatInTimeZone` (v3.x). Never mutate dates.
+> **Quick Guide:** date-fns is a tree-shakeable set of pure functions — each returns a new `Date` and
+> nothing mutates. Parse with `parseISO` for ISO strings or `parse` for custom formats, then check
+> `isValid`, because v4 returns Invalid Date where v3 threw. Format tokens are Unicode TR35 (`yyyy`,
+> `dd`, `EEEE`) and differ from Moment's. Timezone support lives in a companion package whose name
+> depends on the major version.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — formatting, parsing with validation, arithmetic, boundaries, preset ranges
+- [examples/timezone.md](examples/timezone.md) — TZDate, the `in` option, `transpose`, DST detection, UTC classes
+- [examples/i18n.md](examples/i18n.md) — locale maps, localized month and weekday names, week start days
+- [examples/relative.md](examples/relative.md) — distances, durations, relative-vs-absolute display
+- [examples/comparison.md](examples/comparison.md) — comparisons, interval generation, overlap detection, validation
+- [reference.md](reference.md) — format token table, function index, v4 breaking changes, Moment migration table
+
+---
+
+## Which path applies
+
+- **v4, and the dates carry a timezone** — `@date-fns/tz` supplies `TZDate` and `tz()`, `@date-fns/utc` supplies `UTCDate`, and `transpose` ships in the core package. Follow [examples/timezone.md](examples/timezone.md).
+- **v3.x, and the dates carry a timezone** — `date-fns-tz` supplies `formatInTimeZone`, `toZonedTime` and `fromZonedTime`. Same file, second half.
+- **No timezone significance** — store and transmit ISO UTC, read with `parseISO`, normalise date-only values with `startOfDay`, and skip the timezone file.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing date-fns code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Parse ISO 8601 strings with `parseISO`.** `new Date(string)` parsing is engine-dependent, so
+`new Date("01/15/2026")` can succeed, fail, or mean a different day depending on the runtime.
 
-**(You MUST use `parseISO()` for ISO 8601 strings - NEVER use `new Date(string)` which has browser inconsistencies)**
+**Check `isValid()` on anything you parsed.** v4 returns Invalid Date and `NaN` where v3 threw, so
+an unchecked parse stays silent until the first `format` call downstream.
 
-**(You MUST import only needed functions - NEVER use `import * as dateFns` which defeats tree-shaking)**
+**Import each function by name.** `import * as dateFns` defeats tree-shaking and pulls the whole
+library; a named `format` import costs roughly 2 KB.
 
-**(You MUST use pure functions that return new dates - NEVER mutate dates with `setDate()` or similar)**
-
-**(You MUST use named constants for format strings and durations - NO magic strings like 'yyyy-MM-dd' scattered in code)**
+**Build new dates with `add*` / `sub*` / `startOf*` rather than the `Date` setters.**
+`date.setDate(...)` mutates the object every holder of that reference shares; every date-fns
+function returns a new one.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** date-fns, format, parseISO, addDays, subMonths, differenceInDays, formatDistance, isAfter, isBefore, eachDayOfInterval, date-fns-tz, @date-fns/tz, @date-fns/utc, TZDate, TZDateMini, UTCDate, UTCDateMini, tz(), transpose, tzName, tzScan, withTimeZone, locale
+**Auto-detection:** date-fns, format, parseISO, addDays, subMonths, differenceInDays,
+formatDistance, formatDistanceToNow, isAfter, isBefore, eachDayOfInterval, startOfWeek,
+weekStartsOn, date-fns-tz, @date-fns/tz, @date-fns/utc, TZDate, TZDateMini, UTCDate, UTCDateMini,
+tz(), transpose, tzName, tzScan, tzOffset, withTimeZone
 
-**When to use:**
+**Applies to:**
 
-- Formatting dates for display with locale support
-- Parsing date strings into Date objects
-- Date arithmetic (add/subtract days, months, years)
-- Comparing dates and checking intervals
-- Calculating differences between dates
-- Generating date ranges for calendars
-- Relative time formatting ("2 hours ago")
+- Formatting dates for display, with or without a locale
+- Parsing date strings and validating what came back
+- Arithmetic — adding and subtracting days, months, years, business days
+- Period boundaries, and generating date ranges for calendars
+- Comparisons, interval containment and overlap detection
+- Relative and duration phrasing ("2 hours ago", "5 months 14 days")
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Simple date display - use `Intl.DateTimeFormat` (zero bundle cost)
-- Very simple operations - native `Date` may suffice
-- Complex recurring dates - use `rrule.js` alongside
-- Future projects with Temporal API browser support
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Formatting, parsing, arithmetic, boundaries, preset ranges
-- [examples/timezone.md](examples/timezone.md) - v4 TZDate, v3 date-fns-tz, DST handling, UTC operations
-- [examples/i18n.md](examples/i18n.md) - Locale setup, locale-aware formatting, week start days
-- [examples/relative.md](examples/relative.md) - Relative time, duration formatting, smart date display
-- [examples/comparison.md](examples/comparison.md) - Comparisons, intervals, overlap detection, validation
-- [reference.md](reference.md) - Decision frameworks, migration guides, anti-patterns, quick reference
+- Display-only formatting with no arithmetic — the platform's own `Intl.DateTimeFormat` covers it at zero bundle cost, and a runtime that ships the `Temporal` standard makes most of this library optional
+- Recurrence rules — expanding a repeating event into occurrences is a separate concern; date-fns operates on the instants that expansion produces
+- The tz database itself — the companion packages read the runtime's IANA data rather than bundling their own
 
 ---
 
 <philosophy>
 
-## Philosophy
+Functions, not methods. There is no chainable wrapper object: `format(date, "PP")` takes a `Date`
+and returns a string, `addDays(date, 7)` takes a `Date` and returns a new `Date`. That is what makes
+the library tree-shakeable — a bundler can drop the 200 functions you did not import — and it is
+what makes every operation testable in isolation.
 
-date-fns is a **modular, functional** date utility library. Each function is independent, enabling tree-shaking to include only what you use. All functions are **pure** - they return new Date objects rather than mutating inputs. This makes date operations predictable and testable.
-
-**Key principle:** Import what you need, let bundlers remove the rest. A simple `format` import adds ~2KB, not the entire 80KB library.
-
-```typescript
-// Tree-shakeable - only includes format and parseISO
-import { format, parseISO } from "date-fns";
-
-// Format constant at module level
-const DATE_DISPLAY_FORMAT = "MMMM d, yyyy";
-
-const date = parseISO("2026-01-15");
-const display = format(date, DATE_DISPLAY_FORMAT); // "January 15, 2026"
-```
-
-**v3+ is 100% TypeScript** with built-in type definitions. No `@types/date-fns` needed.
+Two consequences worth holding: composition reads inside-out (`format(startOfMonth(addDays(d, 7)), F)`),
+and there is no ambient configuration, so a locale or a timezone reaches a call only as an option
+you pass.
 
 </philosophy>
 
@@ -84,333 +90,145 @@ const display = format(date, DATE_DISPLAY_FORMAT); // "January 15, 2026"
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Format Tokens (Unicode TR35)
+### Pattern 1: Format tokens are Unicode TR35
 
-date-fns uses Unicode Technical Standard #35 format tokens. These **differ from Moment.js** (`yyyy` not `YYYY`, `dd` not `DD`, `EEEE` not `dddd`).
+Tokens follow Unicode Technical Standard #35, which differs from Moment: `yyyy` not `YYYY`, `dd` not
+`DD`, `EEEE` not `dddd`. A Moment token is not an error — it produces a different value.
 
 ```typescript
 import { format } from "date-fns";
-
-// Define format constants at module level
-const ISO_DATE_FORMAT = "yyyy-MM-dd";
-const DISPLAY_DATE_FORMAT = "MMMM d, yyyy";
-const DISPLAY_DATETIME_FORMAT = "MMMM d, yyyy 'at' h:mm a";
 
 const date = new Date(2026, 0, 15, 14, 30, 0);
 
-format(date, ISO_DATE_FORMAT); // "2026-01-15"
-format(date, DISPLAY_DATE_FORMAT); // "January 15, 2026"
-format(date, DISPLAY_DATETIME_FORMAT); // "January 15, 2026 at 2:30 PM"
+format(date, "yyyy-MM-dd"); // "2026-01-15"
+format(date, "MMMM d, yyyy 'at' h:mm a"); // "January 15, 2026 at 2:30 PM"
 format(date, "EEEE"); // "Thursday"
-format(date, "h:mm a"); // "2:30 PM"
 ```
 
-See [reference.md](reference.md) for the full format token table.
-
-**Why good:** named constants make format strings reusable and discoverable, Unicode tokens are standard across date libraries
+Full token table: [reference.md](reference.md). Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Locale-Aware Format Shortcuts
+### Pattern 2: Locale-aware format shortcuts
 
-Use `P`, `PP`, `PPP`, `PPPP` for locale-aware date formatting without specifying exact format.
+`P`, `PP`, `PPP`, `PPPP` (and `p`, `pp` for time) render the locale's own conventions, so the same
+call reads correctly in every region. A hardcoded `MM/dd/yyyy` is US-only.
 
 ```typescript
 import { format } from "date-fns";
-import { enUS, de, ja, fr } from "date-fns/locale";
+import { enUS, de, ja } from "date-fns/locale";
 
-const date = new Date(2026, 0, 15);
-
-// ✅ Good Example - Locale-aware formatting
-// Short date
 format(date, "P", { locale: enUS }); // "01/15/2026"
 format(date, "P", { locale: de }); // "15.01.2026"
 format(date, "P", { locale: ja }); // "2026/01/15"
-
-// Medium date
-format(date, "PP", { locale: enUS }); // "Jan 15, 2026"
-format(date, "PP", { locale: de }); // "15. Jan. 2026"
-
-// Long date
-format(date, "PPP", { locale: enUS }); // "January 15th, 2026"
-format(date, "PPP", { locale: fr }); // "15 janvier 2026"
-
-// Full date
-format(date, "PPPP", { locale: enUS }); // "Thursday, January 15th, 2026"
-format(date, "PPPP", { locale: ja }); // "2026年1月15日木曜日"
-
-// Time shortcuts
-format(date, "p", { locale: enUS }); // "12:00 AM"
-format(date, "pp", { locale: enUS }); // "12:00:00 AM"
-
-// Combined date and time
-format(date, "PPpp", { locale: enUS }); // "Jan 15, 2026, 12:00:00 AM"
+format(date, "PPPP", { locale: de }); // "Donnerstag, 15. Januar 2026"
 ```
 
-**Why good:** `P`/`PP`/`PPP` adapt to locale conventions automatically, users see dates in familiar format for their region
-
-```typescript
-// ❌ Bad Example - Hardcoded format ignores locale
-format(date, "MM/dd/yyyy"); // "01/15/2026" - wrong for most of world!
-```
-
-**Why bad:** hardcoded MM/dd/yyyy format is US-specific, confusing for European and Asian users who expect different order
+Full code: [examples/i18n.md](examples/i18n.md)
 
 ---
 
-### Pattern 3: Safe Parsing with parseISO
+### Pattern 3: Parse, then validate
 
-Use `parseISO` for ISO 8601 strings. Use `parse` for custom formats.
-
-```typescript
-import { parseISO, parse, isValid } from "date-fns";
-
-// ✅ Good - parseISO for ISO strings
-const date = parseISO("2026-01-15T14:30:00Z");
-
-// ✅ Good - parse for custom formats (3rd arg is reference date)
-const CUSTOM_DATE_FORMAT = "dd/MM/yyyy";
-const customDate = parse("15/01/2026", CUSTOM_DATE_FORMAT, new Date());
-
-// Always validate parsed dates
-if (!isValid(date)) {
-  /* handle invalid */
-}
-```
-
-**Why good:** parseISO handles all ISO 8601 variants, isValid catches invalid dates
+`parseISO` for ISO 8601, `parse` for a custom format with a reference date as the third argument.
+Neither throws — validate before use. Round-tripping through `format` additionally rejects dates
+that parsed but do not exist, such as Feb 30.
 
 ```typescript
-// ❌ Bad - Using Date constructor
-const date1 = new Date("2026-01-15"); // Browser-inconsistent!
-const date2 = new Date("01/15/2026"); // May fail in non-US browsers
+import { parseISO, parse, isValid, format } from "date-fns";
+
+const fromApi = parseISO("2026-01-15T14:30:00Z");
+const fromUser = parse("15/01/2026", "dd/MM/yyyy", new Date());
+
+if (!isValid(fromUser)) return null;
+if (format(fromUser, "dd/MM/yyyy") !== "15/01/2026") return null; // Feb 30 etc.
 ```
 
-**Why bad:** `new Date(string)` parsing varies by browser and locale
-
-See [examples/core.md](examples/core.md) for strict round-trip parsing that catches invalid dates like Feb 30.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Date Arithmetic
+### Pattern 4: Arithmetic returns new dates
 
-Use pure functions for date manipulation. All return new Date objects.
-
-```typescript
-import {
-  addDays,
-  addMonths,
-  addYears,
-  subDays,
-  subMonths,
-  subYears,
-  addHours,
-  addMinutes,
-} from "date-fns";
-
-// Duration constants
-const WEEK_IN_DAYS = 7;
-const BILLING_CYCLE_MONTHS = 1;
-const TRIAL_PERIOD_DAYS = 14;
-
-const date = new Date(2026, 0, 15);
-
-// ✅ Good Example - Pure functions return new dates
-const nextWeek = addDays(date, WEEK_IN_DAYS); // Jan 22, 2026
-const nextMonth = addMonths(date, BILLING_CYCLE_MONTHS); // Feb 15, 2026
-const nextYear = addYears(date, 1); // Jan 15, 2027
-
-const lastWeek = subDays(date, WEEK_IN_DAYS); // Jan 8, 2026
-const trialEnd = addDays(date, TRIAL_PERIOD_DAYS); // Jan 29, 2026
-
-// Chain operations
-const twoWeeksFromNextMonth = addDays(addMonths(date, 1), WEEK_IN_DAYS * 2);
-
-// Original date is unchanged
-console.log(date); // Still Jan 15, 2026
-```
-
-**Why good:** pure functions are predictable and testable, original date unchanged, constants document business logic
+Every `add*` and `sub*` function leaves its input untouched, so a date held in state or passed as a
+prop is safe to compute from.
 
 ```typescript
-// ❌ Bad Example - Mutating dates
-const date = new Date(2026, 0, 15);
-date.setDate(date.getDate() + 7); // Mutates original!
-// Original date is now changed - causes bugs in shared references
+import { addDays, addMonths, subDays } from "date-fns";
+
+const trialEnd = addDays(signupDate, 14);
+const nextBilling = addMonths(signupDate, 1);
+const warnAt = subDays(trialEnd, 7);
+// signupDate is unchanged
 ```
 
-**Why bad:** mutation creates side effects, especially problematic when date is passed as prop or stored in state
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Date Boundaries
+### Pattern 5: Period boundaries
 
-Use boundary functions for consistent start/end of periods.
+`startOf*` / `endOf*` handle month lengths, leap years and week-start conventions, and give the
+inclusive ranges a `>= start AND <= end` filter needs. `endOfDay` is `23:59:59.999`, not midnight.
 
 ```typescript
 import {
   startOfDay,
   endOfDay,
   startOfWeek,
-  endOfWeek,
   startOfMonth,
   endOfMonth,
-  startOfQuarter,
-  endOfQuarter,
-  startOfYear,
-  endOfYear,
 } from "date-fns";
 
-const date = new Date(2026, 0, 15, 14, 30, 0);
-
-// ✅ Good Example - Boundary functions for consistent ranges
-const dayStart = startOfDay(date); // Jan 15, 2026 00:00:00
-const dayEnd = endOfDay(date); // Jan 15, 2026 23:59:59.999
-
-// Week boundaries (weekStartsOn: 1 = Monday)
-const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Jan 13, 2026
-const weekEnd = endOfWeek(date, { weekStartsOn: 1 }); // Jan 19, 2026
-
-const monthStart = startOfMonth(date); // Jan 1, 2026
-const monthEnd = endOfMonth(date); // Jan 31, 2026 23:59:59.999
+const today = { start: startOfDay(date), end: endOfDay(date) };
+const thisMonth = { start: startOfMonth(date), end: endOfMonth(date) };
+const isoWeekStart = startOfWeek(date, { weekStartsOn: 1 }); // Monday
 ```
 
-**Why good:** boundary functions handle edge cases (month lengths, leap years), consistent for database queries and filtering
-
-See [examples/core.md](examples/core.md) for range generation utilities (getMonthRange, preset ranges).
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 6: Date Comparisons
+### Pattern 6: Comparison functions over timestamp maths
 
-Use comparison functions instead of manual timestamp comparisons.
-
-```typescript
-import {
-  isAfter,
-  isBefore,
-  isEqual,
-  isSameDay,
-  isSameMonth,
-  isSameYear,
-  isWithinInterval,
-  isToday,
-  isPast,
-  isFuture,
-  isWeekend,
-} from "date-fns";
-
-const date1 = new Date(2026, 0, 15);
-const date2 = new Date(2026, 0, 20);
-
-// ✅ Good Example - Semantic comparison functions
-const isLater = isAfter(date2, date1); // true
-const isEarlier = isBefore(date1, date2); // true
-const areSame = isEqual(date1, date1); // true
-
-// Same period checks (ignore time)
-const sameDay = isSameDay(date1, date1); // true
-const sameMonth = isSameMonth(date1, date2); // true (both January)
-const sameYear = isSameYear(date1, date2); // true (both 2026)
-
-// Range check
-const isInRange = isWithinInterval(new Date(2026, 0, 17), {
-  start: date1,
-  end: date2,
-}); // true
-
-// Convenience checks
-const todayCheck = isToday(new Date()); // true
-const pastCheck = isPast(date1); // depends on current date
-const futureCheck = isFuture(date2); // depends on current date
-const weekendCheck = isWeekend(date1); // false (Thursday)
-```
-
-**Why good:** semantic function names make code readable, handles edge cases like time zone differences
+`isSameDay`, `isWithinInterval` and friends express the intent and handle the unit-truncation the
+manual version gets wrong.
 
 ```typescript
-// ❌ Bad Example - Manual timestamp comparison
-const isLater = date2.getTime() > date1.getTime();
-const sameDay =
-  date1.getFullYear() === date2.getFullYear() &&
-  date1.getMonth() === date2.getMonth() &&
-  date1.getDate() === date2.getDate();
+import { isAfter, isSameDay, isWithinInterval, isWeekend } from "date-fns";
+
+isAfter(end, start);
+isSameDay(a, b); // ignores time-of-day
+isWithinInterval(candidate, { start, end }); // endpoints sorted, so order is not checked
+isWeekend(date);
 ```
 
-**Why bad:** verbose, error-prone, doesn't handle edge cases, hard to read intent
+Full code: [examples/comparison.md](examples/comparison.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Version Notes
-
-- **v4+** (current, 4.1.0): Uses `@date-fns/tz` for timezone handling with `TZDate` class and `tz()` helper
-- **v3.x**: Uses `date-fns-tz` package with `formatInTimeZone`, `toZonedTime`, `fromZonedTime`
-- v4 is ESM-first; constants must be imported from `date-fns/constants`
-- v4 returns Invalid Date/NaN instead of throwing errors for invalid inputs
-- All versions are 100% TypeScript with built-in types
-
-**v4 Bundle Size:**
-
-- Core date-fns function: ~2KB each (tree-shakeable)
-- `TZDate`: 1.2 KB | `TZDateMini`: 916 B (use Mini for internal calculations)
-- `UTCDate`: 504 B | `UTCDateMini`: 239 B (use Mini for internal calculations)
-
-**v4 Timezone Functions (`@date-fns/tz`):**
-
-- `tz()`: Creates timezone context for the `in` option
-- `tzName()`: Returns human-readable timezone name (short, long, generic formats)
-- `tzScan()`: Detects DST transitions within a date range
-- `tzOffset()`: Returns UTC offset in minutes
-- `.withTimeZone()`: TZDate method for timezone conversion
-
-**v4 Core Functions (from `date-fns`):**
-
-- `transpose()`: Converts dates between timezones (replaces `toZonedTime`/`fromZonedTime`)
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-- **`new Date(string)` for parsing** - Browser-inconsistent, use `parseISO` or `parse`
-- **Mutating dates** - `date.setDate()` causes side effects, use pure functions like `addDays`
-- **`import *` from date-fns** - Defeats tree-shaking, import individual functions
-- **Magic format strings** - `format(date, 'yyyy-MM-dd')` scattered in code, use named constants
-- **Missing `isValid` check** - Parsed dates can be invalid, always validate after parsing
-- **Using Moment.js tokens** - `YYYY`/`DD` (Moment) vs `yyyy`/`dd` (date-fns)
-- **Hardcoded locale formats** - `MM/dd/yyyy` is US-only, use `P`/`PP`/`PPP` with locale
-- **`isWithinInterval` with inverted start/end** - Throws error if start > end
-- **Month boundary surprises** - Jan 31 + 1 month = Feb 28, not March 3
+**Breaks at runtime:**
 
-See [reference.md](reference.md) for the complete red flags and gotchas list.
+- Formatting an unvalidated parse — `format` on an Invalid Date throws, and in v4 the parse itself gave no warning. Gate on `isValid`.
+- `parse` called with two arguments — the reference date is required, and its year/month supply anything the format string omits.
+- `format(date, "z")` on a `UTCDate` — the `z` token needs a native `Date`.
+
+**Surprising behaviour:**
+
+- An interval with `start` later than `end` is not rejected — since v3 `isWithinInterval` and `areIntervalsOverlapping` sort the endpoints and `eachDayOfInterval` returns the days reversed, so a range the user got backwards answers plausibly instead of failing. Order the interval yourself.
+- A pasted Moment format string produces a wrong value rather than an error — the commonest defect in a migrated codebase.
+- `new Date("2026-01-15")` is UTC midnight, because a date-only ISO string is specified as UTC; every other string shape is implementation-defined, so the same input can shift a whole day between runtimes.
+- `addMonths(jan31, 1)` is Feb 28, and `addYears(feb29, 1)` is Feb 28 — the day clamps to the target month's length.
+- `differenceIn*` truncates: 45 days is `differenceInMonths` 1, not 1.5. v4 truncates toward zero where v3 floored, which changes negative results.
+- Week start varies by region and defaults to Sunday — pass `weekStartsOn` or a locale for anything user-facing.
+- Constants such as `daysInYear` import from `date-fns/constants`, not from the package root.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use `parseISO()` for ISO 8601 strings - NEVER use `new Date(string)` which has browser inconsistencies)**
-
-**(You MUST import only needed functions - NEVER use `import * as dateFns` which defeats tree-shaking)**
-
-**(You MUST use pure functions that return new dates - NEVER mutate dates with `setDate()` or similar)**
-
-**(You MUST use named constants for format strings and durations - NO magic strings like 'yyyy-MM-dd' scattered in code)**
-
-**Failure to follow these rules will cause browser inconsistencies, bundle bloat, and mutation bugs.**
-
-</critical_reminders>

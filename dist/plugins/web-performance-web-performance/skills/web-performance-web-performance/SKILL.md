@@ -5,62 +5,61 @@ description: Bundle optimization, render performance, Core Web Vitals
 
 # Web Performance Patterns
 
-> **Quick Guide:** Bundle budgets: < 200KB main bundle gzipped. Core Web Vitals: LCP < 2.5s, INP < 200ms, CLS < 0.1. Profile before optimizing -- measure actual bottlenecks, don't guess. Lazy load routes and heavy libraries. Use React Compiler (React 19+) for automatic memoization; manual memo only when profiling proves a bottleneck. Monitor real users with web-vitals library, not just Lighthouse.
+> **Quick Guide:** Three numbers decide whether a page is fast: LCP under 2.5s, INP under 200ms, CLS under 0.1. Bundle size is the lever that moves the first two, so budget it — around 200 KB gzipped for the main bundle — and split by route. Measure before optimising and measure again in production, because a lab score and a real user's session disagree. With the React Compiler enabled, memoisation is automatic; a hand-written `useMemo` needs a profile behind it.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — memoisation, virtual scrolling, debouncing
+- [examples/code-splitting.md](examples/code-splitting.md) — lazy routes, dynamic imports, tree shaking, budget enforcement
+- [examples/web-vitals.md](examples/web-vitals.md) — LCP, INP and CLS patterns, and field measurement
+- [examples/image-optimization.md](examples/image-optimization.md) — formats, responsive sources, lazy loading
+- [reference.md](reference.md) — threshold and budget tables, format comparison
+
+---
+
+## Which path applies
+
+- **The bundle is the problem** — a slow first load, a large main chunk, a heavy dependency; go to
+  [examples/code-splitting.md](examples/code-splitting.md).
+- **The runtime is the problem** — a janky list, a slow interaction, a re-render storm; go to
+  [examples/core.md](examples/core.md).
+- **Nothing is measured yet** — instrument first, because the two above have different answers and
+  guessing picks the wrong one; go to [examples/web-vitals.md](examples/web-vitals.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Optimizing Performance
+## Before optimising performance
 
-**(You MUST profile BEFORE optimizing - measure actual bottlenecks with browser DevTools, framework profiler, or Lighthouse)**
+**Profile first, and name the bottleneck before changing anything.** Every optimisation costs readability, and one applied to code that was never slow buys nothing back — a profiler, a bundle analysis, or a field measurement is what turns a guess into a target.
 
-**(You MUST set performance budgets BEFORE building features - bundle size limits and Core Web Vitals targets)**
+**Write the budgets down before the features.** A bundle limit and Core Web Vitals targets that exist in CI are a decision every future dependency is measured against; added afterwards, they only describe how far past the line you already are.
 
-**(You MUST use named constants for ALL performance thresholds - no magic numbers like `200` or `2.5`)**
+**Measure real sessions, not just a lab run.** Lab conditions have one device, one network and a cold cache; field data has the distribution of devices your users actually hold, and the two disagree most on exactly the pages that matter.
 
-**(You MUST monitor Core Web Vitals in production - track LCP, INP, CLS for real users, not just lab metrics)**
-
-**(You MUST lazy load route components and heavy libraries - code splitting prevents large initial bundles)**
+**Load route code when the route is reached.** Splitting on route boundaries is the single largest reduction available to most applications, because it stops every user paying for the pages they never open.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Core Web Vitals, bundle size optimization, LCP, INP, CLS, lazy loading, code splitting, memoization, React Compiler, performance monitoring, web-vitals library, bundle budget, virtualization, react-window, TanStack Virtual
+**Auto-detection:** Core Web Vitals, LCP, INP, CLS, TTFB, bundle size, bundle budget, code splitting, lazy loading, tree shaking, memoization, React Compiler, virtualization, virtual scrolling, debounce, throttle, performance budget, field measurement, RUM
 
-**When to use:**
+**Applies to:**
 
-- Optimizing Core Web Vitals (LCP < 2.5s, INP < 200ms, CLS < 0.1)
-- Setting and enforcing bundle size budgets (< 200KB main bundle)
-- Implementing runtime performance patterns (strategic memo, lazy loading, virtualization)
-- Monitoring performance with web-vitals library in production
-- Code splitting and tree shaking to reduce initial bundle
+- Core Web Vitals: what each measures, and what moves it
+- Bundle budgets, and enforcing them in CI
+- Code splitting, dynamic import and tree shaking
+- Render cost: memoisation, virtualisation, debouncing, keeping work off the main thread
+- Image weight and format selection
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Before measuring (premature optimization adds complexity without benefit)
-- For simple components (memoizing cheap renders adds overhead)
-- Internal admin tools with < 10 users (ROI too low)
-- Prototypes and MVPs (optimize after validating product-market fit)
-
-**Key patterns covered:**
-
-- Core Web Vitals targets and improvement strategies (LCP, INP, CLS)
-- Bundle size budgets (< 200KB main, < 500KB total initial load)
-- Strategic memoization (profile first; React Compiler handles most cases)
-- Code splitting (route-based lazy loading, dynamic imports, tree shaking)
-- Image optimization (modern formats, lazy loading, responsive images)
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - React memoization, virtual scrolling, debouncing
-- [examples/code-splitting.md](examples/code-splitting.md) - Lazy loading, tree shaking, bundle budgets
-- [examples/web-vitals.md](examples/web-vitals.md) - LCP, INP, CLS patterns and monitoring
-- [examples/image-optimization.md](examples/image-optimization.md) - Image formats, lazy loading, responsive images
-- [reference.md](reference.md) - Decision frameworks and anti-patterns
+- Bundler configuration — chunking strategy and analysis output belong to whichever bundler is in use; this skill decides what the numbers should be.
+- Server response time — TTFB is upstream of everything here, and caching, compression and origin latency are the serving layer's.
+- Framework-level rendering — whether a page is server-rendered, streamed or static is a framework decision, and each moves LCP differently.
+- Data fetching and caching — a request that repeats needlessly is a fetching-layer concern, though it surfaces here as INP.
 
 ---
 
@@ -68,148 +67,174 @@ description: Bundle optimization, render performance, Core Web Vitals
 
 ## Philosophy
 
-Performance is a feature, not an afterthought. Fast applications improve user experience, conversion rates, and SEO rankings. Performance optimization requires measurement before action, budgets before building, and monitoring in production.
+Performance work goes wrong in one of two ways: optimising what was never slow, or shipping features
+against no budget until the page is slow everywhere at once. Both are failures of measurement rather
+than of technique.
 
-**Core principles:**
-
-- **Measure first, optimize second** - Profile actual bottlenecks, don't guess
-- **Set budgets early** - Define bundle size limits and Core Web Vitals targets before building
-- **Monitor real users** - Lab metrics (Lighthouse) differ from real-world performance (RUM)
-- **Optimize strategically** - Memoize expensive operations, not everything
-- **Lazy load by default** - Load code when needed, not upfront
+So the order is fixed — budget, then build, then measure, then optimise what the measurement named.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Where to spend the effort
+
+```
+Is the problem measured?
+├─ NO → Measure it. A profiler for runtime, a bundle report for size,
+│        field data for what users actually experience.
+└─ YES → Is it load or interaction?
+    ├─ Load (LCP, first paint) → How big is the initial download?
+    │   ├─ Over budget → Split by route, defer heavy dependencies,
+    │   │                 drop or replace the largest one
+    │   └─ Within budget → It is the critical path: preload the LCP image,
+    │                      remove render-blocking resources, cut TTFB
+    └─ Interaction (INP, jank) → What is holding the main thread?
+        ├─ A long task → Break it up, or move it to a worker
+        ├─ Re-rendering → Profile the tree, then memoise what the profile named
+        └─ Too many DOM nodes → Virtualise the list
+```
+
+**Memoise or not:** with the React Compiler the answer is usually "the compiler already did".
+Without it, memoise a component that re-renders often with unchanged props and costs real time to
+render — and nothing else, because the comparison itself is not free.
+
+**Virtualise or not:** past roughly a hundred rows the DOM is the cost and virtualisation wins. Below
+that it loses, and it costs you find-in-page and native scroll anchoring either way.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Bundle Size Budgets
+### Pattern 1: Bundle budgets
 
-Set and enforce bundle size limits to prevent bloat. Main bundle should be < 200KB gzipped for fast downloads on 3G networks.
+Budgets are per artifact and enforced in CI, so a dependency that doubles a chunk fails the pull
+request rather than being discovered in production.
 
 ```typescript
-// constants/bundle-budgets.ts
 export const BUNDLE_SIZE_BUDGETS_KB = {
   MAIN_BUNDLE_GZIPPED: 200,
   VENDOR_BUNDLE_GZIPPED: 150,
   ROUTE_BUNDLE_GZIPPED: 100,
   TOTAL_INITIAL_LOAD_GZIPPED: 500,
-  MAIN_CSS_GZIPPED: 50,
-  CRITICAL_CSS_INLINE: 14, // Fits in first TCP packet
+  CRITICAL_CSS_INLINE: 14, // fits in the first TCP round trip
 } as const;
 ```
 
-**Why these limits:** 200 KB ≈ 1 second download on 3G, faster Time to Interactive (TTI), better mobile performance
+The numbers come from download time on a slow connection rather than from taste — the table and its
+reasoning are in [reference.md](reference.md), and enforcement is in
+[examples/code-splitting.md](examples/code-splitting.md).
 
-**Recommended budgets:**
+### Pattern 2: Core Web Vitals
 
-- **Main bundle**: < 200 KB gzipped
-- **Vendor bundle**: < 150 KB gzipped
-- **Route bundles**: < 100 KB each gzipped
-- **Total initial load**: < 500 KB gzipped
-- **Main CSS**: < 50 KB gzipped
-- **Critical CSS**: < 14 KB inlined (fits in first TCP packet)
+Each metric has a different cause, so a single "make it faster" task rarely moves more than one.
 
-For enforcement examples, see [examples/code-splitting.md](examples/code-splitting.md).
+| Metric | Measures         | Usually caused by                                               |
+| ------ | ---------------- | --------------------------------------------------------------- |
+| LCP    | Loading          | An unoptimised hero image, render-blocking CSS or JS, slow TTFB |
+| INP    | Interactivity    | Long tasks on the main thread, too much JavaScript              |
+| CLS    | Visual stability | Images without dimensions, late-injected content, font swap     |
 
----
+Thresholds and remedies are in [reference.md](reference.md); patterns in
+[examples/web-vitals.md](examples/web-vitals.md).
 
-### Pattern 2: Core Web Vitals Optimization
+### Pattern 3: Route-level code splitting
 
-Optimize for Google's Core Web Vitals: LCP < 2.5s, INP < 200ms, CLS < 0.1. These metrics impact SEO and user experience.
+Each lazy route becomes its own chunk, fetched when the route is reached.
 
 ```typescript
-// constants/web-vitals.ts
-export const CORE_WEB_VITALS_THRESHOLDS = {
-  LCP_SECONDS: 2.5, // Largest Contentful Paint
-  INP_MS: 200, // Interaction to Next Paint
-  CLS_SCORE: 0.1, // Cumulative Layout Shift
-  FCP_SECONDS: 1.8, // First Contentful Paint
-  TTI_SECONDS: 3.8, // Time to Interactive
-  TBT_MS: 300, // Total Blocking Time
-  TTFB_MS: 800, // Time to First Byte
-} as const;
+import { lazy, Suspense } from "react";
+
+const Dashboard = lazy(() => import("./pages/dashboard"));
+const Reports = lazy(() => import("./pages/reports"));
+
+// Whatever the router hands you, the lazy component renders under one Suspense boundary
+<Suspense fallback={<PageLoader />}>
+  {currentPage === "dashboard" ? <Dashboard /> : <Reports />}
+</Suspense>;
 ```
 
-#### LCP (Largest Contentful Paint): < 2.5s
+Split routes, heavy feature modules, dialogs and below-fold sections. Leave above-fold components,
+error boundaries and loading states in the main bundle — lazy-loading those adds a round trip to the
+critical path.
 
-Measures loading performance -- when the largest visible element renders.
+Full code: [examples/code-splitting.md](examples/code-splitting.md)
 
-**How to improve:** Optimize images (modern formats, preload hero images), minimize render-blocking resources, use CDN for static assets, SSR or SSG for critical content.
+### Pattern 4: Deferring a heavy dependency
 
-#### INP (Interaction to Next Paint): < 200ms
-
-Measures interactivity across ALL user interactions (replaced FID in March 2024). Includes input delay, processing time, and presentation delay.
-
-**How to improve:** Minimize JavaScript execution time, code split to load less JS upfront, use web workers for heavy computation, break up long tasks (> 50ms) with `scheduler.yield()` or `setTimeout`.
-
-#### CLS (Cumulative Layout Shift): < 0.1
-
-Measures visual stability -- prevents unexpected layout shifts.
-
-**How to improve:** Set explicit image/video dimensions, reserve space for dynamic content (ads, embeds), avoid injecting content above existing content, use `font-display: swap` with `size-adjust`.
-
-For detailed examples and monitoring setup, see [examples/web-vitals.md](examples/web-vitals.md).
-
----
-
-### Pattern 3: Code Splitting and Lazy Loading
-
-Lazy load route components and heavy libraries. Code splitting keeps the initial bundle small by loading code on demand.
+A large library that only one interaction needs is imported inside that interaction rather than at
+the top of the file.
 
 ```typescript
-import { lazy, Suspense } from 'react';
-
-// Route-based splitting - each route is a separate chunk
-const Dashboard = lazy(() => import('./pages/dashboard'));
-const Reports = lazy(() => import('./pages/reports'));
-
-export function App() {
-  return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/reports" element={<Reports />} />
-      </Routes>
-    </Suspense>
-  );
+// "chart-library" stands for whichever heavy dependency the path actually needs
+async function renderChart(container: HTMLElement, data: ChartData) {
+  const { createChart } = await import("chart-library");
+  return createChart(container, data);
 }
 ```
 
-**Why good:** Splits bundle by route, loads components on demand, users only download what they navigate to
+The saving is the library's whole weight for every user who never triggers the path.
 
-**When to lazy load:** Route components, heavy feature modules, modals/dialogs, below-fold content
+### Pattern 5: Strategic memoisation
 
-**When NOT to lazy load:** Above-fold components, error boundaries, loading states
-
-For tree shaking and bundle enforcement, see [examples/code-splitting.md](examples/code-splitting.md).
-
----
-
-### Pattern 4: Strategic Memoization
-
-Profile before memoizing. React Compiler (v1.0, Oct 2025) auto-memoizes in most cases. Manual memo only when profiling proves a bottleneck.
+Profile first. Under the React Compiler this is mostly already done for you.
 
 ```typescript
-// Only memoize when profiling shows > 5ms render time
-const EXPENSIVE_RENDER_MS = 5;
-
-// ✅ Expensive calculation with large dataset
+// Worth it: sorting thousands of rows on every keystroke elsewhere in the tree
 const sortedRows = useMemo(
   () => [...rows].sort((a, b) => compareValues(a[sortColumn], b[sortColumn])),
   [rows, sortColumn],
 );
 
-// ❌ Trivial calculation - memo overhead exceeds cost
+// Not worth it: the comparison costs more than the work
 const doubled = useMemo(() => value * 2, [value]);
 ```
 
-**React Compiler (React 19+):** Automatically memoizes components, values, and functions at build time. Manual `useMemo`/`useCallback`/`React.memo` rarely needed. Only add manual memo for: third-party interop, non-pure computations, or when profiling shows the compiler missed an optimization.
+Full code: [examples/core.md](examples/core.md)
 
-For complete memoization patterns, see [examples/core.md](examples/core.md).
+### Pattern 6: Virtualising long lists
+
+Render the visible window rather than the whole collection, so the DOM stays a constant size however
+long the list grows.
+
+```typescript
+const visible = rows.slice(startIndex, endIndex);
+
+<div style={{ height: rows.length * ROW_HEIGHT_PX }}>
+  <div style={{ transform: `translateY(${startIndex * ROW_HEIGHT_PX}px)` }}>
+    {visible.map((row) => (
+      <Row key={row.id} row={row} />
+    ))}
+  </div>
+</div>;
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 7: Debouncing input-driven work
+
+Run the expensive reaction after the typing stops, not on each keystroke. `useDebounced` below is a
+dozen lines of `useRef` and `setTimeout`, written out in full in [examples/core.md](examples/core.md).
+
+```typescript
+const debouncedSearch = useDebounced(performSearch, SEARCH_DEBOUNCE_MS);
+
+const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  setQuery(event.target.value);
+  debouncedSearch(event.target.value);
+};
+```
+
+Debounce when only the final value matters — search, autosave, validation. Throttle when the
+intermediate values matter but the rate does not — scroll, resize, pointer tracking.
+
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -217,54 +242,24 @@ For complete memoization patterns, see [examples/core.md](examples/core.md).
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- No performance budgets defined -- bundle sizes grow unnoticed, Core Web Vitals degrade
-- Memoizing everything without profiling -- adds overhead, increases complexity, premature optimization
-- Not lazy loading routes -- massive initial bundles, slow Time to Interactive
-- Importing entire libraries (`import _ from 'lodash'`) -- bundles unused code, prevents tree shaking
-- Not optimizing images -- images are 50%+ of page weight; modern formats reduce size 30-50%
-- Blocking main thread with heavy computation -- causes high INP, use web workers or break up long tasks
+- A lazily loaded component with no `Suspense` boundary above it — React throws rather than waiting.
+- An unstable dependency array on a memo hook — a fresh object or inline function each render means the memo never hits and you pay the comparison forever.
+- Lazy-loading an error boundary or a loading state — the thing meant to render during a failure is itself still downloading.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Not monitoring Core Web Vitals in production -- lab metrics differ from real users
-- Rendering 100+ items without virtualization -- DOM bloat, slow scrolling
-- No bundle size enforcement in CI -- regressions slip through code review
-- Using CommonJS imports (`require()`) -- prevents tree shaking
-
-**Gotchas & Edge Cases:**
-
-- `React.memo` uses shallow comparison -- deep object props always trigger re-render
-- `useMemo`/`useCallback` have overhead -- only use for expensive operations (> 5ms)
-- React Compiler (v1.0) handles memoization automatically -- manual memo is rarely needed
-- Lighthouse scores differ from real users -- always monitor RUM with web-vitals
-- Code splitting increases total bundle size slightly (runtime overhead) -- net win for initial load
-- Virtual scrolling breaks browser find-in-page (Cmd+F)
-- Lazy loading doesn't work in SSR -- components load on client mount
-- AVIF support is ~95% (2026) -- always provide WebP fallbacks
-- Bundle size budgets should account for gzip/brotli compression
+- `React.memo` compares shallowly, so a prop that is a new object each render defeats it entirely.
+- Memoisation costs a comparison and a retained reference; below a few milliseconds of work it is a net loss.
+- Splitting adds bytes overall — more chunks and more runtime — and still wins on first load.
+- A lab score and field data measure different populations; a green audit with a red INP in the field is the normal case, not a contradiction.
+- Virtual scrolling breaks in-page find, anchor links into off-screen rows, and native scroll restoration.
+- Lazy-loaded components are absent from server-rendered HTML, so anything above the fold shifts when it arrives.
+- A namespace import (`import _ from "…"`) and a `require()` both defeat tree shaking; so does a barrel file that re-exports a whole directory.
+- Budgets are meaningless without naming the compression — a 200 KB budget is three different limits raw, gzipped and brotli-compressed.
+- AVIF is not universal; a `<picture>` without a WebP or JPEG source will fail to render for some users.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST profile BEFORE optimizing - measure actual bottlenecks with browser DevTools, framework profiler, or Lighthouse)**
-
-**(You MUST set performance budgets BEFORE building features - bundle size limits and Core Web Vitals targets)**
-
-**(You MUST use named constants for ALL performance thresholds - no magic numbers like `200` or `2.5`)**
-
-**(You MUST monitor Core Web Vitals in production - track LCP, INP, CLS for real users, not just lab metrics)**
-
-**(You MUST lazy load route components and heavy libraries - code splitting prevents large initial bundles)**
-
-**Failure to follow these rules will result in slow applications, poor Core Web Vitals, large bundles, and degraded user experience.**
-
-</critical_reminders>

@@ -77,10 +77,14 @@ import {
   ModalForm,
   ProFormText,
   ProFormSelect,
+  ProFormDigit,
+  ProFormMoney,
 } from "@ant-design/pro-components";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import { Button, App, Popconfirm } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+// Your own data layer
+import { fetchProducts, createProduct, deleteProduct } from "./product-api";
 
 interface ProductRecord {
   id: string;
@@ -91,8 +95,14 @@ interface ProductRecord {
   status: "active" | "draft" | "archived";
 }
 
-function ProductManagement() {
-  const actionRef = useRef<ActionType>();
+interface ProductManagementProps {
+  onEdit: (product: ProductRecord) => void;
+}
+
+function ProductManagement({ onEdit }: ProductManagementProps) {
+  // React 19's types require an initial argument, so the bare
+  // useRef<ActionType>() of older examples no longer compiles
+  const actionRef = useRef<ActionType | undefined>(undefined);
   const { message } = App.useApp();
 
   const columns: ProColumns<ProductRecord>[] = [
@@ -141,7 +151,7 @@ function ProductManagement() {
       valueType: "option",
       width: 180,
       render: (_, record) => [
-        <a key="edit" onClick={() => handleEdit(record)}>
+        <a key="edit" onClick={() => onEdit(record)}>
           Edit
         </a>,
         <Popconfirm
@@ -208,12 +218,12 @@ function ProductManagement() {
             ]}
             rules={[{ required: true }]}
           />
-          <ProFormText
+          <ProFormMoney
             name="price"
             label="Price"
             rules={[{ required: true }]}
           />
-          <ProFormText
+          <ProFormDigit
             name="stock"
             label="Stock"
             rules={[{ required: true }]}
@@ -237,6 +247,8 @@ import {
   ProFormSelect,
   StepsForm,
 } from "@ant-design/pro-components";
+// Your own data layer
+import { createProject } from "./project-api";
 
 function CreateProjectWizard() {
   return (

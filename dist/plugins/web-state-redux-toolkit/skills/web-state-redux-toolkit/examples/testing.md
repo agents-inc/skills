@@ -69,7 +69,7 @@ describe("todosSlice", () => {
 });
 ```
 
-**Why good:** Tests reducer in isolation, named constants for test data, tests all reducer actions, verifies immutability by checking new state
+**Why good:** the reducer is tested in isolation as a pure function, named constants carry the test data, and every action the slice declares has a case
 
 ---
 
@@ -77,7 +77,8 @@ describe("todosSlice", () => {
 
 ```typescript
 // store/slices/users-slice.test.ts
-// Using your test runner (describe, it, expect, mock/spy functions, beforeEach)
+// Using your test runner (describe, it, expect); `mockFn` stands for its
+// mock factory - vi.fn, jest.fn, mock.fn
 import { configureStore } from "@reduxjs/toolkit";
 import { fetchUsers, usersReducer } from "./users-slice";
 
@@ -87,12 +88,8 @@ const MOCK_USERS = [
 ];
 
 describe("users async thunks", () => {
-  beforeEach(() => {
-    // Reset mocks between tests
-  });
-
   it("should fetch users successfully", async () => {
-    // Mock fetch at network level using your test runner's mock API
+    // Mock fetch at the network level, not the thunk
     global.fetch = mockFn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(MOCK_USERS),
@@ -126,7 +123,9 @@ describe("users async thunks", () => {
 });
 ```
 
-**Why good:** Mock at network level not thunk level, test full store integration, named constants for mock data, tests both success and error paths
+**Why good:** mocking at the network level leaves the thunk's own lifecycle under test, a real store checks the reducer wiring too, and both the success and the failure path are covered.
+
+**Caveat:** `global.fetch` stays stubbed once assigned — restore it in your runner's teardown hook, or the next suite inherits it.
 
 ---
 
@@ -154,6 +153,12 @@ describe("todos selectors", () => {
     expect(result).toHaveLength(3);
   });
 
+  it("should return the same reference when the state is unchanged", () => {
+    const first = selectFilteredTodos(MOCK_STATE);
+    const second = selectFilteredTodos(MOCK_STATE);
+    expect(second).toBe(first); // memoised - a fresh array would fail this
+  });
+
   it("should select only active todos when filter is active", () => {
     const stateWithActiveFilter = {
       ...MOCK_STATE,
@@ -175,6 +180,6 @@ describe("todos selectors", () => {
 });
 ```
 
-**Why good:** Tests selector logic with mock state, verifies memoization behavior, named constants for test data
+**Why good:** the selectors are exercised against a plain mock state, and the reference-identity assertion is what actually proves memoisation — an unmemoised `items.filter(...)` returns a new array every call and re-renders every connected component.
 
 ---

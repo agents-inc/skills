@@ -1,12 +1,13 @@
-# VeeValidate - Dynamic Arrays
+# VeeValidate - Repeatable Field Groups
 
-> useFieldArray pattern for dynamic form fields. See [core.md](core.md) for basic form patterns.
+> `useFieldArray` for entries the user adds and removes. See [core.md](core.md) for the basic form.
 
-**Prerequisites:** Understand Basic Forms and Schema Validation from [core.md](core.md) and [validation.md](validation.md) first.
+**Prerequisites:** Pattern 1 from [core.md](core.md), and Pattern 6 from
+[validation.md](validation.md) for the array-validating examples.
 
 ---
 
-## Pattern 1: Basic useFieldArray
+## Pattern 9: Basic useFieldArray
 
 ### Good Example - Dynamic user list
 
@@ -45,7 +46,7 @@ const schema = toTypedSchema(
 
 const { handleSubmit, errors, defineField } = useForm<FormData>({
   validationSchema: schema,
-  // CRITICAL: Initialize array with at least one item
+  // An array key present here — undefined would throw when fields iterates
   initialValues: {
     teamName: "",
     users: DEFAULT_USERS,
@@ -83,7 +84,7 @@ const onSubmit = handleSubmit(async (values) => {
     <h3>Team Members</h3>
 
     <div v-for="(field, index) in fields" :key="field.key" class="user-row">
-      <!-- CRITICAL: Use field.key as iteration key, NOT index -->
+      <!-- field.key, not index — it survives insertion and reordering -->
       <input
         v-model="field.value.name"
         :name="`users[${index}].name`"
@@ -124,7 +125,7 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** field.key ensures correct DOM reconciliation on add/remove, schema validates both individual items and array length, initialValues prevents undefined array errors, named constants for MIN_USERS and DEFAULT_USERS, error paths match nested structure `users[${index}].name`
+**Why good:** field.key ensures correct DOM reconciliation on add/remove, schema validates both individual items and array length, error paths match the nested structure `users[${index}].name`
 
 ### Bad Example - Using index as key
 
@@ -155,7 +156,7 @@ const { fields, remove } = useFieldArray("users");
 
 ---
 
-## Pattern 2: Nested Field Arrays
+## Pattern 10: Nested Field Arrays
 
 Arrays within arrays.
 
@@ -289,7 +290,7 @@ const onSubmit = handleSubmit(async (values) => {
 
 ---
 
-## Pattern 3: Reorderable Field Array
+## Pattern 11: Reorderable Field Array
 
 Drag-and-drop style reordering.
 
@@ -397,11 +398,11 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** swap() for adjacent moves is simpler than move(), move() for arbitrary position changes, v-model.number converts select to number, sr-only class for screen reader accessibility
+**Why good:** swap() for adjacent moves is simpler than move(), move() for arbitrary position changes, v-model.number converts select to number
 
 ---
 
-## Pattern 4: Field Array with Validation Per Item
+## Pattern 12: Field Array with Validation Per Item
 
 ```vue
 <script setup lang="ts">
@@ -554,7 +555,7 @@ const onSubmit = handleSubmit(async (data) => {
 </template>
 ```
 
-**Why good:** individual field errors accessed via bracket notation `errors[\`items[${index}].field\`]`, array-level errors at `errors.items`, computed total reacts to value changes, v-model.number converts string inputs to numbers
+**Why good:** individual field errors accessed via bracket notation `errors[\`items[${index}].field\`]`, array-level errors at `errors.items`, v-model.number converts string inputs to numbers
 
 ---
 

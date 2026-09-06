@@ -1,27 +1,22 @@
-# Playwright E2E Testing - Page Objects
+# Playwright E2E Testing — Page Object Hierarchy
 
-> Advanced page object patterns with inheritance and composition. See [core.md](core.md) for foundational patterns.
-
-**Prerequisites**: Understand [Pattern 2: Page Object Model](core.md#pattern-2-page-object-model) from core examples first.
+> Inheritance and composition across page objects. See [core.md](core.md) for the basic shape this
+> builds on ([Pattern 2](core.md#pattern-2-page-object-model)).
 
 ---
 
-## Pattern: Complete Page Object Hierarchy
-
-### Base Page with Common Functionality
+## A base page for what every page shares
 
 ```typescript
 // tests/e2e/pages/base-page.ts
-import type { Page, Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export abstract class BasePage {
-  readonly page: Page;
   readonly header: Locator;
   readonly footer: Locator;
   readonly navMenu: Locator;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(readonly page: Page) {
     this.header = page.getByRole("banner");
     this.footer = page.getByRole("contentinfo");
     this.navMenu = page.getByRole("navigation");
@@ -32,17 +27,14 @@ export abstract class BasePage {
   }
 
   async expectToBeOnPage(urlPattern: string | RegExp) {
-    const { expect } = await import("@playwright/test");
     await expect(this.page).toHaveURL(urlPattern);
   }
 }
 ```
 
-### Extended Page Objects
-
 ```typescript
 // tests/e2e/pages/dashboard-page.ts
-import type { Page, Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { BasePage } from "./base-page";
 
 const DASHBOARD_URL = "/dashboard";
@@ -52,7 +44,6 @@ export class DashboardPage extends BasePage {
   readonly userMenu: Locator;
   readonly logoutButton: Locator;
   readonly statsCards: Locator;
-  readonly recentActivityList: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -60,9 +51,6 @@ export class DashboardPage extends BasePage {
     this.userMenu = page.getByRole("button", { name: /user menu/i });
     this.logoutButton = page.getByRole("menuitem", { name: /logout/i });
     this.statsCards = page.getByTestId("stats-card");
-    this.recentActivityList = page.getByRole("list", {
-      name: /recent activity/i,
-    });
   }
 
   async goto() {
@@ -74,15 +62,15 @@ export class DashboardPage extends BasePage {
     await this.logoutButton.click();
   }
 
-  async getStatsCardValue(cardTitle: string) {
-    const card = this.statsCards.filter({ hasText: cardTitle });
-    return card.getByTestId("card-value").textContent();
+  // Returns a locator rather than text: the caller can assert on it and get retries.
+  statsCardValue(cardTitle: string): Locator {
+    return this.statsCards
+      .filter({ hasText: cardTitle })
+      .getByTestId("card-value");
   }
 }
 ```
 
-**Why good:** Base page provides common functionality inheritance, page objects encapsulate all locators and actions, methods expose domain-specific operations
-
----
-
-_See [core.md](core.md) for foundational patterns: User Flows, Basic Page Objects, Network Mocking, and Configuration._
+**Why good:** landmark locators are written once for every page in the suite, and each subclass adds
+only what is its own. Returning a `Locator` rather than an awaited string keeps the caller's
+assertion retrying.

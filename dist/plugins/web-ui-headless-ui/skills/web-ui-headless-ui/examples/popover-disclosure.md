@@ -2,11 +2,7 @@
 
 > Complete code examples for Popover (floating panels) and Disclosure (accordion) patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for API reference.
 
-**Related examples:**
-
-- [Dialog & Modal](dialog.md) - Modal overlays
-- [Menu & Dropdowns](menu.md) - Dropdown action menus
-- [Tabs](tabs.md) - Tabbed content navigation
+**Related examples:** [dialog.md](dialog.md), [menu.md](menu.md), [tabs.md](tabs.md)
 
 ---
 
@@ -55,7 +51,8 @@ export function InfoPopover() {
 }
 ```
 
-**Why good:** `anchor` handles positioning, CloseButton closes popover when clicked (useful for navigation links), `transition` with `data-[closed]` for enter/exit animations
+**Why good:** `CloseButton as="a"` is a real link that also closes the panel — a plain `<a>` would
+navigate and leave the popover open behind it.
 
 ---
 
@@ -72,66 +69,25 @@ import {
   CloseButton,
 } from "@headlessui/react";
 
+// `icon` is whatever your project renders icons with — the popover does not care.
 const SOLUTIONS = [
   {
     name: "Analytics",
     description: "Get a better understanding of your traffic",
     href: "/analytics",
-    icon: (
-      <svg
-        className="size-6 text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-        />
-      </svg>
-    ),
+    icon: <AnalyticsIcon className="size-6 text-gray-400" aria-hidden />,
   },
   {
     name: "Engagement",
     description: "Speak directly to your customers",
     href: "/engagement",
-    icon: (
-      <svg
-        className="size-6 text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"
-        />
-      </svg>
-    ),
+    icon: <EngagementIcon className="size-6 text-gray-400" aria-hidden />,
   },
   {
     name: "Security",
-    description: "Your customers data will be safe and secure",
+    description: "Your customers' data stays safe",
     href: "/security",
-    icon: (
-      <svg
-        className="size-6 text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-        />
-      </svg>
-    ),
+    icon: <SecurityIcon className="size-6 text-gray-400" aria-hidden />,
   },
 ];
 
@@ -139,11 +95,11 @@ export function NavPopover() {
   return (
     <PopoverGroup className="flex gap-4">
       <Popover>
-        <PopoverButton className="flex items-center gap-1 text-sm font-semibold text-gray-900 data-[open]:text-blue-600">
+        <PopoverButton className="group flex items-center gap-1 text-sm font-semibold text-gray-900 data-[open]:text-blue-600">
           Solutions
-          <svg className="size-4" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z" />
-          </svg>
+          <span className="group-data-[open]:rotate-180" aria-hidden="true">
+            &#9662;
+          </span>
         </PopoverButton>
 
         <PopoverPanel
@@ -174,7 +130,8 @@ export function NavPopover() {
 }
 ```
 
-**Why good:** `CloseButton as="a"` renders links that close the popover on click, `PopoverGroup` manages focus across sibling popovers, `data-[open]` styles button when panel is open, `anchor` handles positioning, transition slides panel down on enter/up on exit
+**Why good:** `PopoverGroup` keeps sibling popovers from closing each other as focus moves between
+them, which is what a navigation bar of dropdowns needs.
 
 ---
 
@@ -227,7 +184,8 @@ export function FaqAccordion() {
 }
 ```
 
-**Why good:** Each Disclosure manages its own state independently, `transition` on panel enables smooth expand/collapse, `data-[open]` rotates the chevron icon, multiple can be open simultaneously
+**Why good:** each Disclosure owns its own state, so several can be open at once — a single-open
+accordion means lifting `open` yourself.
 
 ---
 
@@ -255,4 +213,5 @@ export function FadePanel() {
 }
 ```
 
-**Why good:** `show` controls visibility, `data-[closed]` defines initial/final state for transitions, Transition handles mount/unmount timing
+**Why good:** `Transition` delays the unmount until the leave transition finishes, which is the part
+a bare conditional render cannot do.

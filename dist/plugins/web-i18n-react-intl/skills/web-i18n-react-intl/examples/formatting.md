@@ -260,7 +260,7 @@ export function StatsCard({ visitors, conversionRate, revenue, currency }: Props
 
 ```
 
-**Why good:** named constant for decimal places, locale-aware thousand separators, currency symbol position varies by locale
+**Why good:** thousand separators, decimal separators and currency symbol position all follow the locale rather than the code
 
 ### Good Example - Number Formatting with useIntl
 
@@ -312,7 +312,7 @@ export function useFormatFileSize() {
 // Usage: formatFileSize(1536000) -> "1.5 MB" (en-US) | "1,5 MB" (de-DE)
 ```
 
-**Why good:** named constants for byte conversions, unit style for proper localization, returns hook for reusable formatting
+**Why good:** `style: "unit"` localizes the unit name itself rather than appending an English abbreviation
 
 ---
 
@@ -369,7 +369,7 @@ export function PriceDisplay({
 
 ```
 
-**Why good:** named constant for decimal places, accessible strikethrough for original price, currency code determines symbol and position
+**Why good:** the currency code determines symbol and position, and the struck-through original price carries a label so it is not read as the current one
 
 ### Good Example - Currency Range
 
@@ -477,7 +477,7 @@ export function TimeAgo({ timestamp, autoUpdate = true }: Props) {
 
 ```
 
-**Why good:** named constants for time conversions, automatic unit selection, optional auto-update, semantic time element
+**Why good:** the unit is chosen from the size of the delta rather than fixed, and `updateIntervalInSeconds` keeps it live without an interval of your own
 
 ### Good Example - Relative Time with useIntl
 

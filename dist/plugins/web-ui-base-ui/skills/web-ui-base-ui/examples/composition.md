@@ -59,6 +59,20 @@ function Button({ children }: { children: React.ReactNode }) {
 
 **Why bad:** no ref means the positioner has no anchor to measure and focus cannot return to the trigger, no prop spreading means the click handler, `aria-haspopup` and `aria-expanded` are discarded — and none of this throws, so the menu simply never opens and the failure looks like a Base UI bug
 
+### Bad Example - Reaching for asChild
+
+```tsx
+// There is no asChild and no Slot in this library
+<Menu.Trigger asChild>
+  <Button>Open</Button>
+</Menu.Trigger>
+
+// The equivalent here
+<Menu.Trigger render={<Button />}>Open</Menu.Trigger>
+```
+
+**Why bad:** `asChild` is not a prop, so it lands on the DOM node as an unknown attribute and the trigger renders its own default element — leaving your button either ignored or rendered as a child of a second interactive element
+
 ### Good Example - Nesting render Props
 
 ```tsx

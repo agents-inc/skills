@@ -1,104 +1,34 @@
 # Socket.IO Reference
 
-> Decision frameworks, quick reference tables, and checklists for Socket.IO. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
+> Option tables, event names and checklists. See [SKILL.md](SKILL.md) for the decisions and red flags, and [examples/](examples/) for code.
 
 ---
 
-## Decision Framework
+## What the Protocol Layer Adds
 
-### When to Use Socket.IO vs Native WebSocket
+Measured against the native WebSocket API Socket.IO runs on top of.
 
-```
-Need real-time bidirectional communication?
-├─ YES → Need rooms/namespaces for broadcast grouping?
-│   ├─ YES → Socket.IO ✓
-│   └─ NO → Need automatic reconnection out-of-the-box?
-│       ├─ YES → Socket.IO ✓
-│       └─ NO → Need acknowledgments (delivery confirmation)?
-│           ├─ YES → Socket.IO ✓
-│           └─ NO → Need to work in restrictive networks (fallback transports)?
-│               ├─ YES → Socket.IO ✓
-│               └─ NO → Native WebSocket (simpler, smaller bundle)
-└─ NO → Use HTTP REST or Server-Sent Events
-```
+| Feature            | Socket.IO             | Native WebSocket          |
+| ------------------ | --------------------- | ------------------------- |
+| Transport fallback | Automatic             | Hand-written              |
+| Reconnection       | Built-in              | Hand-written              |
+| Rooms              | Built-in              | Hand-written, server-side |
+| Namespaces         | Built-in              | Not available             |
+| Acknowledgments    | Built-in              | Hand-written              |
+| Protocol           | Custom (incompatible) | Standard WebSocket        |
+| Bundle cost        | ~14.5KB gzipped       | None                      |
 
-### Namespace vs Room Decision
+---
 
-```
-Need to separate communication channels?
-├─ Is it a distinct feature area (chat, admin, notifications)?
-│   └─ YES → Use Namespaces
-│       - Clients explicitly connect
-│       - Can have different middleware/auth
-│       - Example: /chat, /admin, /game
-├─ Is it for grouping users within a feature?
-│   └─ YES → Use Rooms (within a namespace)
-│       - Server-side only
-│       - For targeted broadcasting
-│       - Example: chat rooms, game lobbies
-└─ Single unified communication
-    └─ Use default namespace ("/")
-```
+## Rooms vs Namespaces
 
-### Authentication Strategy
-
-```
-Implementing Socket.IO authentication?
-├─ Need to pass token on initial connection?
-│   └─ YES → Use `auth` option in io()
-│       - Token sent in handshake
-│       - Not visible in URL/logs
-│       - Server validates in middleware
-├─ Using session-based auth with cookies?
-│   └─ YES → Set `withCredentials: true`
-│       - Cookies sent automatically
-│       - Server must allow credentials in CORS
-├─ Need to authenticate per-namespace?
-│   └─ YES → Use namespace middleware
-│       - Different auth per namespace
-│       - Example: basic auth for /chat, elevated for /admin
-└─ NEVER put tokens in query strings (security risk)
-```
-
-### Connection State Recovery Decision
-
-```
-Implementing reconnection handling?
-├─ Using Socket.IO v4.6.0+?
-│   ├─ YES → Check socket.recovered after connect
-│   │   ├─ true → Missed events delivered automatically
-│   │   └─ false → Need full state refresh
-│   └─ NO → Always do full state refresh on reconnect
-├─ Have long-running sessions?
-│   └─ YES → Implement message queuing
-│       - Queue during disconnect
-│       - Flush on reconnect
-└─ Need exactly-once delivery?
-    └─ YES → Implement acknowledgments + idempotency
-```
-
-### Binary Data Strategy
-
-```
-Sending binary data with Socket.IO?
-├─ Small binary payloads?
-│   └─ YES → Send directly in event
-│       - Socket.IO handles serialization
-│       - ArrayBuffer, Buffer, Blob all supported
-├─ Large files?
-│   └─ YES → Chunk the uploads
-│       - Send metadata first
-│       - Stream chunks with progress
-│       - Acknowledge each chunk
-├─ Frequent small updates (cursor, position)?
-│   └─ YES → Use volatile events
-│       - socket.volatile.emit()
-│       - OK if some are dropped
-└─ Mixed binary + JSON?
-    └─ YES → Supported automatically
-        - Objects with binary fields work
-        - Socket.IO parses correctly
-```
+| Feature          | Rooms                 | Namespaces                          |
+| ---------------- | --------------------- | ----------------------------------- |
+| Client awareness | No                    | Yes                                 |
+| Join / leave     | Server-side only      | Client connects to it               |
+| Own middleware   | No                    | Yes, including its own `auth`       |
+| Use case         | Targeted broadcasting | Feature separation                  |
+| Example          | Chat rooms, lobbies   | `/chat`, `/admin`, `/notifications` |
 
 ---
 
@@ -149,33 +79,13 @@ Sending binary data with Socket.IO?
 | `transport close`      | Connection closed (network issue) | Yes            |
 | `transport error`      | Connection error                  | Yes            |
 
-### Connection Checklist
+### Deployment Checklist
 
-- [ ] Types defined for ServerToClientEvents and ClientToServerEvents
-- [ ] Token in `auth` option (NOT query string)
-- [ ] Named constants for all timing values
-- [ ] Connection state tracking with UI feedback
-- [ ] Error handling for connect_error
-- [ ] Event listener cleanup in useEffect return
-- [ ] Check socket.connected before emitting
-- [ ] Message queue for offline support
-- [ ] Token refresh before reconnection
-- [ ] Cleanup on component unmount
+Items beyond what SKILL.md's requirements and red flags already cover.
 
-### Security Checklist
-
-- [ ] Uses HTTPS/WSS in production
-- [ ] Token in auth option (not query string)
-- [ ] Token refresh mechanism implemented
-- [ ] No sensitive data in events without validation
-- [ ] CORS properly configured on server
-- [ ] Rate limiting on server side
-
-### Performance Checklist
-
-- [ ] Single socket instance shared across app
-- [ ] Volatile events for expendable data
-- [ ] Binary data chunked for large files
-- [ ] Event listeners removed when not needed
-- [ ] Connection state recovery utilized (v4.6.0+)
-- [ ] Namespaces share single connection
+- [ ] Secure origin in production (`https://` / `wss://`)
+- [ ] Server CORS allows the app's origin, and `credentials` where cookie auth is used
+- [ ] Server-side rate limiting on inbound events
+- [ ] Inbound event payloads validated before use — a typed interface is a compile-time claim, not a runtime one
+- [ ] One socket instance shared across the app rather than one per component
+- [ ] Message queue in place for sends attempted while disconnected

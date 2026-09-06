@@ -1,8 +1,8 @@
 {
   "name": "web-framework-svelte",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
-  "description": "Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API",
+  "description": "Svelte 5 runes — $state, $derived, $effect, $props, $bindable, snippets, callback props, context. Load when writing Svelte 5 components or reactive modules.",
   "author": {
     "name": "@vince"
   },

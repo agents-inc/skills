@@ -1,17 +1,18 @@
-# URQL GraphQL Client - Core Examples
+# URQL — Core Examples
 
-> All core code examples for URQL patterns. See [SKILL.md](../SKILL.md) for concepts.
+> Full code for the core patterns. See [SKILL.md](../SKILL.md) for the decisions.
 
 **Extended examples:**
 
-- [exchanges.md](exchanges.md) - Exchange architecture, custom exchanges, auth
-- [subscriptions.md](subscriptions.md) - Real-time data with WebSockets
+- [exchanges.md](exchanges.md) — the pipeline, Graphcache, auth, retry, custom exchanges
+- [subscriptions.md](subscriptions.md) — real-time data over websockets
+- [v6-features.md](v6-features.md) — the GET default and the migration steps
 
 ---
 
-## Pattern 1: Complete Client Setup
+## Pattern 1: Client and provider
 
-### Basic Client
+### The client
 
 ```typescript
 // lib/urql-client.ts
@@ -29,7 +30,7 @@ const client = new Client({
 export { client };
 ```
 
-### Provider Setup
+### The provider
 
 ```typescript
 // providers/urql-provider.tsx
@@ -48,13 +49,14 @@ function UrqlProvider({ children }: UrqlProviderProps) {
 export { UrqlProvider };
 ```
 
-**Why good:** Clean separation of client creation and provider, typed props, named exports
+The client is created once at module scope, not inside the provider component — a client rebuilt on
+re-render brings a fresh empty cache with it.
 
 ---
 
-## Pattern 2: useQuery Basics
+## Pattern 2: Queries
 
-### Query with Variables and Loading States
+### With variables and loading states
 
 ```typescript
 // components/user-profile.tsx
@@ -113,7 +115,10 @@ function UserProfile({ userId }: { userId: string }) {
 export { UserProfile, GET_USER };
 ```
 
-### Conditional Query with Pause
+`stale` gets its own affordance: the data on screen is real and a refresh is in flight behind it, so
+a badge is right and a skeleton would be a regression.
+
+### Pausing a conditional query
 
 ```typescript
 // components/user-details.tsx
@@ -166,13 +171,14 @@ function UserDetails({ userId }: { userId: string | null }) {
 export { UserDetails };
 ```
 
-**Why good:** pause prevents requests when userId is null, proper null state handling
+Without `pause`, the query fires with `id: null` and the server answers with an error the component
+then has to distinguish from a real one.
 
 ---
 
-## Pattern 3: Mutations with Cache Updates
+## Pattern 3: Mutations
 
-### Create with Manual Cache Update
+### Create
 
 ```typescript
 // components/create-post-form.tsx
@@ -255,7 +261,7 @@ function CreatePostForm({ onSuccess }: { onSuccess?: () => void }) {
 export { CreatePostForm, CREATE_POST };
 ```
 
-### Update Mutation
+### Update
 
 ```typescript
 // components/edit-post-form.tsx
@@ -336,7 +342,7 @@ function EditPostForm({ post, onSuccess }: EditPostFormProps) {
 export { EditPostForm };
 ```
 
-### Delete Mutation
+### Delete
 
 ```typescript
 // components/delete-post-button.tsx
@@ -383,13 +389,13 @@ function DeletePostButton({ postId, onDeleted }: DeletePostButtonProps) {
 export { DeletePostButton, DELETE_POST };
 ```
 
-**Why good:** Confirmation dialog prevents accidental deletion, disabled during mutation, error handling
+All three read the error off the awaited response rather than from a callback, so the success path
+and the failure path stay in one function. With the document cache these need no cache code at all:
+the mutation's result carries a `__typename` and every query holding that type is invalidated.
 
 ---
 
-## Pattern 4: Error Handling
-
-### Component-Level Error Handling
+## Pattern 4: Error handling
 
 ```typescript
 // components/users-with-error-handling.tsx
@@ -451,13 +457,14 @@ function UsersWithErrorHandling() {
 export { UsersWithErrorHandling };
 ```
 
-**Why good:** Handles network vs GraphQL errors differently, supports partial data with errors, provides retry action
+The order of the branches is the point: the network branch offers a retry because retrying might
+work, the GraphQL branch inspects `extensions.code` because a 404 and a validation failure need
+different screens, and the partial branch runs before the empty check so a page that mostly loaded
+still renders.
 
 ---
 
-## Pattern 5: Context Options
-
-### Custom Fetch Options Per Query
+## Pattern 5: Per-query context
 
 ```typescript
 import { useQuery, gql } from "urql";
@@ -493,72 +500,7 @@ function AdminPanel() {
 export { AdminPanel };
 ```
 
-**Why good:** Per-query customization without affecting global client, headers for specific endpoints
+`context` is per-operation and leaves the client untouched, which is what makes a second endpoint or
+a one-off header safe to add without a second `Client`.
 
----
-
-## Anti-Pattern Examples
-
-```typescript
-// BAD: Wrong exchange order (async before sync)
-const client = new Client({
-  url: "/graphql",
-  exchanges: [fetchExchange, cacheExchange], // WRONG ORDER!
-});
-
-// BAD: Magic numbers
-const POLL_INTERVAL = 5000; // What is 5000?
-
-// BAD: Not handling all states
-function BadUserList() {
-  const [result] = useQuery({ query: USERS_QUERY });
-  // Crashes if data is undefined!
-  return result.data.users.map((u) => <li key={u.id}>{u.name}</li>);
-}
-
-// BAD: Default export
-export default function UserList() { /* ... */ }
-
-// BAD: Missing Provider (v4+ requires Provider)
-function App() {
-  // Error: No urql Client found!
-  return <UserList />;
-}
-```
-
-```typescript
-// GOOD: Correct exchange order (sync before async)
-const client = new Client({
-  url: "/graphql",
-  exchanges: [cacheExchange, fetchExchange], // Correct!
-});
-
-// GOOD: Named constant with unit
-const POLL_INTERVAL_MS = 5 * 1000; // 5 seconds
-
-// GOOD: Handle all states
-function GoodUserList() {
-  const [result] = useQuery({ query: USERS_QUERY });
-  const { data, fetching, error } = result;
-
-  if (fetching && !data) return <Skeleton />;
-  if (error && !data) return <Error message={error.message} />;
-  if (!data?.users?.length) return <EmptyState />;
-
-  return data.users.map((u) => <li key={u.id}>{u.name}</li>);
-}
-
-// GOOD: Named export
-export { UserList };
-
-// GOOD: Always wrap with Provider
-function App() {
-  return (
-    <Provider value={client}>
-      <UserList />
-    </Provider>
-  );
-}
-```
-
-**Why bad examples fail:** Wrong exchange order breaks caching, magic numbers hide intent, missing state handling causes crashes, default exports prevent tree-shaking, missing Provider causes runtime errors
+The mistakes these patterns guard against are in [SKILL.md](../SKILL.md)'s red flags.

@@ -7,7 +7,7 @@
 - [Forms & Validation](form.md)
 - [Tables & Data Display](table.md)
 - [Feedback Components](feedback.md)
-- [Next.js Integration](nextjs.md)
+- [SSR Style Extraction](ssr.md)
 
 ---
 
@@ -16,29 +16,19 @@
 ```tsx
 import { ConfigProvider, App as AntApp } from "antd";
 import type { ThemeConfig } from "antd";
-import { theme } from "antd";
 import enUS from "antd/locale/en_US";
-
-const BRAND_PRIMARY = "#2563eb";
-const BRAND_SUCCESS = "#16a34a";
-const BRAND_WARNING = "#ea580c";
-const BRAND_ERROR = "#dc2626";
-const BRAND_BORDER_RADIUS = 8;
-const BRAND_FONT_SIZE = 14;
-const BRAND_FONT_FAMILY =
-  "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
 
 const ENTERPRISE_THEME: ThemeConfig = {
   cssVar: true,
   hashed: false, // Safe when only one antd version in the app
   token: {
-    colorPrimary: BRAND_PRIMARY,
-    colorSuccess: BRAND_SUCCESS,
-    colorWarning: BRAND_WARNING,
-    colorError: BRAND_ERROR,
-    borderRadius: BRAND_BORDER_RADIUS,
-    fontSize: BRAND_FONT_SIZE,
-    fontFamily: BRAND_FONT_FAMILY,
+    colorPrimary: "#2563eb",
+    colorSuccess: "#16a34a",
+    colorWarning: "#ea580c",
+    colorError: "#dc2626",
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: "'Inter', system-ui, sans-serif",
     colorBgLayout: "#f5f5f5",
   },
   components: {
@@ -95,7 +85,6 @@ import type { ThemeConfig } from "antd";
 import { SunOutlined, MoonOutlined } from "@ant-design/icons";
 
 const STORAGE_KEY = "app-theme-mode";
-const BRAND_PRIMARY = "#2563eb";
 
 function useThemeMode() {
   const [isDark, setIsDark] = useState(() => {
@@ -105,7 +94,7 @@ function useThemeMode() {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, isDark ? "dark" : "light");
-    // Optionally set data attribute for non-antd elements
+    // Mirror onto the root element so non-antd elements can follow the mode
     document.documentElement.setAttribute(
       "data-theme",
       isDark ? "dark" : "light",
@@ -123,9 +112,7 @@ function DarkModeApp() {
   const themeConfig: ThemeConfig = {
     cssVar: true,
     algorithm: isDark ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
-    token: {
-      colorPrimary: BRAND_PRIMARY,
-    },
+    token: { colorPrimary: "#2563eb" },
   };
 
   return (

@@ -63,7 +63,7 @@ export const selectCounterState = counterSlice.selectSlice;
 export const counterReducer = counterSlice.reducer;
 ```
 
-**Why good:** Selectors co-located with slice logic, automatically wrapped for root state access via selectSlice, named constants for magic numbers, named exports
+**Why good:** A selector declared inside the slice receives the slice's own state, and RTK rewrites it against the root — so the selector no longer has to know where the slice was mounted, and moving it in the reducer map breaks nothing.
 
 ### Component Usage
 
@@ -165,7 +165,7 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 ```
 
-**Why good:** Automatic key assignment from slice names, type-safe lazy loading, reduces initial bundle size, named exports
+**Why good:** A slice injected later is typed as possibly-absent until `withLazyLoadedSlices` declares it, so a selector reading a slice that has not been injected yet is a compile error rather than a runtime `undefined`. The reducer ships with the code that needs it instead of with the initial bundle.
 
 ### Injecting Slices at Runtime
 
@@ -319,7 +319,7 @@ export const { selectUsers, selectSelectedUser, selectIsLoading, selectError } =
 export const usersReducer = usersSlice.reducer;
 ```
 
-**Why good:** Async thunks co-located with sync reducers, lifecycle handlers inline with thunk definition, selectors in same slice, no separate extraReducers needed, named exports
+**Why good:** The thunk and its `pending` / `fulfilled` / `rejected` handlers sit in one declaration, so the three cannot fall out of step the way a thunk in one file and an `extraReducers` block in another can.
 
 ### Component Usage with Inline Async Thunks
 

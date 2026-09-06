@@ -5,114 +5,90 @@ description: Reactive programming with RxJS - Observables, operators, Subjects, 
 
 # RxJS Reactive Programming Patterns
 
-> **Quick Guide:** Use RxJS for complex async flows involving event streams, composed async operations, and reactive data pipelines. Create Observables with `of`, `from`, `fromEvent`, or `defer`. Transform with pipeable operators (`map`, `filter`, `switchMap`). Always unsubscribe to prevent memory leaks -- use the `takeUntil` pattern with a destroy Subject, or store subscriptions and call `unsubscribe()` in cleanup. Suffix observable variables with `$`. Choose the right flattening operator: `switchMap` to cancel previous, `mergeMap` for parallel, `concatMap` for sequential, `exhaustMap` to ignore while busy.
+> **Quick Guide:** RxJS composes async work as streams. Observables are lazy — nothing runs until
+> `subscribe()` — and operators inside `pipe()` describe a pipeline rather than execute one. Three
+> decisions carry most of the weight: which flattening operator (`switchMap` cancels, `mergeMap`
+> parallelises, `concatMap` queues, `exhaustMap` ignores), where `catchError` sits (inside the inner
+> pipe, or an error kills the outer stream permanently), and how the subscription ends. Suffix
+> observable variables with `$`.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — creation, lazy execution with `defer`, transformation, error recovery, Promise interop
+- [examples/higher-order.md](examples/higher-order.md) — `switchMap`, `mergeMap`, `concatMap`, `exhaustMap` worked through
+- [examples/subjects.md](examples/subjects.md) — the four Subject types, multicasting, `shareReplay`
+- [examples/combination.md](examples/combination.md) — `combineLatest`, `forkJoin`, `merge`, `concat`, `race`
+- [examples/memory-leaks.md](examples/memory-leaks.md) — the `takeUntil` pattern, subscription collections, self-completing streams
+- [reference.md](reference.md) — operator tables, scenario-to-operator lookup, deprecations
+
+---
+
+## Which path applies
+
+Cleanup is the branch, and it is decided by whether the source ends on its own.
+
+- **The source completes by itself** — `of`, `from`, a wrapped Promise, `timer(n)`, a single HTTP response. Nothing to unsubscribe; go straight to [examples/core.md](examples/core.md).
+- **The source runs until stopped** — `fromEvent`, `interval`, any `Subject`, a WebSocket. Every subscription needs an ending, and the shapes are in [examples/memory-leaks.md](examples/memory-leaks.md).
+- **You need one value out of a stream** — `firstValueFrom` / `lastValueFrom` bridge to `await` and settle the lifetime for you. In [examples/core.md](examples/core.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing RxJS code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Give every long-lived subscription an ending** — `takeUntil` with a destroy Subject, a
+`Subscription` collection, or a self-completing operator such as `take` or `first`. A `fromEvent`
+or `interval` subscription with no ending outlives whatever created it, holding its closure alive.
 
-**(You MUST unsubscribe from every long-lived Observable -- use `takeUntil`, `take`, `first`, or explicit `unsubscribe()` to prevent memory leaks)**
+**Put `takeUntil` last in the pipe.** Operators only see what precedes them, so a `takeUntil` above
+a `switchMap` ends the outer source and leaves the inner Observable running — a leak that looks
+like correct cleanup code.
 
-**(You MUST choose the correct flattening operator -- `switchMap` for cancellation, `mergeMap` for parallel, `concatMap` for sequential, `exhaustMap` to ignore while busy)**
+**Put `catchError` inside the inner pipe, not the outer one.** An error propagates to the
+subscriber and terminates the chain for good; recovering inside the inner Observable keeps the
+outer stream alive for the next value.
 
-**(You MUST place `takeUntil` LAST in the pipe chain -- placing it before higher-order operators like `switchMap` leaves inner subscriptions alive)**
-
-**(You MUST handle errors with `catchError` inside the pipe -- an unhandled error terminates the entire Observable chain permanently)**
+**Pick the flattening operator from the concurrency you want** — cancel previous (`switchMap`),
+run in parallel (`mergeMap`), queue (`concatMap`), ignore while busy (`exhaustMap`). Defaulting to
+`mergeMap` for a search box is how stale responses overwrite fresh ones.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** RxJS, rxjs, Observable, Subject, BehaviorSubject, ReplaySubject, AsyncSubject, subscribe, pipe, switchMap, mergeMap, concatMap, exhaustMap, combineLatest, forkJoin, fromEvent, of, from, interval, timer, defer, catchError, retry, debounceTime, throttleTime, distinctUntilChanged, takeUntil, map, filter, tap, shareReplay
+**Auto-detection:** RxJS, rxjs, Observable, Subject, BehaviorSubject, ReplaySubject, AsyncSubject,
+subscribe, pipe, switchMap, mergeMap, concatMap, exhaustMap, combineLatest, forkJoin,
+withLatestFrom, fromEvent, defer, interval, timer, catchError, retry, debounceTime, throttleTime,
+distinctUntilChanged, takeUntil, shareReplay, firstValueFrom, lastValueFrom, Subscription
 
-**When to use:**
+**Applies to:**
 
-- Complex async flows composing multiple HTTP requests, WebSockets, or event streams
-- Event stream processing with debounce, throttle, or buffer logic
-- Real-time data pipelines (stock tickers, chat, live updates)
-- Cancellable HTTP requests (type-ahead search, route changes)
-- Coordinating multiple async sources (race, combine, fork-join)
+- Event streams that need composition — debounce, throttle, buffer, distinct
+- Coordinating several async sources — combine, fork-join, race, sequence
+- Cancellable work, where a new input should abandon the request in flight
+- Real-time data arriving over time — sockets, server-sent events, polling
+- Retry and backoff policies expressed as part of the pipeline
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Simple one-shot HTTP requests (use `fetch` or your data-fetching solution)
-- Simple component state (use `useState`, `ref`, or signals)
-- State management (use a dedicated state management solution)
-- Single async operation with no stream composition (use `async`/`await`)
-
-**Key patterns covered:**
-
-- Observable creation (`of`, `from`, `fromEvent`, `interval`, `timer`, `defer`)
-- Pipeable operators (transformation, filtering, combination)
-- Higher-order mapping (`switchMap`, `mergeMap`, `concatMap`, `exhaustMap`)
-- Subjects (`Subject`, `BehaviorSubject`, `ReplaySubject`, `AsyncSubject`)
-- Error handling (`catchError`, `retry` with config, `retryWhen` deprecated)
-- Memory leak prevention (`takeUntil` pattern, subscription management)
-- Combination operators (`combineLatest`, `forkJoin`, `merge`, `concat`)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Observable creation, subscription, basic operators, error handling
-- [examples/higher-order.md](examples/higher-order.md) - switchMap, mergeMap, concatMap, exhaustMap patterns
-- [examples/subjects.md](examples/subjects.md) - Subject types, multicasting, state sharing
-- [examples/combination.md](examples/combination.md) - combineLatest, forkJoin, merge, concat, race
-- [examples/memory-leaks.md](examples/memory-leaks.md) - takeUntil pattern, subscription cleanup strategies
-- [reference.md](reference.md) - Operator decision tree, flattening operator cheat sheet, gotchas
+- A single request with no stream semantics — `async`/`await` says it in one line, and wrapping it in an Observable buys nothing
+- Local component state — a stream is the wrong shape for a value that is simply read and written
+- Application state ownership — RxJS carries values between places; deciding where they live is a separate concern
+- Framework binding — converting a stream into whatever the view layer renders is that layer's own API
 
 ---
 
 <philosophy>
 
-## Philosophy
+Everything is a stream: clicks, responses, timers, socket frames. An Observable is a description of
+work rather than the work itself, so a `pipe()` chain builds a pipeline and `subscribe()` is what
+starts it — which is why a `pipe` with no subscriber does nothing at all, and why the same
+Observable subscribed twice usually does its work twice.
 
-RxJS implements the **Observable pattern** for composing asynchronous and event-based programs using observable sequences. The core idea: treat everything as a stream -- clicks, HTTP responses, timers, WebSocket messages -- and compose them declaratively with operators.
-
-**Key principle:** Observables are lazy. Nothing happens until you `subscribe()`. Operators in a `pipe()` build a processing pipeline that transforms values as they flow through.
-
-```typescript
-import { fromEvent, map, filter, debounceTime } from "rxjs";
-
-const DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 3;
-
-// Declarative stream: input events -> debounced search queries
-const search$ = fromEvent<InputEvent>(searchInput, "input").pipe(
-  map((event) => (event.target as HTMLInputElement).value),
-  debounceTime(DEBOUNCE_MS),
-  filter((query) => query.length >= MIN_QUERY_LENGTH),
-);
-```
-
-### Naming Convention
-
-Suffix observable variables with `$` to distinguish them from plain values:
-
-```typescript
-const users$ = userService.getUsers(); // Observable
-const users = []; // plain array
-```
-
-### Current Version
-
-RxJS **7.8.x** is the current stable release. v7 introduced smaller bundle sizes (~50% smaller via tree-shaking), pipeable-only operators, and improved TypeScript types. v8 is in development.
-
-### When to Use RxJS
-
-- Event streams that need composition (debounce + filter + switchMap)
-- Multiple concurrent async operations needing coordination
-- Real-time data that arrives over time (WebSockets, SSE, polling)
-- Complex cancellation logic (cancel previous request on new input)
-
-### When NOT to Use RxJS
-
-- Simple fetch calls -- `async`/`await` or your data-fetching solution is simpler
-- One-off async operations without stream semantics
-- State management -- use a dedicated state solution
-- When the team lacks RxJS experience and the problem is simple
+That laziness is also the source of the most common surprise: anything eager placed inside the
+chain (a `fetch` call evaluated at construction time rather than inside `defer`) escapes the model
+and runs once, shared, whether anyone subscribed or not.
 
 </philosophy>
 
@@ -120,11 +96,12 @@ RxJS **7.8.x** is the current stable release. v7 introduced smaller bundle sizes
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Observable Creation
+### Pattern 1: Creation, and keeping it lazy
 
-Use the right creation function for the data source.
+Match the creation function to the source, and wrap anything eager in `defer` so each subscriber
+gets its own execution.
 
 ```typescript
 import {
@@ -135,295 +112,146 @@ import {
   timer,
   defer,
   EMPTY,
-  NEVER,
   throwError,
 } from "rxjs";
 
-// ✅ Good Example - Matching creation function to data source
+of(1, 2, 3); // fixed values, then completes
+from([1, 2, 3]); // any iterable, then completes
+fromEvent(element, "click"); // never completes
+interval(1000); // never completes
+timer(2000); // one value, then completes
 
-// Static values
-const static$ = of(1, 2, 3); // emits 1, 2, 3, then completes
-
-// From iterable/Promise/array
-const fromArray$ = from([1, 2, 3]); // emits 1, 2, 3, then completes
-const fromPromise$ = from(fetch("/api/users")); // emits response, completes
-
-// DOM events (infinite stream -- must unsubscribe)
-const clicks$ = fromEvent(document, "click");
-
-// Timed emissions
-const POLL_INTERVAL_MS = 1000;
-const interval$ = interval(POLL_INTERVAL_MS); // emits 0, 1, 2... every second
-
-const INITIAL_DELAY_MS = 2000;
-const timer$ = timer(INITIAL_DELAY_MS); // emits 0 after 2s, then completes
-
-// Deferred creation -- new Observable per subscriber
-const deferred$ = defer(() => from(fetch("/api/data")));
-
-// Sentinel observables
-const empty$ = EMPTY; // completes immediately, emits nothing
-const error$ = throwError(() => new Error("Something failed"));
+defer(() => from(fetch("/api/users"))); // fresh request per subscriber
+from(fetch("/api/users")); // ❌ fires at construction, shared by all
 ```
 
-**Why good:** each creation function matches the data source semantics, `defer` ensures fresh execution per subscriber, named constants for durations
-
-```typescript
-// ❌ Bad Example - Wrapping a promise without defer
-const bad$ = from(fetch("/api/users")); // fetch fires immediately, shared across subscribers!
-```
-
-**Why bad:** without `defer`, the fetch executes once when the Observable is created, not when subscribed -- all subscribers share the same stale response
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Pipeable Operators
-
-All operators are used inside `.pipe()`. Import from `"rxjs/operators"` or `"rxjs"` (v7.2+).
+### Pattern 2: Operators in a pipe, never a nested subscribe
 
 ```typescript
-import { map, filter, tap, take, skip, distinctUntilChanged } from "rxjs";
-
-const MIN_AGE = 18;
-
-// ✅ Good Example - Operator pipeline
 const adults$ = users$.pipe(
-  filter((user) => user.age >= MIN_AGE),
+  filter((user) => user.age >= 18),
   map((user) => user.name),
-  distinctUntilChanged(), // skip consecutive duplicates
-  tap((name) => console.log("Processing:", name)), // side effects (logging)
+  distinctUntilChanged(),
+  tap((name) => console.log(name)), // side effects live in tap
 );
 ```
 
-**Why good:** clear transformation pipeline, each operator has a single purpose, `tap` for side effects keeps the pipeline pure otherwise
+A `.subscribe()` inside a `.subscribe()` creates a subscription nothing holds a reference to, so
+nothing can end it — the flattening operators exist to replace exactly this shape.
 
-```typescript
-// ❌ Bad Example - Nesting subscribes instead of using operators
-users$.subscribe((user) => {
-  if (user.age >= MIN_AGE) {
-    names$.subscribe((name) => {
-      console.log(name); // nested subscription = memory leak risk
-    });
-  }
-});
-```
-
-**Why bad:** nested subscriptions are impossible to clean up properly, create exponential subscription count, lose back-pressure control
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Error Handling with catchError
-
-Errors terminate the Observable chain. Use `catchError` to recover or provide fallback values.
+### Pattern 3: Error recovery with catchError
 
 ```typescript
-import { catchError, retry, of, from, timer, switchMap } from "rxjs";
-
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
-
-// ✅ Good Example - Error recovery with fallback
-const data$ = source$.pipe(
-  switchMap(() =>
-    from(fetch("/api/data")).pipe(
-      retry(MAX_RETRIES), // retry up to 3 times on failure
-      catchError((error) => {
-        console.error("Fetch failed:", error);
-        return of([]); // fallback: emit empty array, stream continues
-      }),
-    ),
-  ),
-);
-
-// ✅ Good Example - Delayed retry with backoff
-const resilient$ = source$.pipe(
-  switchMap(() =>
-    from(fetch("/api/data")).pipe(
-      retry({
-        count: MAX_RETRIES,
-        delay: (error, retryCount) => timer(RETRY_DELAY_MS * retryCount),
-      }),
-      catchError(() => of({ data: null, error: true })),
+const results$ = query$.pipe(
+  switchMap((query) =>
+    defer(() => from(search(query))).pipe(
+      retry({ count: 3, delay: (_, n) => timer(1000 * 2 ** (n - 1)) }),
+      catchError(() => of({ results: [], failed: true })), // inner — outer survives
     ),
   ),
 );
 ```
 
-**Why good:** `catchError` returns a fallback Observable keeping the outer stream alive, `retry` with delay config prevents hammering the server, error is scoped to inner Observable
+`catchError` must return an Observable, and where it sits decides what survives: inside the inner
+pipe the outer stream continues, outside it the whole chain ends on the first failure.
 
-```typescript
-// ❌ Bad Example - catchError in wrong position
-const bad$ = source$.pipe(
-  catchError(() => of([])), // catches errors from source$, NOT from switchMap
-  switchMap(() => from(fetch("/api/data"))), // errors here kill the stream!
-);
-```
-
-**Why bad:** `catchError` must be inside the inner Observable pipe to catch inner errors; placing it before `switchMap` only catches source errors
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Rate Limiting (debounceTime, throttleTime)
-
-Control emission frequency for performance.
+### Pattern 4: Rate limiting
 
 ```typescript
-import {
-  debounceTime,
-  throttleTime,
-  distinctUntilChanged,
-  auditTime,
-} from "rxjs";
+// Wait for a pause — user input
+input$.pipe(debounceTime(300), distinctUntilChanged());
 
-const DEBOUNCE_MS = 300;
-const THROTTLE_MS = 200;
-
-// ✅ Good Example - Search input with debounce
-const searchQuery$ = fromEvent<InputEvent>(searchInput, "input").pipe(
-  map((e) => (e.target as HTMLInputElement).value.trim()),
-  debounceTime(DEBOUNCE_MS), // wait 300ms of silence before emitting
-  distinctUntilChanged(), // skip if value unchanged
-);
-
-// ✅ Good Example - Scroll position with throttle
-const scrollPosition$ = fromEvent(window, "scroll").pipe(
-  throttleTime(THROTTLE_MS), // emit at most every 200ms
-  map(() => window.scrollY),
-);
+// Cap the rate — continuous events
+fromEvent(window, "scroll").pipe(throttleTime(200));
 ```
 
-**Why good:** `debounceTime` waits for pause in emissions (ideal for user input), `throttleTime` limits rate (ideal for continuous events like scroll/resize), `distinctUntilChanged` prevents redundant processing
+`debounceTime` emits the last value after silence; `throttleTime` emits the first value of each
+window and drops the rest. `distinctUntilChanged` after a debounce is what stops a
+type-then-undo from re-issuing the same request.
+
+Full code: [examples/higher-order.md](examples/higher-order.md), inside the search pipeline.
+Operator comparison: [reference.md](reference.md)
 
 ---
 
-### Pattern 5: Higher-Order Mapping Operators
+### Pattern 5: Flattening operators
 
-The most critical decision in RxJS: choosing the right flattening operator.
+The decision is what should happen when a new outer value arrives while the inner Observable is
+still running.
 
 ```
-New outer value arrives while inner Observable is still running:
-├── Cancel previous inner, switch to new? → switchMap
-├── Run new inner in parallel with previous? → mergeMap
-├── Queue new inner, wait for previous to finish? → concatMap
-└── Ignore new outer value until current inner finishes? → exhaustMap
+Cancel the previous inner and switch    → switchMap    (search, navigation)
+Run the new one alongside               → mergeMap     (uploads, fire-and-forget)
+Queue it until the previous finishes    → concatMap    (ordered saves, message send)
+Ignore it until the current one ends    → exhaustMap   (submit, login, refresh)
 ```
 
 ```typescript
-import { switchMap, mergeMap, concatMap, exhaustMap } from "rxjs";
-
-// ✅ switchMap - Type-ahead search (cancel previous request)
-const searchResults$ = searchQuery$.pipe(
-  switchMap((query) => from(fetch(`/api/search?q=${query}`))),
-);
-
-// ✅ mergeMap - Bulk file upload (process all in parallel)
-const uploads$ = files$.pipe(
-  mergeMap((file) => uploadFile(file), 3), // concurrent limit of 3
-);
-
-// ✅ concatMap - Sequential form submissions (preserve order)
-const saves$ = saveActions$.pipe(
-  concatMap((data) =>
-    from(fetch("/api/save", { method: "POST", body: JSON.stringify(data) })),
-  ),
-);
-
-// ✅ exhaustMap - Login button (ignore clicks while request pending)
-const login$ = loginClick$.pipe(
-  exhaustMap(() => from(authService.login(credentials))),
-);
+query$.pipe(switchMap((q) => search(q)));
+files$.pipe(mergeMap((file) => upload(file), 3)); // 3 = concurrency limit
+saves$.pipe(concatMap((data) => save(data)));
+clicks$.pipe(exhaustMap(() => submit()));
 ```
 
-**Why good:** each operator matches the exact concurrency semantics needed, `mergeMap` with concurrent limit prevents resource exhaustion
-
-See [examples/higher-order.md](examples/higher-order.md) for detailed patterns.
+Full code: [examples/higher-order.md](examples/higher-order.md)
 
 ---
 
 ### Pattern 6: Subjects
 
-Subjects are both Observable and Observer -- they can multicast values to multiple subscribers.
+A Subject is both Observable and Observer, which makes it the way to multicast — and the way to
+push values in from imperative code.
 
 ```typescript
-import { Subject, BehaviorSubject, ReplaySubject, AsyncSubject } from "rxjs";
-
-// ✅ Subject - No initial value, no replay
-const event$ = new Subject<string>();
-event$.subscribe((v) => console.log("A:", v));
-event$.next("hello"); // A: hello
-event$.subscribe((v) => console.log("B:", v));
-event$.next("world"); // A: world, B: world (B missed "hello")
-
-// ✅ BehaviorSubject - Has current value, replays latest to new subscribers
-const currentUser$ = new BehaviorSubject<User | null>(null);
-currentUser$.subscribe((u) => console.log("User:", u)); // immediately: User: null
-currentUser$.next({ name: "Alice" }); // User: { name: "Alice" }
-currentUser$.getValue(); // synchronous access: { name: "Alice" }
-
-// ✅ ReplaySubject - Replays N previous values to new subscribers
-const REPLAY_BUFFER_SIZE = 3;
-const messages$ = new ReplaySubject<string>(REPLAY_BUFFER_SIZE);
-messages$.next("msg1");
-messages$.next("msg2");
-messages$.next("msg3");
-messages$.subscribe((m) => console.log(m)); // replays: msg1, msg2, msg3
-
-// ✅ AsyncSubject - Emits only the LAST value, only on complete()
-const result$ = new AsyncSubject<number>();
-result$.next(1);
-result$.next(2);
-result$.next(3);
-result$.complete(); // subscribers receive: 3 (only last value, only after complete)
+new Subject<T>(); // no initial value, no replay
+new BehaviorSubject<T>(initial); // always has a current value; .getValue()
+new ReplaySubject<T>(n, windowMs); // replays the last n (optionally, recent ones)
+new AsyncSubject<T>(); // the final value only, and only on complete()
 ```
 
-**Why good:** each Subject type matches a specific multicast pattern, `BehaviorSubject` for current state, `ReplaySubject` for message history, `AsyncSubject` for final results
+`BehaviorSubject` for state that always has a value, `ReplaySubject` for history a late subscriber
+needs, `Subject` for events with no past, `AsyncSubject` for one final result.
 
-See [examples/subjects.md](examples/subjects.md) for detailed patterns.
+Full code: [examples/subjects.md](examples/subjects.md)
 
 ---
 
-### Pattern 7: Memory Leak Prevention
-
-The `takeUntil` pattern is the standard approach for cleanup.
+### Pattern 7: Cleanup with takeUntil
 
 ```typescript
-import { Subject, takeUntil } from "rxjs";
-
-// ✅ Good Example - takeUntil with destroy Subject
-class DataService {
+class Controller {
   private readonly destroy$ = new Subject<void>();
 
-  initialize(): void {
-    this.longLivedStream$
+  start(): void {
+    source$
       .pipe(
-        switchMap((id) => this.fetchData(id)),
-        takeUntil(this.destroy$), // MUST be LAST in the pipe
+        switchMap((id) => this.load(id)),
+        takeUntil(this.destroy$), // last — ends the inner subscription too
       )
-      .subscribe((data) => this.handleData(data));
+      .subscribe((data) => this.render(data));
   }
 
-  cleanup(): void {
+  stop(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 }
 ```
 
-**Why good:** `takeUntil` as last operator ensures all inner subscriptions are cleaned up, single destroy Subject handles all subscriptions
-
-```typescript
-// ❌ Bad Example - takeUntil before switchMap
-this.source$
-  .pipe(
-    takeUntil(this.destroy$), // BAD: inner Observable from switchMap survives!
-    switchMap((id) => this.longRunningRequest(id)),
-  )
-  .subscribe();
-```
-
-**Why bad:** `takeUntil` before `switchMap` unsubscribes from the outer source but the inner Observable created by `switchMap` continues running -- a silent memory leak
-
-See [examples/memory-leaks.md](examples/memory-leaks.md) for all cleanup strategies.
+One `destroy$` ends every subscription that pipes through it. Full code:
+[examples/memory-leaks.md](examples/memory-leaks.md)
 
 </patterns>
 
@@ -431,53 +259,25 @@ See [examples/memory-leaks.md](examples/memory-leaks.md) for all cleanup strateg
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority:**
+**Breaks at runtime:**
 
-- Nested `.subscribe()` calls inside `.subscribe()` -- use flattening operators (`switchMap`, `mergeMap`, etc.) instead
-- Missing `takeUntil` or `unsubscribe()` on long-lived Observables -- causes memory leaks
-- `takeUntil` placed before higher-order operators in the pipe -- inner subscriptions survive cleanup
-- Unhandled errors in Observable chains -- one error kills the entire stream permanently
-- Using `mergeMap` when `switchMap` is appropriate -- causes race conditions and stale data
+- An unhandled error terminates the chain permanently. Every subsequent emission is dropped silently, and the stream cannot be revived — only re-subscribed.
+- `catchError` returning a plain value rather than an Observable is a type error; `of(fallback)` is the fix.
+- `takeUntil` placed before a higher-order operator ends the outer source and leaves the inner subscription running. The cleanup code reads as correct and the leak is silent.
+- Nested `.subscribe()` calls produce subscriptions with no reference, multiplying with each outer emission.
+- `firstValueFrom` rejects when the Observable completes without emitting — the deprecated `.toPromise()` resolved `undefined` instead, so a migration changes the failure mode.
 
-**Medium Priority:**
+**Surprising behaviour:**
 
-- Using `.subscribe()` just to get a value and assign it -- consider `async` pipe, `firstValueFrom()`, or `lastValueFrom()` for one-shot usage
-- Not using `shareReplay` when multiple subscribers need the same HTTP response -- causes duplicate requests
-- Forgetting `distinctUntilChanged()` after `debounceTime` -- processes unchanged values
-- Using `new Observable()` when a creation function exists -- `fromEvent`, `from`, `timer` are cleaner
-
-**Gotchas & Edge Cases:**
-
-- `from(promise)` executes the promise immediately at creation time, not at subscription time -- use `defer(() => from(promise))` for lazy execution
-- `BehaviorSubject.getValue()` returns the current value synchronously but doesn't trigger subscriptions -- use `.pipe()` for reactive updates
-- `catchError` must return an Observable -- returning a plain value is a type error
-- `forkJoin` only emits when ALL source Observables complete -- one incomplete source blocks everything
-- `combineLatest` requires all sources to emit at least once before producing any output
-- `interval(0)` does NOT emit synchronously -- it uses `setInterval` and is always async
-- HTTP Observables (single-emission, auto-complete) generally don't need unsubscription, but `fromEvent`, `interval`, and Subject-based streams always do
-- `retry` re-subscribes to the source Observable from scratch -- ensure the source is idempotent
-- `shareReplay({ bufferSize: 1, refCount: true })` -- without `refCount: true`, the source is never unsubscribed even when all subscribers leave
+- `from(promise)` runs the promise at construction, not at subscription, and every subscriber gets the same settled result. `defer(() => from(promise))` restores laziness.
+- `shareReplay(1)` defaults `refCount` to `false`, so the source stays subscribed after the last subscriber leaves. `shareReplay({ bufferSize: 1, refCount: true })` is almost always what was meant.
+- `combineLatest` emits nothing until every source has emitted at least once — one silent source stalls the whole combination.
+- `forkJoin` emits only when every source _completes_, so a `Subject` or an `interval` in the list means it never emits.
+- `retry` re-subscribes to the source from the top, so a non-idempotent source runs its side effects again.
+- `interval(0)` is still asynchronous — it schedules, it does not emit synchronously.
+- `BehaviorSubject.getValue()` reads the current value without subscribing, which quietly turns reactive code into a poll.
+- `mergeMap` where `switchMap` was meant produces a race: responses land out of order and the slowest one wins.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST unsubscribe from every long-lived Observable -- use `takeUntil`, `take`, `first`, or explicit `unsubscribe()` to prevent memory leaks)**
-
-**(You MUST choose the correct flattening operator -- `switchMap` for cancellation, `mergeMap` for parallel, `concatMap` for sequential, `exhaustMap` to ignore while busy)**
-
-**(You MUST place `takeUntil` LAST in the pipe chain -- placing it before higher-order operators like `switchMap` leaves inner subscriptions alive)**
-
-**(You MUST handle errors with `catchError` inside the pipe -- an unhandled error terminates the entire Observable chain permanently)**
-
-**Failure to follow these rules will cause memory leaks, stale data, and silently broken Observable chains.**
-
-</critical_reminders>

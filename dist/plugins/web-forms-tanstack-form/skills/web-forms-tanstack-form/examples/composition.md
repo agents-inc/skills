@@ -10,7 +10,7 @@
 
 ---
 
-## Pattern 1: createFormHook for App-Wide Consistency
+## Pattern 13: createFormHook for App-Wide Consistency
 
 Use `createFormHook` to register reusable field and form components once, then use them across all forms via `useAppForm`.
 
@@ -118,7 +118,7 @@ export function ProfileForm() {
 
 ---
 
-## Pattern 2: withForm for Subform Components
+## Pattern 14: withForm for Subform Components
 
 Use `withForm` to create typed subform components that receive the form instance.
 
@@ -174,7 +174,7 @@ export function CheckoutForm() {
 
 ---
 
-## Pattern 3: Listeners for Side Effects
+## Pattern 15: Listeners for Side Effects
 
 Use the `listeners` prop on `form.Field` to perform side effects when a field changes. Listeners do not return validation errors.
 
@@ -270,7 +270,7 @@ export function LocationForm() {
 
 ---
 
-## Pattern 4: form.Subscribe for Conditional UI
+## Pattern 16: form.Subscribe for Conditional UI
 
 Use `form.Subscribe` to show/hide sections, display totals, or toggle UI based on form state without re-rendering the entire form.
 

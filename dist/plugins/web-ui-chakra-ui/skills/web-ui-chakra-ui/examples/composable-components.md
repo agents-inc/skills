@@ -4,6 +4,8 @@
 
 **Prerequisites**: Understand composable component pattern from SKILL.md Pattern 4.
 
+Every overlay here has the same skeleton: `Root` and `Trigger`, then a `Portal` holding the backdrop, the `Positioner` and the `Content`. The `Positioner` is the part that places the content against the trigger or the viewport — omit it and the content renders unplaced. `Portal` is what keeps the overlay out of any ancestor with `overflow` or a `transform` on it.
+
 ---
 
 ## Dialog (Modal)
@@ -11,7 +13,7 @@
 ### Basic Dialog
 
 ```tsx
-import { Dialog, Button } from "@chakra-ui/react";
+import { Button, Dialog, Portal } from "@chakra-ui/react";
 
 function BasicDialog() {
   return (
@@ -19,28 +21,36 @@ function BasicDialog() {
       <Dialog.Trigger asChild>
         <Button variant="outline">Edit Profile</Button>
       </Dialog.Trigger>
-      <Dialog.Backdrop />
-      <Dialog.Content>
-        <Dialog.Header>Edit Profile</Dialog.Header>
-        <Dialog.Body>
-          <p>Update your profile information below.</p>
-        </Dialog.Body>
-        <Dialog.Footer>
-          <Dialog.CloseTrigger asChild>
-            <Button variant="outline">Cancel</Button>
-          </Dialog.CloseTrigger>
-          <Button colorPalette="blue">Save</Button>
-        </Dialog.Footer>
-      </Dialog.Content>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Edit Profile</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+              <p>Update your profile information below.</p>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <Button variant="outline">Cancel</Button>
+              </Dialog.CloseTrigger>
+              <Button colorPalette="blue">Save</Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
     </Dialog.Root>
   );
 }
 ```
 
+`Dialog.Title` is the part that supplies the dialog's accessible name. Heading text placed directly in `Dialog.Header` renders the same and names nothing.
+
 ### Controlled Dialog
 
 ```tsx
-import { Dialog, Button } from "@chakra-ui/react";
+import { Button, Dialog, Portal } from "@chakra-ui/react";
 import { useState } from "react";
 
 function ControlledDialog() {
@@ -56,19 +66,25 @@ function ControlledDialog() {
       <Dialog.Trigger asChild>
         <Button>Open</Button>
       </Dialog.Trigger>
-      <Dialog.Backdrop />
-      <Dialog.Content>
-        <Dialog.Header>Confirm</Dialog.Header>
-        <Dialog.Body>Are you sure you want to proceed?</Dialog.Body>
-        <Dialog.Footer>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button colorPalette="red" onClick={handleSave}>
-            Confirm
-          </Button>
-        </Dialog.Footer>
-      </Dialog.Content>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Confirm</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>Are you sure you want to proceed?</Dialog.Body>
+            <Dialog.Footer>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button colorPalette="red" onClick={handleSave}>
+                Confirm
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
     </Dialog.Root>
   );
 }
@@ -77,7 +93,7 @@ function ControlledDialog() {
 ### Alert Dialog
 
 ```tsx
-import { Dialog, Button } from "@chakra-ui/react";
+import { Button, Dialog, Portal } from "@chakra-ui/react";
 
 function DeleteConfirmation({ onDelete }: { onDelete: () => void }) {
   return (
@@ -87,21 +103,28 @@ function DeleteConfirmation({ onDelete }: { onDelete: () => void }) {
           Delete
         </Button>
       </Dialog.Trigger>
-      <Dialog.Backdrop />
-      <Dialog.Content>
-        <Dialog.Header>Delete Item</Dialog.Header>
-        <Dialog.Body>
-          This action cannot be undone. This will permanently delete the item.
-        </Dialog.Body>
-        <Dialog.Footer>
-          <Dialog.CloseTrigger asChild>
-            <Button variant="outline">Cancel</Button>
-          </Dialog.CloseTrigger>
-          <Button colorPalette="red" onClick={onDelete}>
-            Delete
-          </Button>
-        </Dialog.Footer>
-      </Dialog.Content>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Delete Item</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+              This action cannot be undone. This will permanently delete the
+              item.
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <Button variant="outline">Cancel</Button>
+              </Dialog.CloseTrigger>
+              <Button colorPalette="red" onClick={onDelete}>
+                Delete
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
     </Dialog.Root>
   );
 }
@@ -115,12 +138,16 @@ function DeleteConfirmation({ onDelete }: { onDelete: () => void }) {
   <Dialog.Trigger asChild>
     <Button>Open Heavy Content</Button>
   </Dialog.Trigger>
-  <Dialog.Backdrop />
-  <Dialog.Content>
-    <Dialog.Body>
-      {/* Heavy content only renders when dialog opens */}
-    </Dialog.Body>
-  </Dialog.Content>
+  <Portal>
+    <Dialog.Backdrop />
+    <Dialog.Positioner>
+      <Dialog.Content>
+        <Dialog.Body>
+          {/* Heavy content only renders when dialog opens */}
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Positioner>
+  </Portal>
 </Dialog.Root>
 ```
 
@@ -133,7 +160,7 @@ function DeleteConfirmation({ onDelete }: { onDelete: () => void }) {
 ### Basic Menu
 
 ```tsx
-import { Menu, Button } from "@chakra-ui/react";
+import { Button, Menu, Portal } from "@chakra-ui/react";
 
 function ActionMenu() {
   return (
@@ -143,14 +170,18 @@ function ActionMenu() {
           Actions
         </Button>
       </Menu.Trigger>
-      <Menu.Content>
-        <Menu.Item value="edit">Edit</Menu.Item>
-        <Menu.Item value="duplicate">Duplicate</Menu.Item>
-        <Menu.Separator />
-        <Menu.Item value="delete" color="fg.error">
-          Delete
-        </Menu.Item>
-      </Menu.Content>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content>
+            <Menu.Item value="edit">Edit</Menu.Item>
+            <Menu.Item value="duplicate">Duplicate</Menu.Item>
+            <Menu.Separator />
+            <Menu.Item value="delete" color="fg.error">
+              Delete
+            </Menu.Item>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
     </Menu.Root>
   );
 }
@@ -159,7 +190,8 @@ function ActionMenu() {
 ### Menu with Selection
 
 ```tsx
-import { Menu, Button } from "@chakra-ui/react";
+import { Button, Menu, Portal } from "@chakra-ui/react";
+import { useState } from "react";
 
 function SortMenu() {
   const [sortBy, setSortBy] = useState("name");
@@ -169,22 +201,35 @@ function SortMenu() {
       <Menu.Trigger asChild>
         <Button variant="outline">Sort by: {sortBy}</Button>
       </Menu.Trigger>
-      <Menu.Content>
-        <Menu.RadioItemGroup
-          value={sortBy}
-          onValueChange={(details) => setSortBy(details.value)}
-        >
-          <Menu.RadioItem value="name">Name</Menu.RadioItem>
-          <Menu.RadioItem value="date">Date</Menu.RadioItem>
-          <Menu.RadioItem value="size">Size</Menu.RadioItem>
-        </Menu.RadioItemGroup>
-      </Menu.Content>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content>
+            <Menu.RadioItemGroup
+              value={sortBy}
+              onValueChange={(details) => setSortBy(details.value)}
+            >
+              <Menu.RadioItem value="name">
+                Name
+                <Menu.ItemIndicator />
+              </Menu.RadioItem>
+              <Menu.RadioItem value="date">
+                Date
+                <Menu.ItemIndicator />
+              </Menu.RadioItem>
+              <Menu.RadioItem value="size">
+                Size
+                <Menu.ItemIndicator />
+              </Menu.RadioItem>
+            </Menu.RadioItemGroup>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
     </Menu.Root>
   );
 }
 ```
 
-**Why good:** composable parts, built-in radio/checkbox groups, keyboard navigation, accessible by default
+**Why good:** composable parts, built-in radio/checkbox groups, keyboard navigation, accessible by default. `Menu.ItemIndicator` is the part that marks the selected item, and it belongs inside each `RadioItem`.
 
 ---
 
@@ -193,7 +238,7 @@ function SortMenu() {
 ### Basic Popover
 
 ```tsx
-import { Popover, Button, Text, Stack } from "@chakra-ui/react";
+import { Popover, Portal, Button, Text, Stack } from "@chakra-ui/react";
 
 function InfoPopover() {
   return (
@@ -203,25 +248,33 @@ function InfoPopover() {
           Info
         </Button>
       </Popover.Trigger>
-      <Popover.Content>
-        <Popover.Arrow />
-        <Popover.Header>Details</Popover.Header>
-        <Popover.Body>
-          <Stack gap="2">
-            <Text fontSize="sm">Created: Jan 15, 2026</Text>
-            <Text fontSize="sm">Status: Active</Text>
-          </Stack>
-        </Popover.Body>
-      </Popover.Content>
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content>
+            <Popover.Arrow>
+              <Popover.ArrowTip />
+            </Popover.Arrow>
+            <Popover.Header>Details</Popover.Header>
+            <Popover.Body>
+              <Stack gap="2">
+                <Text fontSize="sm">Created: Jan 15, 2026</Text>
+                <Text fontSize="sm">Status: Active</Text>
+              </Stack>
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
     </Popover.Root>
   );
 }
 ```
 
+`Popover.Arrow` positions the arrow and `Popover.ArrowTip` draws it — the documented anatomy nests the tip inside the arrow.
+
 ### Controlled Popover
 
 ```tsx
-import { Popover, Button } from "@chakra-ui/react";
+import { Popover, Portal, Button, Text } from "@chakra-ui/react";
 import { useState } from "react";
 
 function ControlledPopover() {
@@ -232,15 +285,21 @@ function ControlledPopover() {
       <Popover.Trigger asChild>
         <Button>Toggle</Button>
       </Popover.Trigger>
-      <Popover.Content>
-        <Popover.Arrow />
-        <Popover.Body>
-          <Text>Controlled content</Text>
-          <Button size="sm" onClick={() => setOpen(false)}>
-            Close
-          </Button>
-        </Popover.Body>
-      </Popover.Content>
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content>
+            <Popover.Arrow>
+              <Popover.ArrowTip />
+            </Popover.Arrow>
+            <Popover.Body>
+              <Text>Controlled content</Text>
+              <Button size="sm" onClick={() => setOpen(false)}>
+                Close
+              </Button>
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
     </Popover.Root>
   );
 }
@@ -255,7 +314,7 @@ function ControlledPopover() {
 ### Basic Drawer
 
 ```tsx
-import { Drawer, Button } from "@chakra-ui/react";
+import { Button, Drawer, Portal, Stack } from "@chakra-ui/react";
 
 function SideDrawer() {
   return (
@@ -263,30 +322,36 @@ function SideDrawer() {
       <Drawer.Trigger asChild>
         <Button variant="outline">Open Drawer</Button>
       </Drawer.Trigger>
-      <Drawer.Backdrop />
-      <Drawer.Content>
-        <Drawer.Header>Navigation</Drawer.Header>
-        <Drawer.Body>
-          <Stack gap="2">
-            <Button variant="ghost" justifyContent="flex-start">
-              Home
-            </Button>
-            <Button variant="ghost" justifyContent="flex-start">
-              Profile
-            </Button>
-            <Button variant="ghost" justifyContent="flex-start">
-              Settings
-            </Button>
-          </Stack>
-        </Drawer.Body>
-        <Drawer.Footer>
-          <Drawer.CloseTrigger asChild>
-            <Button variant="outline" w="full">
-              Close
-            </Button>
-          </Drawer.CloseTrigger>
-        </Drawer.Footer>
-      </Drawer.Content>
+      <Portal>
+        <Drawer.Backdrop />
+        <Drawer.Positioner>
+          <Drawer.Content>
+            <Drawer.Header>
+              <Drawer.Title>Navigation</Drawer.Title>
+            </Drawer.Header>
+            <Drawer.Body>
+              <Stack gap="2">
+                <Button variant="ghost" justifyContent="flex-start">
+                  Home
+                </Button>
+                <Button variant="ghost" justifyContent="flex-start">
+                  Profile
+                </Button>
+                <Button variant="ghost" justifyContent="flex-start">
+                  Settings
+                </Button>
+              </Stack>
+            </Drawer.Body>
+            <Drawer.Footer>
+              <Drawer.CloseTrigger asChild>
+                <Button variant="outline" w="full">
+                  Close
+                </Button>
+              </Drawer.CloseTrigger>
+            </Drawer.Footer>
+          </Drawer.Content>
+        </Drawer.Positioner>
+      </Portal>
     </Drawer.Root>
   );
 }
@@ -295,20 +360,26 @@ function SideDrawer() {
 ### Drawer with Placement
 
 ```tsx
-import { Drawer, Button } from "@chakra-ui/react";
+import { Button, Drawer, Portal } from "@chakra-ui/react";
 
-// Placement options: "start" (left), "end" (right), "top", "bottom"
+// Placement options: "start" (left), "end" (right, the default), "top", "bottom"
 function RightDrawer() {
   return (
     <Drawer.Root placement="end">
       <Drawer.Trigger asChild>
         <Button>Details</Button>
       </Drawer.Trigger>
-      <Drawer.Backdrop />
-      <Drawer.Content>
-        <Drawer.Header>Item Details</Drawer.Header>
-        <Drawer.Body>{/* Detail content */}</Drawer.Body>
-      </Drawer.Content>
+      <Portal>
+        <Drawer.Backdrop />
+        <Drawer.Positioner>
+          <Drawer.Content>
+            <Drawer.Header>
+              <Drawer.Title>Item Details</Drawer.Title>
+            </Drawer.Header>
+            <Drawer.Body>{/* Detail content */}</Drawer.Body>
+          </Drawer.Content>
+        </Drawer.Positioner>
+      </Portal>
     </Drawer.Root>
   );
 }
@@ -319,6 +390,8 @@ function RightDrawer() {
 ---
 
 ## Tabs
+
+Tabs are laid out in place rather than floated, so there is no positioner and no portal.
 
 ### Basic Tabs
 

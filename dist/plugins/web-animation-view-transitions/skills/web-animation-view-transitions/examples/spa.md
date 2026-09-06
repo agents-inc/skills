@@ -1,14 +1,15 @@
-# SPA View Transitions
+# View Transitions - Same-Document Examples
 
-> Same-document transition patterns for single-page applications. See [core.md](core.md) for basic patterns.
+> Client-side transition patterns, continuing the numbering from [core.md](core.md).
 
-**Prerequisites**: Understand feature detection from [core.md](core.md) first.
+**Prerequisites:** feature detection from [core.md](core.md) Pattern 1 — every function below
+branches on it.
 
 ---
 
-## Theme Switcher with Circular Reveal
+## Pattern 7: Theme Switch with a Circular Reveal
 
-### Good Example - Click-Origin Circular Reveal
+### Good Example - Reveal from the Click Point
 
 ```typescript
 // theme-transition.ts
@@ -18,14 +19,12 @@ interface ClickPosition {
   y: number;
 }
 
-// Track last click position for reveal origin
 let lastClickPosition: ClickPosition = { x: 0, y: 0 };
 
 document.addEventListener("click", (e: MouseEvent) => {
   lastClickPosition = { x: e.clientX, y: e.clientY };
 });
 
-// Animation constants
 const REVEAL_DURATION_MS = 400;
 const REVEAL_EASING = "ease-in-out";
 
@@ -37,7 +36,7 @@ export async function toggleThemeWithReveal(): Promise<void> {
 
   const { x, y } = lastClickPosition;
 
-  // Calculate radius to cover entire viewport
+  // Radius from the click to the furthest corner, so the circle covers the viewport
   const endRadius = Math.hypot(
     Math.max(x, window.innerWidth - x),
     Math.max(y, window.innerHeight - y),
@@ -49,7 +48,6 @@ export async function toggleThemeWithReveal(): Promise<void> {
 
   await transition.ready;
 
-  // Determine animation direction based on theme
   const isDark = document.documentElement.classList.contains("dark");
   const clipPath = [
     `circle(0 at ${x}px ${y}px)`,
@@ -74,7 +72,6 @@ function toggleThemeClass(): void {
 **Supporting CSS:**
 
 ```css
-/* Required for clip-path animation */
 ::view-transition-image-pair(root) {
   isolation: auto;
 }
@@ -87,13 +84,16 @@ function toggleThemeClass(): void {
 }
 ```
 
-**Why good:** Calculates reveal radius from click position, reverses animation based on theme direction, disables default animations for custom control
+**Why good:** The default cross-fade has to be cancelled or the two snapshots blend under the clip
+and the reveal reads as a smear. Reversing the clip for one direction means the outgoing theme wipes
+away rather than the incoming one wiping in, which keeps the motion pointing the same way for both
+toggles.
 
 ---
 
-## Multi-Step Form Transitions
+## Pattern 8: Multi-Step Form
 
-### Good Example - Form Step Navigation
+### Good Example - Direction-Aware Step Navigation
 
 ```typescript
 // form-transitions.ts
@@ -117,12 +117,10 @@ function getStepElement(step: FormStep): HTMLElement | null {
 }
 
 function showStep(step: FormStep): void {
-  // Hide all steps
   document.querySelectorAll("[data-form-step]").forEach((el) => {
     (el as HTMLElement).hidden = true;
   });
 
-  // Show target step
   const stepElement = getStepElement(step);
   if (stepElement) {
     stepElement.hidden = false;
@@ -133,7 +131,6 @@ export async function goToStep(step: FormStep): Promise<void> {
   if (step < 1 || step > TOTAL_STEPS) return;
   if (step === formState.currentStep) return;
 
-  // Determine direction
   formState.direction = step > formState.currentStep ? "forwards" : "backwards";
 
   const updateFn = () => {
@@ -146,7 +143,6 @@ export async function goToStep(step: FormStep): Promise<void> {
     return;
   }
 
-  // Set direction type for CSS targeting via :active-view-transition-type()
   const transition = document.startViewTransition({
     update: updateFn,
     types: [formState.direction],
@@ -168,7 +164,7 @@ export function prevStep(): void {
 }
 ```
 
-**CSS for directional transitions:**
+**CSS:**
 
 ```css
 :root {
@@ -180,7 +176,6 @@ export function prevStep(): void {
   view-transition-name: form-step;
 }
 
-/* Forward navigation */
 html:active-view-transition-type(forwards) {
   &::view-transition-old(form-step) {
     animation: slide-out-left var(--form-slide-duration) ease-in;
@@ -190,7 +185,6 @@ html:active-view-transition-type(forwards) {
   }
 }
 
-/* Backward navigation */
 html:active-view-transition-type(backwards) {
   &::view-transition-old(form-step) {
     animation: slide-out-right var(--form-slide-duration) ease-in;
@@ -229,34 +223,29 @@ html:active-view-transition-type(backwards) {
 }
 ```
 
-**Why good:** Direction-aware transitions, CSS custom properties for values, proper step validation
+**Why good:** One name on every step is safe because only one is ever visible — the hidden steps do
+not participate. The direction is passed as a type, so the JavaScript knows nothing about which
+keyframes exist and the CSS owns the whole animation.
 
 ---
 
-## Tab Panel Transitions
+## Pattern 9: Tab Panels
 
-### Good Example - Tab Content Transitions
+### Good Example - Panel Cross-Fade
 
 ```typescript
 // tab-transitions.ts
-
-interface Tab {
-  id: string;
-  label: string;
-}
 
 let activeTabId: string = "";
 
 function setActiveTab(tabId: string): void {
   activeTabId = tabId;
 
-  // Update tab button states
   document.querySelectorAll('[role="tab"]').forEach((tab) => {
     const isActive = tab.getAttribute("data-tab-id") === tabId;
     tab.setAttribute("aria-selected", String(isActive));
   });
 
-  // Update tab panel visibility
   document.querySelectorAll('[role="tabpanel"]').forEach((panel) => {
     const isActive = panel.getAttribute("data-tab-id") === tabId;
     (panel as HTMLElement).hidden = !isActive;
@@ -309,13 +298,15 @@ export function switchTab(tabId: string): void {
 }
 ```
 
-**Why good:** ARIA-compliant tab implementation, simple fade transition for content
+**Why good:** `aria-selected` and `hidden` are updated inside the callback, so the accessible state
+and the animation cannot disagree. The early return on the active tab avoids a transition that would
+animate nothing.
 
 ---
 
-## Accordion Transitions
+## Pattern 10: Accordion Sections
 
-### Good Example - Expanding Sections
+### Good Example - A Name Assigned Only While Animating
 
 ```typescript
 // accordion-transitions.ts
@@ -339,13 +330,11 @@ function toggleAccordionSection(triggerId: string): void {
     return;
   }
 
-  // Give the panel a unique transition name while animating
   panel.style.viewTransitionName = `accordion-${panelId}`;
 
   const transition = document.startViewTransition(updateFn);
 
   transition.finished.then(() => {
-    // Clean up transition name
     panel.style.viewTransitionName = "";
   });
 }
@@ -358,7 +347,6 @@ function toggleAccordionSection(triggerId: string): void {
   --accordion-duration: 300ms;
 }
 
-/* Dynamic transition names are set via JavaScript */
 [id^="accordion-panel-"] {
   overflow: hidden;
 }
@@ -369,13 +357,15 @@ function toggleAccordionSection(triggerId: string): void {
 }
 ```
 
-**Why good:** Dynamic transition names prevent conflicts, cleanup after transition, accessible ARIA pattern
+**Why good:** The name derives from the panel's own id, so several accordions on one page never
+collide; clearing it in the `finished` handler is what keeps the next section's transition from
+inheriting it.
 
 ---
 
-## List Reordering Transitions
+## Pattern 11: List Reordering
 
-### Good Example - Animated List Sort
+### Good Example - Rows That Move Rather Than Redraw
 
 ```typescript
 // list-transitions.ts
@@ -392,18 +382,17 @@ function renderList(): void {
   const container = document.getElementById("sortable-list");
   if (!container) return;
 
-  // Sort by order
   const sortedItems = [...items].sort((a, b) => a.order - b.order);
 
-  container.innerHTML = sortedItems
-    .map(
-      (item) => `
-      <li data-item-id="${item.id}" style="view-transition-name: item-${item.id}">
-        ${item.label}
-      </li>
-    `,
-    )
-    .join("");
+  container.replaceChildren(
+    ...sortedItems.map((item) => {
+      const li = document.createElement("li");
+      li.dataset.itemId = item.id;
+      li.style.viewTransitionName = `item-${item.id}`;
+      li.textContent = item.label;
+      return li;
+    }),
+  );
 }
 
 export function sortListBy(
@@ -425,7 +414,6 @@ export function sortListBy(
   document.startViewTransition(updateFn);
 }
 
-// Usage
 export function sortAlphabetically(): void {
   sortListBy((a, b) => a.label.localeCompare(b.label));
 }
@@ -442,60 +430,35 @@ export function sortById(): void {
   --list-reorder-duration: 300ms;
 }
 
-/* Each item has unique view-transition-name via inline style */
-#sortable-list li {
-  /* view-transition-name is set inline */
-}
-
-/* Animate position changes */
 ::view-transition-group(*) {
   animation-duration: var(--list-reorder-duration);
   animation-timing-function: ease-out;
 }
 ```
 
-**Why good:** Each item gets unique transition name for FLIP animation, sorts without remounting elements
+**Why good:** A per-item name derived from the item id is what turns a full re-render into rows
+sliding to their new positions — the browser matches the two snapshots by name, so it does not matter
+that the elements themselves were replaced.
 
 ---
 
-## Reduced Motion Fallback
+## Pattern 12: Reduced Motion
 
-### Good Example - Accessible SPA Transitions
+### Good Example - Both Layers Handled
 
 ```typescript
 // accessible-transitions.ts
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-interface TransitionConfig {
-  duration: number;
-  reducedDuration: number;
-}
-
-const DEFAULT_CONFIG: TransitionConfig = {
-  duration: 300,
-  reducedDuration: 100,
-};
-
 function prefersReducedMotion(): boolean {
   return window.matchMedia(REDUCED_MOTION_QUERY).matches;
 }
 
-export function getTransitionDuration(config = DEFAULT_CONFIG): number {
-  return prefersReducedMotion() ? config.reducedDuration : config.duration;
-}
-
 export async function accessibleTransition(
   updateFn: () => void,
-  config = DEFAULT_CONFIG,
 ): Promise<void> {
-  // Skip transition entirely for reduced motion if preferred
-  if (prefersReducedMotion()) {
-    updateFn();
-    return;
-  }
-
-  if (!document.startViewTransition) {
+  if (prefersReducedMotion() || !document.startViewTransition) {
     updateFn();
     return;
   }
@@ -504,16 +467,14 @@ export async function accessibleTransition(
   await transition.finished;
 }
 
-// Monitor for preference changes
+/** Subscribe to preference changes; returns an unsubscribe function. */
 export function onReducedMotionChange(
   callback: (prefers: boolean) => void,
 ): () => void {
   const query = window.matchMedia(REDUCED_MOTION_QUERY);
-
   const handler = (e: MediaQueryListEvent) => callback(e.matches);
-  query.addEventListener("change", handler);
 
-  // Return cleanup function
+  query.addEventListener("change", handler);
   return () => query.removeEventListener("change", handler);
 }
 ```
@@ -530,4 +491,6 @@ export function onReducedMotionChange(
 }
 ```
 
-**Why good:** JavaScript and CSS both handle reduced motion, returns cleanup function for subscriptions
+**Why good:** The preference is read at call time rather than captured once, so a user changing it
+mid-session is respected without a reload. The CSS layer is a backstop for any transition that starts
+without going through this function.

@@ -1,32 +1,28 @@
-# View Transitions Core Examples
+# View Transitions - Core Examples
 
-> Complete code examples for basic View Transitions patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Full code for the core patterns. See [SKILL.md](../SKILL.md) for the decisions and
+> [reference.md](../reference.md) for naming rules and API tables.
 
-**For advanced patterns**: See topic-specific files in this folder:
+**Related examples:**
 
-- [spa.md](spa.md) - Same-document SPA transitions
-- [shared-elements.md](shared-elements.md) - Shared element hero animations
+- [spa.md](spa.md) — same-document patterns (Patterns 7–12)
+- [shared-elements.md](shared-elements.md) — elements that travel between views (Patterns 13–18)
 
 ---
 
 ## Pattern 1: Feature Detection Utility
 
-### Good Example - Comprehensive Feature Detection
+### Good Example - One Guard, Two Shapes
 
 ```typescript
 // view-transition-utils.ts
 
-// Feature detection constant
 export const SUPPORTS_VIEW_TRANSITIONS =
   typeof document !== "undefined" && "startViewTransition" in document;
 
-// Type for callback functions
 type TransitionCallback = () => void | Promise<void>;
 
-/**
- * Execute a function with optional view transition.
- * Falls back gracefully if transitions are not supported.
- */
+/** Run an update inside a transition, awaiting the animation. */
 export async function withViewTransition(
   updateFn: TransitionCallback,
 ): Promise<void> {
@@ -42,10 +38,7 @@ export async function withViewTransition(
   await transition.finished;
 }
 
-/**
- * Execute a function with view transition, returning the ViewTransition object
- * for custom animation control.
- */
+/** Run an update inside a transition, returning the object for custom animation. */
 export function startViewTransitionSafe(
   updateFn: TransitionCallback,
 ): ViewTransition | null {
@@ -58,12 +51,13 @@ export function startViewTransitionSafe(
 }
 ```
 
-**Why good:** Named export for tree-shaking, type-safe, async support, returns transition object for advanced use cases
+**Why good:** Two entry points for the two real needs — await the whole thing, or hold the object to
+animate a pseudo-element after `ready`. Returning `null` rather than a stub makes the unsupported
+path visible at the call site instead of failing later on a missing promise.
 
-### Bad Example - No Feature Detection
+### Bad Example - Unguarded Call
 
 ```typescript
-// Bad - will crash in unsupported browsers
 function updatePage(content: string): void {
   document.startViewTransition(() => {
     document.body.innerHTML = content;
@@ -71,13 +65,14 @@ function updatePage(content: string): void {
 }
 ```
 
-**Why bad:** No feature detection causes runtime errors in Firefox < 144, Safari < 18, older browsers
+**Why bad:** Where the API is absent the call throws, so the page never updates at all — the missing
+animation takes the content change down with it.
 
 ---
 
 ## Pattern 2: Basic State Transition
 
-### Good Example - Toggle with Transition
+### Good Example - View Toggle
 
 ```typescript
 type ViewState = "list" | "detail";
@@ -111,7 +106,6 @@ function navigateTo(view: ViewState): void {
   });
 }
 
-// Usage
 document.getElementById("show-detail")?.addEventListener("click", () => {
   navigateTo("detail");
 });
@@ -121,13 +115,14 @@ document.getElementById("back-to-list")?.addEventListener("click", () => {
 });
 ```
 
-**Why good:** Feature detection with fallback, clear separation of state and render
+**Why good:** The transition wraps an update that already worked on its own — state and render stay
+separate, so removing the transition changes nothing but the animation.
 
 ---
 
-## Pattern 3: Async Data Loading Transition
+## Pattern 3: Async Data Loading
 
-### Good Example - Fetch with Transition
+### Good Example - Fetch Inside the Callback
 
 ```typescript
 interface User {
@@ -138,7 +133,6 @@ interface User {
 
 async function loadUserWithTransition(userId: string): Promise<void> {
   const updateFn = async () => {
-    // Show loading state
     showLoadingState();
 
     try {
@@ -146,7 +140,7 @@ async function loadUserWithTransition(userId: string): Promise<void> {
       const user: User = await response.json();
       renderUserProfile(user);
     } catch (error) {
-      renderError("Failed to load user");
+      renderError(`Failed to load user: ${String(error)}`);
     }
   };
 
@@ -155,12 +149,10 @@ async function loadUserWithTransition(userId: string): Promise<void> {
     return;
   }
 
-  // Start transition with async callback
   const transition = document.startViewTransition(async () => {
     await updateFn();
   });
 
-  // Handle transition errors separately
   transition.finished.catch((error) => {
     console.warn("View transition failed:", error);
   });
@@ -175,31 +167,37 @@ function showLoadingState(): void {
 
 function renderUserProfile(user: User): void {
   const container = document.getElementById("user-profile");
-  if (container) {
-    container.innerHTML = `
-      <article>
-        <h1>${user.name}</h1>
-        <p>${user.email}</p>
-      </article>
-    `;
-  }
+  if (!container) return;
+
+  const heading = document.createElement("h1");
+  heading.textContent = user.name;
+
+  const email = document.createElement("p");
+  email.textContent = user.email;
+
+  container.replaceChildren(heading, email);
 }
 
 function renderError(message: string): void {
   const container = document.getElementById("user-profile");
-  if (container) {
-    container.innerHTML = `<div role="alert">${message}</div>`;
-  }
+  if (!container) return;
+
+  const alert = document.createElement("div");
+  alert.setAttribute("role", "alert");
+  alert.textContent = message;
+  container.replaceChildren(alert);
 }
 ```
 
-**Why good:** Handles async operations inside transition callback, error handling for both fetch and transition, accessible loading state
+**Why good:** The page is frozen for as long as the callback runs, so the callback moves to a loading
+state rather than awaiting the network before painting anything. The `finished` rejection is caught
+separately from the fetch failure — a transition can be skipped without the update having failed.
 
 ---
 
-## Pattern 4: Transition Promise Handling
+## Pattern 4: The Three Promises
 
-### Good Example - Using ViewTransition Promises
+### Good Example - What Each One Marks
 
 ```typescript
 async function demonstrateTransitionPromises(
@@ -212,16 +210,16 @@ async function demonstrateTransitionPromises(
 
   const transition = document.startViewTransition(updateFn);
 
-  // ready: Pseudo-element tree is created, animation about to start
+  // ready: pseudo-element tree exists, animation about to start
   transition.ready
     .then(() => {
-      console.log("Pseudo-elements ready - safe to add custom animations");
+      console.log("safe to animate pseudo-elements now");
     })
     .catch((error) => {
-      console.warn("Transition rejected before ready:", error);
+      console.warn("transition rejected before ready:", error);
     });
 
-  // updateCallbackDone: DOM update callback completed
+  // updateCallbackDone: the DOM update itself finished
   transition.updateCallbackDone
     .then(() => {
       console.log("DOM update complete");
@@ -230,13 +228,13 @@ async function demonstrateTransitionPromises(
       console.error("DOM update failed:", error);
     });
 
-  // finished: Transition complete, new view visible
+  // finished: animation over, new view live
   await transition.finished;
-  console.log("Transition finished - cleanup safe");
 }
 ```
 
-**Why good:** Shows all three promise stages, proper error handling for each
+**Why good:** Each promise rejects for a different reason, so catching them separately tells a
+skipped transition apart from a failed update.
 
 ### Good Example - Custom Animation After Ready
 
@@ -254,10 +252,8 @@ async function transitionWithCustomAnimation(
 
   const transition = document.startViewTransition(updateFn);
 
-  // Wait for pseudo-elements to exist
   await transition.ready;
 
-  // Apply custom animation via Web Animations API
   document.documentElement.animate(
     {
       opacity: [0.8, 1],
@@ -274,13 +270,14 @@ async function transitionWithCustomAnimation(
 }
 ```
 
-**Why good:** Waits for ready before animating, uses named constants, applies to correct pseudo-element
+**Why good:** The animation is called on the document element with a `pseudoElement` option, because
+the pseudo-element is not a node anything can hold a reference to.
 
 ---
 
-## Pattern 5: Skipping Transition
+## Pattern 5: Skipping a Transition
 
-### Good Example - Conditional Transition Skip
+### Good Example - Rapid Navigation
 
 ```typescript
 interface TransitionOptions {
@@ -291,29 +288,23 @@ function updateWithOptions(
   updateFn: () => void,
   options: TransitionOptions = {},
 ): ViewTransition | null {
-  // Skip if requested or not supported
   if (options.skipTransition || !document.startViewTransition) {
     updateFn();
     return null;
   }
 
-  const transition = document.startViewTransition(updateFn);
-
-  return transition;
+  return document.startViewTransition(updateFn);
 }
 
-// Skip transition programmatically
 function skipTransition(transition: ViewTransition | null): void {
   if (transition) {
     transition.skipTransition();
   }
 }
 
-// Usage - skip on rapid interactions
 let pendingTransition: ViewTransition | null = null;
 
 function handleRapidNavigation(page: string): void {
-  // Skip previous transition if still running
   skipTransition(pendingTransition);
 
   pendingTransition = updateWithOptions(() => {
@@ -322,33 +313,32 @@ function handleRapidNavigation(page: string): void {
 }
 
 function renderPage(page: string): void {
-  // Page rendering logic
+  // page rendering logic
 }
 ```
 
-**Why good:** Allows programmatic skip, handles rapid interactions gracefully
+**Why good:** `skipTransition()` jumps the previous transition to its end state rather than
+abandoning it midway, so a fast sequence of clicks lands on the right view instead of stacking
+half-finished animations.
 
 ---
 
-## Pattern 6: Transition CSS Customization
+## Pattern 6: CSS Customisation
 
-### Good Example - Basic CSS Animation Override
+### Good Example - Asymmetric Cross-Fade
 
 ```css
-/* Timing constants as CSS custom properties */
 :root {
   --vt-duration: 300ms;
   --vt-easing-enter: ease-out;
   --vt-easing-exit: ease-in;
 }
 
-/* Default cross-fade with custom timing */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: var(--vt-duration);
 }
 
-/* Asymmetric timing - exit faster than enter */
 ::view-transition-old(root) {
   animation-timing-function: var(--vt-easing-exit);
   animation-duration: calc(var(--vt-duration) * 0.8);
@@ -359,12 +349,12 @@ function renderPage(page: string): void {
 }
 ```
 
-**Why good:** CSS custom properties for maintainable timing values, asymmetric timing for polish
+**Why good:** Clearing the old view slightly ahead of the new one arriving keeps the two from
+muddying each other at the crossover, where equal durations leave both at half opacity.
 
-### Good Example - Disable Animation for Specific Elements
+### Good Example - Holding an Element Still
 
 ```css
-/* Exclude header from transition animation */
 .site-header {
   view-transition-name: header;
 }
@@ -374,10 +364,11 @@ function renderPage(page: string): void {
   animation: none;
 }
 
-/* Header stays static while content animates */
 ::view-transition-group(header) {
   z-index: 100;
 }
 ```
 
-**Why good:** Named element excluded from animation, z-index ensures proper layering
+**Why good:** Naming the header takes it out of the root snapshot, and cancelling its animation is
+what makes it sit still while the content beneath it changes. The `z-index` on the group keeps it
+above the content moving underneath.

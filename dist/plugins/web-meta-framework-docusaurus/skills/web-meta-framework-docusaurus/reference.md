@@ -26,12 +26,12 @@
 
 ### Swizzling
 
-| Command                                                             | Purpose                        |
-| ------------------------------------------------------------------- | ------------------------------ |
-| `npx docusaurus swizzle --list`                                     | List all swizzlable components |
-| `npx docusaurus swizzle [theme] [component] -- --wrap`              | Wrap a component (recommended) |
-| `npx docusaurus swizzle [theme] [component] -- --eject`             | Eject a component (full copy)  |
-| `npx docusaurus swizzle @docusaurus/theme-classic Footer -- --wrap` | Wrap the Footer component      |
+| Command                                                 | Purpose                                      |
+| ------------------------------------------------------- | -------------------------------------------- |
+| `npx docusaurus swizzle --list`                         | List swizzlable components and safety levels |
+| `npx docusaurus swizzle [theme] [component] -- --wrap`  | Wrap a component (recommended)               |
+| `npx docusaurus swizzle [theme] [component] -- --eject` | Eject a component (full copy)                |
+| `... -- --wrap --typescript`                            | Emit `.tsx` instead of `.js`                 |
 
 ### Deployment
 

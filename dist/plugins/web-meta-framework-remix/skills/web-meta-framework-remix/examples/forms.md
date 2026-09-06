@@ -1,6 +1,6 @@
-# Remix - Multiple Forms Examples
+# Remix — Multiple Forms in One Route
 
-> Patterns for handling multiple forms in a single route.
+> One action serving several forms, distinguished by a hidden `intent` field.
 
 ---
 
@@ -152,45 +152,43 @@ export default function Settings() {
 }
 ```
 
-**Why good:** Hidden `intent` field distinguishes forms, action uses switch statement for routing, success/error messages scoped to specific form, individual loading states per form
+**Why good:** A route has one action, so the `intent` field is what routes the submission to the right
+branch — and echoing it back in the response is what lets each form show only its own result. The
+`isSubmitting(intent)` helper reads `navigation.formData`, so saving the profile does not disable the
+delete button.
 
 ---
 
-## Key Concepts
-
-### Multi-Form Pattern Structure
+## The Four Parts
 
 ```typescript
-// 1. Hidden intent field in each form
+// 1. Every form declares which one it is
 <input type="hidden" name="intent" value="formName" />
 
-// 2. Switch on intent in action
+// 2. The action branches on it
 switch (formData.get("intent")) {
   case "formName":
-    // Handle this form
     break;
 }
 
-// 3. Scope feedback to specific form
-{actionData?.intent === "formName" && actionData.success && (
-  <p>Success!</p>
-)}
+// 3. The response says which form it belongs to, so feedback lands in one place
+{actionData?.intent === "formName" && actionData.success && <p>Success!</p>}
 
-// 4. Track loading state per form
+// 4. The pending state reads the in-flight submission's own intent
 const isSubmitting = (intent: string) =>
-  navigation.state === "submitting" &&
-  navigation.formData?.get("intent") === intent;
+  navigation.state === "submitting" && navigation.formData?.get("intent") === intent;
 ```
 
-### Alternative: Separate Actions with useFetcher
+## The Alternative: one fetcher per form
 
-For complex pages, consider using `useFetcher` with different endpoints:
+`useNavigation` describes a single navigation, so several forms sharing it are serialised — one
+submission at a time. Giving each form its own fetcher makes them independent, at the cost of a
+route per form.
 
 ```typescript
 const profileFetcher = useFetcher();
 const emailFetcher = useFetcher();
 
-// Each fetcher submits to its own resource route
 <profileFetcher.Form action="/api/profile" method="post">
 <emailFetcher.Form action="/api/email" method="post">
 ```

@@ -279,16 +279,17 @@ export const colors = {
 
 ---
 
-### Version Notes
+### Publishing Tokens Outside the Repository That Owns Them
 
-| Fact                    | Current state                                                                         |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| DTCG format module      | 2025.10 -- first stable version, published 2025-10-28                                 |
-| `color` / `dimension`   | Object values, not strings. Earlier drafts allowed `"#f8fafc"` and `"4px"`.           |
-| Style Dictionary        | v5 (5.5.0 at time of writing), targets the 2025.10 spec                               |
-| Node requirement        | v22.0.0 minimum for Style Dictionary v5                                               |
-| v5 reference strictness | References must point at real tokens -- non-token leaf nodes are no longer resolvable |
-| v5 reference syntax     | `{`, `}`, and `.` are fixed by the DTCG spec and no longer configurable               |
-| Format coexistence      | DTCG (`$value`) and original (`value`) cannot be combined in one instance             |
+Two rules follow from the source and the output being different things:
 
-**Migration helpers:** `convertToDTCG` converts an in-memory dictionary, `convertJSONToDTCG` and `convertZIPToDTCG` convert files, and `typeDtcgDelegate` pushes group-level `$type` down onto individual tokens. Convert the whole tree in one pass -- a partial conversion hits the mixed-format failure above.
+- **Add the namespace segment to every name** (`--acme-color-surface-raised`). A token set that lands in someone else's stylesheet is competing for names with theirs, and `--color-surface-raised` is exactly the name they would have chosen too.
+- **Version the generated artifact, not the source.** Consumers pin the artifact, so the source tree stays free to be reorganised — split, merged, retiered — for as long as the generated names hold. Reorganising is then a non-event, while renaming a generated token is a breaking change whatever the source looked like.
+
+**What that makes breaking:** a name change, a tier collapse that removes a token a consumer read, and a value change large enough to break someone's contrast ratios. Not: a file move, a group rename inside the source, or an added tier that leaves the output identical.
+
+---
+
+### Migrating an Older Token Tree
+
+Version facts, the reserved-property list and the conversion utilities are in [reference.md](../reference.md). The one procedural rule: **convert the whole tree in one pass** — a partial conversion produces the mixed-format failure above, which presents as tokens that simply vanished rather than as a format error.

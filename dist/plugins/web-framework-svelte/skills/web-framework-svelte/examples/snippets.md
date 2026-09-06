@@ -56,7 +56,7 @@ Content placed between a component's tags automatically becomes the `children` s
 
 ## Pattern 2: Named Snippets as Props
 
-Named snippets replace Svelte 4's named slots. Declare them inside the component tags or pass explicitly.
+Named snippets replace Svelte 4's named slots: declare one inside the component's tags, or pass a snippet reference as a prop.
 
 ### Good Example — Table with Header and Row Snippets
 
@@ -89,7 +89,7 @@ Named snippets replace Svelte 4's named slots. Declare them inside the component
         <tr><td colspan="999">No data</td></tr>
       {/if}
     {:else}
-      {#each data as item, index (index)}
+      {#each data as item, index}
         <tr>
           {@render row(item, index)}
         </tr>
@@ -135,7 +135,7 @@ Named snippets replace Svelte 4's named slots. Declare them inside the component
 </DataTable>
 ```
 
-**Why good:** Generic type `T` flows through to row snippet, typed parameters with `Snippet<[T, number]>`, optional empty snippet with fallback
+**Why good:** the generic `T` flows through to the row snippet, `Snippet<[T, number]>` types both parameters, and the optional `empty` snippet still has a fallback. The rows are unkeyed because a generic `T` carries no id — a concrete list keys on its own identifier, as [core.md](core.md) does.
 
 ---
 

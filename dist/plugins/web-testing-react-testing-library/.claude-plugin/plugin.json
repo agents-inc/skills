@@ -1,8 +1,8 @@
 {
   "name": "web-testing-react-testing-library",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
-  "description": "React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing",
+  "description": "React Testing Library — query hierarchy, userEvent, async utilities, renderHook, custom render with providers. Load when writing or reviewing tests that render React components or hooks.",
   "author": {
     "name": "@vince"
   },

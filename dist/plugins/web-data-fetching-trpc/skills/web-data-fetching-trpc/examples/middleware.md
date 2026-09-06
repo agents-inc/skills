@@ -1,12 +1,12 @@
-# tRPC Middleware Patterns
+# tRPC — Middleware Examples
 
-> Middleware for logging, rate limiting, and access control. See [core.md](core.md) for setup patterns.
+> Logging, rate limiting and scoped access. See [core.md](core.md) for initialization.
 
-**Prerequisites**: Understand Pattern 1 (Router Setup) from core examples first.
+**Prerequisites**: Pattern 1 (initialization and context) from core.
 
 ---
 
-## Logging Middleware
+## Logging
 
 ```typescript
 // packages/api/src/trpc/middleware/logging.ts
@@ -25,14 +25,14 @@ export const loggingMiddleware = middleware(async ({ path, type, next }) => {
 
   return result;
 });
-
-// Named export
-export { loggingMiddleware };
 ```
+
+`next()` is awaited, so the timing brackets the whole downstream chain including the handler — which
+is what makes this measure the procedure rather than the middleware.
 
 ---
 
-## Rate Limiting Middleware
+## Rate limiting
 
 ```typescript
 // packages/api/src/trpc/middleware/rate-limit.ts
@@ -42,8 +42,8 @@ import { middleware } from "../index";
 const RATE_LIMIT_REQUESTS = 100;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 
-// Use your rate limiting solution (e.g., in-memory, Redis-backed, or a managed service)
-// This example uses a simple in-memory store for illustration
+// An in-memory counter, to keep the example self-contained. A real deployment needs a shared
+// store, or each server process enforces its own separate limit.
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(identifier: string): {
@@ -82,14 +82,14 @@ export const rateLimitMiddleware = middleware(async ({ ctx, next }) => {
 
   return next();
 });
-
-// Named export
-export { rateLimitMiddleware };
 ```
+
+The identifier falls back through user, then address, then a shared bucket — so an authenticated
+user keeps their own allowance across devices while anonymous traffic shares one.
 
 ---
 
-## Organization-Scoped Access
+## Scoping access to a resource
 
 ```typescript
 // packages/api/src/trpc/middleware/org-access.ts
@@ -132,35 +132,13 @@ const withOrgAccess = middleware(async ({ ctx, getRawInput, next }) => {
   });
 });
 
-// Create org-scoped procedure
 export const orgProcedure = protectedProcedure.use(withOrgAccess);
-
-// Named export
-export { orgProcedure };
 ```
 
----
+Composing onto `protectedProcedure` rather than `publicProcedure` is what lets this middleware read
+`ctx.user.id` without a null check — the layer below already narrowed it. And because the membership
+is returned through `next({ ctx })`, every procedure built on `orgProcedure` gets it typed, without
+a second lookup.
 
-## Bad Example - Checking Auth in Every Handler
-
-```typescript
-// BAD: Duplicated auth checks in every procedure
-const postRouter = router({
-  create: publicProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" }); // Repeated!
-    // ...
-  }),
-  update: publicProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" }); // Repeated!
-    // ...
-  }),
-  delete: publicProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" }); // Repeated!
-    // ...
-  }),
-});
-```
-
-**Why bad:** Duplicated auth logic is error-prone (easy to forget), no TypeScript narrowing (ctx.user still nullable), middleware provides compile-time safety
-
----
+`getRawInput()` is used because a middleware runs before the procedure's own `.input()` parses, so
+the value is unvalidated — hence the explicit `orgId` check rather than trusting the cast.

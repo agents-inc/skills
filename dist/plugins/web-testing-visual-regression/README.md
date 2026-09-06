@@ -1,6 +1,6 @@
 # web-testing-visual-regression
 
-Visual regression testing - screenshot baselines, determinism, diff review workflow, baseline custody, and CI wiring for catching unintended UI changes
+Visual regression testing — screenshot baselines, determinism, diff review, baseline custody and CI wiring. Load when adding, reviewing or debugging tests that compare a rendered subject against an approved image.
 
 ## Installation
 

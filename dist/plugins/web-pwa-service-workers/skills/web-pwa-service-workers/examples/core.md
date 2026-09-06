@@ -1,19 +1,20 @@
-# Service Worker - Core Examples
+# Service Worker — Core Examples
 
-> Core code examples for Service Worker lifecycle and registration. See [SKILL.md](../SKILL.md) for concepts.
-
-**Extended patterns:** See [caching.md](caching.md) for advanced caching strategies and [updates.md](updates.md) for update handling.
+> Registration and the full lifecycle template. Decisions are in [SKILL.md](../SKILL.md);
+> [caching.md](caching.md) has the advanced strategies and [updates.md](updates.md) the update
+> handling.
 
 ---
 
-## Pattern 1: Service Worker Registration
+## Pattern 1: Registration
 
-Complete client-side registration with update detection, user-controlled updates, and reload on controller change.
+Feature detection, periodic update checks, waiting-worker tracking, and a single reload on
+controller change.
 
 ```typescript
 // register-service-worker.ts
 const SW_PATH = "/sw.js";
-const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 interface ServiceWorkerState {
   registration: ServiceWorkerRegistration | null;
@@ -21,14 +22,14 @@ interface ServiceWorkerState {
   applyUpdate: () => void;
 }
 
+const NOT_SUPPORTED: ServiceWorkerState = {
+  registration: null,
+  updateAvailable: false,
+  applyUpdate: () => {},
+};
+
 async function registerServiceWorker(): Promise<ServiceWorkerState> {
-  if (!("serviceWorker" in navigator)) {
-    return {
-      registration: null,
-      updateAvailable: false,
-      applyUpdate: () => {},
-    };
-  }
+  if (!("serviceWorker" in navigator)) return NOT_SUPPORTED;
 
   try {
     const registration = await navigator.serviceWorker.register(SW_PATH, {
@@ -36,7 +37,6 @@ async function registerServiceWorker(): Promise<ServiceWorkerState> {
       updateViaCache: "none",
     });
 
-    // Check for updates periodically
     setInterval(() => registration.update(), UPDATE_CHECK_INTERVAL_MS);
 
     let updateAvailable = false;
@@ -48,31 +48,26 @@ async function registerServiceWorker(): Promise<ServiceWorkerState> {
       window.dispatchEvent(new CustomEvent("sw-update-available"));
     };
 
-    if (registration.waiting) {
-      handleUpdate(registration.waiting);
-    }
+    if (registration.waiting) handleUpdate(registration.waiting);
 
     registration.addEventListener("updatefound", () => {
       const installing = registration.installing;
       if (!installing) return;
 
       installing.addEventListener("statechange", () => {
-        if (
+        const supersedesActive =
           installing.state === "installed" &&
-          navigator.serviceWorker.controller
-        ) {
-          handleUpdate(installing);
-        }
+          navigator.serviceWorker.controller;
+        if (supersedesActive) handleUpdate(installing);
       });
     });
 
-    // Reload when new worker takes control
+    // controllerchange can fire more than once; reload only the first time
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!refreshing) {
-        refreshing = true;
-        window.location.reload();
-      }
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
     });
 
     return {
@@ -82,11 +77,7 @@ async function registerServiceWorker(): Promise<ServiceWorkerState> {
     };
   } catch (error) {
     console.error("Service Worker registration failed:", error);
-    return {
-      registration: null,
-      updateAvailable: false,
-      applyUpdate: () => {},
-    };
+    return NOT_SUPPORTED;
   }
 }
 
@@ -94,19 +85,18 @@ export { registerServiceWorker };
 export type { ServiceWorkerState };
 ```
 
-**Why good:** Feature detection, periodic update checks, tracks waiting worker for user-controlled updates, handles controller change to reload, dispatches custom event for UI notification
+The `sw-update-available` event keeps the UI decoupled: any component can listen without importing
+the registration module.
 
 ---
 
-## Pattern 2: Complete Service Worker Template
+## Pattern 2: Complete service worker
 
-A production-ready service worker with all lifecycle handlers, caching strategies, and proper error handling.
+All lifecycle handlers, the four strategies, versioned caches, and size limits.
 
 ```typescript
-// sw.ts - Complete service worker template
+// sw.ts
 declare const self: ServiceWorkerGlobalScope;
-
-// ---- Constants ----
 
 const CACHE_VERSION = "v1.0.0";
 
@@ -128,27 +118,16 @@ const PRECACHE_URLS = [
   "/images/logo.svg",
 ] as const;
 
-const MAX_CACHE_ITEMS = {
-  images: 100,
-  api: 50,
-} as const;
-
+const MAX_CACHE_ITEMS = { images: 100, api: 50 } as const;
 const NETWORK_TIMEOUT_MS = 3000;
-
-// ---- Utilities ----
 
 async function limitCacheSize(cache: Cache, maxItems: number): Promise<void> {
   const keys = await cache.keys();
+  if (keys.length <= maxItems) return;
 
-  if (keys.length > maxItems) {
-    const deleteCount = keys.length - maxItems;
-    const toDelete = keys.slice(0, deleteCount);
-
-    await Promise.all(toDelete.map((request) => cache.delete(request)));
-  }
+  const toDelete = keys.slice(0, keys.length - maxItems);
+  await Promise.all(toDelete.map((request) => cache.delete(request)));
 }
-
-// ---- Caching Strategies ----
 
 async function cacheFirst(
   request: Request,
@@ -156,17 +135,10 @@ async function cacheFirst(
 ): Promise<Response> {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
-
-  if (cachedResponse) {
-    return cachedResponse;
-  }
+  if (cachedResponse) return cachedResponse;
 
   const networkResponse = await fetch(request);
-
-  if (networkResponse.ok) {
-    cache.put(request, networkResponse.clone());
-  }
-
+  if (networkResponse.ok) cache.put(request, networkResponse.clone());
   return networkResponse;
 }
 
@@ -185,16 +157,11 @@ async function networkFirst(
       ),
     ]);
 
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-
+    if (networkResponse.ok) cache.put(request, networkResponse.clone());
     return networkResponse;
   } catch {
     const cachedResponse = await cache.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
+    if (cachedResponse) return cachedResponse;
 
     if (request.mode === "navigate") {
       const offlinePage = await caches.match("/offline.html");
@@ -222,16 +189,10 @@ async function staleWhileRevalidate(
     })
     .catch(() => null);
 
-  if (cachedResponse) {
-    return cachedResponse;
-  }
+  if (cachedResponse) return cachedResponse;
 
   const networkResponse = await fetchPromise;
-  if (networkResponse) {
-    return networkResponse;
-  }
-
-  return new Response("No data available", { status: 503 });
+  return networkResponse ?? new Response("No data available", { status: 503 });
 }
 
 async function cacheFirstWithLimit(
@@ -241,24 +202,16 @@ async function cacheFirstWithLimit(
 ): Promise<Response> {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
-
-  if (cachedResponse) {
-    return cachedResponse;
-  }
+  if (cachedResponse) return cachedResponse;
 
   const networkResponse = await fetch(request);
-
   if (networkResponse.ok) {
     await limitCacheSize(cache, maxItems - 1);
     cache.put(request, networkResponse.clone());
   }
-
   return networkResponse;
 }
 
-// ---- Lifecycle Handlers ----
-
-// Install - precache critical assets
 self.addEventListener("install", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
@@ -275,12 +228,11 @@ self.addEventListener("install", (event: ExtendableEvent) => {
   );
 });
 
-// Activate - cleanup old caches
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
       const cacheNames = await caches.keys();
-      const currentCaches = Object.values(CACHES);
+      const currentCaches: string[] = Object.values(CACHES);
 
       await Promise.all(
         cacheNames
@@ -293,7 +245,6 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
   );
 });
 
-// Fetch - route to strategies
 self.addEventListener("fetch", (event: FetchEvent) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -314,27 +265,24 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   }
 });
 
-// Message handler for skip waiting
 self.addEventListener("message", (event: ExtendableMessageEvent) => {
-  if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 ```
 
-**Why good:** Complete template with all lifecycle handlers, typed constants, proper error handling with `Promise.allSettled`, cache versioning, message handler for user-controlled updates, cache size limits
+`Promise.allSettled` in install matters: `cache.addAll` rejects the whole batch if any single URL
+fails, which fails the installation over one missing asset.
 
 ---
 
-## Pattern 3: TypeScript Service Worker Types
+## Pattern 3: Message types
 
-Type definitions for service worker global scope and events. Add as a `.d.ts` file in your project.
+A discriminated union in a `.d.ts` file makes the client-worker protocol checkable at both ends.
 
 ```typescript
 // types/service-worker.d.ts
 declare const self: ServiceWorkerGlobalScope;
 
-// Message types for client-worker communication
 type ServiceWorkerMessage =
   | { type: "SKIP_WAITING" }
   | { type: "GET_VERSION"; requestId: string }
@@ -346,13 +294,11 @@ type ClientMessage =
   | { type: "UPDATE_AVAILABLE"; version: string };
 ```
 
-**Why good:** Discriminated unions for type-safe message passing, covers common client-worker communication patterns
-
 ---
 
-## Pattern 4: Precache with Critical/Optional Split
+## Pattern 4: Precache with a critical/optional split
 
-Distinguish critical assets (must succeed) from optional ones (best-effort). Installation fails only if a critical asset fails.
+Installation should fail on a missing app shell and survive a missing decorative asset.
 
 ```typescript
 interface PrecacheResult {
@@ -375,33 +321,24 @@ async function precacheWithFallback(
   const cache = await caches.open(cacheName);
   const result: PrecacheResult = { successful: [], failed: [] };
 
-  // Critical assets - fail installation if any fail
-  const criticalUrls = PRECACHE_URLS.filter((p) => p.critical);
-  for (const { url } of criticalUrls) {
+  for (const { url } of PRECACHE_URLS.filter((p) => p.critical)) {
     try {
       await cache.add(url);
       result.successful.push(url);
-    } catch (error) {
+    } catch {
       throw new Error(`Critical asset failed to cache: ${url}`);
     }
   }
 
-  // Optional assets - best-effort
   const optionalUrls = PRECACHE_URLS.filter((p) => !p.critical);
   const optionalResults = await Promise.allSettled(
-    optionalUrls.map(async ({ url }) => {
-      await cache.add(url);
-      return url;
-    }),
+    optionalUrls.map(({ url }) => cache.add(url)),
   );
 
-  optionalResults.forEach((settledResult, index) => {
-    const url = optionalUrls[index].url;
-    if (settledResult.status === "fulfilled") {
-      result.successful.push(url);
-    } else {
-      result.failed.push(url);
-    }
+  optionalResults.forEach((settled, index) => {
+    const { url } = optionalUrls[index];
+    if (settled.status === "fulfilled") result.successful.push(url);
+    else result.failed.push(url);
   });
 
   return result;
@@ -410,5 +347,3 @@ async function precacheWithFallback(
 export { precacheWithFallback };
 export type { PrecacheResult };
 ```
-
-**Why good:** Critical assets fail installation, optional assets degrade gracefully, reports results for debugging

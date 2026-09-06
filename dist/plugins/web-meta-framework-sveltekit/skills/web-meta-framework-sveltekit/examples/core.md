@@ -1,14 +1,13 @@
-# SvelteKit Routing Examples
+# SvelteKit — Routing
 
-> Complete code examples for SvelteKit routing patterns. See [SKILL.md](../SKILL.md) for core concepts.
-
-**Advanced patterns:** See [load-functions.md](load-functions.md), [form-actions.md](form-actions.md), [hooks.md](hooks.md), and [api-routes.md](api-routes.md).
+> Pages, layouts, error boundaries, dynamic routes, route groups and parameter matchers. Loads are in
+> [load-functions.md](load-functions.md), mutations in [form-actions.md](form-actions.md).
 
 ---
 
-## Pattern 1: Basic Page with Data
+## Pattern 1: A Page and Its Data
 
-### Good Example — Page with Server Load
+### Good Example — page with a server load
 
 ```typescript
 // src/routes/+page.server.ts
@@ -44,9 +43,11 @@ export const load: PageServerLoad = async () => {
 {/each}
 ```
 
-**Why good:** Server load fetches data before render (no waterfalls), `PageProps` from `$types` provides type safety, `$props()` receives data (Svelte 5 pattern)
+**Why good:** The posts are in the HTML the server sends, so the page has content before any
+JavaScript runs. `PageProps` is generated from this route's own load, so renaming `posts` is a
+compile error rather than an empty list.
 
-### Bad Example — Fetching in Component
+### Bad Example — fetching inside the component
 
 ```svelte
 <!-- BAD: Client-side fetch in component -->
@@ -62,13 +63,15 @@ export const load: PageServerLoad = async () => {
 </script>
 ```
 
-**Why bad:** Data fetches after component renders (waterfall), no SSR for SEO, no loading state management, no error handling
+**Why bad:** The server renders an empty list, then the browser downloads the JavaScript, then it
+fetches — three sequential steps for something the server already had. A crawler sees the empty
+version, and there is nowhere to put a loading or error state.
 
 ---
 
 ## Pattern 2: Layouts
 
-### Good Example — Nested Layout with Navigation
+### Good Example — nested layouts
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
@@ -119,13 +122,15 @@ export const load: PageServerLoad = async () => {
 </div>
 ```
 
-**Why good:** Root layout provides global navigation, dashboard layout nests with sidebar, `{@render children()}` is Svelte 5 syntax for layout content, layout persists across child page navigations
+**Why good:** Layouts nest, so the dashboard sidebar sits inside the site header without either file
+knowing about the other. Only what `{@render children()}` renders changes on navigation, so the
+sidebar keeps its scroll position.
 
 ---
 
 ## Pattern 3: Error Boundaries
 
-### Good Example — Segment Error Boundary
+### Good Example — an error boundary for one segment
 
 ```svelte
 <!-- src/routes/dashboard/+error.svelte -->
@@ -152,13 +157,15 @@ export const load: PageServerLoad = async () => {
 </div>
 ```
 
-**Why good:** Uses `$app/state` (Svelte 5 pattern, not `$app/stores`), handles different status codes, provides navigation back, role="alert" for accessibility
+**Why good:** Each status gets the recovery that actually helps — a 401 offers a login link, a 404
+offers the dashboard. A single generic message offers neither. The boundary is inside `dashboard/`, so
+the site header above it still renders.
 
 ---
 
 ## Pattern 4: Dynamic Routes
 
-### Good Example — Blog Post with Slug
+### Good Example — a blog post by slug
 
 ```
 src/routes/blog/[slug]/
@@ -207,9 +214,10 @@ export const load: PageServerLoad = async ({ params }) => {
 </article>
 ```
 
-**Why good:** `params.slug` is type-safe from `$types`, `error(404)` renders `+error.svelte` with proper status, `<svelte:head>` for SEO metadata
+**Why good:** `error(404)` throws, so `data.post` is non-null in the component with no branch for the
+missing case — and the response carries a real 404 status rather than a 200 with an empty page.
 
-### Good Example — Rest Parameters for Docs
+### Good Example — rest parameters
 
 ```
 src/routes/docs/[...path]/
@@ -241,15 +249,14 @@ export const load: PageServerLoad = async ({ params }) => {
 };
 ```
 
-**Why good:** Rest parameter captures entire path, breadcrumbs generated from segments, fallback to 404 for missing docs
+**Why good:** One route file serves every depth under `/docs`, and the breadcrumbs fall out of the
+segments rather than being maintained separately.
 
 ---
 
 ## Pattern 5: Route Groups
 
-Route groups organize routes with shared layouts without affecting the URL.
-
-### Good Example — Different Layouts for Marketing vs App
+### Good Example — a different layout per section
 
 ```
 src/routes/
@@ -311,15 +318,15 @@ src/routes/
 </div>
 ```
 
-**Why good:** Route groups don't affect URLs (`/pricing`, not `/(marketing)/pricing`), different layouts for different sections, auth check scoped to app group
+**Why good:** The parenthesised folder never reaches the URL — `/pricing`, not `/(marketing)/pricing`
+— so two sections get different chrome without nesting the paths. `(app)/+layout.server.ts` then
+guards every route in that group by existing.
 
 ---
 
 ## Pattern 6: Parameter Matchers
 
-Validate route parameters with custom matchers.
-
-### Good Example — Integer ID Matcher
+### Good Example — an integer-only id
 
 ```typescript
 // src/params/integer.ts
@@ -334,8 +341,11 @@ export const match: ParamMatcher = (param) => {
 src/routes/users/[id=integer]/+page.svelte
 ```
 
-**Why good:** Route only matches numeric IDs, `/users/abc` falls through to 404, type-safe parameter validation at the routing level
+**Why good:** The validation happens during route matching, so `/users/abc` never reaches the load
+function at all — it 404s instead of the load parsing a non-numeric id and having to decide what to
+do about it.
 
 ---
 
-_For load function patterns, see [load-functions.md](load-functions.md). For form actions, see [form-actions.md](form-actions.md)._
+_Loads are in [load-functions.md](load-functions.md), mutations in
+[form-actions.md](form-actions.md)._

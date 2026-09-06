@@ -62,7 +62,7 @@ Svelte 5 uses native event attributes (`onclick`, `oninput`, `onsubmit`) instead
 <button on:click|stopPropagation={handler}>Stop</button>
 ```
 
-**Why bad:** `on:click` is Svelte 4 syntax (still works but deprecated), event modifiers (`|preventDefault`, `|stopPropagation`) removed in Svelte 5, put modifier logic in the handler function
+**Why bad:** `on:click` is Svelte 4 syntax — it still compiles, but it is deprecated. Modifiers belong to `on:` and do nothing on an event attribute, so `preventDefault` and `stopPropagation` move into the handler.
 
 ### Good Example — Replacing Event Modifiers
 
@@ -78,11 +78,13 @@ Svelte 5 uses native event attributes (`onclick`, `oninput`, `onsubmit`) instead
     // click logic
   }
 
-  let handler = $state<((e: KeyboardEvent) => void) | null>(null);
-
-  // Replaces |once modifier
-  function handleOnce(event: MouseEvent) {
-    // Do something once, then remove the handler by setting state
+  // Replaces |once — a wrapper that drops the handler after the first call
+  function once(fn: (event: MouseEvent) => void) {
+    let pending: ((event: MouseEvent) => void) | null = fn;
+    return (event: MouseEvent) => {
+      pending?.(event);
+      pending = null;
+    };
   }
 </script>
 
@@ -93,9 +95,11 @@ Svelte 5 uses native event attributes (`onclick`, `oninput`, `onsubmit`) instead
 <div onclick={handleClick}>
   <!-- ... -->
 </div>
+
+<button onclick={once(handleClick)}>Runs once</button>
 ```
 
-**Why good:** All modifier logic lives in the handler, easier to understand (one place for all logic), works with standard DOM APIs
+**Why good:** all the logic lives in one place and works through standard DOM APIs. `capture`, `passive` and `nonpassive` are the three that cannot be wrapped, because they apply when the listener is bound rather than when it fires — capture has its own attribute (`onclickcapture`), and the other two need an action.
 
 ---
 
@@ -238,7 +242,7 @@ Since events are just props, forwarding is trivial — pass the callback through
 </IconButton>
 ```
 
-**Why good:** Rest props (`...rest`) forwards all event handlers automatically, extends `HTMLButtonAttributes` for full type safety, no manual event forwarding needed
+**Why good:** `...rest` forwards every event handler with no manual wiring, and extending `HTMLButtonAttributes` types the whole button surface
 
 ---
 

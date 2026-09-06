@@ -1,144 +1,58 @@
 # shadcn/ui Reference
 
-> Decision frameworks, anti-patterns, and red flags for shadcn/ui development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> CLI commands, the variable table, anti-patterns with code, and what changed recently. See
+> [SKILL.md](SKILL.md) for the decisions and [examples/](examples/) for full implementations.
 
 ---
 
-## Decision Framework
+## Where a change belongs
 
-### When to Use shadcn/ui vs Other Options
-
-```
-Need UI components?
-├─ Do you want full control over component source?
-│   ├─ YES → shadcn/ui is ideal
-│   └─ NO → Consider a traditional component library
-├─ Are you using Tailwind CSS?
-│   ├─ YES → shadcn/ui integrates perfectly
-│   └─ NO → Consider other options or add Tailwind
-├─ Do you need accessible components?
-│   └─ YES → shadcn/ui (built on Radix/Base UI) provides this
-└─ Do you need a specific design system (Material, etc.)?
-    ├─ YES → Use that design system's library
-    └─ NO → shadcn/ui works with any design
-```
-
-### Component Addition Decision
-
-```
-Need a new component?
-├─ Is it in shadcn/ui registry?
-│   ├─ YES → npx shadcn@latest add [component]
-│   └─ NO → Build custom component following shadcn patterns
-├─ Does component need customization?
-│   ├─ Styling only → Use CSS variables or cn()
-│   ├─ Behavior change → Modify the component source
-│   └─ Major change → Create wrapper or new component
-└─ Is it a one-off component?
-    ├─ YES → Build without variant system
-    └─ NO → Follow shadcn variant patterns (cva)
-```
-
-### Theming Decision
-
-```
-Need to change appearance?
-├─ Is it a global color change?
-│   └─ Modify CSS variables in globals.css + @theme inline mapping
-├─ Is it a component-specific style?
-│   ├─ All instances → Modify component source
-│   └─ One instance → Use className prop with cn()
-├─ Is it dark mode?
-│   └─ Update variables in .dark class
-└─ Is it a new color?
-    └─ Add CSS variable + foreground pair + @theme inline mapping
-```
-
-### Dialog vs Sheet vs Drawer
-
-```
-Need to display content in an overlay?
-├─ Is it a confirmation or alert?
-│   └─ AlertDialog (blocks interaction until response)
-├─ Is it a form or detailed content?
-│   ├─ On desktop → Dialog (centered modal)
-│   └─ On mobile → Drawer (slides from bottom)
-├─ Is it contextual editing (list item, settings)?
-│   └─ Sheet (slides from side)
-├─ Does it need to stay open while interacting with page?
-│   └─ Sheet (side panel pattern)
-└─ Is it a quick action or selection?
-    └─ Popover or DropdownMenu
-```
-
-### Form Component Selection
-
-```
-Building a form field?
-├─ Is it text input?
-│   ├─ Single line → Input
-│   ├─ Multi-line → Textarea
-│   └─ Sensitive → Input type="password"
-├─ Is it a selection?
-│   ├─ Few options (2-5) → RadioGroup or Tabs
-│   ├─ Many options → Select or Combobox
-│   └─ Multiple selections → Checkbox group
-├─ Is it a boolean?
-│   ├─ On/off setting → Switch
-│   └─ Agreement/Terms → Checkbox
-├─ Is it a date/time?
-│   └─ Calendar or DatePicker
-└─ Wrapping any field?
-    └─ Use Field component (not legacy FormField)
-```
-
----
-
-## RED FLAGS
-
-See [SKILL.md](SKILL.md) `<red_flags>` section for the complete list of red flags, gotchas, and edge cases.
+| What you are changing                   | Where it goes                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| A colour, globally                      | The CSS variable, in `:root` and `.dark`, plus `@theme inline`                              |
+| A style every instance should have      | The component's variant map, in its own source                                              |
+| A style one call site needs             | `className` on that call site, merged through `cn()`                                        |
+| Behaviour every instance should have    | The component source — a new prop, or a new default                                         |
+| Behaviour only some call sites need     | A wrapper component around the registry one                                                 |
+| Something the registry has no entry for | A new component following the same shape: variant map, `cn()`, `data-slot`, forwarded props |
 
 ---
 
 ## Anti-Patterns
 
-### Direct Style Overrides
-
-Use CSS variables and cn() instead of inline styles or style prop overrides.
+### Overriding from outside instead of editing the source
 
 ```tsx
-// WRONG - Inline styles break theming
+// WRONG — an inline style sits outside the theme entirely, in both modes
 <Button style={{ backgroundColor: "#3b82f6" }}>Click me</Button>
 
-// WRONG - Hardcoded Tailwind classes bypass theme
+// WRONG — a literal palette class ignores the theme and does not follow dark mode
 <Button className="bg-blue-500 hover:bg-blue-600">Click me</Button>
 
-// CORRECT - Use variant system
+// CORRECT — a named variant, declared once in the source you own
 <Button variant="default">Click me</Button>
 
-// CORRECT - Use CSS variable-based classes via cn()
+// CORRECT — a themed one-off, still going through cn()
 <Button className={cn("bg-brand hover:bg-brand/90")}>Click me</Button>
 ```
 
-### Manual Component Copy
-
-Use the CLI instead of manually copying component code.
+### Pasting component source instead of adding it
 
 ```bash
-# WRONG - Manual copy from documentation
-# Copy-pasting code from ui.shadcn.com
+# WRONG — copying from the documentation site
+#   misses the registry entry's dependencies, does not install the primitive
+#   packages, writes to the wrong path, and leaves imports pointing at aliases
+#   the project has not configured
 
-# CORRECT - Use CLI (resolves deps, installs Radix packages, creates utils)
+# CORRECT
 npx shadcn@latest add button
-npx shadcn@latest add card dialog form
+npx shadcn@latest add card dialog field
 ```
 
-### Ignoring the Variant System
-
-Use the variant system for component variations instead of conditional classes.
+### Conditional class strings where a variant belongs
 
 ```tsx
-// WRONG - Ad-hoc conditional classes
+// WRONG — the variation is untyped, unnamed, and re-derived at every call site
 <button
   className={`px-4 py-2 ${
     isPrimary ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
@@ -147,31 +61,26 @@ Use the variant system for component variations instead of conditional classes.
   Click
 </button>
 
-// CORRECT - Use variant props
+// CORRECT — the axis already exists
 <Button variant={isPrimary ? "default" : "secondary"}>Click</Button>
 
-// CORRECT - Add new variant to component source if needed
-const buttonVariants = cva("...", {
-  variants: {
-    variant: {
-      // ...existing variants
-      brand: "bg-brand text-brand-foreground hover:bg-brand/90",
-    },
+// CORRECT — extend the map when the axis does not have the value yet
+variants: {
+  variant: {
+    brand: "bg-brand text-brand-foreground hover:bg-brand/90",
   },
-});
+}
 ```
 
-### Breaking Composition Patterns
-
-Maintain compound component patterns when customizing.
+### Replacing compound parts with plain elements
 
 ```tsx
-// WRONG - Breaking compound structure
+// WRONG — loses the styling hooks, and in an overlay the behaviour too
 <div className="card">
   <div className="card-header"><h2>{title}</h2></div>
 </div>
 
-// CORRECT - Use compound components
+// CORRECT
 <Card>
   <CardHeader>
     <CardTitle>{title}</CardTitle>
@@ -179,18 +88,15 @@ Maintain compound component patterns when customizing.
 </Card>
 ```
 
-### Missing Foreground Colors
-
-Always define foreground colors when adding new background colors.
+### A background colour with no foreground
 
 ```css
-/* WRONG - Background without foreground */
+/* WRONG — text on --brand inherits from wherever it happens to sit */
 :root {
   --brand: oklch(0.627 0.265 303.9);
-  /* Missing --brand-foreground! */
 }
 
-/* CORRECT - Pair background with foreground, both modes */
+/* CORRECT — the pair, in both themes */
 :root {
   --brand: oklch(0.627 0.265 303.9);
   --brand-foreground: oklch(1 0 0);
@@ -202,17 +108,15 @@ Always define foreground colors when adding new background colors.
 }
 ```
 
-### Not Using asChild for Polymorphism
-
-Use asChild prop to compose with other components like Link.
+### Nesting an interactive element instead of `asChild`
 
 ```tsx
-// WRONG - Nested interactive elements
+// WRONG — an anchor inside a button: invalid HTML, and two focus stops
 <Button>
   <Link href="/dashboard">Dashboard</Link>
 </Button>
 
-// CORRECT - asChild merges components
+// CORRECT — the Button's props merge onto the link, which is the only element rendered
 <Button asChild>
   <Link href="/dashboard">Dashboard</Link>
 </Button>
@@ -220,64 +124,110 @@ Use asChild prop to compose with other components like Link.
 
 ---
 
-## Quick Reference
-
-### CLI Commands
+## CLI Commands
 
 ```bash
-npx shadcn@latest init                         # Initialize project
-npx shadcn@latest init --base radix           # Specify primitive library
-npx shadcn@latest init --preset CODE          # Use design system preset
-npx shadcn@latest init --template             # Scaffold full project
-npx shadcn@latest add [component]             # Add component(s)
-npx shadcn@latest add button --dry-run        # Preview changes
-npx shadcn@latest add button --diff           # Check for updates
-npx shadcn@latest add button --view           # Inspect payload
-npx shadcn@latest info                        # Show project context
-npx shadcn@latest docs combobox               # View component docs
-npx shadcn@latest migrate radix               # Migrate to unified radix-ui package
+npx shadcn@latest init                  # write components.json
+npx shadcn@latest init --base radix     # choose the primitive library
+npx shadcn@latest init --base base
+npx shadcn@latest init --preset CODE    # apply a shared design-system preset
+npx shadcn@latest init --template       # scaffold a whole project
+npx shadcn@latest init --monorepo
+npx shadcn@latest add [component]
+npx shadcn@latest add button --dry-run  # preview without writing
+npx shadcn@latest add button --diff     # your copy against the registry's
+npx shadcn@latest add button --view     # print the registry payload
+npx shadcn@latest add button --path=packages/ui/src/components
+npx shadcn@latest info                  # resolved project context
+npx shadcn@latest docs combobox         # component docs in the terminal
+npx shadcn@latest migrate radix         # individual primitive packages → the unified one
 ```
 
-### Essential CSS Variables (Tailwind v4 OKLCH)
+---
 
-| Variable                                   | Purpose                   |
-| ------------------------------------------ | ------------------------- |
-| `--background / --foreground`              | Page background / text    |
-| `--primary / --primary-foreground`         | Primary action colors     |
-| `--secondary / --secondary-foreground`     | Secondary action colors   |
-| `--muted / --muted-foreground`             | Subtle backgrounds / text |
-| `--destructive / --destructive-foreground` | Danger/error colors       |
-| `--accent / --accent-foreground`           | Accent backgrounds / text |
-| `--border`                                 | Border color              |
-| `--input`                                  | Input border color        |
-| `--ring`                                   | Focus ring color          |
-| `--radius`                                 | Border radius base        |
-| `--chart-1` through `--chart-5`            | Chart color palette       |
-| `--sidebar / --sidebar-*`                  | Sidebar component colors  |
+## CSS Variables
 
-### Component Checklist
+| Variable                                     | Purpose                                             |
+| -------------------------------------------- | --------------------------------------------------- |
+| `--background` / `--foreground`              | Page surface and its text                           |
+| `--primary` / `--primary-foreground`         | Primary action                                      |
+| `--secondary` / `--secondary-foreground`     | Secondary action                                    |
+| `--muted` / `--muted-foreground`             | Recessed surface and text                           |
+| `--accent` / `--accent-foreground`           | Hover and highlight                                 |
+| `--destructive` / `--destructive-foreground` | Danger                                              |
+| `--border`                                   | Border colour                                       |
+| `--input`                                    | Input border                                        |
+| `--ring`                                     | Focus ring                                          |
+| `--radius`                                   | Base radius; `-sm`/`-md`/`-lg`/`-xl` derive from it |
+| `--chart-1` … `--chart-5`                    | Chart series palette                                |
+| `--sidebar`, `--sidebar-*`                   | Sidebar surfaces                                    |
 
-- [ ] Used CLI to add component (`npx shadcn@latest add`)
-- [ ] Component is in `components/ui/` directory
-- [ ] Using `cn()` for class merging
-- [ ] CSS variables used for colors (not hardcoded)
-- [ ] Foreground color defined for new backgrounds
-- [ ] Both `:root` and `.dark` updated for new colors
-- [ ] Using variant system for component variations
-- [ ] `asChild` used when composing with Link
-- [ ] Accessibility attributes preserved
-- [ ] `className` prop exposed on custom components
+Values are OKLCH. `@theme inline` maps each one to a utility; a variable without that mapping exists
+in CSS but not as a class.
+
+---
+
+## Recent Additions
+
+| Component      | Purpose                               |
+| -------------- | ------------------------------------- |
+| `field`        | Form-library-agnostic field layout    |
+| `spinner`      | Loading indicator                     |
+| `kbd`          | Keyboard shortcut display             |
+| `button-group` | Grouped button container              |
+| `input-group`  | Input with leading or trailing addons |
+| `item`         | Flex container for list and card rows |
+| `empty`        | Empty-state display                   |
+
+Each is added the usual way — `npx shadcn@latest add <name>` — and each works on either primitive
+base.
+
+---
+
+## Migration Notes
+
+**Unified primitive package.** The individual `@radix-ui/react-*` packages were consolidated into a
+single `radix-ui`. Component source that predates the change imports from the old paths:
+
+```tsx
+// before
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+
+// after
+import { Dialog as DialogPrimitive } from "radix-ui";
+```
+
+`npx shadcn@latest migrate radix` rewrites these across the components you own.
+
+**Choosing a primitive base.** `init --base radix` and `--base base` select which primitive library
+the generated source sits on. The shadcn-level API is the same either way; the difference shows when
+you edit a component and reach for a primitive's own props.
+
+**RTL.** The CLI transforms physical CSS classes to their logical equivalents at install time, so
+generated components lay out correctly in right-to-left locales without a second set of overrides.
+
+**CLI v4.** Adds `docs`, `init --template`, `--preset`, and `registry:base` for distributing a whole
+design system as one payload.
+
+---
+
+## Checklist
+
+- [ ] Added through the CLI, not pasted
+- [ ] Lives at the path `components.json` records
+- [ ] Classes merged through `cn()`, incoming `className` last
+- [ ] Colours read from CSS variables rather than literal palette classes
+- [ ] New colours have a `-foreground` pair, in `:root` and `.dark`, and an `@theme inline` mapping
+- [ ] Repeated variations live in the variant map, not at the call site
+- [ ] `asChild` used wherever a trigger wraps another interactive element
+- [ ] Custom components accept and forward `className`
+- [ ] ARIA attributes the primitive supplied still reach the DOM
 
 ---
 
 ## Sources
 
-- [shadcn/ui Official Documentation](https://ui.shadcn.com/docs)
-- [shadcn/ui Theming Guide](https://ui.shadcn.com/docs/theming)
-- [shadcn/ui Field Component](https://ui.shadcn.com/docs/components/radix/field)
-- [shadcn/ui CLI Reference](https://ui.shadcn.com/docs/cli)
-- [shadcn/ui Changelog](https://ui.shadcn.com/docs/changelog)
-- [October 2025 - New Components](https://ui.shadcn.com/docs/changelog/2025-10-new-components)
-- [January 2026 - RTL Support](https://ui.shadcn.com/docs/changelog/2026-01-rtl)
-- [February 2026 - Unified Radix UI Package](https://ui.shadcn.com/docs/changelog/2026-02-radix-ui)
-- [March 2026 - CLI v4](https://ui.shadcn.com/docs/changelog/2026-03-cli-v4)
+- [Documentation](https://ui.shadcn.com/docs)
+- [Theming](https://ui.shadcn.com/docs/theming)
+- [CLI reference](https://ui.shadcn.com/docs/cli)
+- [Changelog](https://ui.shadcn.com/docs/changelog)

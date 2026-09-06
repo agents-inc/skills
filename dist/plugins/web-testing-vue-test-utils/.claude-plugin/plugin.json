@@ -1,8 +1,8 @@
 {
   "name": "web-testing-vue-test-utils",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
-  "description": "Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking",
+  "description": "Vue Test Utils — mount vs shallowMount, the wrapper API, awaiting DOM updates, flushPromises, testing composables, and the global mounting options. Load when writing or reviewing tests that mount Vue components.",
   "author": {
     "name": "@vince"
   },

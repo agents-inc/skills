@@ -1,17 +1,18 @@
 # Motion - Core Examples
 
-> Core animation patterns for Motion. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
+> Full code for the core patterns. See [SKILL.md](../SKILL.md) for the decisions and
+> [reference.md](../reference.md) for migration notes and API tables.
 
 **Related examples:**
 
-- [layout.md](layout.md) - Layout animations, shared elements
-- [scroll.md](scroll.md) - Scroll progress, reveal, parallax
-- [sequences.md](sequences.md) - Complex sequences, keyframes
-- [svg.md](svg.md) - SVG path animations
+- [layout.md](layout.md) — `layout`, `layoutId`, shared elements
+- [scroll.md](scroll.md) — scroll progress, reveal, parallax
+- [sequences.md](sequences.md) — `useAnimation` chains, keyframe arrays
+- [svg.md](svg.md) — `pathLength` drawing
 
 ---
 
-## Pattern 1: Basic Motion Components
+## Pattern 1: Motion Components
 
 ### Good Example - Fade In with Transform
 
@@ -33,11 +34,7 @@ export const FadeIn = ({ children, delay = 0, className }: FadeInProps) => {
       className={className}
       initial={{ opacity: 0, y: FADE_DISTANCE_PX }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: FADE_DURATION_S,
-        delay,
-        ease: "easeOut",
-      }}
+      transition={{ duration: FADE_DURATION_S, delay, ease: "easeOut" }}
     >
       {children}
     </motion.div>
@@ -45,17 +42,18 @@ export const FadeIn = ({ children, delay = 0, className }: FadeInProps) => {
 };
 ```
 
-**Why good:** Named constants for timing, className exposed for styling flexibility, delay prop enables staggering, y transform is GPU-accelerated
+**Why good:** The `delay` prop lets a caller stagger several of these without the component knowing
+about its siblings, and `className` keeps the styling decision outside the wrapper.
 
-### Bad Example - Layout-Triggering Animation
+### Bad Example - Layout on Every Frame
 
 ```typescript
 export const FadeIn = ({ children }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, marginTop: 20 }}  // Bad: marginTop triggers layout
+      initial={{ opacity: 0, marginTop: 20 }}
       animate={{ opacity: 1, marginTop: 0 }}
-      transition={{ duration: 0.4 }}            // Bad: magic number
+      transition={{ duration: 0.4 }}
     >
       {children}
     </motion.div>
@@ -63,13 +61,14 @@ export const FadeIn = ({ children }) => {
 };
 ```
 
-**Why bad:** marginTop triggers expensive layout recalculations on every frame, magic number 0.4 is not maintainable, no className prop
+**Why bad:** `marginTop` reflows the document on every frame and moves the elements below it as it
+animates; `y` moves only the painted element.
 
 ---
 
 ## Pattern 2: Variants for Lists
 
-### Good Example - Staggered List Animation
+### Good Example - Staggered List with Reverse Exit
 
 ```typescript
 import { motion, type Variants } from "motion/react";
@@ -101,22 +100,12 @@ const itemVariants: Variants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
-    },
+    transition: { type: "spring", stiffness: 300, damping: 24 },
   },
-  exit: {
-    opacity: 0,
-    x: ITEM_DISTANCE_PX,
-  },
+  exit: { opacity: 0, x: ITEM_DISTANCE_PX },
 };
 
-type ListItem = {
-  id: string;
-  label: string;
-};
+type ListItem = { id: string; label: string };
 
 type AnimatedListProps = {
   items: ListItem[];
@@ -142,23 +131,22 @@ export const AnimatedList = ({ items, className }: AnimatedListProps) => {
 };
 ```
 
-**Why good:** Variants are reusable and type-safe, staggerDirection: -1 reverses exit animation, spring transition feels natural, items have stable keys
+**Why good:** The items carry no `animate` prop — they inherit the variant name from the list, which
+is what makes `staggerChildren` possible at all. `staggerDirection: -1` unwinds the list from the
+bottom on exit, so the reverse reads as an undo rather than a repeat.
 
-### Bad Example - Inline Variants Without Types
+### Bad Example - Per-Item Delays and Index Keys
 
 ```typescript
 export const AnimatedList = ({ items }) => {
   return (
-    <motion.ul
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
+    <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {items.map((item, index) => (
         <motion.li
-          key={index}  // Bad: using index as key
+          key={index}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1 }}  // Bad: calculated delay
+          transition={{ delay: index * 0.1 }}
         >
           {item.label}
         </motion.li>
@@ -168,13 +156,15 @@ export const AnimatedList = ({ items }) => {
 };
 ```
 
-**Why bad:** Using index as key causes animation issues on list changes, calculated delays are less maintainable than staggerChildren, no type safety on variants
+**Why bad:** The index key re-points to a different item whenever the list is sorted or spliced, so
+the wrong element animates; and the hand-computed delay is fixed at mount, so an item inserted later
+animates with a stale offset.
 
 ---
 
-## Pattern 3: AnimatePresence Patterns
+## Pattern 3: AnimatePresence
 
-### Good Example - Modal with Exit Animation
+### Good Example - Modal with Keyed Backdrop
 
 ```typescript
 import { AnimatePresence, motion } from "motion/react";
@@ -192,7 +182,6 @@ type ModalProps = {
 };
 
 export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
-  // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -207,57 +196,64 @@ export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: BACKDROP_OPACITY }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: MODAL_DURATION_S }}
-            onClick={onClose}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "black",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Modal content */}
-          <motion.div
-            key="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-            initial={{ opacity: 0, scale: MODAL_SCALE_HIDDEN, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: MODAL_SCALE_HIDDEN, y: 10 }}
-            transition={{
-              duration: MODAL_DURATION_S,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            <h2 id="modal-title">{title}</h2>
-            {children}
-            <button onClick={onClose} aria-label="Close modal">
-              Close
-            </button>
-          </motion.div>
-        </>
+        <motion.div
+          key="backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: BACKDROP_OPACITY }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: MODAL_DURATION_S }}
+          onClick={onClose}
+          style={{ position: "fixed", inset: 0, background: "black" }}
+          aria-hidden="true"
+        />
+      )}
+      {isOpen && (
+        <motion.div
+          key="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          initial={{ opacity: 0, scale: MODAL_SCALE_HIDDEN, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: MODAL_SCALE_HIDDEN, y: 10 }}
+          transition={{ duration: MODAL_DURATION_S, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <h2 id="modal-title">{title}</h2>
+          {children}
+          <button onClick={onClose} aria-label="Close modal">
+            Close
+          </button>
+        </motion.div>
       )}
     </AnimatePresence>
   );
 };
 ```
 
-**Why good:** Unique keys on both backdrop and modal, keyboard accessibility with Escape, proper ARIA attributes, custom easing for polished feel, transform properties for performance
+**Why good:** Two sibling conditionals rather than one wrapping both elements — each is a keyed
+direct child, which is what `AnimatePresence` tracks.
+
+### Bad Example - Fragment Wrapper
+
+```typescript
+<AnimatePresence>
+  {isOpen && (
+    <>
+      <motion.div exit={{ opacity: 0 }}>Backdrop</motion.div>
+      <motion.div exit={{ opacity: 0 }}>Modal</motion.div>
+    </>
+  )}
+</AnimatePresence>
+```
+
+**Why bad:** The fragment is the direct child and takes no key, so nothing is tracked and both exits
+are skipped — the modal disappears instantly while looking correct on the way in.
 
 ### Good Example - Page Transitions with mode="wait"
 
@@ -273,10 +269,7 @@ const pageVariants = {
   exit: { opacity: 0, x: -PAGE_DISTANCE_PX },
 };
 
-const pageTransition = {
-  duration: PAGE_DURATION_S,
-  ease: "easeInOut",
-};
+const pageTransition = { duration: PAGE_DURATION_S, ease: "easeInOut" };
 
 type PageWrapperProps = {
   pageKey: string;
@@ -301,11 +294,12 @@ export const PageWrapper = ({ pageKey, children }: PageWrapperProps) => {
 };
 ```
 
-**Why good:** mode="wait" ensures clean transition without overlap, semantic main element, pageKey changes trigger animation cycle
+**Why good:** The changing `key` is what makes one page an exit and the next an enter; `mode="wait"`
+stops the two overlapping, which would otherwise show both pages' content at once.
 
 ---
 
-## Pattern 4: Gesture Animations
+## Pattern 4: Gestures
 
 ### Good Example - Interactive Card
 
@@ -352,9 +346,11 @@ export const InteractiveCard = ({
 };
 ```
 
-**Why good:** Lift effect on hover, subtle scale on tap, keyboard accessible with Enter/Space, proper ARIA role for interactive cards
+**Why good:** A gesture prop makes the element look interactive without making it operable — the
+role, `tabIndex` and key handler are what a keyboard user needs, and they are applied only when a
+handler exists.
 
-### Good Example - Draggable Element with Constraints
+### Good Example - Drag Bounded by a Parent
 
 ```typescript
 import { motion, useDragControls } from "motion/react";
@@ -391,13 +387,14 @@ export const DraggableItem = ({ children, className }: DraggableItemProps) => {
 };
 ```
 
-**Why good:** Constraints bound dragging to parent, elastic provides resistance at bounds, visual feedback during drag
+**Why good:** `dragElastic` at 0.1 lets the element travel slightly past the bounds and spring back,
+which reads as a boundary rather than as a stuck element.
 
 ---
 
-## Pattern 5: Reduced Motion (Accessibility)
+## Pattern 5: Reduced Motion
 
-### Good Example - Accessible Animation Component
+### Good Example - Reduced Form With Its Own Values
 
 ```typescript
 import { motion, useReducedMotion, type Variants } from "motion/react";
@@ -415,14 +412,8 @@ export const FadeInMotion = ({ children, className }: FadeInMotionProps) => {
   const shouldReduceMotion = useReducedMotion();
 
   const variants: Variants = {
-    hidden: {
-      opacity: 0,
-      y: shouldReduceMotion ? 0 : FULL_DISTANCE_PX,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-    },
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : FULL_DISTANCE_PX },
+    visible: { opacity: 1, y: 0 },
   };
 
   return (
@@ -442,4 +433,6 @@ export const FadeInMotion = ({ children, className }: FadeInMotionProps) => {
 };
 ```
 
-**Why good:** Respects prefers-reduced-motion setting, still provides visual feedback with opacity, shorter duration for reduced motion users
+**Why good:** Drops the travel and shortens the fade rather than removing the animation, so the
+element still reads as arriving. `MotionConfig reducedMotion="user"` covers the common case; this
+shape is for when the reduced form needs different values rather than no transform.

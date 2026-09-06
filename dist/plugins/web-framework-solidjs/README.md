@@ -1,6 +1,6 @@
 # web-framework-solidjs
 
-SolidJS fine-grained reactivity patterns - signals, effects, memos, stores, createResource, control flow components, Suspense, SolidStart
+SolidJS fine-grained reactivity — signals, effects, memos, stores, resources, control-flow components. Load when writing Solid components or reactive state.
 
 ## Installation
 

@@ -1,6 +1,8 @@
 # Angular 19 New Features Examples
 
-> Examples for linkedSignal, resource/rxResource, and afterRenderEffect APIs introduced in Angular 19. See [core.md](core.md) for signal basics.
+> `linkedSignal`, `resource`/`rxResource` and `afterRenderEffect`. See [core.md](core.md) for signal basics.
+
+**Availability:** `linkedSignal()` and `afterRenderEffect()` landed in 19.0 and are stable. `resource()` and `rxResource()` landed in 19.0 and `httpResource()` in 19.2; all three are experimental, so their options may still change between minors. All are read-only — a POST, PUT or DELETE goes through `HttpClient`.
 
 ---
 
@@ -107,7 +109,7 @@ export class ProductFilterComponent {
 }
 ```
 
-**Why good:** Uses advanced linkedSignal syntax with source/computation to preserve user selection when categories update, only resets if selected item no longer exists
+**Why good:** the `source`/`computation` form preserves the user's choice across a category update, resetting only when the selected item is gone.
 
 ### Bad Example - Manual synchronization instead of linkedSignal
 
@@ -436,24 +438,27 @@ export class ChartComponent {
   private chartInstance: Chart | null = null;
 
   constructor() {
-    // afterRenderEffect for third-party library that needs DOM
-    afterRenderEffect(() => {
-      const canvas = this.canvasRef().nativeElement;
-      const chartData = this.data();
+    // Naming the phase matters: the bare afterRenderEffect(fn) form registers
+    // in mixedReadWrite, which thrashes layout. Building a chart is a write.
+    afterRenderEffect({
+      write: () => {
+        const canvas = this.canvasRef().nativeElement;
+        const chartData = this.data();
 
-      // Destroy previous instance
-      if (this.chartInstance) {
-        this.chartInstance.destroy();
-      }
+        // Destroy previous instance
+        if (this.chartInstance) {
+          this.chartInstance.destroy();
+        }
 
-      // Create new chart instance
-      this.chartInstance = new Chart(canvas, {
-        type: "bar",
-        data: {
-          labels: chartData.labels,
-          datasets: [{ data: chartData.values }],
-        },
-      });
+        // Create new chart instance
+        this.chartInstance = new Chart(canvas, {
+          type: "bar",
+          data: {
+            labels: chartData.labels,
+            datasets: [{ data: chartData.values }],
+          },
+        });
+      },
     });
 
     // Cleanup on destroy
@@ -464,7 +469,7 @@ export class ChartComponent {
 }
 ```
 
-**Why good:** afterRenderEffect ensures canvas element exists in DOM, re-runs when data() signal changes, proper cleanup with DestroyRef
+**Why good:** the canvas exists in the DOM by the time the `write` phase runs, the effect re-runs when `data()` changes, and `DestroyRef` disposes the last instance.
 
 ### Bad Example - Using effect() for DOM operations
 

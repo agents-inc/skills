@@ -684,7 +684,9 @@ export class DashboardComponent {
 }
 ```
 
-**Why useful:** Allows gradual migration, no big-bang rewrite, teams can migrate feature by feature, both systems work together
+**Why useful:** The two are separate DI tokens reading separate state, so they cannot conflict and neither needs to know the other exists — which is what makes a feature-at-a-time migration safe rather than merely convenient.
+
+The cost is that both idioms are live at once: the same component reads one value through an `async` pipe and another through a signal call. Migrating whole features rather than whole layers keeps that boundary at the feature edge instead of running through every component.
 
 ---
 

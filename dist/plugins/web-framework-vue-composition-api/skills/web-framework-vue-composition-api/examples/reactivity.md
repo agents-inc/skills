@@ -4,7 +4,7 @@
 
 ---
 
-## ref() for Primitives
+## ref() for Primitives and Anything Reassigned
 
 ### Good Example - Primitive refs with computed
 
@@ -45,7 +45,7 @@ function clearSelection() {
 }
 ```
 
-**Why good:** ref for primitives is idiomatic, explicit .value access, computed for derived state, named constants for limits, null type union for optional values
+**Why good:** ref for primitives is idiomatic, computed for derived state, named constants for the limits, and a null union where the value is genuinely optional
 
 ---
 
@@ -100,52 +100,60 @@ function resetForm() {
 const { name, email } = toRefs(form);
 ```
 
-**Why good:** reactive for complex nested state, direct property access is natural, toRefs preserves reactivity when destructuring, typed interface for shape
+**Why good:** direct property access reads naturally for an object mutated in place, `toRefs` preserves reactivity when destructuring, and the interface fixes the shape.
+
+**Caveat:** `reactive()` holds object types only, cannot be reassigned, and loses reactivity when destructured — which is why Vue's own guide recommends `ref()` as the primary API for declaring reactive state. Reach for `reactive()` where one object is mutated in place and the `.value` hops genuinely cost readability.
 
 ---
 
 ## Anti-Patterns
 
-### Bad Example - Mixing ref and reactive incorrectly
+### Bad Example - Reassigning or destructuring a reactive object
 
 ```typescript
-import { ref, reactive } from "vue";
+import { reactive } from "vue";
 
-// ref for complex object - inconsistent with convention
-const user = ref({
-  name: "John",
-  email: "john@example.com",
-  settings: {
-    theme: "dark",
-  },
-});
+let form = reactive({ name: "", email: "" });
 
-// Confusing: need .value for object but not for nested
-user.value.name = "Jane";
-user.value.settings.theme = "light";
+// BAD: a new proxy is bound here; the template still holds the old one
+function reset() {
+  form = reactive({ name: "", email: "" });
+}
 
-// reactive for primitive - loses reactivity on reassignment
-const count = reactive({ value: 0 });
-// Later someone might do:
-// count = { value: 5 }  // BREAKS REACTIVITY
+// BAD: destructuring copies values out of the proxy
+const { name } = form; // a plain string, disconnected from form.name
 ```
 
-**Why bad:** ref for complex objects adds unnecessary .value, reactive for primitives is verbose and error-prone, inconsistent patterns confuse readers
+**Why bad:** `reactive()` tracks through property access on one proxy, so both the reassignment and the destructure sever the connection — and neither throws, so the UI simply stops updating.
+
+### Good Example - Mutate in place, destructure through toRefs
+
+```typescript
+import { reactive, toRefs } from "vue";
+
+const form = reactive({ name: "", email: "" });
+
+function reset() {
+  Object.assign(form, { name: "", email: "" }); // same proxy, new values
+}
+
+const { name, email } = toRefs(form); // refs, still connected
+```
+
+**Why good:** `Object.assign` keeps the identity the template is holding, and `toRefs` hands out refs rather than copies. Where the whole value gets replaced, `ref()` avoids the question entirely — reassigning `.value` is exactly what a ref tracks.
 
 ---
 
 ## Decision Framework
 
 ```
-Is it a primitive (string, number, boolean)?
-├─ YES → ref()
-└─ NO → Is it a complex object with nested properties?
-    ├─ YES → reactive()
-    └─ NO → ref() (for arrays or simple objects)
-
-Need to destructure reactive object?
-├─ YES → toRefs() to preserve reactivity
-└─ NO → Access properties directly
+Will the whole value be replaced (a fetch result, a null-to-object swap)?
+├─ YES → ref() — reassigning .value is tracked
+└─ NO → Is it a primitive?
+    ├─ YES → ref() — reactive() holds object types only
+    └─ NO → One object, mutated in place, no destructuring at the call site?
+        ├─ YES → reactive() — property access, no .value
+        └─ NO → ref(), or reactive() plus toRefs() at every destructure
 ```
 
 ---

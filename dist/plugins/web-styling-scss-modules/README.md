@@ -1,6 +1,6 @@
 # web-styling-scss-modules
 
-SCSS Modules, cva, design tokens
+SCSS Modules - locally scoped component stylesheets, cascade layers, the Sass module system, mixins, and build-time versus runtime values
 
 ## Installation
 

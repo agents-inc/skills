@@ -1,48 +1,68 @@
 # Vite Reference
 
-> Quick-lookup tables, migration checklist, and external links. See [SKILL.md](SKILL.md) for decision frameworks and red flags. See [examples/core.md](examples/core.md) for full code examples.
+> Settings tables, per-version notes and the migration checklist. See [SKILL.md](SKILL.md) for the decisions and red flags, and [examples/core.md](examples/core.md) for full configs.
 
 ---
 
-## Quick Reference Tables
-
-### Dev vs Production Settings
+## Dev vs production settings
 
 | Setting                  | Development | Production                    | Notes                                               |
 | ------------------------ | ----------- | ----------------------------- | --------------------------------------------------- |
-| `sourcemap`              | `true`      | `false`                       | Use `'hidden'` for production error tracking        |
-| `minify`                 | `false`     | `true` (Oxc in Vite 8)        | Oxc minifier in Vite 8, esbuild in Vite 7           |
-| Chunk splitting          | `undefined` | Vendor splitting              | `manualChunks` (Vite 7) or `codeSplitting` (Vite 8) |
-| `modulePreload.polyfill` | `true`      | `true`                        | Disable for modern-only targets                     |
-| `target`                 | N/A         | `'baseline-widely-available'` | Vite 7+ default                                     |
+| `sourcemap`              | `true`      | `'hidden'` or `false`         | `'hidden'` keeps maps for error reporting, unlinked |
+| `minify`                 | `false`     | `true`                        | Oxc in Vite 8, esbuild in Vite 7                    |
+| Chunk splitting          | not applied | vendor grouping               | `manualChunks` (Vite 7), `codeSplitting` (Vite 8)   |
+| `modulePreload.polyfill` | `true`      | `true`                        | Drop only when every target supports it natively    |
+| `target`                 | n/a         | `'baseline-widely-available'` | Default from Vite 7                                 |
 
-### Build Target Defaults
+## Build targets
 
-| Target                        | Browser Support                                    | Notes                                 |
-| ----------------------------- | -------------------------------------------------- | ------------------------------------- |
-| `'baseline-widely-available'` | Chrome 107+, Edge 107+, Firefox 104+, Safari 16+   | Vite 7 default                        |
-| (Vite 8 default)              | Chrome 111+, Edge 111+, Firefox 114+, Safari 16.4+ | Updated in Vite 8                     |
-| `'modules'`                   | **REMOVED**                                        | Was Vite 6 default; removed in Vite 7 |
-| `'esnext'`                    | Latest browsers only                               | Minimal transpilation                 |
-| `['chrome111', 'safari16.4']` | Custom browser list                                | Explicit control                      |
-
----
-
-## Vite 8 Migration Checklist
-
-1. **Rename `build.rollupOptions`** to `build.rolldownOptions`
-2. **Replace `manualChunks`** with `codeSplitting.groups` (object-form removed, function-form deprecated)
-3. **Update browser targets** if pinned (Chrome 107 to 111, Firefox 104 to 114, Safari 16.0 to 16.4)
-4. **Remove `build.commonjsOptions`** (now a no-op)
-5. **Remove `resolve.alias[].customResolver`** (removed)
-6. **Consider `resolve.tsconfigPaths: true`** to replace manual alias configuration
-7. **Migrate `esbuild` config to `oxc`** - auto-converted but not all options supported (no property mangling, no `supported` option)
-8. **Note install size increase** - ~15MB larger (lightningcss + Rolldown)
+| Target                        | Browser support                                    | Notes                              |
+| ----------------------------- | -------------------------------------------------- | ---------------------------------- |
+| `'baseline-widely-available'` | Chrome 107+, Edge 107+, Firefox 104+, Safari 16+   | Vite 7 default                     |
+| (Vite 8 default)              | Chrome 111+, Edge 111+, Firefox 114+, Safari 16.4+ | Floor raised in Vite 8             |
+| `'modules'`                   | removed                                            | Was the Vite 6 default             |
+| `'esnext'`                    | latest only                                        | Minimal transpilation              |
+| `['chrome111', 'safari16.4']` | explicit list                                      | For a contract that names versions |
 
 ---
 
-## See Also
+## Per-version notes
 
-- [Vite 8 Announcement](https://vite.dev/blog/announcing-vite8)
-- [Vite Migration Guide](https://vite.dev/guide/migration)
-- [Rolldown Code Splitting](https://rolldown.rs/reference/OutputOptions.codeSplitting)
+**Vite 8**
+
+- Bundles with Rolldown; CSS is minified by Lightning CSS and JS by Oxc
+- Install size is roughly 15MB larger than Vite 7 (Lightning CSS plus Rolldown)
+- `resolve.alias[].customResolver` is removed
+
+**Vite 7**
+
+- Requires Node 20.19+ or 22.12+
+- The Sass legacy API and `splitVendorChunkPlugin` are both removed
+- The default `build.target` changed from `'modules'` to `'baseline-widely-available'`
+
+**Rolldown options, wherever it is the bundler**
+
+- `advancedChunks` under rolldown-vite is the same feature as `codeSplitting` in Vite 8
+- `codeSplitting.maxSize` is a target rather than a hard limit
+- `includeDependenciesRecursively` defaults to true, so a group can pull in more than its `test` names
+
+---
+
+## Vite 8 migration checklist
+
+1. Rename `build.rollupOptions` to `build.rolldownOptions`
+2. Replace `manualChunks` with `codeSplitting.groups` — object form is removed, function form deprecated
+3. Raise pinned browser targets (Chrome 107 to 111, Firefox 104 to 114, Safari 16.0 to 16.4)
+4. Remove `build.commonjsOptions`, now a no-op
+5. Remove `resolve.alias[].customResolver`
+6. Consider `resolve.tsconfigPaths: true` in place of a hand-mirrored alias map
+7. Move `esbuild` options to `oxc` — auto-converted, with unsupported options dropped rather than reported; property mangling and `supported` have no Oxc equivalent
+8. Expect the larger install size
+
+---
+
+## See also
+
+- [Vite 8 announcement](https://vite.dev/blog/announcing-vite8)
+- [Vite migration guide](https://vite.dev/guide/migration)
+- [Rolldown code splitting](https://rolldown.rs/reference/OutputOptions.codeSplitting)

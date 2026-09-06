@@ -1,21 +1,19 @@
-# React - Core Examples
+# React — Core Examples
 
-> Component architecture, variant props, and event handlers. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Component shape, variant props, event handlers, accessible controls. See [SKILL.md](../SKILL.md) for the decisions and [reference.md](../reference.md) for the decision trees.
 
 **Additional Examples:**
 
-- [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
-- [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
-- [react-19-hooks.md](react-19-hooks.md) - useActionState, useFormStatus, useOptimistic, use()
+- [hooks.md](hooks.md) — usePagination, useDebounce, useLocalStorage
+- [react-19-hooks.md](react-19-hooks.md) — useActionState, useFormStatus, useOptimistic, use(), ref cleanup
 
 ---
 
-## Pattern 1: Component Architecture (React 19)
+## Pattern 1: Component shape
 
-### Good Example - React 19 ref as prop pattern
+### Good — ref as a regular prop
 
 ```typescript
-// Type-safe variant props
 export type ButtonVariant = "default" | "ghost" | "link";
 export type ButtonSize = "default" | "large" | "icon";
 
@@ -25,7 +23,6 @@ export type ButtonProps = React.ComponentProps<"button"> & {
   ref?: React.Ref<HTMLButtonElement>;
 };
 
-// React 19: ref is passed as a regular prop - no forwardRef needed
 export function Button({
   variant = "default",
   size = "default",
@@ -45,12 +42,11 @@ export function Button({
 }
 ```
 
-**Why good:** React 19 allows ref as a regular prop eliminating forwardRef boilerplate, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, data-attributes enable styling based on variants
+**Why good:** `ref` arrives as a prop with no wrapper, `className` leaves styling to the consumer, and `data-*` attributes let any CSS layer select on the variant. Spreading `React.ComponentProps<"button">` means every native button attribute passes through unlisted.
 
-### Bad Example - Using deprecated forwardRef in React 19
+### Bad — forwardRef
 
 ```typescript
-// WRONG - forwardRef is deprecated in React 19
 import { forwardRef } from "react";
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -62,9 +58,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 ```
 
-**Why bad:** forwardRef is deprecated in React 19, adds unnecessary wrapper boilerplate, requires manual displayName assignment
+**Why bad:** the wrapper and its manual `displayName` do nothing React 19 does not do for a plain prop.
 
-### Bad Example - Missing critical patterns
+### Bad — no seams at all
 
 ```typescript
 export default function Button({ variant, size, onClick, children }) {
@@ -76,18 +72,17 @@ export default function Button({ variant, size, onClick, children }) {
 }
 ```
 
-**Why bad:** default export prevents tree-shaking and violates project conventions, no ref prop breaks focus management and third-party library integrations, no className prop prevents customization, string interpolation for classes is not type-safe and prone to runtime errors, no TypeScript types means no compile-time safety
+**Why bad:** no `ref` breaks focus management and any library that needs the node; no `className` leaves the consumer unable to style it; interpolated class strings are unchecked, so a typo survives to runtime; untyped props catch nothing at compile time.
 
 ---
 
-## Pattern 2: Variant Props (React 19)
+## Pattern 2: Typed variant props
 
-### Good Example - Type-safe variant props with ref as prop
+### Good — union types and data attributes
 
 ```typescript
 const ANIMATION_DURATION_MS = 200;
 
-// Define variant types explicitly
 export type AlertVariant = "info" | "warning" | "error" | "success";
 export type AlertSize = "sm" | "md" | "lg";
 
@@ -97,7 +92,6 @@ export type AlertProps = React.ComponentProps<"div"> & {
   ref?: React.Ref<HTMLDivElement>;
 };
 
-// React 19: ref as a regular prop
 export function Alert({
   variant = "info",
   size = "md",
@@ -119,9 +113,9 @@ export function Alert({
 }
 ```
 
-**Why good:** TypeScript union types provide autocomplete for variant values, data-attributes enable CSS styling based on variants, named constant for animation duration prevents magic numbers, React 19 ref as prop simplifies component definition
+**Why good:** the unions give autocomplete and reject an unknown variant at compile time, and the caller's own `style` spreads last so it can override the transition.
 
-### Bad Example - Untyped variants with string interpolation
+### Bad — untyped variants in an interpolated class
 
 ```typescript
 export const Alert = ({ variant = "info", size = "md", className, ...props }) => {
@@ -135,13 +129,13 @@ export const Alert = ({ variant = "info", size = "md", className, ...props }) =>
 };
 ```
 
-**Why bad:** no type safety means typos compile but break at runtime, string interpolation is error-prone and hard to refactor, magic number 200 is not discoverable or maintainable, no TypeScript autocomplete for variant values
+**Why bad:** a misspelled variant compiles and produces a class nobody styled; `${className}` renders the string `undefined` when the prop is absent.
 
 ---
 
-## Pattern 3: Event Handlers
+## Pattern 3: Event handler naming
 
-### Good Example - Descriptive event handler names
+### Good — descriptive names, typed events
 
 ```typescript
 import type { FormEvent, ChangeEvent } from "react";
@@ -151,7 +145,6 @@ const MIN_PRICE = 0;
 function ProductForm() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Submit logic
   };
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -173,16 +166,16 @@ function ProductForm() {
 }
 ```
 
-**Why good:** descriptive names make code self-documenting, explicit event types catch errors at compile time, named constant MIN_PRICE prevents magic number, handle prefix clearly identifies internal event handlers
+**Why good:** the name says which field changed, and the event type makes `e.target.value` checked rather than `any`.
 
-### Bad Example - Generic names, unclear purpose
+### Bad — generic names, untyped events
 
 ```typescript
 function ProductForm() {
   const submit = (e) => { /* ... */ };
   const change = (e) => { /* ... */ };
   const blur = () => {
-    if (price < 0) { // Magic number
+    if (price < 0) {
       setPrice(0);
     }
   };
@@ -196,9 +189,9 @@ function ProductForm() {
 }
 ```
 
-**Why bad:** generic names don't describe what changes or what submits, no event types means runtime errors only, magic number 0 has no context, missing handle prefix creates ambiguity about function purpose
+**Why bad:** `change` names nothing when a second field arrives, and an untyped `e` accepts any property access.
 
-### Good Example - useCallback with memoized component
+### useCallback — when it pays
 
 ```typescript
 import { useCallback } from "react";
@@ -215,9 +208,7 @@ function JobBoard() {
 }
 ```
 
-**Why good:** useCallback prevents function recreation on every render, memoized child component won't re-render unnecessarily, performance optimization has measurable impact with memoized children
-
-### Bad Example - useCallback without memoized child
+**Why good:** the child is memoised, so a stable callback identity is what keeps it from re-rendering.
 
 ```typescript
 function SearchBar() {
@@ -225,20 +216,17 @@ function SearchBar() {
     setQuery(value);
   }, []);
 
-  // Input is not memoized, useCallback provides no benefit
   return <input onChange={handleSearch} />;
 }
 ```
 
-**Why bad:** useCallback adds overhead without benefit when child is not memoized, premature optimization that adds complexity, input element re-renders regardless of callback identity
+**Why bad:** a DOM element re-renders regardless of callback identity, so the wrapper is pure overhead.
 
 ---
 
-## Pattern 4: Accessible Interactive Elements
+## Accessible names on icon-only controls
 
-Icon-only buttons and interactive elements without visible text need accessibility attributes.
-
-### Good Example - Accessible icon-only button
+### Good — icon button with an accessible name
 
 ```tsx
 <button
@@ -255,9 +243,9 @@ Icon-only buttons and interactive elements without visible text need accessibili
 </button>
 ```
 
-**Why good:** title provides tooltip for sighted users, aria-label provides accessible name for screen readers, aria-hidden on decorative content prevents duplicate announcements
+**Why good:** `aria-label` names the control for assistive technology, `title` gives sighted users the same text on hover, and `aria-hidden` stops the glyph being announced twice.
 
-### Bad Example - Interactive element without accessible name
+### Bad — glyph with no name
 
 ```tsx
 <button onClick={handleToggle}>
@@ -265,4 +253,4 @@ Icon-only buttons and interactive elements without visible text need accessibili
 </button>
 ```
 
-**Why bad:** no title means no tooltip, no aria-label means screen readers announce "button" with no context, unusable for keyboard and screen reader users
+**Why bad:** the accessible name becomes the glyph, so the control is announced as an unlabelled button.

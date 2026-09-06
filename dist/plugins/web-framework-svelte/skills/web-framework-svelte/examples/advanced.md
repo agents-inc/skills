@@ -53,9 +53,17 @@
 
 ---
 
-## Pattern 2: Context API with createContext
+## Pattern 2: Typed context with `createContext`
 
-Use `createContext` for type-safe context that avoids string key collisions.
+`createContext<T>()` returns a `[get, set]` accessor pair with the key minted for you and the type
+carried to both ends. It replaces the older `setContext(key, value)` / `getContext(key)` pair, which
+accept any key and return `unknown`, so every consumer needed a cast.
+
+Declare the pair once in a module and import the accessors where they are used — the provider calls
+`set`, the consumer calls `get`, and neither names a key.
+
+On a version without `createContext`, the same shape is a five-line wrapper over
+`setContext`/`getContext` that mints a `Symbol` for the key.
 
 ### Good Example — Theme Context
 
@@ -121,7 +129,7 @@ export const [getThemeContext, setThemeContext] = createContext<ThemeContext>();
 </div>
 ```
 
-**Why good:** `createContext` returns typed getter/setter pair, no string key collisions, getter uses `get` accessor to maintain reactivity through context, file extension `.svelte.ts` enables runes
+**Why good:** the provider hands over `get theme()` rather than `theme`, so consumers read through the accessor and see the `$state` change — a plain property would have copied the value at the moment `setThemeContext` was called. The `.svelte.ts` extension is what makes `$state` legal outside a component.
 
 ### Bad Example — String Keys Without Types
 

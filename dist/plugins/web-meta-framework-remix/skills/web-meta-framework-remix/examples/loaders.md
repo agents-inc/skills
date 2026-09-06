@@ -1,6 +1,6 @@
-# Remix - Loader Examples
+# Remix — Loaders
 
-> Patterns for data loading with authentication, pagination, and caching.
+> Authentication, pagination through search params, and HTTP caching headers.
 
 ---
 
@@ -103,7 +103,10 @@ export default function AdminUsers() {
 }
 ```
 
-**Why good:** Authentication redirects unauthenticated users, authorization throws 403 for non-admins, parallel database queries with Promise.all, URL search params for shareable state, named constants for pagination
+**Why good:** Authentication and authorization fail differently on purpose — an anonymous visitor gets
+a redirect to somewhere useful, a signed-in non-admin gets a 403 the ErrorBoundary can explain.
+Pagination and search live in the URL, so the state is shareable, bookmarkable and survives a
+refresh, which component state would not be.
 
 ---
 
@@ -135,4 +138,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 ```
 
-**Why good:** HTTP caching via standard headers, named constants for cache durations, stale-while-revalidate improves perceived performance
+**Why good:** Caching is a `Cache-Control` header rather than a framework API, so a CDN in front of the
+app honours it without knowing anything about Remix. `stale-while-revalidate` serves the cached copy
+for the following five minutes while a fresh one is fetched behind it.

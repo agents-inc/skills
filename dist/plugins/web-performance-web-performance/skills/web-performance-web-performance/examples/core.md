@@ -1,22 +1,20 @@
-# Performance Examples
+# Performance — Runtime Examples
 
-> Core React performance optimization patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Memoisation, virtualisation and debouncing. See [SKILL.md](../SKILL.md) for the decisions and [reference.md](../reference.md) for the thresholds.
 
-**React Compiler (v1.0, Oct 2025):** Automatically memoizes components, values, and functions at build time. With the compiler enabled, you typically don't need manual `useMemo`, `useCallback`, or `React.memo`. The patterns below are still useful for projects without the compiler or for edge cases (third-party interop, non-pure computations).
+**Extended examples:**
 
-**For advanced patterns**: See topic-specific files in this folder:
+- [code-splitting.md](code-splitting.md) — lazy routes, dynamic imports, tree shaking, budgets
+- [web-vitals.md](web-vitals.md) — LCP, INP and CLS patterns, field measurement
+- [image-optimization.md](image-optimization.md) — formats, responsive sources, lazy loading
 
-- [code-splitting.md](code-splitting.md) - Lazy loading, tree shaking, bundle budgets
-- [web-vitals.md](web-vitals.md) - LCP, INP, CLS patterns and monitoring
-- [image-optimization.md](image-optimization.md) - Image formats, lazy loading, responsive images
-
----
-
-## Memoization Constants
+**With the React Compiler enabled**, components, values and callbacks are memoised at build time and
+the hooks below are rarely needed by hand. They still apply without it, and in the cases the compiler
+leaves alone: interop with code outside React, and computations that are not pure.
 
 ```typescript
 // constants/performance.ts
-export const MEMOIZATION_THRESHOLDS = {
+export const PERFORMANCE_THRESHOLDS = {
   EXPENSIVE_RENDER_MS: 5,
   VIRTUALIZATION_ITEM_COUNT: 100,
   DEBOUNCE_SEARCH_MS: 500,
@@ -26,220 +24,155 @@ export const MEMOIZATION_THRESHOLDS = {
 
 ---
 
-## Pattern 1: React.memo
+## Pattern 5: Memoisation
 
-### Good Example - Memoize Expensive Component
+### `React.memo`
 
 ```typescript
-import { memo } from 'react';
+import { memo } from "react";
 
 interface ChartProps {
   data: DataPoint[];
 }
 
-export const ExpensiveChart = memo(({ data }: ChartProps) => {
-  // Complex charting logic (> 5ms render time)
-  return <Chart data={data} />;
-});
-
-ExpensiveChart.displayName = 'ExpensiveChart';
+// Profiled at 40 ms per render, re-rendered on every parent state change
+export const ExpensiveChart = memo(({ data }: ChartProps) => <Chart data={data} />);
 ```
 
-**Why good:** Prevents re-renders when props haven't changed, useful for expensive components (> 5ms render), reduces render cascades in deep trees
-
-### Bad Example - Memoizing Cheap Component
+**Why good:** the prop comparison costs microseconds and skips tens of milliseconds of work.
 
 ```typescript
-import { memo } from 'react';
-
-export const SimpleButton = memo(({ label }: { label: string }) => {
-  return <button>{label}</button>;  // < 1ms render
-});
+// Bad
+export const SimpleButton = memo(({ label }: { label: string }) => <button>{label}</button>);
 ```
 
-**Why bad:** Memoization overhead exceeds render cost for simple components, adds complexity without benefit, premature optimization
+**Why bad:** the render was already under a millisecond, so the comparison and the retained previous
+props are pure overhead — and the component now looks expensive to whoever reads it next.
 
-**When to use React.memo:**
+`memo` compares props shallowly. A parent passing `style={{ margin: 4 }}` or an inline arrow defeats
+it on every render, so a memoised component whose props are objects needs those props stable too.
 
-- Component renders frequently with same props
-- Component is expensive to render (> 5ms)
-- Component is deep in the tree
-- **Not using React Compiler** (compiler handles this automatically)
-
-**When not to use:**
-
-- Props change frequently (memoization never helps)
-- Component is cheap to render (overhead > benefit)
-- Before profiling (premature optimization)
-- **Using React Compiler** (React 19+) - compiler auto-memoizes
-
----
-
-## Pattern 2: useMemo
-
-### Good Example - Memoize Expensive Data Operations
+### `useMemo`
 
 ```typescript
-import { useMemo } from 'react';
-
-const LARGE_DATASET_THRESHOLD = 1000;
+import { useMemo } from "react";
 
 export function DataTable({ rows, filters, sortColumn }: Props) {
   const filteredRows = useMemo(
-    () => rows.filter((row) => filters.every((f) => f.predicate(row))),
-    [rows, filters]
+    () => rows.filter((row) => filters.every((filter) => filter.predicate(row))),
+    [rows, filters],
   );
 
   const sortedRows = useMemo(
-    () => [...filteredRows].sort((a, b) =>
-      compareValues(a[sortColumn], b[sortColumn])
-    ),
-    [filteredRows, sortColumn]
+    () => [...filteredRows].sort((a, b) => compareValues(a[sortColumn], b[sortColumn])),
+    [filteredRows, sortColumn],
   );
 
   return <Table data={sortedRows} />;
 }
 ```
 
-**Why good:** Prevents recalculating filter/sort on every render, only recomputes when dependencies change, dramatically faster for large datasets (> 1000 items)
-
-### Bad Example - Recalculates on Every Render
-
-```typescript
-export function DataTable({ rows, filters, sortColumn }: Props) {
-  const filteredRows = rows.filter((row) =>
-    filters.every((f) => f.predicate(row))
-  );
-  const sortedRows = filteredRows.sort((a, b) =>
-    compareValues(a[sortColumn], b[sortColumn])
-  );
-
-  return <Table data={sortedRows} />;
-}
-```
-
-**Why bad:** Filters and sorts entire dataset on every render, wasted computation when dependencies haven't changed, causes performance issues with large datasets
-
-### Bad Example - Memoizing Simple Calculation
+**Why good:** filtering and sorting a large collection is real work, and it repeats on every render
+of an ancestor otherwise. Chaining the two means changing the sort column does not redo the filter.
 
 ```typescript
+// Bad — recomputed on every render
+const filteredRows = rows.filter((row) =>
+  filters.every((filter) => filter.predicate(row)),
+);
+
+// Also bad — memoised, but the work was one multiplication
 const doubled = useMemo(() => value * 2, [value]);
 ```
 
-**Why bad:** Memoization overhead exceeds calculation cost, adds complexity for trivial operation
-
-**When to use useMemo:**
-
-- Expensive calculations (filtering, sorting large arrays > 1000 items)
-- Creating objects/arrays passed to memoized components
-- Preventing referential equality issues
-- **Not using React Compiler** (compiler handles this automatically)
-
-**When not to use:**
-
-- Simple calculations (addition, string concatenation)
-- Values used only in JSX (not passed as props)
-- Before profiling
-- **Using React Compiler** (React 19+) - compiler auto-memoizes
-
----
-
-## Pattern 3: useCallback
-
-### Good Example - Callback Passed to Memoized Child
+### `useCallback`
 
 ```typescript
-import { useCallback, memo } from 'react';
+import { useCallback, memo } from "react";
 
-const MemoizedButton = memo(({ onClick, label }: ButtonProps) => {
-  return <button onClick={onClick}>{label}</button>;
-});
+const MemoizedButton = memo(({ onClick, label }: ButtonProps) => (
+  <button onClick={onClick}>{label}</button>
+));
 
 export function Parent({ id }: Props) {
-  const handleClick = useCallback(() => {
-    doSomething(id);
-  }, [id]);
-
+  const handleClick = useCallback(() => doSomething(id), [id]);
   return <MemoizedButton onClick={handleClick} label="Click me" />;
 }
 ```
 
-**Why good:** Stable function reference prevents MemoizedButton re-renders, only recreates callback when id changes, enables memoization to work
-
-### Bad Example - Callback Not Passed to Memoized Component
+**Why good:** without the stable reference, `MemoizedButton` receives a new `onClick` every render
+and the `memo` around it does nothing at all.
 
 ```typescript
+// Bad — the child is not memoised, so it re-renders regardless
 export function Form() {
-  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setValue(event.target.value);
   }, []);
 
   return <input onChange={handleChange} />;
-  // input is not memoized - useCallback unnecessary
 }
 ```
 
-**Why bad:** Input re-renders anyway (not memoized), useCallback adds overhead without benefit, premature optimization
-
-**When to use useCallback:**
-
-- Functions passed to memoized child components
-- Functions used in dependency arrays
-- Event handlers in optimized components
-- **Not using React Compiler** (compiler handles this automatically)
-
-**When not to use:**
-
-- Functions not passed to memoized children
-- Functions that change on every render anyway
-- Inline event handlers in non-optimized components
-- **Using React Compiler** (React 19+) - compiler auto-memoizes
+**Why bad:** `useCallback` only pays off when something downstream compares the reference. A plain
+`<input>` does not, so this is cost with no beneficiary.
 
 ---
 
-## Pattern 4: Virtual Scrolling
+## Pattern 6: Virtualising a long list
 
-### Good Example - react-window
+Only the rows inside the viewport are in the DOM. A spacer gives the scrollbar the full height, and
+the rendered window is offset to sit where those rows would have been.
 
 ```typescript
-import { FixedSizeList } from 'react-window';
+import { useState } from "react";
 
-const ITEM_HEIGHT_PX = 120;
-const LIST_HEIGHT_PX = 600;
-const VIRTUALIZATION_THRESHOLD = 100;
+const ROW_HEIGHT_PX = 120;
+const VIEWPORT_HEIGHT_PX = 600;
+const OVERSCAN_ROWS = 3;
 
 interface ProductListProps {
   products: Product[];
 }
 
 export function ProductList({ products }: ProductListProps) {
-  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
-    <div style={style}>
-      <ProductCard product={products[index]} />
-    </div>
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const firstVisible = Math.floor(scrollTop / ROW_HEIGHT_PX);
+  const startIndex = Math.max(0, firstVisible - OVERSCAN_ROWS);
+  const endIndex = Math.min(
+    products.length,
+    firstVisible + Math.ceil(VIEWPORT_HEIGHT_PX / ROW_HEIGHT_PX) + OVERSCAN_ROWS,
   );
 
   return (
-    <FixedSizeList
-      height={LIST_HEIGHT_PX}
-      itemCount={products.length}
-      itemSize={ITEM_HEIGHT_PX}
-      width="100%"
+    <div
+      style={{ height: VIEWPORT_HEIGHT_PX, overflowY: "auto" }}
+      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
     >
-      {Row}
-    </FixedSizeList>
+      <div style={{ height: products.length * ROW_HEIGHT_PX, position: "relative" }}>
+        <div style={{ transform: `translateY(${startIndex * ROW_HEIGHT_PX}px)` }}>
+          {products.slice(startIndex, endIndex).map((product) => (
+            <div key={product.id} style={{ height: ROW_HEIGHT_PX }}>
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 ```
 
-**Why good:** Only renders visible items (constant DOM size), smooth scrolling with 100K+ items, dramatically reduced memory usage
-
-### Bad Example - Rendering 10,000 DOM Nodes
+**Why good:** the DOM holds a screenful of rows whatever the collection's length, so memory and
+scroll cost stay flat. The overscan rows above and below keep blank space from appearing during a
+fast scroll.
 
 ```typescript
+// Bad — ten thousand cards in the document
 export function ProductList({ products }: { products: Product[] }) {
   return (
-    <div className="product-list">
+    <div>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
@@ -248,73 +181,72 @@ export function ProductList({ products }: { products: Product[] }) {
 }
 ```
 
-**Why bad:** Renders thousands of DOM nodes, consumes gigabytes of memory, slow scrolling, browser struggles with large DOMs
+**Why bad:** every card is laid out, styled and painted, and every ancestor re-render walks all of
+them.
 
-**When to use virtual scrolling:**
-
-- Rendering > 100 items
-- Items have consistent height
-- List is scrollable
-
-**Libraries:**
-
-- **react-window** - Lightweight, simple
-- **react-virtuoso** - Feature-rich, dynamic heights
-- **TanStack Virtual** - Headless, flexible
+**What it costs:** rows outside the window do not exist, so in-page find misses them, anchor links
+into them fail, and scroll restoration needs handling by hand. Fixed row heights are the simple
+case; variable heights need measurement and are where a dedicated virtualisation library earns its
+weight.
 
 ---
 
-## Pattern 5: Debouncing
-
-### Good Example - Debounced Search
+## Pattern 7: Debouncing and throttling
 
 ```typescript
-import { useState } from 'react';
-import { useDebouncedCallback } from 'use-debounce';
-import type { ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 
 const SEARCH_DEBOUNCE_MS = 500;
 
-export function SearchInput() {
-  const [query, setQuery] = useState('');
+function useDebounced<Args extends unknown[]>(fn: (...args: Args) => void, delayMs: number) {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestFn = useRef(fn);
+  latestFn.current = fn;
 
-  const debouncedSearch = useDebouncedCallback(
-    (value: string) => {
-      performSearch(value);
-    },
-    SEARCH_DEBOUNCE_MS // Wait 500ms after user stops typing
+  useEffect(() => () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, []);
+
+  return useMemo(
+    () =>
+      (...args: Args) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => latestFn.current(...args), delayMs);
+      },
+    [delayMs],
   );
+}
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setQuery(value);
-    debouncedSearch(value);
+export function SearchInput() {
+  const [query, setQuery] = useState("");
+  const debouncedSearch = useDebounced(performSearch, SEARCH_DEBOUNCE_MS);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value);
+    debouncedSearch(event.target.value);
   };
 
   return <input value={query} onChange={handleChange} />;
 }
 ```
 
-**Why good:** Reduces API calls (one request instead of one per keystroke), better UX (no flickering results), prevents race conditions, saves server resources
-
-### Bad Example - Triggering Search on Every Keystroke
+**Why good:** the input stays controlled and responsive on every keystroke while the expensive
+reaction runs once. Clearing the timeout on unmount stops a search firing into a component that is
+gone, and holding the latest `fn` in a ref keeps the debounced identity stable across renders.
 
 ```typescript
-export function SearchInput() {
-  const [query, setQuery] = useState('');
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-    performSearch(e.target.value); // Fires every keystroke!
-  };
-
-  return <input value={query} onChange={handleChange} />;
-}
+// Bad — one request per keystroke
+const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  setQuery(event.target.value);
+  performSearch(event.target.value);
+};
 ```
 
-**Why bad:** API call for every keystroke, potential race conditions (responses arrive out of order), wastes bandwidth and server resources, poor UX with flickering results
+**Why bad:** eight requests for an eight-character query, arriving out of order, so the results the
+user sees are whichever response happened to land last.
 
-**Debouncing vs Throttling:**
-
-- **Debouncing**: Wait until user stops (search inputs, form validation, auto-save)
-- **Throttling**: Limit execution rate (scroll handlers, resize handlers, mouse move tracking)
+**Debounce or throttle:** debounce when only the final value matters — search, autosave, validation.
+Throttle when the intermediate values matter but their rate does not — scroll position, resize,
+pointer tracking. Debouncing a scroll handler means nothing happens until scrolling stops, which is
+almost never what was wanted.

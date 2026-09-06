@@ -1,6 +1,6 @@
 # web-data-fetching-trpc
 
-tRPC type-safe API patterns, procedures, middleware, React Query integration
+tRPC type-safe API patterns — routers and procedures, input validation, context and middleware, TRPCError, and the typed client bridge
 
 ## Installation
 

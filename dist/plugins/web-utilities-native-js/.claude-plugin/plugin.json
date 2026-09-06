@@ -1,6 +1,6 @@
 {
   "name": "web-utilities-native-js",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Modern native JavaScript (ES2022-ES2025) utility patterns that replace lodash",
   "author": {

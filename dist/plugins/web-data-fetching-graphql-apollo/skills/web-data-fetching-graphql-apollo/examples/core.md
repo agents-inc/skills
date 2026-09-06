@@ -1,21 +1,21 @@
-# Apollo Client GraphQL - Code Examples
+# Apollo Client — Core Examples
 
-> All code examples for Apollo Client patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Full code for the core patterns. See [SKILL.md](../SKILL.md) for the decisions.
 
 **Extended examples:**
 
-- [pagination.md](pagination.md) - Infinite scroll, type policies
-- [error-handling.md](error-handling.md) - Component-level and global error handling
-- [fragments.md](fragments.md) - Reusable field selections
-- [subscriptions.md](subscriptions.md) - Real-time data with WebSockets
-- [testing.md](testing.md) - MockedProvider, component tests, cache testing
-- [suspense.md](suspense.md) - v3.9+ Suspense hooks (useSuspenseQuery, useLoadableQuery)
+- [pagination.md](pagination.md) — infinite scroll, type policies
+- [error-handling.md](error-handling.md) — component-level and global error handling
+- [fragments.md](fragments.md) — reusable field selections
+- [subscriptions.md](subscriptions.md) — real-time data over websockets
+- [testing.md](testing.md) — MockedProvider, mock shapes, cache assertions
+- [suspense.md](suspense.md) — Suspense hooks (v3.9+)
 
 ---
 
-## Pattern 1: Complete Client Setup
+## Pattern 1: Client setup
 
-### GraphQL Codegen Configuration
+### Code generation
 
 ```typescript
 // codegen.ts
@@ -110,13 +110,15 @@ function ApolloWrapper({ children }: { children: ReactNode }) {
 export { ApolloWrapper, getClient };
 ```
 
-**Why good:** Codegen generates types automatically, auth link adds token to requests, error link handles auth globally, singleton prevents multiple clients
+The link order matters: `authLink` runs before `errorLink`, so a 401 caught by the error link is
+already carrying the token that failed. The singleton keeps one cache per browser session while
+returning a fresh client per server render.
 
 ---
 
-## Pattern 2: useQuery Basics
+## Pattern 2: Queries
 
-### Query with Variables and Loading States
+### With variables and loading states
 
 ```typescript
 // components/user-profile.tsx
@@ -160,7 +162,7 @@ function UserProfile({ userId }: { userId: string }) {
 export { UserProfile, GET_USER };
 ```
 
-### useLazyQuery for On-Demand Fetching
+### useLazyQuery, for a fetch the user triggers
 
 ```typescript
 // components/user-search.tsx
@@ -203,13 +205,13 @@ function UserSearch() {
 export { UserSearch };
 ```
 
-**Why good:** useLazyQuery for user-triggered fetches, skip prevents unnecessary requests, network-only for fresh search results
+`called` distinguishes "no results" from "not searched yet", which are the same empty `data`.
 
 ---
 
-## Pattern 3: Mutations with Cache Updates
+## Pattern 3: Mutations with cache updates
 
-### Create with Cache Update
+### Create
 
 ```typescript
 // components/create-post-form.tsx
@@ -264,7 +266,7 @@ function CreatePostForm({ authorId, onSuccess }: { authorId: string; onSuccess?:
 export { CreatePostForm, CREATE_POST };
 ```
 
-### Update with Optimistic Response
+### Update, with an optimistic response
 
 ```typescript
 // components/edit-post-form.tsx
@@ -314,7 +316,7 @@ function EditPostForm({ post, onSuccess }: { post: Post; onSuccess?: () => void 
 export { EditPostForm };
 ```
 
-### Delete with Cache Eviction
+### Delete, evicting the entity
 
 ```typescript
 // components/delete-post-button.tsx
@@ -353,79 +355,7 @@ function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted?: (
 export { DeletePostButton, DELETE_POST };
 ```
 
-**Why good:** cache.modify updates lists without refetching, cache.evict removes data, optimisticResponse provides instant feedback
+The delete does three things and needs all three: `cache.modify` takes the reference out of the list,
+`cache.evict` removes the entity, and `cache.gc` collects what now points at nothing.
 
----
-
-## Anti-Pattern Examples
-
-```typescript
-// BAD: Manual type definitions (drift from schema)
-interface User {
-  id: string;
-  name: string;
-}
-
-// BAD: Missing __typename in optimistic response
-const [createUser] = useMutation(CREATE_USER, {
-  optimisticResponse: { createUser: { id: "temp-123", name: "New User" } }, // Cache fails!
-});
-
-// BAD: Magic numbers
-const { data } = useQuery(GET_USERS, { pollInterval: 30000 }); // What is 30000?
-
-// BAD: Missing keyArgs - cache collisions
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        users: {
-          // All filtered queries share same cache!
-          merge(existing = [], incoming) {
-            return [...existing, ...incoming];
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-```typescript
-// GOOD: Generated types from Codegen
-import type { User, GetUsersQuery } from "../generated/graphql";
-
-// GOOD: Complete optimistic response with __typename
-const [createUser] = useMutation(CREATE_USER, {
-  optimisticResponse: {
-    createUser: {
-      __typename: "User",
-      id: "temp-123",
-      name: "New User",
-      email: "new@example.com",
-    },
-  },
-});
-
-// GOOD: Named constants
-const POLL_INTERVAL_MS = 30 * 1000;
-const { data } = useQuery(GET_USERS, { pollInterval: POLL_INTERVAL_MS });
-
-// GOOD: keyArgs separates caches per filter
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        users: {
-          keyArgs: ["filter", "sortBy"],
-          merge(existing = [], incoming) {
-            return [...existing, ...incoming];
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-**Why bad examples fail:** Manual types drift from schema, missing \_\_typename breaks cache, magic numbers hide intent, missing keyArgs shows wrong data
+The mistakes these patterns guard against are in [SKILL.md](../SKILL.md)'s red flags.

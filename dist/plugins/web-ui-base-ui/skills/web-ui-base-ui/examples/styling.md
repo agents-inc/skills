@@ -39,7 +39,7 @@ import { Switch } from "@base-ui/react/switch";
 }
 ```
 
-**Why good:** the state never enters JavaScript, so no re-render is needed for a visual change, one static class name per part means no string allocation on every state transition, the same selectors work for a designer editing CSS without touching the component
+**Why good:** the state never enters JavaScript, so a visual change costs no re-render and no per-transition string allocation, and the selectors stay editable by anyone working in the CSS alone
 
 ### Good Example - The className Function, Where a Selector Cannot Reach
 
@@ -55,6 +55,9 @@ import { Switch } from "@base-ui/react/switch";
 ### Bad Example - Mirroring State into React to Drive Styles
 
 ```tsx
+import { useState } from "react";
+import { Popover } from "@base-ui/react/popover";
+
 function BadPopover() {
   const [open, setOpen] = useState(false);
 
@@ -69,7 +72,7 @@ function BadPopover() {
 }
 ```
 
-**Why bad:** the trigger already publishes `data-popup-open`, so this duplicates state that can drift, it forces a re-render of the whole subtree for a purely visual change, and the copy updates a frame later than the attribute so the two disagree mid-transition — write `.trigger[data-popup-open] { … }` instead
+**Why bad:** the trigger already publishes `data-popup-open`; the copy re-renders the whole subtree for a purely visual change and lands a frame later than the attribute, so the two disagree mid-transition — write `.trigger[data-popup-open] { … }` instead
 
 ---
 

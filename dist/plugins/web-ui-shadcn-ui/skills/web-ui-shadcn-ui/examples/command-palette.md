@@ -81,4 +81,9 @@ export function CommandMenu({ onNavigate }: CommandMenuProps) {
 }
 ```
 
-**Why good:** Cmd/Ctrl+K keyboard shortcut, search filters items automatically, shortcuts displayed for discoverability, closes after action, navigation callback is framework-agnostic
+**Why good:** `runCommand` closes the dialog before running the action, so a navigation does not race
+the unmount. `CommandInput` filters `CommandItem` children by their text content with no filter
+prop and no state — which is why `CommandEmpty` is the only empty handling needed. The `keydown`
+listener is on `document` rather than on an element, since the palette must open from anywhere, and
+its cleanup is what keeps a remount from stacking handlers. `onNavigate` arrives as a prop, so the
+palette is unaware of how routing works.

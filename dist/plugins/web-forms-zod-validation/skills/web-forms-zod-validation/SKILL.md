@@ -5,66 +5,96 @@ description: Zod schema validation patterns for TypeScript - schema definitions,
 
 # Zod Schema Validation Patterns
 
-> **Quick Guide:** Use Zod for runtime validation at trust boundaries (API responses, form inputs, config, URL params). Define schemas once, derive types with `z.infer`. Use `safeParse` for error handling, `refine`/`superRefine` for custom validation, `transform` for data conversion. Named constants for all validation limits.
->
-> **Version Note:** Zod v4 is now the stable release (v4.1+). It brings 14.7x faster string parsing, 57% smaller bundle, and new top-level APIs (`z.email()`, `z.url()`, `z.iso.*`). The v3 method-chain equivalents (`z.string().email()`) still work but are deprecated. For migration details, see [reference.md](reference.md).
+> **Quick Guide:** A schema is declared once and the TypeScript type derived from it with `z.infer`,
+> so the rule and the type cannot drift. `safeParse` returns a result object where invalid input is
+> expected and `parse` throws where it is a bug; `refine` and `superRefine` carry rules the built-in
+> checks cannot express, and `transform` converts during validation — which splits `z.input` from
+> `z.output`. On v4 the string formats moved to the top level (`z.email()`, `z.url()`, `z.iso.*`) and
+> the v3 method chains are deprecated rather than removed; `flatten()`, `format()` and `merge()` have
+> replacements, and [reference.md](reference.md) carries the full migration list.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — schema definition, safe parsing, error formatting, unions, composition, async refinements
+- [examples/transforms.md](examples/transforms.md) — transforms, coercion, pipe chains, query params
+- [examples/advanced-patterns.md](examples/advanced-patterns.md) — branded types, `.catch()` fallbacks, readonly, recursive schemas
+- [reference.md](reference.md) — decision trees, method lookup, worked anti-patterns, v4 migration guide
+
+---
+
+## Which path applies
+
+- **The schema checks a value and hands back what it received** — `z.infer` is the only type helper
+  needed, and the parsed value has the shape the caller passed in. Follow
+  [examples/core.md](examples/core.md).
+- **The schema converts as it checks** — a `transform`, a `coerce` or a `default` makes the input and
+  output types differ, so a function taking pre-validation data types its parameter `z.input` and
+  its return `z.output`. Follow [examples/transforms.md](examples/transforms.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Zod schemas
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Reach for `safeParse` wherever invalid input is expected.** It returns a result object rather than
+throwing, so the failure is a branch rather than a catch, and `result.error.issues` carries the field
+paths a form needs. Keep `parse` for config and internal data, where invalid means a bug.
 
-**(You MUST use `safeParse` instead of `parse` for user-facing validation - prevents unhandled exceptions)**
+**Derive the type with `z.infer<typeof schema>`.** A hand-written interface beside a schema is a
+second declaration of the same thing, and the two drift in the direction that leaves the type
+claiming more than the schema checks.
 
-**(You MUST use `z.infer<typeof schema>` to derive types - never duplicate schema as separate interface)**
+**Validate where untrusted data enters** — API responses, form input, config, URL params. A shape
+change caught at the boundary names the field that moved; caught later it surfaces as an undefined
+property several frames away.
 
-**(You MUST validate at trust boundaries - API responses, form inputs, config files, URL params)**
-
-**(You MUST use named constants for validation limits - NO magic numbers in `.min()`, `.max()`, `.length()`)**
+**Name the validation limits.** `.min(MIN_USERNAME_LENGTH)` says what the number is for, and the same
+constant reaches the error message so the two cannot disagree.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Zod schemas, z.object, z.string, z.number, z.infer, safeParse, refine, superRefine, transform, discriminatedUnion, z.coerce, z.pipe, z.catch, z.brand, z.lazy, z.email, z.url, z.iso
+**Auto-detection:** zod, z.object, z.infer, z.input, z.output, safeParse, safeParseAsync, parse,
+parseAsync, refine, superRefine, ctx.addIssue, transform, discriminatedUnion, z.coerce, z.pipe,
+z.catch, z.brand, z.lazy, z.email, z.url, z.uuid, z.iso, z.flattenError, z.treeifyError,
+z.strictObject, z.looseObject, ZodError
 
-**When to use:**
+**Applies to:**
 
-- Validating API responses before using data
-- Parsing form input data with type safety
-- Validating configuration files or environment variables
-- Defining contracts between systems (frontend/backend shared schemas)
-- Runtime type checking for data from untrusted sources
+- Validating data crossing a trust boundary, and reporting which field failed
+- Deriving TypeScript types from the rules that enforce them
+- Cross-field rules, conditional shapes and discriminated variants
+- Converting values during validation — strings to numbers, ISO strings to `Date`
+- Composing schemas for the read, create and update shapes of one record
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Internal function parameters (TypeScript is sufficient for trusted data)
-- Simple boolean checks that don't need schema definition
-- Performance-critical hot paths where validation overhead matters
+- Wiring a schema into a form — a form library accepts one through its own adapter or validator
+  slot, and how that connection is made is settled by whatever owns it.
+- Where the data came from — a schema validates a value it is handed and performs no I/O of its own.
+- Persistence schemas — a runtime validator and a table definition are separate artefacts even where
+  they describe the same record, and generating one from the other is that tool's concern.
 
 ---
 
 <philosophy>
 
-## Philosophy
-
-TypeScript provides compile-time type safety for code you control. Zod provides **runtime validation** for data you don't control - API responses, user input, configuration files, URL parameters. Use TypeScript for internal contracts; use Zod at **trust boundaries** where external data enters your system.
-
-**Key principle:** Define the schema once, derive the type. Never maintain parallel type definitions and validation logic - they will drift apart.
+TypeScript checks the code you compile; a schema checks the data you receive. The two meet at the
+boundary, and the point of deriving the type from the schema is that only one of them can be wrong.
 
 ```typescript
-// Schema is the source of truth
-const UserSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-});
-
-// Type is derived, always in sync
+const UserSchema = z.object({ name: z.string(), email: z.email() });
 type User = z.infer<typeof UserSchema>;
 ```
+
+Written the other way round — an interface, and a schema maintained beside it — a field added to the
+interface and forgotten in the schema type-checks everywhere while validating nothing.
+
+The corollary is where _not_ to reach for a schema. Data that has already crossed a boundary has
+been checked, and re-validating it inside a function the compiler already governs buys nothing and
+costs a parse on every call.
 
 </philosophy>
 
@@ -72,11 +102,11 @@ type User = z.infer<typeof UserSchema>;
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Schema Definition with Named Constants
+### Pattern 1: Schema with named limits
 
-Define schemas with named constants for all validation limits. Custom error messages for user-facing fields.
+The constant appears in the check and in the message, so a change to the limit updates both.
 
 ```typescript
 const MIN_USERNAME_LENGTH = 3;
@@ -93,53 +123,45 @@ const UserSchema = z.object({
       MAX_USERNAME_LENGTH,
       `Username cannot exceed ${MAX_USERNAME_LENGTH} characters`,
     ),
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
 });
 
-type User = z.infer<typeof UserSchema>; // Always derived, never manual interface
+type User = z.infer<typeof UserSchema>;
 ```
 
-**Why good:** named constants make limits discoverable, custom error messages improve UX, type derived from schema
-
-See [examples/core.md](examples/core.md) for complete schema examples with reusable sub-schemas and CRUD composition patterns.
+Full code: [examples/core.md](examples/core.md) Pattern 1
 
 ---
 
-### Pattern 2: Safe Parsing for Error Handling
+### Pattern 2: safeParse and error formatting
 
-Use `safeParse` for user input and API responses. Reserve `parse` for config/internal data where invalid = programming error.
+The result is a discriminated union on `success`, so the failure branch narrows to an error and the
+success branch to typed data.
 
 ```typescript
 const result = UserSchema.safeParse(data);
 
 if (!result.success) {
-  const errors = result.error.issues.reduce(
-    (acc, err) => {
-      const field = err.path.join(".");
-      acc[field] = err.message;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-  return { success: false, errors };
+  const { fieldErrors } = z.flattenError(result.error);
+  return { success: false, errors: fieldErrors };
 }
 
 return { success: true, user: result.data };
 ```
 
-**Why good:** safeParse never throws, validation errors handled explicitly, error formatting provides useful field-level feedback
+`z.flattenError` gives one level of field-to-messages, which is what a flat form needs.
+`z.treeifyError` preserves nesting for anything deeper.
 
-See [examples/core.md](examples/core.md) for form validation and API response validation patterns.
+Full code: [examples/core.md](examples/core.md) Pattern 2
 
 ---
 
-### Pattern 3: Refinements and Cross-Field Validation
+### Pattern 3: Refinements and cross-field rules
 
-Use `refine` for custom validation logic. Use `superRefine` when you need cross-field validation with specific error paths.
+`refine` adds a condition to one value. `superRefine` sees the whole object and chooses which path
+the error attaches to, which is what puts a mismatch message on the field the user must fix.
 
 ```typescript
-const MIN_PASSWORD_LENGTH = 8;
-
 const PasswordFormSchema = z
   .object({
     password: z.string().min(MIN_PASSWORD_LENGTH),
@@ -156,43 +178,36 @@ const PasswordFormSchema = z
   });
 ```
 
-**Why good:** superRefine enables cross-field validation with specific error paths, keeps all validation in the schema
-
-See [examples/core.md](examples/core.md) for password refinement chains and conditional validation patterns.
+Full code: [examples/core.md](examples/core.md) Pattern 5
 
 ---
 
-### Pattern 4: Transforms and Type Conversion
+### Pattern 4: Transforms and the input/output split
 
-Use `transform` to convert data during validation. Use `z.input` and `z.output` when transforms change the type.
+Once a schema transforms, it has two types. `z.infer` returns the output, so a function receiving
+raw data types its parameter `z.input`.
 
 ```typescript
-const DateSchema = z
-  .string()
-  .datetime()
-  .transform((str) => new Date(str));
+const DateSchema = z.iso.datetime().transform((str) => new Date(str));
 
 type DateInput = z.input<typeof DateSchema>; // string
 type DateOutput = z.output<typeof DateSchema>; // Date
 ```
 
-**Gotcha:** `z.infer` returns the output type. When a function accepts pre-validation input, use `z.input` for the parameter type.
+`.transform()` runs after every other check on the same schema, so a rule that must inspect the
+converted value goes after a `.pipe()` rather than before the transform.
 
-See [examples/transforms.md](examples/transforms.md) for coercion patterns (URL params, form data) and transform pipelines.
+Full code: [examples/transforms.md](examples/transforms.md) Pattern 7, and Pattern 9 for the pipe
 
 ---
 
-### Pattern 5: Discriminated Unions
+### Pattern 5: Discriminated unions
 
-Use `discriminatedUnion` when objects share a common discriminator field. Provides better error messages and TypeScript narrowing than `union`.
+Where the variants share a literal field, naming it lets Zod check one branch instead of all of them.
 
 ```typescript
 const NotificationSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("email"),
-    email: z.string().email(),
-    subject: z.string(),
-  }),
+  z.object({ type: z.literal("email"), email: z.email(), subject: z.string() }),
   z.object({ type: z.literal("sms"), phone: z.string(), message: z.string() }),
   z.object({
     type: z.literal("push"),
@@ -202,27 +217,24 @@ const NotificationSchema = z.discriminatedUnion("type", [
 ]);
 ```
 
-**Why good over `z.union`:** discriminatedUnion reports which variant failed (not "Invalid input"), TypeScript narrows type in switch statements
+A plain `z.union` tries every member and reports the combined failure, which reads as "invalid
+input"; the discriminated form names the variant and the field inside it, and narrows in a `switch`.
 
-See [examples/core.md](examples/core.md) for payment method union and type narrowing examples.
+Full code: [examples/core.md](examples/core.md) Pattern 4
 
 ---
 
-### Pattern 6: Schema Composition
+### Pattern 6: Composition
 
-Compose schemas using `extend`, `pick`, `omit`, and `partial` for CRUD operations.
+One base schema, and the read, create and update shapes derived from it — so a field added to the
+base reaches all three.
 
 ```typescript
-const BaseEntitySchema = z.object({
-  id: z.string().uuid(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
-
 const UserSchema = BaseEntitySchema.extend({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string(),
 });
+
 const CreateUserSchema = UserSchema.omit({
   id: true,
   createdAt: true,
@@ -232,19 +244,19 @@ const UpdateUserSchema = CreateUserSchema.partial();
 const UserSummarySchema = UserSchema.pick({ id: true, name: true });
 ```
 
-See [examples/core.md](examples/core.md) for full CRUD schema composition example.
+`.extend()` is unavailable on a schema that already carries `.refine()`, so extend first and refine
+last.
+
+Full code: [examples/core.md](examples/core.md) Pattern 3
 
 ---
 
-### Pattern 7: Coercion for String Inputs
+### Pattern 7: Coercion for string sources
 
-Use `z.coerce` for URL params and form data that arrive as strings. Simpler than manual parsing.
+URL params and form fields arrive as strings whatever they represent. `z.coerce` converts before
+checking, so the rules read as the types they are about.
 
 ```typescript
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
-
 const PaginationSchema = z.object({
   page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
   limit: z.coerce
@@ -254,92 +266,68 @@ const PaginationSchema = z.object({
     .max(MAX_LIMIT)
     .default(DEFAULT_LIMIT),
 });
-
-// "3" -> 3, "50" -> 50, missing -> defaults
 ```
 
-**Gotcha:** `z.coerce.boolean()` coerces any truthy value to true, including the string `"false"`. Use explicit comparison for string booleans.
+`z.coerce.boolean()` is `Boolean(value)`, so every non-empty string is `true` — including `"false"`.
+Use `z.stringbool()` where the string carries the intent.
 
-See [examples/transforms.md](examples/transforms.md) for complete pagination and query param patterns.
+Full code: [examples/transforms.md](examples/transforms.md) Pattern 8
 
 ---
 
-### Pattern 8: Optional, Nullable, and Nullish
+### Pattern 8: optional, nullable, nullish and default
+
+Four distinct claims about an absent value; picking by meaning keeps the type honest.
 
 ```typescript
 const ProfileSchema = z.object({
-  name: z.string(), // Required
-  bio: z.string().optional(), // string | undefined
-  avatar: z.string().url().nullable(), // string | null
-  nickname: z.string().nullish(), // string | null | undefined
-  theme: z.string().default("light"), // string (always defined)
+  name: z.string(), // required
+  bio: z.string().optional(), // may be omitted — string | undefined
+  avatar: z.url().nullable(), // explicitly empty — string | null
+  nickname: z.string().nullish(), // either — string | null | undefined
+  theme: z.string().default("light"), // absent becomes "light" — always string
 });
 ```
 
-**Key distinction:** `nullable` = explicitly set to null (API returns null), `optional` = may be omitted entirely, `nullish` = either.
+`.default()` fills a missing key, so the output type stays non-optional while the input type does
+not — one more reason `z.input` and `z.output` diverge.
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Schema definition, safe parsing, error formatting, discriminated unions, composition, nested schemas
-- [examples/transforms.md](examples/transforms.md) - Transforms, coercion, pipe chains
-- [examples/advanced-patterns.md](examples/advanced-patterns.md) - Branded types, catch fallbacks, readonly, recursive schemas, ISO validators
-- [reference.md](reference.md) - Decision frameworks, method reference, anti-patterns, v4 migration guide
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Using `parse` for user-facing validation** - Throws exceptions for expected invalid input, requiring try-catch and losing detailed error info
-- **Magic numbers in validation limits** - `.min(3).max(50)` is undocumented; use named constants like `MIN_USERNAME_LENGTH`
-- **Defining separate TypeScript interfaces** - Creates drift between schema and type; always use `z.infer<typeof schema>`
-- **Not validating at trust boundaries** - API responses, user input, and config should always be validated at entry points
-- **Async refinements with `parse` instead of `parseAsync`** - Async refinements silently fail with sync parse methods
+- `parse` on user input — it throws on the expected case, and a catch block receives the exception
+  after the branch that could have read `error.issues` has been skipped. Use `safeParse`.
+- An async refinement parsed synchronously — Zod throws rather than awaiting. `parseAsync` or
+  `safeParseAsync` for any schema containing one.
+- `.extend()` on a schema that already carries `.refine()` — the refined schema no longer exposes it.
+  Extend first, refine last.
+- v4: `.refine(fn, (val) => ({ message }))` — the function form of the second argument is gone. Use
+  `superRefine` where the message depends on the value.
+- v4: `z.record(valueSchema)` with one argument — both the key and the value schema are required now.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Overly strict validation on optional fields** - Empty strings should often be treated as undefined for optional fields
-- **Missing custom error messages** - Default "Invalid input" messages are not user-friendly
-- **Validating internal function parameters with Zod** - TypeScript is sufficient for trusted internal code
-- **Using `.passthrough()` by default** - Allows unexpected fields through; use `.strict()` when you want to reject extras
+- Unknown keys are stripped rather than rejected. `z.strictObject()` rejects them and
+  `z.looseObject()` keeps them; the plain object schema quietly drops them, which hides a renamed
+  API field.
+- `z.coerce.boolean()` coerces `"false"` to `true`, and `z.coerce.date()` accepts everything
+  `new Date()` does — including strings that parse to a date nobody meant. Where the input is
+  supposed to be ISO, `z.iso.datetime()` says so and rejects the rest.
+- `z.email()` rejects the empty string, so an optional field that submits `""` fails. Allow it
+  explicitly or normalise `""` to `undefined` before parsing.
+- A `superRefine` rule is skipped, not failed, when a key it reads is absent — the object validates.
+- Default `"Invalid input"` messages reach the user unchanged wherever a check has no message.
+- v4: `ctx.path` is gone from `superRefine` — `ctx.addIssue({ path: [...] })` still works.
+- v4 replacements: `.flatten()` → `z.flattenError()`, `.format()` → `z.treeifyError()`, `.merge()` →
+  `.extend()`.
 
-**Gotchas & Edge Cases:**
-
-- **`z.coerce.boolean()`**: Coerces any truthy value to true, including string `"false"` - use explicit string comparison if needed
-- **Transform order**: `.transform()` runs after all other validations; refinements on transformed values need `.pipe()` to validate after
-- **Empty strings**: `z.string().email()` rejects empty strings; use `.email().or(z.literal(""))` to allow empty
-- **Extend with refinements**: `.extend()` on a schema with `.refine()` throws; apply refinements after extending instead
-- **Date parsing**: `z.coerce.date()` uses `new Date()` which accepts many formats; use `.datetime()` for strict ISO format
-- **`z.union` vs `z.discriminatedUnion`**: Union tries all schemas and reports combined errors; discriminatedUnion uses discriminator for targeted validation and better errors
-- **v4: `.refine()` function second arg removed**: `z.string().refine(fn, (val) => ({ message: ... }))` no longer works; use `superRefine()` for dynamic messages
-- **v4: `ctx.path` removed in `.superRefine()`**: No longer available for performance reasons; `ctx.addIssue()` still works
-- **v4 deprecations**: `.flatten()` deprecated - use `z.flattenError()` instead; `.format()` deprecated - use `z.treeifyError()` instead; `.merge()` deprecated - use `.extend()` instead
+Worked before/after code for the most common of these is in [reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use `safeParse` instead of `parse` for user-facing validation - prevents unhandled exceptions)**
-
-**(You MUST use `z.infer<typeof schema>` to derive types - never duplicate schema as separate interface)**
-
-**(You MUST validate at trust boundaries - API responses, form inputs, config files, URL params)**
-
-**(You MUST use named constants for validation limits - NO magic numbers in `.min()`, `.max()`, `.length()`)**
-
-**Failure to follow these rules will create type mismatches, unhandled exceptions, and unmaintainable validation code.**
-
-</critical_reminders>

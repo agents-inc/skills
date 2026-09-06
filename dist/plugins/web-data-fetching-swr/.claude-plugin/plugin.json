@@ -1,8 +1,8 @@
 {
   "name": "web-data-fetching-swr",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
-  "description": "SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll",
+  "description": "SWR data fetching patterns — keys and fetchers, isLoading vs isValidating, revalidation strategy, useSWRMutation, useSWRInfinite, conditional fetching",
   "author": {
     "name": "@vince"
   },

@@ -1,6 +1,6 @@
 {
   "name": "web-realtime-sse",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Server-Sent Events for unidirectional server-to-client streaming, EventSource API, fetch streaming, reconnection patterns, message parsing",
   "author": {

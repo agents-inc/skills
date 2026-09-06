@@ -1,6 +1,6 @@
 # web-framework-vue-composition-api
 
-Vue 3 Composition API patterns, reactivity primitives, composables, lifecycle hooks
+Vue 3 Composition API — reactivity primitives, composables, lifecycle, the 3.4+ and 3.5+ macros. Load when writing Vue 3 components or composables.
 
 ## Installation
 

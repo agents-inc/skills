@@ -93,7 +93,7 @@ export const {
 } = apiSlice;
 ```
 
-**Why good:** Named constants for config, typed request/response, cache tags enable automatic invalidation, providesTags/invalidatesTags for cache management, auto-generated hooks exported with named exports
+**Why good:** The tags connect the mutation to the queries it makes stale, so a successful write refetches the affected lists without any call site coordinating it. The hooks are generated from the endpoint definitions, so the request and response types cannot drift from the component that consumes them.
 
 ---
 
@@ -147,6 +147,6 @@ export const UserList = () => {
 };
 ```
 
-**Why good:** Auto-generated hooks handle loading/error states, unwrap() for promise handling, polling interval via named constant, cache automatically invalidated on mutations
+**Why good:** The query hook owns the loading and error flags, so the component branches on them rather than tracking a request itself. `.unwrap()` is what makes the `try`/`catch` work: the promise a mutation trigger returns resolves with a result object either way, and only the unwrapped form rejects on failure.
 
 ---

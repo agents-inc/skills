@@ -1,6 +1,6 @@
 # web-server-state-react-query
 
-React Query server state, hey-api OpenAPI codegen, type-safe data fetching
+React Query server state — query keys and query options, caching policy, error handling, and typed clients generated from an API schema
 
 ## Installation
 

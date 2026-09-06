@@ -2,11 +2,7 @@
 
 > Complete code examples for Listbox (custom select) and Combobox (autocomplete) patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for API reference.
 
-**Related examples:**
-
-- [Menu & Dropdowns](menu.md) - Action menus
-- [Form Components](forms.md) - Field, Input, Label, Fieldset patterns
-- [Switch & RadioGroup](switch-radio.md) - Toggle and option selection patterns
+**Related examples:** [menu.md](menu.md), [forms.md](forms.md), [switch-radio.md](switch-radio.md)
 
 ---
 
@@ -72,7 +68,8 @@ export function PersonSelect() {
 }
 ```
 
-**Why good:** Object comparison works via `id` by default, `data-[selected]` styles the current value, `data-[disabled]` handles unavailable items, `--button-width` CSS variable matches dropdown width to trigger
+**Why good:** objects compare by `id` with no `by` prop needed, `data-selected` and `data-disabled`
+carry the per-option state, and `--button-width` matches the panel to its trigger.
 
 ---
 
@@ -92,9 +89,9 @@ import {
 type Tag = { id: number; name: string };
 
 const TAGS: Tag[] = [
-  { id: 1, name: "React" },
-  { id: 2, name: "TypeScript" },
-  { id: 3, name: "Tailwind" },
+  { id: 1, name: "Frontend" },
+  { id: 2, name: "Backend" },
+  { id: 3, name: "Infrastructure" },
 ];
 
 export function TagSelect() {
@@ -129,7 +126,8 @@ export function TagSelect() {
 }
 ```
 
-**Why good:** `multiple` enables array selection, `name="tags"` renders hidden inputs for form submission, `onChange` receives full updated array
+**Why good:** `multiple` makes the value an array and `onChange` receives the whole new one;
+`name` renders one hidden input per selection for native form submission.
 
 ---
 
@@ -232,97 +230,9 @@ export function CountryCombobox() {
 }
 ```
 
-**Why good:** `onClose` resets query, `displayValue` shows selected country name in input, `empty:invisible` hides dropdown when no content, `--input-width` matches dropdown width to input, `data-[selected]` shows checkmark and bolds text, `name` enables form submission
-
----
-
-## Combobox: Basic People Search
-
-A simpler combobox for searching and selecting from a list of people.
-
-```tsx
-import { useState } from "react";
-import {
-  Combobox,
-  ComboboxButton,
-  ComboboxInput,
-  ComboboxOption,
-  ComboboxOptions,
-} from "@headlessui/react";
-
-type Person = { id: number; name: string };
-
-const PEOPLE: Person[] = [
-  { id: 1, name: "Wade Cooper" },
-  { id: 2, name: "Arlene Mccoy" },
-  { id: 3, name: "Devon Webb" },
-  { id: 4, name: "Tom Cook" },
-];
-
-export function PeopleCombobox() {
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Person | null>(null);
-
-  const filtered =
-    query === ""
-      ? PEOPLE
-      : PEOPLE.filter((person) =>
-          person.name.toLowerCase().includes(query.toLowerCase()),
-        );
-
-  return (
-    <Combobox
-      value={selected}
-      onChange={setSelected}
-      onClose={() => setQuery("")}
-    >
-      <div className="relative">
-        <ComboboxInput
-          className="w-full rounded-lg border py-2 pl-3 pr-10"
-          displayValue={(person: Person | null) => person?.name ?? ""}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search people..."
-        />
-        <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
-          <span className="size-5 text-gray-400" aria-hidden="true">
-            &#9662;
-          </span>
-        </ComboboxButton>
-      </div>
-      <ComboboxOptions
-        anchor="bottom"
-        transition
-        className="w-[var(--input-width)] rounded-xl bg-white p-1 shadow-lg [--anchor-gap:4px] duration-150 data-[closed]:opacity-0"
-      >
-        {filtered.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-gray-500">
-            No results found
-          </div>
-        ) : (
-          filtered.map((person) => (
-            <ComboboxOption
-              key={person.id}
-              value={person}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 data-[focus]:bg-blue-100"
-            >
-              <svg
-                className="invisible size-4 text-blue-600 data-[selected]:visible"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
-              </svg>
-              {person.name}
-            </ComboboxOption>
-          ))
-        )}
-      </ComboboxOptions>
-    </Combobox>
-  );
-}
-```
-
-**Why good:** Filtering is explicit and customizable, `onClose` resets query, `displayValue` formats selected item in input, empty state handled, `data-[selected]` shows check mark
+**Why good:** `onClose` is where the query resets — `onChange` fires on selection, which is a
+different moment. `displayValue` decides what the input shows for the selected object, and
+`--input-width` matches the panel to the input.
 
 ---
 
@@ -388,4 +298,5 @@ export function VirtualCombobox() {
 }
 ```
 
-**Why good:** `virtual` prop enables built-in virtualization for 10k+ items, render function on ComboboxOptions receives each visible option, only visible items are in the DOM
+**Why good:** `virtual` keeps only the visible options in the DOM, with no windowing library.
+Note the shape change: `ComboboxOptions` takes a render function rather than mapped children.

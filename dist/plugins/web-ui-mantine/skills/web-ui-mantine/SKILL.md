@@ -5,296 +5,189 @@ description: Mantine v7 component library — theming, styling, hooks, forms, no
 
 # Mantine v7 Component Patterns
 
-> **Quick Guide:** Mantine v7 is a full-featured React component library using CSS Modules (not CSS-in-JS). Wrap your app in `MantineProvider` with a `createTheme` object. Style with CSS Modules + PostCSS preset mixins, the Styles API (`classNames`/`styles` props), or style props (`p`, `m`, `bg`, etc.). Use `@mantine/form` for form management, `@mantine/hooks` for utility hooks, and `@mantine/notifications` for toasts. PostCSS preset with `postcss-preset-mantine` is required for responsive mixins and `light-dark()`.
+> **Quick Guide:** Mantine is a batteries-included React component library whose v7 rewrite replaced
+> Emotion with CSS Modules, so there is no CSS-in-JS runtime. Wrap the app in `MantineProvider` with
+> a `createTheme` object, install `postcss-preset-mantine` for the mixins and `light-dark()`, and
+> style through one of four routes: style props for one-offs, the Styles API (`classNames` /
+> `styles`) for inner elements, CSS Modules for custom components, and `theme.components` for
+> app-wide defaults. `@mantine/form`, `@mantine/hooks`, `@mantine/notifications` and `@mantine/dates`
+> are separate packages, each with its own stylesheet.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — provider and PostCSS setup, SSR, CSS Modules, Styles API, style props, AppShell, loading states
+- [examples/components.md](examples/components.md) — Modal, Drawer, Menu, Tabs, Accordion, notifications, dates
+- [examples/theming.md](examples/theming.md) — custom colours, `virtualColor`, component defaults, auto-contrast, theme merging
+- [examples/forms.md](examples/forms.md) — `useForm` validation, cross-field rules, nested fields, dynamic lists, schema resolvers
+- [reference.md](reference.md) — component selection tree, style-prop and mixin tables, Styles API selectors, package list, anti-patterns
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Mantine code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap the app in `MantineProvider` and import `@mantine/core/styles.css` at the root.** Every
+component reads its CSS variables from the provider, and without the stylesheet they render as
+unstyled markup rather than failing loudly.
 
-**(You MUST wrap your app in `MantineProvider` and import `@mantine/core/styles.css` at the root)**
+**Install and configure `postcss-preset-mantine`.** It compiles `@mixin smaller-than`,
+`@mixin hover`, `light-dark()` and `rem()`. Without it those lines pass through to the browser as
+invalid CSS and are dropped.
 
-**(You MUST install and configure `postcss-preset-mantine` for CSS Modules mixins and responsive utilities)**
+**Write custom component styles as CSS Modules.** `createStyles` was removed in v7, and the theme's
+values are available to plain CSS as `--mantine-*` custom properties.
 
-**(You MUST use CSS Modules (`.module.css`) for custom component styles - `createStyles` was removed in v7)**
-
-**(You MUST provide 10-shade color tuples when adding custom colors to the theme)**
+**Give a custom colour all ten shades.** The palette is indexed 0 (lightest) to 9 (darkest) and the
+type is a 10-tuple, so a short array is a compile error rather than a runtime surprise.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Mantine, @mantine/core, @mantine/hooks, @mantine/form, @mantine/notifications, @mantine/dates, MantineProvider, createTheme, useForm, useDisclosure, useDebouncedValue, useMediaQuery, postcss-preset-mantine, light-dark(), getInputProps, classNames prop, styles prop
+**Auto-detection:** Mantine, @mantine/core, @mantine/hooks, @mantine/form, @mantine/notifications,
+@mantine/dates, MantineProvider, createTheme, virtualColor, useMantineColorScheme,
+useComputedColorScheme, ColorSchemeScript, mantineHtmlProps, useDisclosure, useDebouncedValue,
+postcss-preset-mantine, light-dark(), getInputProps, form.key(), classNames prop, styles prop,
+Component.extend()
 
-**When to use:**
+**Applies to:**
 
-- Building React applications needing 100+ ready-to-use accessible components
-- Projects requiring built-in form management, date pickers, or notification systems
-- Applications where CSS Modules (no runtime CSS-in-JS) are preferred for performance
-- Teams wanting a batteries-included library with hooks, theming, and responsive utilities
+- Building on Mantine's 100+ components, and customising them through the theme rather than by
+  forking them
+- Choosing between style props, the Styles API, CSS Modules and theme defaults for a given override
+- Form state with `@mantine/form` — validation, nested paths, dynamic lists
+- Colour scheme handling, including the SSR flash and the `auto` resolution trap
+- The utility hooks in `@mantine/hooks`
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Projects committed to a different component library
-- Applications requiring utility-class-first styling (Mantine uses CSS Modules)
-- When only a few components are needed and a full library is overkill
-
-**Key patterns covered:**
-
-- MantineProvider setup with createTheme and PostCSS configuration
-- Core components (Button, TextInput, Select, Modal, Drawer, Menu, Tabs, Accordion)
-- Styling with CSS Modules, Styles API (classNames/styles/vars), and style props
-- Theming with createTheme (colors, defaultRadius, component defaults)
-- Color scheme (light/dark/auto) with useMantineColorScheme
-- @mantine/form (useForm, validation, nested fields, list management)
-- @mantine/hooks (useDisclosure, useDebouncedValue, useMediaQuery)
-- @mantine/notifications and @mantine/dates
+- CSS methodology and design-token architecture beyond Mantine's own theme — the theme publishes
+  `--mantine-*` custom properties, and how the rest of your stylesheet is organised is settled
+  elsewhere
+- Server state — components take data as props, and where it was fetched is not their concern
+- Global client state beyond a component's own — `useDisclosure` is a local boolean, not a store
+- Schema definition — `useForm` accepts a resolver, and the schema library that produces it is
+  settled by whatever owns validation
 
 ---
 
 <philosophy>
 
-## Philosophy
+Mantine is pre-built rather than copy-and-own: you configure components through a theme, not by
+holding their source. Two consequences shape everything below.
 
-Mantine is a **batteries-included** React component library. Unlike copy-and-own systems, Mantine provides pre-built components that are styled via CSS Modules and customized through a theme object and Styles API. The v7 rewrite (late 2023) dropped Emotion for native CSS Modules, eliminating CSS-in-JS runtime overhead entirely.
+**The theme is the customisation surface.** Colours, radii, fonts, breakpoints and per-component
+default props all live in one `createTheme` object, and every component reads them as CSS variables.
+An override written at the call site is a decision that will need repeating.
 
-**What Mantine handles vs what other skills handle:**
-
-- Mantine: component rendering, theming, form management, hooks, notifications, dates
-- Your styling approach: custom CSS beyond Mantine's Styles API
-- Your data fetching solution: server state management
-- Your state management solution: global client state beyond component state
+**Every component exposes its internals by name.** The Styles API gives each inner element a
+selector — `input`, `label`, `error`, `dropdown` — reachable through `classNames` and `styles`
+without wrapping or forking the component. That is why v7 could drop CSS-in-JS: nothing needs to run
+at render time to target an inner node.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which styling route
+
+```
+One-off spacing or colour            → style props: p="md" bg="blue.1"
+Every instance of a component        → theme.components with Component.extend()
+An inner element, with pseudo-classes → classNames + CSS Modules
+An inner element, quick and inline   → styles prop (no pseudo-classes)
+A component of your own              → CSS Modules using var(--mantine-*)
+Responsive, in JSX                   → style props with object syntax: w={{ base: "100%", sm: 400 }}
+Responsive, in CSS                   → @mixin smaller-than / larger-than
+Light/dark conditional               → light-dark() or @mixin light / @mixin dark
+```
+
+Full component-selection tree and the Styles API selector table: [reference.md](reference.md).
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: MantineProvider Setup
-
-Every Mantine app requires `MantineProvider` at the root with CSS imports and PostCSS configuration.
+### Pattern 1: Provider and theme
 
 ```tsx
-// app.tsx
 import "@mantine/core/styles.css";
-// Import additional package styles only if using those packages:
-// import '@mantine/dates/styles.css';
-// import '@mantine/notifications/styles.css';
-
 import { createTheme, MantineProvider } from "@mantine/core";
 
-const theme = createTheme({
-  primaryColor: "blue",
-  defaultRadius: "md",
-});
+const theme = createTheme({ primaryColor: "blue", defaultRadius: "md" });
 
 export function App() {
-  return (
-    <MantineProvider theme={theme}>{/* Your app content */}</MantineProvider>
-  );
+  return <MantineProvider theme={theme}>{/* app */}</MantineProvider>;
 }
 ```
 
-#### PostCSS Configuration
+Create the theme at module scope — inline in the JSX it is a new object every render, and every
+consumer re-renders with it. Server rendering additionally needs `ColorSchemeScript` in `<head>` and
+`mantineHtmlProps` on `<html>`, or the first paint flashes the wrong scheme.
 
-```javascript
-// postcss.config.cjs
-module.exports = {
-  plugins: {
-    "postcss-preset-mantine": {},
-    "postcss-simple-vars": {
-      variables: {
-        "mantine-breakpoint-xs": "36em",
-        "mantine-breakpoint-sm": "48em",
-        "mantine-breakpoint-md": "62em",
-        "mantine-breakpoint-lg": "75em",
-        "mantine-breakpoint-xl": "88em",
-      },
-    },
-  },
-};
-```
-
-#### SSR Setup (Required for SSR Frameworks)
-
-```tsx
-import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
-
-// In your root HTML/layout:
-<html lang="en" {...mantineHtmlProps}>
-  <head>
-    <ColorSchemeScript defaultColorScheme="auto" />
-  </head>
-  <body>
-    <App />
-  </body>
-</html>;
-```
-
-**Why good:** Theme object lives outside component body (prevents re-renders), PostCSS preset enables responsive mixins, `ColorSchemeScript` prevents flash of wrong theme on SSR
+Full code, including `postcss.config.cjs`: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Core Components
-
-Mantine components accept `className`, `style`, style props, and the Styles API. All support `variant`, `size`, `color`, and `radius` props.
+### Pattern 2: Components share one prop vocabulary
 
 ```tsx
-import {
-  Button,
-  TextInput,
-  Select,
-  Checkbox,
-  Group,
-  Stack,
-} from "@mantine/core";
-
-// Button with variants and sizes
-<Button variant="filled" color="blue" size="md" loading={isLoading}>
-  Submit
-</Button>
-<Button variant="outline">Cancel</Button>
-<Button variant="light" color="red" leftSection={<TrashIcon />}>
+<Button variant="light" color="red" size="md" radius="sm" loading={isSaving} leftSection={<Icon />}>
   Delete
 </Button>
-
-// Text inputs
-<TextInput
-  label="Email"
-  placeholder="you@example.com"
-  withAsterisk
-  error={errors.email}
-/>
-
-// Select
-<Select
-  label="Role"
-  data={["Admin", "Editor", "Viewer"]}
-  placeholder="Pick a role"
-  searchable
-  clearable
-/>
-
-// Checkbox
-<Checkbox label="Accept terms" checked={accepted} onChange={handleChange} />
-
-// Layout components
-<Group gap="md">{/* Horizontal flex */}</Group>
-<Stack gap="sm">{/* Vertical flex */}</Stack>
+<TextInput label="Email" placeholder="you@example.com" withAsterisk error={errors.email} />
+<Select label="Role" data={["Admin", "Editor", "Viewer"]} searchable clearable />
+<Group gap="md">{/* row */}</Group>
+<Stack gap="sm">{/* column */}</Stack>
 ```
 
-**Why good:** Consistent API across all components (variant, size, color, radius), layout components (Group, Stack) replace manual flexbox
+`variant`, `size`, `color` and `radius` mean the same thing on every component, and `Group` / `Stack`
+replace hand-written flexbox. `loading`, `withAsterisk` and `error` are states the component already
+renders — reimplementing them costs the built-in accessibility wiring.
 
 ---
 
-### Pattern 3: Modal, Drawer, Menu, Tabs, Accordion
-
-Overlay and compound components use `useDisclosure` for state management.
+### Pattern 3: Overlays and compound components
 
 ```tsx
-import { Modal, Button } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+const [opened, { open, close }] = useDisclosure(false);
 
-function Demo() {
-  const [opened, { open, close }] = useDisclosure(false);
-
-  return (
-    <>
-      <Modal opened={opened} onClose={close} title="Confirm Action">
-        <p>Are you sure?</p>
-        <Group mt="md" justify="flex-end">
-          <Button variant="outline" onClick={close}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm}>Confirm</Button>
-        </Group>
-      </Modal>
-      <Button onClick={open}>Open Modal</Button>
-    </>
-  );
-}
+<Modal opened={opened} onClose={close} title="Confirm action" centered>
+  <Button onClick={close}>Cancel</Button>
+</Modal>;
 ```
 
-```tsx
-// Drawer - same pattern as Modal
-import { Drawer } from "@mantine/core";
+Overlays are controlled by `opened` / `onClose`, and `useDisclosure` is the handler set they expect.
+Compound components — `Menu.Target` / `Menu.Dropdown`, `Tabs.Tab` / `Tabs.Panel`, `Accordion.Item` —
+pair their parts by `value`, so reordering the list cannot desync them.
 
-<Drawer opened={opened} onClose={close} title="Settings" position="right">
-  {/* Drawer content */}
-</Drawer>;
-```
-
-```tsx
-// Menu
-import { Menu, Button } from "@mantine/core";
-
-<Menu shadow="md" width={200}>
-  <Menu.Target>
-    <Button>Actions</Button>
-  </Menu.Target>
-  <Menu.Dropdown>
-    <Menu.Label>Application</Menu.Label>
-    <Menu.Item leftSection={<SettingsIcon />}>Settings</Menu.Item>
-    <Menu.Divider />
-    <Menu.Item color="red" leftSection={<TrashIcon />}>
-      Delete
-    </Menu.Item>
-  </Menu.Dropdown>
-</Menu>;
-```
-
-```tsx
-// Tabs
-import { Tabs } from "@mantine/core";
-
-<Tabs defaultValue="general">
-  <Tabs.List>
-    <Tabs.Tab value="general">General</Tabs.Tab>
-    <Tabs.Tab value="security">Security</Tabs.Tab>
-  </Tabs.List>
-  <Tabs.Panel value="general">General settings...</Tabs.Panel>
-  <Tabs.Panel value="security">Security settings...</Tabs.Panel>
-</Tabs>;
-```
-
-```tsx
-// Accordion
-import { Accordion } from "@mantine/core";
-
-<Accordion>
-  <Accordion.Item value="faq-1">
-    <Accordion.Control>How does billing work?</Accordion.Control>
-    <Accordion.Panel>Monthly billing starts on signup date.</Accordion.Panel>
-  </Accordion.Item>
-  <Accordion.Item value="faq-2">
-    <Accordion.Control>Can I cancel anytime?</Accordion.Control>
-    <Accordion.Panel>Yes, cancel anytime from settings.</Accordion.Panel>
-  </Accordion.Item>
-</Accordion>;
-```
-
-**Why good:** Consistent compound component pattern (Component.Sub), `useDisclosure` manages open/close state without manual useState boilerplate
+Full code: [examples/components.md](examples/components.md)
 
 ---
 
-### Pattern 4: Styling with CSS Modules and Styles API
+### Pattern 4: Styling — the four routes
 
-Mantine v7 uses CSS Modules as the primary styling approach. The PostCSS preset provides responsive mixins and `light-dark()`.
+```tsx
+// Style props: theme values, not CSS values
+<Box p="md" bg="blue.1" c="blue.9" fz="sm" w={{ base: "100%", sm: 400 }} />
 
-#### CSS Modules
+// Styles API: named inner elements
+<TextInput classNames={{ input: classes.input, label: classes.label }} />
+<TextInput styles={{ input: { backgroundColor: "var(--mantine-color-blue-0)" } }} />
+```
 
 ```css
-/* feature-card.module.css */
+/* your-component.module.css */
 .card {
   padding: var(--mantine-spacing-md);
-  border-radius: var(--mantine-radius-md);
-  background-color: light-dark(
+  background: light-dark(
     var(--mantine-color-white),
     var(--mantine-color-dark-6)
   );
@@ -302,473 +195,188 @@ Mantine v7 uses CSS Modules as the primary styling approach. The PostCSS preset 
   @mixin hover {
     box-shadow: var(--mantine-shadow-md);
   }
-
-  @mixin smaller-than 48em {
+  @mixin smaller-than $mantine-breakpoint-sm {
     padding: var(--mantine-spacing-sm);
   }
 }
-
-.title {
-  font-weight: 700;
-  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-}
 ```
 
-```tsx
-import { Card, Text } from "@mantine/core";
-import classes from "./feature-card.module.css";
+`classNames` takes classes and so supports pseudo-classes; `styles` takes inline objects and does
+not. Both target the same named selectors, listed per component in [reference.md](reference.md).
 
-export function FeatureCard({ title, children }: FeatureCardProps) {
-  return (
-    <Card className={classes.card}>
-      <Text className={classes.title}>{title}</Text>
-      {children}
-    </Card>
-  );
-}
-```
-
-#### Styles API (classNames and styles props)
-
-Every Mantine component exposes named selectors for inner elements:
-
-```tsx
-// Target specific inner elements with classNames
-<TextInput
-  classNames={{
-    root: classes.inputRoot,
-    input: classes.inputField,
-    label: classes.inputLabel,
-  }}
-/>
-
-// Or inline styles for quick overrides
-<TextInput
-  styles={{
-    input: { backgroundColor: "var(--mantine-color-blue-0)" },
-    label: { fontWeight: 700 },
-  }}
-/>
-```
-
-#### Style Props
-
-All Mantine components support shorthand style props with responsive object syntax:
-
-```tsx
-import { Box } from "@mantine/core";
-
-<Box
-  p="md"
-  bg="blue.1"
-  c="blue.9"
-  w={{ base: "100%", sm: 400, lg: 600 }}
-  fz="sm"
-  ta="center"
-/>;
-```
-
-**Why good:** CSS Modules have zero runtime overhead, Styles API targets inner elements without source modification, style props enable rapid prototyping with responsive breakpoints
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Theming with createTheme
-
-Customize the entire library through the theme object. Theme is deeply merged with Mantine defaults.
+### Pattern 5: Theming
 
 ```tsx
-import {
-  createTheme,
-  MantineProvider,
-  virtualColor,
-  Button,
-} from "@mantine/core";
-
-const BRAND_COLORS = [
-  "#f0e4ff",
-  "#d9b8ff",
-  "#c28dff",
-  "#aa61ff",
-  "#9336ff",
-  "#7b0bff",
-  "#6700d9",
-  "#5300b3",
-  "#3f008c",
-  "#2b0066",
-] as const;
-
 const theme = createTheme({
-  // Colors - each color is a 10-shade tuple (index 0 lightest, 9 darkest)
   colors: {
-    brand: [...BRAND_COLORS],
-    // virtualColor switches based on color scheme
-    surface: virtualColor({
-      name: "surface",
-      dark: "dark",
-      light: "gray",
-    }),
+    brand: [...BRAND_COLORS], // exactly 10, index 0 lightest
+    surface: virtualColor({ name: "surface", dark: "dark", light: "gray" }),
   },
   primaryColor: "brand",
   primaryShade: { light: 6, dark: 8 },
-
-  // Typography
-  fontFamily: "Inter, sans-serif",
-  headings: { fontFamily: "Inter, sans-serif" },
-
-  // Layout
-  defaultRadius: "md",
-
-  // Component defaults - override props and styles globally
   components: {
-    Button: Button.extend({
-      defaultProps: {
-        variant: "filled",
-        size: "sm",
-      },
-    }),
+    Button: Button.extend({ defaultProps: { variant: "filled", size: "sm" } }),
   },
 });
 ```
 
-**Why good:** Colors are 10-shade tuples enabling automatic shade selection, `virtualColor` handles dark/light mode switching, component defaults reduce prop repetition across the app
+`primaryShade` picks a different index per scheme, so one colour name reads correctly in both.
+`virtualColor` goes further and swaps the whole palette. `Component.extend()` sets defaults for
+every instance and is type-checked against that component's props.
 
-See [examples/theming.md](examples/theming.md) for custom color generation, theme extension, and component default override patterns.
-
----
-
-### Pattern 6: Color Scheme (Light/Dark/Auto)
-
-Mantine supports `light`, `dark`, and `auto` color schemes with localStorage persistence.
-
-```tsx
-import {
-  useMantineColorScheme,
-  useComputedColorScheme,
-  ActionIcon,
-} from "@mantine/core";
-
-export function ColorSchemeToggle() {
-  const { setColorScheme } = useMantineColorScheme();
-  const computedScheme = useComputedColorScheme("light");
-
-  return (
-    <ActionIcon
-      variant="outline"
-      onClick={() =>
-        setColorScheme(computedScheme === "dark" ? "light" : "dark")
-      }
-    >
-      {computedScheme === "dark" ? <SunIcon /> : <MoonIcon />}
-    </ActionIcon>
-  );
-}
-```
-
-**Critical:** Use `useComputedColorScheme` (not `useMantineColorScheme().colorScheme`) for toggle logic. When set to `"auto"`, `colorScheme` returns `"auto"` not the resolved value.
-
-```tsx
-// MantineProvider configuration for color scheme
-<MantineProvider theme={theme} defaultColorScheme="auto">
-  {/* App */}
-</MantineProvider>
-```
-
-**Conditional visibility:**
-
-```tsx
-// Built-in props for scheme-conditional rendering
-<Button lightHidden>Only visible in dark mode</Button>
-<Button darkHidden>Only visible in light mode</Button>
-```
-
-**Why good:** `auto` respects system preference, localStorage persists user choice, `useComputedColorScheme` resolves `auto` to actual value
+Full code: [examples/theming.md](examples/theming.md)
 
 ---
 
-### Pattern 7: @mantine/form (useForm)
-
-Full form management with validation, nested fields, and list operations.
+### Pattern 6: Colour scheme
 
 ```tsx
-import { useForm } from "@mantine/form";
-import { TextInput, Checkbox, Button, Group, Box } from "@mantine/core";
+const { setColorScheme } = useMantineColorScheme();
+const computed = useComputedColorScheme("light");
 
-export function SignupForm() {
-  const form = useForm({
-    mode: "uncontrolled",
-    initialValues: {
-      email: "",
-      name: "",
-      termsAccepted: false,
-    },
-    validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
-      name: (value) =>
-        value.length < 2 ? "Name must be at least 2 characters" : null,
-      termsAccepted: (value) => (value ? null : "You must accept terms"),
-    },
-  });
-
-  return (
-    <Box component="form" onSubmit={form.onSubmit(handleSubmit)}>
-      <TextInput
-        label="Name"
-        withAsterisk
-        key={form.key("name")}
-        {...form.getInputProps("name")}
-      />
-      <TextInput
-        label="Email"
-        withAsterisk
-        key={form.key("email")}
-        {...form.getInputProps("email")}
-      />
-      <Checkbox
-        label="I accept the terms"
-        key={form.key("termsAccepted")}
-        {...form.getInputProps("termsAccepted", { type: "checkbox" })}
-      />
-      <Group mt="md" justify="flex-end">
-        <Button type="submit">Submit</Button>
-      </Group>
-    </Box>
-  );
-}
+<ActionIcon
+  onClick={() => setColorScheme(computed === "dark" ? "light" : "dark")}
+>
+  {computed === "dark" ? <SunIcon /> : <MoonIcon />}
+</ActionIcon>;
 ```
 
-#### Cross-field Validation
+Read the scheme through `useComputedColorScheme`, not through `useMantineColorScheme().colorScheme`.
+The second returns the literal setting, which is `"auto"` for the default — so a toggle branching on
+it treats a dark system as light. `lightHidden` and `darkHidden` cover the render-one-or-the-other
+case without a hook at all.
+
+Full code: [examples/theming.md](examples/theming.md)
+
+---
+
+### Pattern 7: Forms
 
 ```tsx
 const form = useForm({
   mode: "uncontrolled",
-  initialValues: { password: "", confirmPassword: "" },
-  validate: {
-    confirmPassword: (value, values) =>
-      value !== values.password ? "Passwords do not match" : null,
-  },
-});
-```
-
-#### Nested Fields and Lists
-
-```tsx
-const form = useForm({
-  mode: "uncontrolled",
-  initialValues: {
-    employees: [{ name: "", email: "" }],
-  },
+  initialValues: { email: "", termsAccepted: false },
+  validate: { email: (v) => (/^\S+@\S+$/.test(v) ? null : "Invalid email") },
 });
 
-// Add item
-form.insertListItem("employees", { name: "", email: "" });
-
-// Remove item
-form.removeListItem("employees", index);
-
-// Access nested fields with dot notation
-form.getInputProps("employees.0.name");
-form.getInputProps("employees.0.email");
+<TextInput label="Email" withAsterisk key={form.key("email")} {...form.getInputProps("email")} />
+<Checkbox label="I accept" key={form.key("termsAccepted")}
+  {...form.getInputProps("termsAccepted", { type: "checkbox" })} />
 ```
 
-**Why good:** `getInputProps` auto-binds value, onChange, and error to inputs; `mode: "uncontrolled"` (default) avoids re-renders on every keystroke; `form.key()` is required for uncontrolled mode to maintain React key stability
+`getInputProps` binds value, change handler and error in one spread; `{ type: "checkbox" }` switches
+it to `checked`. `mode: "uncontrolled"` is the default and keeps keystrokes out of React's render
+path — which is why `form.key()` is required alongside it, to give React a key that survives the
+value changing outside its knowledge. Nested paths use dot notation (`address.city`,
+`members.0.name`), and list items move through `insertListItem` / `removeListItem`.
 
-See [examples/forms.md](examples/forms.md) for Zod resolver integration, dynamic list forms, and validation timing options.
+Full code, including schema resolvers: [examples/forms.md](examples/forms.md)
 
 ---
 
-### Pattern 8: @mantine/hooks
-
-Utility hooks that solve common React patterns.
+### Pattern 8: Hooks
 
 ```tsx
-import { useState } from "react";
-import {
-  useDisclosure,
-  useDebouncedValue,
-  useMediaQuery,
-  useClickOutside,
-  useClipboard,
-} from "@mantine/hooks";
-
-// useDisclosure - boolean state with handlers
 const [opened, { open, close, toggle }] = useDisclosure(false);
-
-// useDebouncedValue - debounce any value
-const [search, setSearch] = useState("");
 const [debounced] = useDebouncedValue(search, 300);
-
-// useMediaQuery - responsive logic in JS
 const isMobile = useMediaQuery("(max-width: 48em)");
-
-// useClickOutside - close on outside click
 const ref = useClickOutside(() => close());
-
-// useClipboard - copy to clipboard with timeout
-const clipboard = useClipboard({ timeout: 2000 });
-clipboard.copy("text to copy");
-// clipboard.copied is true for 2000ms after copy
+const clipboard = useClipboard({ timeout: 2000 }); // clipboard.copied stays true for the timeout
 ```
 
-**Why good:** Purpose-built hooks eliminate boilerplate, `useDebouncedValue` handles cleanup automatically, `useMediaQuery` returns `undefined` during SSR (safe for hydration)
+`useDebouncedValue` and `useClickOutside` own their own cleanup. `useMediaQuery` returns `undefined`
+during server rendering rather than guessing, so branch on that third state instead of treating it
+as `false`.
 
 ---
 
-### Pattern 9: @mantine/notifications
-
-Toast notification system with queue management.
+### Pattern 9: Notifications
 
 ```tsx
-// Root setup (once)
-import { Notifications } from "@mantine/notifications";
-import "@mantine/notifications/styles.css";
+<Notifications position="top-right" />; // once, inside MantineProvider
 
-<MantineProvider>
-  <Notifications position="top-right" />
-  <App />
-</MantineProvider>;
-```
-
-```tsx
-// Show notifications anywhere
-import { notifications } from "@mantine/notifications";
-
-// Basic notification
-notifications.show({
-  title: "Success",
-  message: "Your changes have been saved",
-  color: "green",
-});
-
-// Loading notification that updates
 const id = notifications.show({
   loading: true,
-  title: "Uploading file",
-  message: "Please wait...",
+  message: "Uploading…",
   autoClose: false,
-  withCloseButton: false,
 });
-
-// Update to success
 notifications.update({
   id,
   loading: false,
-  title: "Upload complete",
-  message: "File has been uploaded",
+  message: "Uploaded",
   color: "green",
   autoClose: 3000,
 });
-
-// Clean all
-notifications.clean();
 ```
 
-**Why good:** Queue management prevents notification flooding, `update` pattern handles async operations elegantly, consistent positioning across the app
+The renderer mounts once; the API is imperative and callable from anywhere, including outside React.
+Update by the returned id rather than showing a second notification.
+
+Full code: [examples/components.md](examples/components.md)
 
 ---
 
-### Pattern 10: @mantine/dates
-
-Date components built on dayjs. Requires separate package and CSS import.
-
-```bash
-npm install @mantine/dates dayjs
-```
+### Pattern 10: Dates
 
 ```tsx
 import "@mantine/dates/styles.css";
-import { DatePickerInput, DatesProvider } from "@mantine/dates";
 
-// Wrap with DatesProvider for locale/firstDayOfWeek
 <DatesProvider settings={{ locale: "en", firstDayOfWeek: 0 }}>
-  <App />
+  <DatePickerInput
+    type="range"
+    label="Date range"
+    value={range}
+    onChange={setRange}
+  />
 </DatesProvider>;
-
-// v7: Date objects
-const [date, setDate] = useState<Date | null>(null);
-// v8: string values in "YYYY-MM-DD" format
-// const [date, setDate] = useState<string | null>(null);
-<DatePickerInput
-  label="Pick date"
-  placeholder="Pick date"
-  value={date}
-  onChange={setDate}
-/>;
-
-// v7: Date range
-const [range, setRange] = useState<[Date | null, Date | null]>([null, null]);
-// v8: const [range, setRange] = useState<[string | null, string | null]>([null, null]);
-<DatePickerInput
-  type="range"
-  label="Date range"
-  value={range}
-  onChange={setRange}
-/>;
 ```
 
-**Why good:** dayjs is lightweight (2KB), DatesProvider centralizes locale settings, type parameter controls single/range/multiple selection modes
+Separate package, separate stylesheet, dayjs as a peer. `type` (`default` / `range` / `multiple`)
+changes the value's shape rather than the component.
 
-> **v8 note:** Mantine v8 changed all `@mantine/dates` components from `Date` objects to `"YYYY-MM-DD"` strings. `DatesProvider` no longer supports the `timezone` option.
+Full code: [examples/components.md](examples/components.md)
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - MantineProvider setup, CSS Modules patterns, Styles API, style props, PostCSS mixins
-- [examples/theming.md](examples/theming.md) - Custom colors, component defaults, virtualColor, theme extension
-- [examples/forms.md](examples/forms.md) - useForm validation, Zod resolver, nested fields, dynamic lists
-- [reference.md](reference.md) - Decision frameworks, component selection, anti-patterns, quick reference
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Using `createStyles`** - Removed in v7. Use CSS Modules (`.module.css`) instead
-- **Missing PostCSS preset** - Responsive mixins (`@mixin smaller-than`), `light-dark()`, and `rem()` will not work
-- **Missing `@mantine/core/styles.css` import** - Components will render unstyled
-- **Providing fewer than 10 shades for custom colors** - Mantine requires exactly 10-shade tuples, TypeScript will error
+- No `@mantine/core/styles.css` import — components render as unstyled markup with no error
+- No `postcss-preset-mantine` — `@mixin`, `light-dark()` and `rem()` reach the browser as invalid CSS
+  and are dropped, so responsive and dark-mode rules silently do nothing
+- A package's own stylesheet left out — `@mantine/dates/styles.css`,
+  `@mantine/notifications/styles.css` and the rest are separate imports
+- `createStyles` — removed in v7
+- A custom colour with fewer than ten shades — a TypeScript error, since the palette type is a
+  10-tuple
+- `createTheme(...)` inline in the JSX — a new theme object every render, re-rendering every consumer
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Using `colorScheme` directly for toggle logic** - Returns `"auto"` when set to auto; use `useComputedColorScheme` to get resolved `"light"` or `"dark"`
-- **Forgetting `form.key()` in uncontrolled mode** - Required for React key stability when using `mode: "uncontrolled"` with `getInputProps`
-- **Not importing package-specific CSS** - `@mantine/dates/styles.css`, `@mantine/notifications/styles.css` must be imported separately if using those packages
-- **Overriding styles with inline `style` prop** - Use `classNames`/`styles` Styles API or CSS Modules to target inner elements properly
-
-**Gotchas & Edge Cases:**
-
-- **`mantineHtmlProps` required for SSR** - Must be spread on `<html>` element to prevent hydration mismatches
-- **`ColorSchemeScript` must be in `<head>`** - Prevents flash of wrong color scheme before hydration
-- **Style props use theme values, not CSS values** - `p="md"` resolves to `theme.spacing.md`, not the string `"md"`
-- **Color dot notation** - `color="blue.6"` accesses shade 6 of the blue palette, not a CSS color name
-- **`useMediaQuery` returns `undefined` during SSR** - Handle the initial render state to prevent hydration mismatch
-- **PostCSS breakpoint variables must match Mantine defaults** - If you change `theme.breakpoints`, update `postcss.config.cjs` variables too
-- **v8 exists (released May 2025)** - Key v8 changes: `@mantine/dates` uses `"YYYY-MM-DD"` strings instead of `Date` objects, `DatesProvider` drops `timezone`, `CodeHighlight` drops highlight.js. Check [migration guide](https://mantine.dev/guides/7x-to-8x/) if upgrading
-- **`light-dark()` is a PostCSS function, not native CSS** - Requires `postcss-preset-mantine` to compile
+- `useMantineColorScheme().colorScheme` returns `"auto"` when that is the setting, so a toggle
+  branching on it misreads a dark system as light — `useComputedColorScheme` resolves it
+- `form.key()` is not optional in uncontrolled mode; without it inputs keep stale values after a reset
+- Style props take theme values, not CSS values: `p="md"` is `theme.spacing.md`, and `color="blue.6"`
+  is shade 6 of the palette rather than a CSS colour
+- The PostCSS breakpoint variables are a second copy of `theme.breakpoints` — change one and the CSS
+  and the JS disagree with nothing to catch it
+- `useMediaQuery` returns `undefined` during server rendering, which is a third state rather than
+  `false`
+- `light-dark()` here is compiled by the PostCSS preset rather than the native CSS function
+- The `style` prop reaches only the outermost element and takes raw CSS values, so a colour written
+  there is frozen against the colour scheme — inner elements need `classNames` or `styles`, and a
+  theme-aware colour needs `bg` / `c` or a `--mantine-color-*` variable
+- **v8 shipped in May 2025.** `@mantine/dates` moved from `Date` objects to `"YYYY-MM-DD"` strings,
+  `DatesProvider` dropped `timezone`, and `CodeHighlight` dropped highlight.js. This skill documents
+  v7; check the migration guide before upgrading.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap your app in `MantineProvider` and import `@mantine/core/styles.css` at the root)**
-
-**(You MUST install and configure `postcss-preset-mantine` for CSS Modules mixins and responsive utilities)**
-
-**(You MUST use CSS Modules (`.module.css`) for custom component styles - `createStyles` was removed in v7)**
-
-**(You MUST provide 10-shade color tuples when adding custom colors to the theme)**
-
-**Failure to follow these rules will cause unstyled components, broken responsive layouts, and TypeScript errors.**
-
-</critical_reminders>

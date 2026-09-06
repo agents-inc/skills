@@ -1,6 +1,6 @@
 # Redux Toolkit - Core Examples
 
-Core code examples for Redux Toolkit store configuration and slice creation.
+> Store configuration and slice creation. See [SKILL.md](../SKILL.md) for the decision trees and red flags, and [reference.md](../reference.md) for migration notes.
 
 **Related examples:**
 
@@ -11,7 +11,7 @@ Core code examples for Redux Toolkit store configuration and slice creation.
 - [selectors.md](selectors.md) - Memoized derived state
 - [middleware.md](middleware.md) - Custom middleware patterns
 - [testing.md](testing.md) - Testing reducers and thunks
-- [integrations.md](integrations.md) - Redux Persist integration
+- [persistence.md](persistence.md) - persisting the store across sessions
 
 ---
 
@@ -49,7 +49,7 @@ export type AppDispatch = typeof store.dispatch;
 export type AppStore = typeof store;
 ```
 
-**Why good:** Types inferred from store (no manual typing), DevTools enabled via named constant, RTK Query middleware configured correctly, setupListeners enables automatic refetch behaviors, named exports follow project conventions
+**Why good:** `RootState` follows the reducer map automatically, so adding a slice types every selector without a second edit. The middleware callback extends the defaults rather than replacing them, and `setupListeners` is what makes the refetch options on the API slice do anything.
 
 ### Bad Example - Legacy createStore
 
@@ -64,11 +64,9 @@ const rootReducer = combineReducers({
 });
 
 const store = createStore(rootReducer, applyMiddleware(thunk));
-
-export default store; // BAD: default export
 ```
 
-**Why bad:** Manual middleware setup misses DevTools and development checks, no type inference, requires separate combineReducers call, default export violates conventions, no serializability or mutation checks
+**Why bad:** No DevTools connection, no inferred `RootState`, and none of the development checks that catch an accidental mutation or a non-serialisable value in an action — each of which `configureStore` sets up without being asked.
 
 ---
 
@@ -150,7 +148,6 @@ const todosSlice = createSlice({
   },
 });
 
-// Named exports for actions and reducer
 export const {
   addTodo,
   toggleTodo,
@@ -162,7 +159,7 @@ export const {
 export const todosReducer = todosSlice.reducer;
 ```
 
-**Why good:** Typed initial state enables inference, PayloadAction provides type-safe payloads, Immer syntax simplifies updates, prepare callback for complex action creation, named constants for default values, named exports for all
+**Why good:** The action creators and types are generated from the reducer keys, so `toggleTodo` cannot be dispatched under a name no reducer answers to. `PayloadAction<T>` types the payload at the point it is consumed, and the `prepare` callback keeps id and timestamp generation out of the reducer, which has to stay pure.
 
 ### Bad Example - Switch Statement Reducer
 
@@ -173,7 +170,7 @@ const todosReducer = (state = initialState, action) => {
     case "ADD_TODO":
       return {
         ...state,
-        items: [...state.items, { ...action.payload, id: Date.now() }], // Magic number!
+        items: [...state.items, { ...action.payload, id: Date.now() }], // collides within a tick
       };
     case "TOGGLE_TODO":
       return {
@@ -187,12 +184,10 @@ const todosReducer = (state = initialState, action) => {
   }
 };
 
-// Manual action creators
+// Action creators written by hand, with the type string repeated
 const addTodo = (todo) => ({ type: "ADD_TODO", payload: todo });
-
-export default todosReducer; // BAD: default export
 ```
 
-**Why bad:** No type safety, manual action creators prone to typos, spread operators verbose and error-prone, no DevTools action type inference, magic numbers, default export
+**Why bad:** The type string appears in two places and nothing checks that they agree, so a typo produces an action the reducer's `default` branch swallows in silence. Every update rebuilds the containing objects by hand, which is where deep updates go wrong.
 
 ---

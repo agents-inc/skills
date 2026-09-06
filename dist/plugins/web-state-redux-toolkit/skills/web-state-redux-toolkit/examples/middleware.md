@@ -100,6 +100,6 @@ export const store = configureStore({
 });
 ```
 
-**Why good:** getDefaultMiddleware preserves serialization and immutability checks, middleware chained correctly, named exports
+**Why good:** Concatenating onto `getDefaultMiddleware()` keeps the thunk middleware and the development-only serialisability and mutation checks; replacing the array drops all three without a warning.
 
 ---

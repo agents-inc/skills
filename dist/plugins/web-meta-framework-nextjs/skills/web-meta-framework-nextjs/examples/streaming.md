@@ -1,18 +1,27 @@
 # Streaming with Server Actions
 
-> Real-time progress updates for long-running operations.
+> Reporting progress from a long-running action. See [server-actions.md](server-actions.md) for the
+> single-response shape.
 
 ---
 
 ## Pattern: Long-Running Action with Progress
 
-### Good Example - Import with streaming progress
+`createStreamableValue` and `readStreamableValue` below are **placeholders** — Next.js ships no
+streamable-value primitive, so these stand in for whichever streaming library the project uses.
+Substitute its names. Only two contracts matter:
+
+- **The writer**, created on the server with an initial value, carrying `update(value)`,
+  `done(value)` and `error(value)`. Its `.value` is what the action returns.
+- **The reader**, which turns that returned value into an async iterable on the client.
+
+### Good Example — a file import that reports its progress
 
 ```typescript
 // app/actions/import.ts
 "use server";
 
-import { createStreamableValue } from "ai/rsc";
+import { createStreamableValue } from "./streamable"; // placeholder — see above
 
 export async function importData(formData: FormData) {
   const stream = createStreamableValue({ progress: 0, status: "starting" });
@@ -46,8 +55,8 @@ export async function importData(formData: FormData) {
 'use client'
 
 import { useState } from 'react'
-import { readStreamableValue } from 'ai/rsc'
-import { importData } from '@/app/actions/import'
+import { readStreamableValue } from './streamable' // placeholder — see above
+import { importData } from '../app/actions/import'
 
 export function ImportForm() {
   const [status, setStatus] = useState({ progress: 0, status: '' })
@@ -75,18 +84,20 @@ export function ImportForm() {
 }
 ```
 
-**Why good:** Real-time progress for long-running operations. Uses streamable values for server-to-client updates. User sees progress instead of just a spinner.
-
-**Note:** This example uses `ai/rsc` (Vercel AI SDK) for streamable values. Use your streaming solution's equivalent API if different.
+**Why good:** The action returns the stream handle immediately and keeps working in the background, so
+the user watches a count rise instead of a spinner with no end in sight. A failure arrives as a
+stream value rather than an unhandled rejection.
 
 ---
 
 ## When to Use Streaming
 
-| Scenario             | Use Streaming? |
-| -------------------- | -------------- |
-| File imports/exports | Yes            |
-| Batch operations     | Yes            |
-| AI/LLM responses     | Yes            |
-| Simple CRUD          | No - overkill  |
-| Quick mutations      | No - overkill  |
+The threshold is whether the user would otherwise be looking at an indeterminate spinner for long
+enough to wonder if it has hung.
+
+| Scenario                 | Use Streaming? |
+| ------------------------ | -------------- |
+| File imports and exports | Yes            |
+| Batch operations         | Yes            |
+| Token-by-token responses | Yes            |
+| Ordinary create/update   | No             |

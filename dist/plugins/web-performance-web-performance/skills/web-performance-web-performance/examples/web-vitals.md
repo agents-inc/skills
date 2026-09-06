@@ -1,92 +1,78 @@
-# Core Web Vitals
+# Performance — Core Web Vitals
 
-> LCP, INP, CLS patterns and real-user monitoring. See [core.md](core.md) for React runtime patterns.
+> LCP, INP and CLS patterns, and measuring them in the field. Thresholds are in [reference.md](../reference.md).
 
 ---
 
-## LCP (Largest Contentful Paint)
-
-### Good Example - Optimize Hero Image for LCP
+## LCP: the largest element
 
 ```html
-<!-- Preload hero image, serve modern format, set dimensions -->
-<link rel="preload" as="image" href="/hero.webp" type="image/webp" />
+<link rel="preload" as="image" href="/hero.avif" type="image/avif" />
 
 <img
-  src="/hero.webp"
-  alt="Hero image"
+  src="/hero.avif"
+  alt="Hero"
   width="1200"
   height="600"
-  loading="eager"
   fetchpriority="high"
   decoding="async"
 />
 ```
 
-**Why good:** `fetchpriority="high"` tells browser to prioritize this image, explicit dimensions prevent CLS, `loading="eager"` (default) ensures immediate fetch, preload link starts fetch before HTML parser reaches the `<img>`
-
-### Bad Example - Large Hero Image Without Optimization
+**Why good:** the preload starts the fetch before the parser reaches the `<img>`, `fetchpriority`
+puts it ahead of the other images competing for bandwidth, and the explicit dimensions reserve its
+space so improving LCP does not cost CLS.
 
 ```html
+<!-- Bad -->
 <img src="/hero-4k.jpg" alt="Hero" />
-<!-- No optimization, no preload, no dimensions, blocks LCP -->
 ```
 
-**Why bad:** Large unoptimized image (2-5MB) blocks LCP, no format optimization, no dimensions (causes CLS), no priority hint
+**Why bad:** a multi-megabyte original at full resolution, discovered late, with no reserved space —
+it sets LCP and damages CLS in the same element.
+
+Find the LCP element before optimising: it is whatever the browser judged largest in the viewport,
+which is often a heading or a background rather than the image you expected.
 
 ---
 
-## INP (Interaction to Next Paint)
+## INP: keeping the main thread free
 
-INP replaced FID (First Input Delay) as a Core Web Vital in March 2024. It measures ALL interactions, not just the first.
-
-### Good Example - Web Worker for Heavy Computation
+### Moving work off the thread
 
 ```typescript
 // workers/process-data.ts
-import type { ProcessDataMessage } from './types';
-
-self.onmessage = (e: MessageEvent<ProcessDataMessage>) => {
-  const { data } = e.data;
-
-  // Heavy computation doesn't block main thread
-  const result = processLargeDataset(data);
-
-  self.postMessage({ result });
+self.onmessage = (event: MessageEvent<{ data: RawRow[] }>) => {
+  self.postMessage({ result: processLargeDataset(event.data.data) });
 };
+```
 
-// Component using web worker
-import { useEffect, useState } from 'react';
-
-const WORKER_TIMEOUT_MS = 5000;
+```typescript
+import { useEffect, useState } from "react";
 
 export function DataProcessor({ data }: Props) {
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<ProcessedRow[] | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(new URL('./workers/process-data.ts', import.meta.url));
+    const worker = new Worker(new URL("./workers/process-data.ts", import.meta.url), {
+      type: "module",
+    });
 
+    worker.onmessage = (event) => setResult(event.data.result);
     worker.postMessage({ data });
 
-    worker.onmessage = (e) => {
-      setResult(e.data.result);
-    };
-
-    const timeout = setTimeout(() => worker.terminate(), WORKER_TIMEOUT_MS);
-
-    return () => {
-      clearTimeout(timeout);
-      worker.terminate();
-    };
+    return () => worker.terminate();
   }, [data]);
 
-  return <div>{result}</div>;
+  return result ? <Results rows={result} /> : <Spinner />;
 }
 ```
 
-**Why good:** Heavy computation runs off main thread, main thread stays responsive to user input, prevents INP issues
+**Why good:** the computation runs on its own thread, so clicks and keystrokes are handled while it
+works. Terminating in the cleanup stops an orphaned worker surviving the component and posting into
+nothing.
 
-### Good Example - Breaking Up Long Tasks
+### Yielding inside a long loop
 
 ```typescript
 const LONG_TASK_THRESHOLD_MS = 50;
@@ -95,40 +81,36 @@ async function processItems(items: Item[]) {
   for (const item of items) {
     processItem(item);
 
-    // Yield to main thread between items to keep UI responsive
-    if ("scheduler" in globalThis && "yield" in scheduler) {
-      await scheduler.yield(); // Chromium browsers
+    if ("scheduler" in globalThis && "yield" in globalThis.scheduler) {
+      await globalThis.scheduler.yield();
     } else {
-      await new Promise((resolve) => setTimeout(resolve, 0)); // Fallback
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }
 }
 ```
 
-**Why good:** Breaks long tasks (> 50ms) into smaller chunks, keeps main thread responsive between iterations, `scheduler.yield()` preserves task priority (falls back to `setTimeout` in unsupported browsers)
-
-### Bad Example - Heavy Computation on Main Thread
+**Why good:** a task over 50 ms blocks every interaction that arrives during it. Yielding lets the
+browser handle input between items; `scheduler.yield()` resumes at the front of the queue where
+`setTimeout(0)` goes to the back, which is why the fallback is slower rather than equivalent.
 
 ```typescript
+// Bad — seconds of work between paints
 export function DataProcessor({ data }: Props) {
-  // Blocks main thread for seconds
   const result = processLargeDataset(data);
-
-  return <div>{result}</div>;
+  return <Results rows={result} />;
 }
 ```
 
-**Why bad:** Blocks main thread during computation, user interactions delayed by processing time, causes high INP scores
+**Why bad:** it runs during render, so nothing paints and no input is handled until it finishes.
 
 ---
 
-## CLS (Cumulative Layout Shift)
-
-### Good Example - Image with Explicit Dimensions
+## CLS: reserving space
 
 ```html
 <img
-  src="/product.jpg"
+  src="/product.avif"
   alt="Product"
   width="800"
   height="400"
@@ -137,26 +119,25 @@ export function DataProcessor({ data }: Props) {
 />
 ```
 
-**Why good:** Explicit dimensions reserve space before image loads, prevents layout shift when image appears
-
-### Bad Example - No Dimensions, Causes Layout Shift
+**Why good:** width and height give the browser an aspect ratio to reserve before a byte of the image
+arrives, so nothing below it moves when it lands.
 
 ```html
-<!-- No dimensions, causes layout shift -->
+<!-- Bad -->
 <img src="/product.jpg" alt="Product" />
 ```
 
-**Why bad:** No space reserved for image, content jumps when image loads, causes CLS score increase
+**Why bad:** the image occupies nothing until it loads, then pushes everything below it down —
+usually just as someone is reaching for a link.
 
-### Good Example - Font Loading with size-adjust
+### Fonts
 
 ```css
-/* Font loading with size-adjust to prevent CLS */
 @font-face {
   font-family: "CustomFont";
   src: url("/fonts/custom-font.woff2") format("woff2");
   font-display: swap;
-  size-adjust: 95%; /* Match fallback font metrics */
+  size-adjust: 95%;
 }
 
 body {
@@ -164,64 +145,62 @@ body {
 }
 ```
 
-**Why good:** `size-adjust` prevents layout shift when custom font loads, `font-display: swap` shows fallback immediately, prevents invisible text (FOIT)
+**Why good:** `font-display: swap` shows the fallback immediately rather than leaving invisible text,
+and `size-adjust` scales the fallback so the swap changes glyphs without changing line breaks — which
+is the layout shift the swap would otherwise cause.
 
-### Bad Example - Font Loading Without size-adjust
-
-```css
-@font-face {
-  font-family: "CustomFont";
-  src: url("/fonts/custom-font.woff2") format("woff2");
-  /* No font-display - defaults to block (invisible text) */
-  /* No size-adjust - causes layout shift on swap */
-}
-```
-
-**Why bad:** Text invisible while font loads (FOIT), layout shifts when custom font loads with different metrics
+Without `font-display`, the default is a block period during which the text is invisible entirely.
 
 ---
 
-## Production Monitoring with web-vitals
-
-### Good Example - Web Vitals Analytics
+## Measuring real sessions
 
 ```typescript
 // lib/web-vitals.ts
 import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
 import type { Metric } from "web-vitals";
 
-function sendToAnalytics(metric: Metric) {
+const ANALYTICS_ENDPOINT = "/api/analytics";
+
+function send(metric: Metric) {
   const body = JSON.stringify({
     name: metric.name,
     value: metric.value,
-    id: metric.id,
     delta: metric.delta,
+    id: metric.id,
     rating: metric.rating, // "good" | "needs-improvement" | "poor"
   });
 
-  // Use sendBeacon for reliability on page unload
   if (navigator.sendBeacon) {
-    navigator.sendBeacon("/api/analytics", body);
-  } else {
-    fetch("/api/analytics", {
-      method: "POST",
-      body,
-      headers: { "Content-Type": "application/json" },
-      keepalive: true,
-    }).catch(() => {});
+    navigator.sendBeacon(ANALYTICS_ENDPOINT, body);
+    return;
   }
+
+  fetch(ANALYTICS_ENDPOINT, {
+    method: "POST",
+    body,
+    headers: { "Content-Type": "application/json" },
+    keepalive: true,
+  }).catch(() => {});
 }
 
-// Initialize - call once on app mount
+/** Call once, at startup */
 export function initWebVitals() {
-  onCLS(sendToAnalytics);
-  onINP(sendToAnalytics);
-  onFCP(sendToAnalytics);
-  onLCP(sendToAnalytics);
-  onTTFB(sendToAnalytics);
+  onCLS(send);
+  onINP(send);
+  onFCP(send);
+  onLCP(send);
+  onTTFB(send);
 }
 ```
 
-**Why good:** Tracks real user performance (not lab metrics), measures all Core Web Vitals, `sendBeacon` ensures data sent even on page unload, `rating` field gives instant pass/fail
+**Why good:** `sendBeacon` survives the page unload, which is when CLS and INP reach their final
+values — a plain `fetch` at that moment is cancelled. Reporting `delta` as well as `value` lets the
+receiver aggregate without double-counting, and `rating` gives a pass/fail without the consumer
+knowing the thresholds.
 
-**Note:** web-vitals v5 removed `onFID` entirely. Use `onINP` instead. Do not call these functions more than once per page load -- each creates a PerformanceObserver that persists for the page lifetime.
+**Call each function once per page load.** Each registers a `PerformanceObserver` that lives for the
+page's lifetime, so a second registration reports every metric twice.
+
+Aggregate at the 75th percentile, split by device class. A mean hides the slow tail, which is the
+part these metrics exist to expose.

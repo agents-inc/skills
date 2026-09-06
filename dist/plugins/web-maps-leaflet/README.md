@@ -1,6 +1,6 @@
 # web-maps-leaflet
 
-Leaflet interactive maps - map setup, tile layers, markers, popups, GeoJSON, custom controls, plugins, clustering, events
+Leaflet interactive maps. Use when building a 2D map with tile layers, markers, popups, GeoJSON, layer control, custom controls or marker clustering.
 
 ## Installation
 

@@ -1,103 +1,72 @@
-# Playwright E2E Testing Examples
+# Playwright E2E Testing — Core Examples
 
-> Core code examples for Playwright E2E patterns. Reference from [SKILL.md](../SKILL.md).
+> Full code for the core patterns. Referenced from [SKILL.md](../SKILL.md).
 
 **Extended examples:**
 
-- [visual-testing.md](visual-testing.md) - Screenshot comparison, component visual testing
-- [api-mocking.md](api-mocking.md) - Response interception and modification
-- [page-objects.md](page-objects.md) - Page object hierarchy, base page inheritance
-- [fixtures.md](fixtures.md) - Combined fixtures, database seeding, IndexedDB state
-- [advanced-features.md](advanced-features.md) - Clock API, ARIA snapshots, worker fixtures, polling assertions, accessibility assertions
+- [page-objects.md](page-objects.md) — base-page inheritance
+- [api-mocking.md](api-mocking.md) — modifying real responses
+- [visual-testing.md](visual-testing.md) — screenshot comparison
+- [fixtures.md](fixtures.md) — composition, seeded data, storage state
+- [advanced-features.md](advanced-features.md) — Clock API, ARIA snapshots, worker fixtures,
+  polling assertions
 
 ---
 
-## Pattern 1: Complete User Flow
-
-### E-Commerce Checkout Flow
+## Pattern 1: Complete user flow
 
 ```typescript
 // tests/e2e/checkout/checkout-flow.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-// Test data constants
 const PRODUCT_URL = "/products/wireless-headphones";
-const CART_URL_PATTERN = /\/cart/;
-const ORDER_SUCCESS_URL_PATTERN = /\/order\/success/;
-const PRODUCT_NAME = "Wireless Headphones";
-const PRODUCT_PRICE = "$99.99";
-
-const TEST_EMAIL = "user@example.com";
-const TEST_NAME = "John Doe";
-const TEST_ADDRESS = "123 Main St";
-const TEST_CITY = "San Francisco";
-const TEST_ZIP = "94102";
-
-// Stripe test card numbers
-const CARD_SUCCESS = "4242424242424242";
+const SHIPPING = {
+  email: "user@example.com",
+  name: "John Doe",
+  address: "123 Main St",
+  city: "San Francisco",
+  zip: "94102",
+};
+// Sandbox card numbers the payment provider always accepts / always declines.
+const CARD_ACCEPTED = "4242424242424242";
 const CARD_DECLINED = "4000000000000002";
-const CARD_EXPIRY = "12/28";
-const CARD_CVC = "123";
 
-test.describe("Checkout Flow", () => {
-  test("complete purchase with valid payment", async ({ page }) => {
-    // Navigate to product
+async function fillCheckout(page: Page, cardNumber: string) {
+  await page.getByLabel(/email/i).fill(SHIPPING.email);
+  await page.getByLabel(/full name/i).fill(SHIPPING.name);
+  await page.getByLabel(/address/i).fill(SHIPPING.address);
+  await page.getByLabel(/city/i).fill(SHIPPING.city);
+  await page.getByLabel(/zip/i).fill(SHIPPING.zip);
+  await page.getByLabel(/card number/i).fill(cardNumber);
+  await page.getByLabel(/expiry/i).fill("12/28");
+  await page.getByLabel(/cvc/i).fill("123");
+}
+
+test.describe("Checkout", () => {
+  test("completes a purchase with an accepted card", async ({ page }) => {
     await page.goto(PRODUCT_URL);
 
-    // Add to cart
     await page.getByRole("button", { name: /add to cart/i }).click();
     await expect(page.getByText(/added to cart/i)).toBeVisible();
 
-    // Go to cart
     await page.getByRole("link", { name: /cart/i }).click();
-    await expect(page).toHaveURL(CART_URL_PATTERN);
-
-    // Verify product in cart
-    await expect(page.getByText(PRODUCT_NAME)).toBeVisible();
-    await expect(page.getByText(PRODUCT_PRICE)).toBeVisible();
-
-    // Proceed to checkout
+    await expect(page.getByText("Wireless Headphones")).toBeVisible();
     await page.getByRole("button", { name: /checkout/i }).click();
 
-    // Fill shipping information
-    await page.getByLabel(/email/i).fill(TEST_EMAIL);
-    await page.getByLabel(/full name/i).fill(TEST_NAME);
-    await page.getByLabel(/address/i).fill(TEST_ADDRESS);
-    await page.getByLabel(/city/i).fill(TEST_CITY);
-    await page.getByLabel(/zip/i).fill(TEST_ZIP);
-
-    // Fill payment information
-    await page.getByLabel(/card number/i).fill(CARD_SUCCESS);
-    await page.getByLabel(/expiry/i).fill(CARD_EXPIRY);
-    await page.getByLabel(/cvc/i).fill(CARD_CVC);
-
-    // Submit order
+    await fillCheckout(page, CARD_ACCEPTED);
     await page.getByRole("button", { name: /place order/i }).click();
 
-    // Verify success
     await expect(page.getByText(/order confirmed/i)).toBeVisible();
-    await expect(page).toHaveURL(ORDER_SUCCESS_URL_PATTERN);
+    await expect(page).toHaveURL(/\/order\/success/);
   });
 
-  test("handles payment decline gracefully", async ({ page }) => {
+  test("keeps the user on checkout when the card is declined", async ({
+    page,
+  }) => {
     await page.goto("/checkout");
-
-    // Fill shipping information
-    await page.getByLabel(/email/i).fill(TEST_EMAIL);
-    await page.getByLabel(/full name/i).fill(TEST_NAME);
-    await page.getByLabel(/address/i).fill(TEST_ADDRESS);
-    await page.getByLabel(/city/i).fill(TEST_CITY);
-    await page.getByLabel(/zip/i).fill(TEST_ZIP);
-
-    // Use test card that declines
-    await page.getByLabel(/card number/i).fill(CARD_DECLINED);
-    await page.getByLabel(/expiry/i).fill(CARD_EXPIRY);
-    await page.getByLabel(/cvc/i).fill(CARD_CVC);
-
-    // Attempt to place order
+    await fillCheckout(page, CARD_DECLINED);
     await page.getByRole("button", { name: /place order/i }).click();
 
-    // Verify error handling
     await expect(page.getByText(/payment failed/i)).toBeVisible();
     await expect(
       page.getByRole("button", { name: /try again/i }),
@@ -107,45 +76,35 @@ test.describe("Checkout Flow", () => {
 });
 ```
 
-**Why good:** Tests complete user journey from product selection to order confirmation, covers happy path and error scenarios, uses named constants for all test data, uses accessibility locators (getByRole, getByLabel), verifies both visible feedback and URL changes
+**Why good:** both the happy path and the failure path are covered, every step asserts something the
+user can see, and the shared form filling is a helper rather than a copied block — so a new field
+changes one place.
 
 ---
 
 ## Pattern 2: Page Object Model
 
-### Basic Page Object
-
 ```typescript
 // tests/e2e/pages/login-page.ts
-import type { Page, Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 const LOGIN_URL = "/login";
 
 export class LoginPage {
-  readonly page: Page;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signInButton: Locator;
-  readonly forgotPasswordLink: Locator;
-  readonly createAccountLink: Locator;
-  readonly errorAlert: Locator;
   readonly rememberMeCheckbox: Locator;
+  readonly errorAlert: Locator;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(readonly page: Page) {
     this.emailInput = page.getByLabel(/email/i);
     this.passwordInput = page.getByLabel(/password/i);
     this.signInButton = page.getByRole("button", { name: /sign in/i });
-    this.forgotPasswordLink = page.getByRole("link", {
-      name: /forgot password/i,
-    });
-    this.createAccountLink = page.getByRole("link", {
-      name: /create account/i,
-    });
-    this.errorAlert = page.getByRole("alert");
     this.rememberMeCheckbox = page.getByRole("checkbox", {
       name: /remember me/i,
     });
+    this.errorAlert = page.getByRole("alert");
   }
 
   async goto() {
@@ -155,33 +114,22 @@ export class LoginPage {
   async login(email: string, password: string, rememberMe = false) {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
-
-    if (rememberMe) {
-      await this.rememberMeCheckbox.check();
-    }
-
+    if (rememberMe) await this.rememberMeCheckbox.check();
     await this.signInButton.click();
   }
 
-  async expectError(errorText: string | RegExp) {
-    const { expect } = await import("@playwright/test");
-    await expect(this.errorAlert).toContainText(errorText);
+  async expectError(text: string | RegExp) {
+    await expect(this.errorAlert).toContainText(text);
   }
 }
 ```
-
-### Page Objects with Fixtures
 
 ```typescript
 // tests/e2e/fixtures.ts
 import { test as base, expect } from "@playwright/test";
 import { LoginPage } from "./pages/login-page";
 
-type PageFixtures = {
-  loginPage: LoginPage;
-};
-
-export const test = base.extend<PageFixtures>({
+export const test = base.extend<{ loginPage: LoginPage }>({
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
   },
@@ -194,53 +142,37 @@ export { expect };
 // tests/e2e/auth/login.spec.ts
 import { test, expect } from "../fixtures";
 
-const VALID_EMAIL = "user@example.com";
-const VALID_PASSWORD = "SecurePassword123!";
-
-test.describe("Login with Page Objects", () => {
-  test("successful login", async ({ loginPage }) => {
-    await loginPage.goto();
-    await loginPage.login(VALID_EMAIL, VALID_PASSWORD);
-
-    await expect(loginPage.page).toHaveURL(/dashboard/);
-  });
-
-  test("invalid credentials show error", async ({ loginPage }) => {
-    await loginPage.goto();
-    await loginPage.login("wrong@example.com", "wrongpassword");
-
-    await loginPage.expectError(/invalid credentials/i);
-  });
+test("invalid credentials show an error", async ({ loginPage }) => {
+  await loginPage.goto();
+  await loginPage.login("wrong@example.com", "wrongpassword");
+  await loginPage.expectError(/invalid credentials/i);
 });
 ```
 
-**Why good:** Page objects encapsulate all locators and actions, fixtures inject page objects automatically, tests are clean and focused on behavior, locators are defined once and reused
+**Why good:** locators are defined once, so a markup change is a one-line edit. The fixture
+constructs the page object, so no test repeats `new LoginPage(page)`.
 
-> **Extended pattern:** See [page-objects.md](page-objects.md) for base page inheritance and combined fixtures.
+> Inheritance across several pages: [page-objects.md](page-objects.md).
 
 ---
 
-## Pattern 3: Network Mocking
-
-### Mocking REST API Responses
+## Pattern 3: Network mocking
 
 ```typescript
 // tests/e2e/api-mocking/user-profile.spec.ts
 import { test, expect } from "@playwright/test";
 
 const API_USER_PROFILE = "**/api/users/me";
-
 const MOCK_USER = {
   id: "user-123",
   name: "Jane Doe",
   email: "jane@example.com",
-  avatar: "https://example.com/avatar.jpg",
   role: "admin",
 };
 
-test.describe("User Profile with Mocked API", () => {
+test.describe("Profile", () => {
+  // Registered before every goto in this block, so the first request is already covered.
   test.beforeEach(async ({ page }) => {
-    // Setup default mock
     await page.route(API_USER_PROFILE, (route) =>
       route.fulfill({
         status: 200,
@@ -250,15 +182,13 @@ test.describe("User Profile with Mocked API", () => {
     );
   });
 
-  test("displays user profile information", async ({ page }) => {
+  test("shows the profile", async ({ page }) => {
     await page.goto("/profile");
-
     await expect(page.getByText(MOCK_USER.name)).toBeVisible();
-    await expect(page.getByText(MOCK_USER.email)).toBeVisible();
   });
 
-  test("hides admin badge for regular users", async ({ page }) => {
-    // Override mock for this specific test
+  test("hides the admin badge for a regular user", async ({ page }) => {
+    // A later route for the same pattern takes precedence over the one above.
     await page.route(API_USER_PROFILE, (route) =>
       route.fulfill({
         status: 200,
@@ -268,179 +198,127 @@ test.describe("User Profile with Mocked API", () => {
     );
 
     await page.goto("/profile");
-
     await expect(page.getByText(/admin/i)).not.toBeVisible();
   });
 });
 ```
 
-### Testing Error States
-
 ```typescript
-// tests/e2e/api-mocking/error-handling.spec.ts
-import { test, expect } from "@playwright/test";
+// Error paths, which are the reason to stub at all
+test("shows the error state on 500", async ({ page }) => {
+  await page.route("**/api/products", (route) =>
+    route.fulfill({ status: 500, body: JSON.stringify({ error: "boom" }) }),
+  );
+  await page.goto("/products");
+  await expect(page.getByRole("button", { name: /retry/i })).toBeVisible();
+});
 
-const API_PRODUCTS = "**/api/products";
-const HTTP_SERVER_ERROR = 500;
-const HTTP_UNAUTHORIZED = 401;
+test("redirects to login on 401", async ({ page }) => {
+  await page.route("**/api/products", (route) =>
+    route.fulfill({ status: 401 }),
+  );
+  await page.goto("/products");
+  await expect(page).toHaveURL(/\/login/);
+});
 
-test.describe("API Error Handling", () => {
-  test("shows error message on server error", async ({ page }) => {
-    await page.route(API_PRODUCTS, (route) =>
-      route.fulfill({
-        status: HTTP_SERVER_ERROR,
-        body: JSON.stringify({ error: "Internal server error" }),
-      }),
-    );
-
-    await page.goto("/products");
-
-    await expect(page.getByText(/something went wrong/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /retry/i })).toBeVisible();
-  });
-
-  test("redirects to login on unauthorized", async ({ page }) => {
-    await page.route(API_PRODUCTS, (route) =>
-      route.fulfill({
-        status: HTTP_UNAUTHORIZED,
-        body: JSON.stringify({ error: "Unauthorized" }),
-      }),
-    );
-
-    await page.goto("/products");
-
-    await expect(page).toHaveURL(/\/login/);
-  });
-
-  test("shows network error on connection failure", async ({ page }) => {
-    await page.route(API_PRODUCTS, (route) => route.abort("failed"));
-
-    await page.goto("/products");
-
-    await expect(page.getByText(/network error/i)).toBeVisible();
-  });
+test("shows a network error when the request fails outright", async ({
+  page,
+}) => {
+  await page.route("**/api/products", (route) => route.abort("failed"));
+  await page.goto("/products");
+  await expect(page.getByText(/network error/i)).toBeVisible();
 });
 ```
 
-**Why good:** beforeEach sets up default happy path mocks, individual tests can override for specific scenarios, mock data is clearly defined as constants, tests are isolated and deterministic
+**Why good:** `beforeEach` establishes the happy path once and each test overrides only what it is
+about, so the intent of a test is the two lines that differ from the default.
 
-> **Extended pattern:** See [api-mocking.md](api-mocking.md) for response modification.
+> Modifying a real response instead of replacing it: [api-mocking.md](api-mocking.md).
 
 ---
 
-## Pattern 4: Development Configuration
+## Pattern 4: Configuration decisions
+
+`npm init playwright@latest` writes the config; what follows are the keys that carry a decision
+rather than a default.
 
 ```typescript
 // playwright.config.ts
 import { defineConfig, devices } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3000";
-const DEFAULT_TIMEOUT_MS = 30000;
-const EXPECT_TIMEOUT_MS = 5000;
+const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  forbidOnly: !!process.env.CI, // a stray test.only must not narrow a CI run to one test
+  retries: process.env.CI ? 2 : 0, // retry only where a human is not watching
   workers: process.env.CI ? 2 : undefined,
-
-  reporter: [
-    ["html", { outputFolder: "playwright-report", open: "never" }],
-    ["list"],
-    ...(process.env.CI ? [["github" as const]] : []),
-  ],
 
   use: {
     baseURL: BASE_URL,
-    trace: "on-first-retry",
+    trace: "on-first-retry", // full timeline for the failure, no cost on green runs
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
 
-  timeout: DEFAULT_TIMEOUT_MS,
   expect: {
-    timeout: EXPECT_TIMEOUT_MS,
-    toHaveScreenshot: {
-      maxDiffPixels: 50,
-    },
+    timeout: 5_000, // assertion retry budget, separate from the test timeout
+    toHaveScreenshot: { maxDiffPixels: 50 },
   },
 
   projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-    },
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
 
   webServer: {
     command: "npm run dev",
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
   },
 });
 ```
 
-**Why good:** CI-specific settings for retries and workers, captures trace/screenshot/video on failure, webServer auto-starts dev server, timeout constants are named
+**Why good:** `trace: "on-first-retry"` is the setting that turns a CI failure into something
+debuggable without slowing every passing run. `reuseExistingServer` keeps the local loop attached to
+the dev server already running.
 
-**Multi-environment tip:** Use separate `projects` entries for staging (full suite) and production (smoke tests only with `testMatch: /.*\.smoke\.ts/`). Set `baseURL` per project or via `process.env.BASE_URL`.
+**Targeting several environments:** add a project per environment with its own `baseURL`, and give
+the production one `testMatch: /.*\.smoke\.ts/` so only the safe subset runs there.
 
 ---
 
-## Pattern 5: Authentication Fixture
+## Pattern 5: Authentication fixture
 
 ```typescript
 // tests/e2e/fixtures/auth.ts
 import { test as base, expect } from "@playwright/test";
 
-const AUTH_COOKIE_NAME = "session";
-const AUTH_COOKIE_VALUE = "test-session-token";
-const COOKIE_DOMAIN = "localhost";
-
-type AuthFixtures = {
-  authenticatedContext: void;
+const SESSION_COOKIE = {
+  name: "session",
+  value: "test-session-token",
+  domain: "localhost",
+  path: "/",
+  httpOnly: true,
+  secure: false,
 };
 
-export const test = base.extend<AuthFixtures>({
+export const test = base.extend<{ authenticatedContext: void }>({
   authenticatedContext: [
     async ({ context }, use) => {
-      // Setup: Add authentication cookie
-      await context.addCookies([
-        {
-          name: AUTH_COOKIE_NAME,
-          value: AUTH_COOKIE_VALUE,
-          domain: COOKIE_DOMAIN,
-          path: "/",
-          httpOnly: true,
-          secure: false,
-        },
-      ]);
-
+      await context.addCookies([SESSION_COOKIE]);
       await use();
-
-      // Teardown: Clear cookies
       await context.clearCookies();
     },
-    { auto: true },
+    { auto: true }, // every test in files importing this fixture is authenticated
   ],
 });
 
 export { expect };
 ```
 
-**Why good:** Fixtures encapsulate authentication setup, auto fixtures run automatically for all tests in suite, teardown ensures clean state between tests
+**Why good:** setup and teardown live in one place, and `auto: true` means no test has to remember
+to ask for authentication.
 
-> **Extended pattern:** See [fixtures.md](fixtures.md) for combined fixtures and database seeding.
-
----
-
-_Extended examples: [visual-testing.md](visual-testing.md) | [api-mocking.md](api-mocking.md) | [page-objects.md](page-objects.md) | [fixtures.md](fixtures.md) | [advanced-features.md](advanced-features.md)_
+> Opt-in fixtures, seeded data and storage state: [fixtures.md](fixtures.md).

@@ -30,6 +30,27 @@ interface UsePresenceOptions {
   username: string;
 }
 
+type PresenceMessage =
+  | {
+      type: "presence_update";
+      userId: string;
+      username: string;
+      status: UserStatus;
+    }
+  | { type: "user_disconnected"; userId: string }
+  | { type: "presence_list"; users: UserPresence[] };
+
+function parsePresenceMessage(data: unknown): PresenceMessage | null {
+  // Binary frames arrive on this listener too once any are in play
+  if (typeof data !== "string") return null;
+
+  try {
+    return JSON.parse(data) as PresenceMessage;
+  } catch {
+    return null;
+  }
+}
+
 export function usePresence({ socket, userId, username }: UsePresenceOptions) {
   const [users, setUsers] = useState<Map<string, UserPresence>>(new Map());
   const [myStatus, setMyStatus] = useState<UserStatus>("online");
@@ -101,36 +122,37 @@ export function usePresence({ socket, userId, username }: UsePresenceOptions) {
   // Handle presence messages from server
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data);
+      const message = parsePresenceMessage(event.data);
+      if (!message) return;
 
-      switch (data.type) {
+      switch (message.type) {
         case "presence_update":
-          setUsers((prev) => {
+          return setUsers((prev) => {
             const next = new Map(prev);
-            next.set(data.userId, {
-              id: data.userId,
-              username: data.username,
-              status: data.status,
+            next.set(message.userId, {
+              id: message.userId,
+              username: message.username,
+              status: message.status,
               lastSeen: Date.now(),
             });
             return next;
           });
-          break;
 
         case "user_disconnected":
-          setUsers((prev) => {
+          return setUsers((prev) => {
             const next = new Map(prev);
-            next.delete(data.userId);
+            next.delete(message.userId);
             return next;
           });
-          break;
 
         case "presence_list":
           // Initial presence list from server
-          setUsers(
-            new Map((data.users as UserPresence[]).map((u) => [u.id, u])),
-          );
-          break;
+          return setUsers(new Map(message.users.map((u) => [u.id, u])));
+
+        default: {
+          const exhaustive: never = message;
+          return exhaustive;
+        }
       }
     };
 
@@ -154,4 +176,4 @@ export function usePresence({ socket, userId, username }: UsePresenceOptions) {
 }
 ```
 
-**Why good:** Activity detection for away status, presence updates sent periodically, offline sent on unmount, clean event listener management, Map for efficient user lookups
+**Why good:** Away status comes from real activity rather than a timer alone, "offline" is sent on unmount, listeners are removed with the effect that added them, and the inbound messages are a discriminated union — so a new server message type is a compile error rather than a silently ignored frame.

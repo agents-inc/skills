@@ -1,153 +1,133 @@
-# Accessibility Testing Patterns
+# Accessibility — Testing
 
-> axe-core integration, role-based queries, and CI accessibility audits.
+> Automated auditing, role-based queries, and the manual pass. Rule IDs and the manual checklists are in [reference.md](../reference.md).
+
+Automated auditing finds roughly half of WCAG failures — the machine-checkable half: a missing label,
+an unnamed button, a contrast ratio. It cannot tell you whether the tab order made sense, whether the
+alt text described the right thing, or whether the announcement arrived when the reader needed it.
+Both passes are load-bearing.
 
 ---
 
-## Role-Based Queries
+## Auditing a rendered component
 
-### Example: Query by ARIA Role
+An axe-core audit runs against real DOM and reports rule violations with the element and the
+severity. It is available as an adapter for every common test runner, and the assertion is the same
+shape in all of them: render, audit, expect no violations.
 
-Role-based queries encourage accessible markup - if a component can't be found by role, it's likely missing ARIA attributes.
+**`runAxe`, `auditPage` and `visit` below stand for whatever the installed adapter calls them** —
+every runner names them differently. The option names inside them (`runOnly`, `includedImpacts`,
+`include`) are axe-core's own and are the same everywhere.
 
 ```typescript
-// These patterns work with any testing library that supports role queries
+it("has no accessibility violations", async () => {
+  const { container } = render(<LoginForm />);
+  const results = await runAxe(container);
 
-it("should toggle the feature", async () => {
-  // Query by role (encourages accessible markup)
-  const feature = await screen.findByTestId("feature");
-  const switchElement = within(feature).getByRole("switch");
-
-  expect(switchElement).toBeChecked();
-
-  await userEvent.click(switchElement);
-  await waitFor(() => expect(switchElement).not.toBeChecked());
+  expect(results.violations).toEqual([]);
 });
 
-it("should render button with accessible name", () => {
-  const button = screen.getByRole("button", { name: "Click me" });
-  expect(button).toBeInTheDocument();
+it("has no violations while showing an error", async () => {
+  const { container } = render(<LoginForm errors={{ email: "Invalid email" }} />);
+  const results = await runAxe(container);
+
+  expect(results.violations).toEqual([]);
 });
 ```
 
-**Why good:** Role-based queries fail if markup isn't accessible, catching issues early.
+**Why good:** the second case is the one that matters — error, loading and empty states are rendered
+by different branches, and an audit of the default state never reaches them. Audit each state the
+component can be in, not each component.
 
-**Key accessibility query patterns:**
-
-- `getByRole('button')` - Finds buttons by ARIA role
-- `getByRole('link', { name: 'Home' })` - Finds links by accessible name
-- `getByRole('textbox')` - Finds inputs by role
-- `getByRole('switch')` - Finds toggle controls
-- `getByLabelText('Email')` - Finds inputs by label association
-
----
-
-## axe-core Integration
-
-### Example: Automated Accessibility Testing
-
-Use axe-core to run automated WCAG checks against rendered components. Available as `jest-axe`, `vitest-axe`, or `cypress-axe` depending on your test runner.
+**Targeting a WCAG version:**
 
 ```typescript
-// Unit/component test pattern (adapt imports to your test runner)
-import { axe, toHaveNoViolations } from 'jest-axe'; // or vitest-axe
-
-expect.extend(toHaveNoViolations);
-
-describe('LoginForm', () => {
-  it('should have no accessibility violations', async () => {
-    const { container } = render(<LoginForm />);
-    const results = await axe(container);
-
-    expect(results).toHaveNoViolations();
-  });
-
-  it('should have no violations with error state', async () => {
-    const { container } = render(
-      <LoginForm errors={{ email: 'Invalid email' }} />
-    );
-    const results = await axe(container);
-
-    expect(results).toHaveNoViolations();
-  });
-
-  // Target specific WCAG versions
-  it('should pass WCAG 2.2 AA checks', async () => {
-    const { container } = render(<LoginForm />);
-    const results = await axe(container, {
-      runOnly: {
-        type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag22aa'],
-      },
-    });
-
-    expect(results).toHaveNoViolations();
-  });
+const results = await runAxe(container, {
+  runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
 });
 ```
 
-**Why good:** Automated testing catches common issues (missing labels, insufficient contrast, etc.).
+**Why good:** it pins what "passing" means. Without it the rule set changes when the auditing library
+updates, and a green suite goes red on a dependency bump for reasons nobody changed.
 
-**Limitations:** axe-core finds ~57% of WCAG issues automatically. Color contrast checks don't work in JSDOM - test those manually or in E2E tests.
+**What a unit-level audit cannot see:** colour contrast, because a headless DOM implementation has no
+layout or computed colours. Those checks need a real browser, which is why an end-to-end pass carries
+part of the coverage.
 
 ---
 
-## E2E Accessibility Testing
-
-### Example: axe-core in E2E Tests
+## Auditing a real page
 
 ```typescript
-// E2E test pattern - inject axe-core into real browser
-describe("Accessibility", () => {
-  beforeEach(() => {
-    // Visit page and inject axe-core
-  });
+it("has no critical or serious violations", async () => {
+  await visit("/");
+  const results = await auditPage({ includedImpacts: ["critical", "serious"] });
 
-  it("should have no critical violations on homepage", () => {
-    // Check with severity filter
-    checkA11y(null, {
-      includedImpacts: ["critical", "serious"],
-    });
-  });
+  expect(results.violations).toEqual([]);
+});
 
-  it("should have no violations in main content", () => {
-    // Scope to specific element
-    checkA11y("main");
-  });
+it("has no violations in the main region", async () => {
+  await visit("/");
+  const results = await auditPage({ include: "main" });
 
-  // Gradual adoption: log violations without failing
-  it("should audit full page (non-blocking)", () => {
-    checkA11y(null, {}, (violations) => {
-      logViolations(violations); // Log but don't fail
-    });
-  });
+  expect(results.violations).toEqual([]);
 });
 ```
 
-**Why good:** E2E tests catch real-world issues including color contrast (which JSDOM misses).
+**Why good:** a real browser gives contrast, computed styles and the effect of the actual stylesheet,
+none of which a headless DOM has. Scoping to a region keeps a third-party widget in a footer from
+failing a build over markup nobody here controls.
+
+**Adopting this on an existing codebase:** gate on critical and serious first and report the rest
+without failing, then tighten. A gate that fails on day one against four hundred existing violations
+gets switched off, which is worse than a gate that ratchets.
 
 ---
 
-## CI Accessibility Audits
+## Role-based queries as a check in themselves
 
-### Example: Lighthouse CI Configuration
-
-```json
-// .lighthouserc.json
-{
-  "ci": {
-    "collect": {
-      "url": ["http://localhost:3000"],
-      "numberOfRuns": 3
-    },
-    "assert": {
-      "assertions": {
-        "categories:accessibility": ["error", { "minScore": 0.95 }],
-        "categories:best-practices": ["warn", { "minScore": 0.9 }]
-      }
-    }
-  }
-}
+```typescript
+const submit = screen.getByRole("button", { name: "Submit form" });
+const email = screen.getByLabelText("Email");
+const toggle = within(row).getByRole("switch");
 ```
 
-**Why good:** Automated accessibility audits in CI prevent regressions.
+**Why good:** each of these fails when the accessibility is wrong, in an ordinary functional test.
+A button with no accessible name cannot be found by name; an input with no label cannot be found by
+label. Test id queries pass either way, which is why they hide exactly these defects.
+
+Useful roles: `button`, `link`, `textbox`, `checkbox`, `switch`, `dialog`, `alert`, `status`,
+`listbox`, `option`, `table`, `columnheader`, `heading` — with `{ level: 2 }` to check the outline.
+
+**The trade:** a query by role is coupled to the markup being right, which is the point. When one
+starts failing after a refactor, the first question is whether the accessibility regressed rather
+than whether the query needs loosening.
+
+---
+
+## Gating in CI
+
+Audit scores and violation counts both belong in the pipeline, and the useful settings are the same
+either way: what severity blocks a merge, what is reported and tracked, and how a known exception is
+recorded so it does not read as an unfixed failure.
+
+Every suppression carries a reason. An unexplained one is indistinguishable from an unfixed
+violation, and both survive equally long.
+
+---
+
+## The manual pass
+
+No automation covers these. Run them on anything interactive before it ships:
+
+- Tab through the whole page and watch the focus indicator — the order, and whether it is ever invisible
+- Open every dialog and menu with the keyboard, close it with Escape, and confirm focus came back
+- Turn on a screen reader and use the flow end to end without looking at the screen
+- Zoom to 200% and check nothing scrolls horizontally or overlaps
+- Turn on reduced motion and confirm the interface still communicates what it needs to
+
+The screen reader pass is the one people skip and the one that finds the most. Fifteen minutes with
+a built-in screen reader — VoiceOver or TalkBack — costs nothing and surfaces what no rule ID would
+have caught.
+
+The full checklists are in [reference.md](../reference.md).

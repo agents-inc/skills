@@ -1,87 +1,71 @@
-# CSS Animations Examples
+# CSS Animations - Core Examples
 
-> Complete code examples for CSS animation patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Full code for the core patterns. See [SKILL.md](../SKILL.md) for the decisions and
+> [reference.md](../reference.md) for lookup tables.
 
-**For advanced patterns**: See topic-specific files in this folder:
+**Related examples:**
 
-- [transitions.md](transitions.md) - State-triggered transitions
-- [keyframes.md](keyframes.md) - Multi-step and looping animations
+- [transitions.md](transitions.md) — state-triggered transitions (Patterns 11–20)
+- [keyframes.md](keyframes.md) — multi-step, looping and scroll-driven animations (Patterns 21–30)
 
 ---
 
 ## Pattern 1: Animation Token System
 
-### Good Example - Complete Design Token Setup
+### Good Example - Full Token Set
 
 ```css
 :root {
-  /* =========================
-     Duration Tokens
-     ========================= */
+  /* Duration */
   --duration-instant: 100ms;
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
   --duration-slower: 600ms;
 
-  /* =========================
-     Easing Tokens
-     ========================= */
-  /* Default - general purpose */
+  /* Easing */
   --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Enter - fast start, slow end (elements appearing) */
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-
-  /* Exit - slow start, fast end (elements leaving) */
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);
-
-  /* Symmetric - equal acceleration/deceleration */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1); /* enter: fast start, slow settle */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* exit: slow start, fast departure */
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* overshoot */
 
-  /* Bouncy - playful overshoot */
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-  /* =========================
-     Distance Tokens
-     ========================= */
+  /* Travel distance */
   --distance-xs: 4px;
   --distance-sm: 8px;
   --distance-md: 16px;
   --distance-lg: 24px;
   --distance-xl: 48px;
 
-  /* Lift effects (negative = upward) */
+  /* Lift (negative = upward) */
   --lift-sm: -2px;
   --lift-md: -4px;
   --lift-lg: -8px;
 
-  /* =========================
-     Composite Tokens
-     ========================= */
+  /* Composite: duration and easing together, for the common cases */
   --transition-fast: var(--duration-fast) var(--ease-out);
   --transition-normal: var(--duration-normal) var(--ease-default);
   --transition-slow: var(--duration-slow) var(--ease-in-out);
 }
 ```
 
-**Why good:** Consistent timing across application, easy to adjust globally, semantic naming communicates intent
+**Why good:** Composite tokens keep a duration and its matching curve paired at every call site, so
+retuning one component's feel does not drift the two apart.
 
 ---
 
 ## Pattern 2: Interactive Button States
 
-### Good Example - Complete Button with All States
+### Good Example - Every State Covered
 
 ```css
 .button {
-  /* Base state */
   position: relative;
   transition:
     transform var(--transition-fast),
     opacity var(--transition-fast);
 
-  /* Prepare for shadow animation */
+  /* Shadow lives on a pseudo-element so only its opacity animates */
   &::after {
     content: "";
     position: absolute;
@@ -94,7 +78,6 @@
   }
 }
 
-/* Hover state - lift with shadow */
 .button:hover {
   transform: translateY(var(--lift-sm));
 
@@ -103,13 +86,11 @@
   }
 }
 
-/* Focus state - visible ring */
 .button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
 
-/* Active state - pressed feedback */
 .button:active {
   transform: translateY(0) scale(0.98);
 
@@ -118,16 +99,16 @@
   }
 }
 
-/* Disabled state - reduced opacity */
 .button:disabled {
   opacity: 0.5;
   pointer-events: none;
 }
 ```
 
-**Why good:** All interaction states covered, lift effect creates depth, shadow uses pseudo-element technique, focus state is accessible
+**Why good:** `:focus-visible` rather than `:focus` keeps the ring off mouse users; the pressed state
+cancels the lift and the shadow together, so the button reads as going down rather than flickering.
 
-### Bad Example - Performance Problems
+### Bad Example - Layout and Repaint Per Frame
 
 ```css
 .button {
@@ -140,13 +121,14 @@
 }
 ```
 
-**Why bad:** `all` transitions unnecessary properties, `linear` feels mechanical, `margin-top` triggers layout, direct box-shadow animation causes repaint
+**Why bad:** `margin-top` re-runs layout each frame, the shadow repaints each frame, `all` will pick
+up whatever property is added next, and `linear` reads mechanically.
 
 ---
 
 ## Pattern 3: Card Hover Effect
 
-### Good Example - Performant Card Lift
+### Good Example - Lift with Touch Opt-Out
 
 ```css
 .card {
@@ -156,7 +138,6 @@
   position: relative;
   transition: transform var(--transition-fast);
 
-  /* Shadow layer */
   &::after {
     content: "";
     position: absolute;
@@ -180,7 +161,6 @@
   }
 }
 
-/* Prevent hover on touch devices */
 @media (hover: none) {
   .card:hover {
     transform: none;
@@ -192,13 +172,14 @@
 }
 ```
 
-**Why good:** Combines lift and scale for depth, shadow is GPU-accelerated via opacity, respects touch devices
+**Why good:** The `(hover: none)` block matters because touch browsers latch `:hover` after a tap and
+leave the card stuck in its raised state.
 
 ---
 
 ## Pattern 4: Fade In on Mount
 
-### Good Example - CSS-Only Entrance Animation
+### Good Example - Entrance Without JavaScript
 
 ```css
 @keyframes fade-in {
@@ -221,7 +202,6 @@
   }
 }
 
-/* Apply to elements */
 .fade-in {
   animation: fade-in var(--duration-normal) var(--ease-out);
 }
@@ -230,7 +210,6 @@
   animation: fade-slide-in var(--duration-normal) var(--ease-out);
 }
 
-/* Accessibility - disable for reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .fade-in,
   .fade-slide-in {
@@ -241,13 +220,14 @@
 }
 ```
 
-**Why good:** Separate keyframes for different effects, ease-out for enter animations, respects reduced motion preference
+**Why good:** The reduced-motion block restates the end state as well as cancelling the animation —
+without it the element keeps the keyframe's starting opacity and never appears.
 
 ---
 
 ## Pattern 5: Loading Spinner
 
-### Good Example - Accessible Spinner
+### Good Example - Sized by Custom Property
 
 ```css
 @keyframes spin {
@@ -269,7 +249,6 @@
   animation: spin var(--spinner-duration) linear infinite;
 }
 
-/* Size variants */
 .spinner--sm {
   --spinner-size: 16px;
   --spinner-border: 2px;
@@ -280,21 +259,21 @@
   --spinner-border: 4px;
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .spinner {
-    animation-duration: 1.5s; /* Slow down instead of stopping */
+    animation-duration: 1.5s;
   }
 }
 ```
 
-**Why good:** Uses currentColor for theming, size variants use custom properties, reduced motion slows rather than disables (spinner serves a purpose)
+**Why good:** Variants override two custom properties rather than restating the rule, and reduced
+motion slows the spinner instead of stopping it — a still spinner reads as a hung page.
 
 ---
 
-## Pattern 6: Notification Toast Animation
+## Pattern 6: Notification Toast
 
-### Good Example - Enter and Exit States
+### Good Example - Distinct Enter and Exit
 
 ```css
 @keyframes toast-enter {
@@ -331,7 +310,6 @@
   animation: toast-exit var(--toast-duration) var(--ease-in) forwards;
 }
 
-/* Accessibility alternative */
 @media (prefers-reduced-motion: reduce) {
   @keyframes toast-enter-reduced {
     from {
@@ -363,7 +341,8 @@
 }
 ```
 
-**Why good:** Uses data attributes for state, ease-out for enter / ease-in for exit, reduced motion provides fade-only alternative
+**Why good:** A data attribute drives both directions, so the same element animates in and out
+without being remounted; the reduced-motion pair drops the travel and keeps the fade.
 
 ---
 
@@ -390,7 +369,6 @@
   animation: pulse var(--pulse-duration) ease-in-out infinite;
 }
 
-/* Only animate when not reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .badge-pulse {
     animation: none;
@@ -398,13 +376,14 @@
 }
 ```
 
-**Why good:** Combines opacity and scale for emphasis, uses ease-in-out for smooth oscillation, disabled for reduced motion
+**Why good:** `ease-in-out` on a symmetric loop hides the seam at 100%, where a `linear` pulse
+visibly restarts.
 
 ---
 
-## Pattern 8: Skeleton Loading Animation
+## Pattern 8: Skeleton Shimmer
 
-### Good Example - Shimmer Effect
+### Good Example - Contained Sweep
 
 ```css
 @keyframes shimmer {
@@ -439,7 +418,6 @@
   }
 }
 
-/* Accessibility - stop animation */
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after {
     animation: none;
@@ -447,22 +425,22 @@
 }
 ```
 
-**Why good:** Uses transform (GPU-accelerated), overflow: hidden contains the effect, respects reduced motion
+**Why good:** `overflow: hidden` on the parent is what clips the sweep — without it the highlight
+travels across neighbouring content.
 
 ---
 
-## Pattern 9: Reduced Motion Complete Pattern
+## Pattern 9: Reduced Motion, Both Shapes
 
-### Good Example - Progressive Enhancement Approach
+### Good Example - Opt-In and Opt-Out
 
 ```css
-/* Base styles - no motion */
+/* Opt-in: still state is the base, motion is added under no-preference */
 .element {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Motion opt-in */
 @media (prefers-reduced-motion: no-preference) {
   .element {
     opacity: 0;
@@ -471,7 +449,7 @@
   }
 }
 
-/* Alternative: Motion opt-out */
+/* Opt-out: motion is the base, reduce overrides it */
 .animated-element {
   animation: fade-slide-in var(--duration-normal) var(--ease-out);
 }
@@ -485,20 +463,19 @@
 }
 ```
 
-**Why good:** Progressive enhancement (opt-in) is safest approach, provides clear patterns for both opt-in and opt-out
+**Why good:** The opt-in shape fails safe — an animation added to `.element` later without a
+reduced-motion branch simply never runs for users who asked for none.
 
 ---
 
 ## Pattern 10: Focus Ring Animation
 
-### Good Example - Accessible Focus Indicator
+### Good Example - Animated Ring That Never Delays Focus
 
 ```css
 .interactive-element {
-  /* Remove default outline */
   outline: none;
 
-  /* Custom focus ring */
   &::before {
     content: "";
     position: absolute;
@@ -517,7 +494,6 @@
   }
 }
 
-/* Ensure visibility for all users */
 @media (prefers-reduced-motion: reduce) {
   .interactive-element::before {
     transition: none;
@@ -525,4 +501,5 @@
 }
 ```
 
-**Why good:** Custom focus ring with animation, still visible instantly for reduced motion users, uses :focus-visible (not :focus)
+**Why good:** Removing `outline` is only safe because the pseudo-element replaces it; under reduced
+motion the ring appears instantly rather than fading in, which keeps focus position unambiguous.

@@ -1,18 +1,15 @@
-# React 19 - New Hooks Examples
+# React 19 — Hook Examples
 
-> useActionState, useFormStatus, useOptimistic, use() API. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> useActionState, useFormStatus, useOptimistic, use(), ref cleanup. See [SKILL.md](../SKILL.md) for the decisions and [reference.md](../reference.md) for the form-hook decision tree.
 
 **Additional Examples:**
 
-- [core.md](core.md) - Component architecture, variants, event handlers
-- [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
-- [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
+- [core.md](core.md) — component shape, variant props, event handlers
+- [hooks.md](hooks.md) — usePagination, useDebounce, useLocalStorage
 
 ---
 
-## useActionState - Form Submissions
-
-### Good Example - Form with pending and error state
+## useActionState — form submission
 
 ```typescript
 import { useActionState } from "react";
@@ -27,7 +24,7 @@ async function updateProfile(
   try {
     await saveProfile({ name, email });
     return { error: null, success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to save profile", success: false };
   }
 }
@@ -47,68 +44,26 @@ export function ProfileForm() {
         {isPending ? "Saving..." : "Save Profile"}
       </button>
 
-      {state.error && <p role="alert" className="error">{state.error}</p>}
-      {state.success && <p role="status" className="success">Profile saved!</p>}
+      {state.error && <p role="alert">{state.error}</p>}
+      {state.success && <p role="status">Profile saved!</p>}
     </form>
   );
 }
 ```
 
-**Why good:** useActionState manages pending and result state automatically, no manual useState for loading/error, form action works with progressive enhancement, isPending disables inputs during submission
+**Why good:** the action returns the whole result state, so error and success can never disagree. Reading the fields off `FormData` rather than from controlled state means the form submits before hydration too, and `role="alert"` announces the failure without moving focus.
 
-### Bad Example - Manual state management
-
-```typescript
-// WRONG - Unnecessary boilerplate with useState
-import { useState } from "react";
-
-export function ProfileForm() {
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsPending(true);
-    setError(null);
-    setSuccess(false);
-
-    try {
-      const formData = new FormData(e.target as HTMLFormElement);
-      await saveProfile({
-        name: formData.get("name") as string,
-        email: formData.get("email") as string,
-      });
-      setSuccess(true);
-    } catch (err) {
-      setError("Failed to save profile");
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* ... */}
-    </form>
-  );
-}
-```
-
-**Why bad:** manual state management duplicates useActionState functionality, more code to maintain and test, doesn't work with progressive enhancement, requires manual error handling
+The hand-rolled equivalent is three `useState` calls plus an `onSubmit` that has to reset all three at the top of every attempt — and it drops the pre-hydration submit, because `onSubmit` needs JavaScript where `action` does not.
 
 ---
 
-## useFormStatus - Submit Button Components
-
-### Good Example - Reusable submit button
+## useFormStatus — submit buttons
 
 ```typescript
 import { useFormStatus } from "react-dom";
 
-// Must be used inside a <form> - not in the component that renders the form
 function SubmitButton({ children = "Submit" }: { children?: React.ReactNode }) {
-  const { pending, data } = useFormStatus();
+  const { pending } = useFormStatus();
 
   return (
     <button type="submit" disabled={pending} aria-busy={pending}>
@@ -117,11 +72,10 @@ function SubmitButton({ children = "Submit" }: { children?: React.ReactNode }) {
   );
 }
 
-// Usage in forms
 export function ContactForm({ action }: { action: (formData: FormData) => Promise<void> }) {
   return (
     <form action={action}>
-      <input type="text" name="message" placeholder="Your message" required />
+      <input type="text" name="message" required />
       <SubmitButton>Send Message</SubmitButton>
     </form>
   );
@@ -130,45 +84,38 @@ export function ContactForm({ action }: { action: (formData: FormData) => Promis
 export function NewsletterForm({ action }: { action: (formData: FormData) => Promise<void> }) {
   return (
     <form action={action}>
-      <input type="email" name="email" placeholder="Email" required />
+      <input type="email" name="email" required />
       <SubmitButton>Subscribe</SubmitButton>
     </form>
   );
 }
 ```
 
-**Why good:** SubmitButton is reusable across any form, no prop drilling needed, pending state automatically tracks parent form submission, aria-busy improves accessibility
-
-### Bad Example - useFormStatus in form component
+**Why good:** one button component serves every form, and neither form passes a pending flag down. `aria-busy` tells assistive technology the control is working rather than broken.
 
 ```typescript
-// WRONG - useFormStatus doesn't work in the same component as <form>
-import { useFormStatus } from "react-dom";
-
+// Wrong — pending is always false here
 export function ContactForm({ action }) {
-  const { pending } = useFormStatus(); // Will always be false!
+  const { pending } = useFormStatus();
 
   return (
     <form action={action}>
-      <input type="text" name="message" />
-      <button type="submit" disabled={pending}>
-        {pending ? "Submitting..." : "Send"}
-      </button>
+      <button type="submit" disabled={pending}>Send</button>
     </form>
   );
 }
 ```
 
-**Why bad:** useFormStatus must be called from a component rendered inside `<form>`, not the component that renders it - pending will always be false in this case
+**Why bad:** the hook reads the form above it in the tree. In the component that renders the `<form>`, there is none — so it returns `false` silently, with nothing to debug.
 
 ---
 
-## useOptimistic - Instant UI Updates
+## useOptimistic — instant feedback
 
-### Good Example - Optimistic todo list
+### Updating an existing item
 
 ```typescript
-import { useOptimistic, useRef, startTransition } from "react";
+import { useOptimistic, startTransition } from "react";
 
 type Todo = { id: string; text: string; completed: boolean; pending?: boolean };
 
@@ -214,9 +161,9 @@ export function TodoList({
 }
 ```
 
-**Why good:** UI updates instantly when checkbox is clicked, visual feedback shows pending state, state automatically reverts if server request fails, better UX than waiting for server response
+**Why good:** the reducer marks the touched row `pending`, so the UI can distinguish an applied change from a proposed one. Both the setter and the await sit inside one `startTransition`, which is what keeps the optimistic value alive until the real one arrives.
 
-### Good Example - Optimistic message sending
+### Appending a new item
 
 ```typescript
 import { useOptimistic, useRef, startTransition } from "react";
@@ -257,12 +204,12 @@ export function Chat({
         {optimisticMessages.map((msg) => (
           <li key={msg.id}>
             {msg.text}
-            {msg.sending && <span className="sending-indicator"> Sending...</span>}
+            {msg.sending && <span> Sending...</span>}
           </li>
         ))}
       </ul>
       <form action={formAction} ref={formRef}>
-        <input type="text" name="message" placeholder="Type a message..." />
+        <input type="text" name="message" />
         <button type="submit">Send</button>
       </form>
     </div>
@@ -270,13 +217,13 @@ export function Chat({
 }
 ```
 
-**Why good:** message appears instantly in UI, sending indicator provides feedback, form clears immediately after submission, state reverts if send fails
+**Why good:** appending needs a temporary key, and the server's own id replaces it when the real message arrives. The setter is called directly here rather than wrapped, because a form `action` is already a transition — outside one it would need `startTransition`, as the toggle example does.
 
 ---
 
-## use() API - Reading Promises and Context
+## use() — promises and context
 
-### Good Example - Reading promises with Suspense
+### Reading a promise under Suspense
 
 ```typescript
 import { use, Suspense } from "react";
@@ -309,21 +256,17 @@ export function Post({ post, commentsPromise }: {
     <article>
       <h1>{post.title}</h1>
       <p>{post.body}</p>
-
-      <section>
-        <h2>Comments</h2>
-        <Suspense fallback={<p>Loading comments...</p>}>
-          <CommentList commentsPromise={commentsPromise} />
-        </Suspense>
-      </section>
+      <Suspense fallback={<p>Loading comments...</p>}>
+        <CommentList commentsPromise={commentsPromise} />
+      </Suspense>
     </article>
   );
 }
 ```
 
-**Why good:** use() suspends component while promise resolves, Suspense boundary shows loading state, separates post content from async comments loading, clean component structure
+**Why good:** the promise is created by the parent and passed down, so the fetch starts before the child renders rather than on mount. Only the subtree inside `<Suspense>` waits — the post body paints immediately.
 
-### Good Example - Reading context conditionally
+### Reading context after an early return
 
 ```typescript
 import { use, createContext } from "react";
@@ -332,7 +275,6 @@ type Theme = "light" | "dark";
 const ThemeContext = createContext<Theme>("light");
 
 function OptionalHeader({ title }: { title: string | null }) {
-  // use() can be called conditionally - unlike useContext
   if (title === null) {
     return null;
   }
@@ -356,41 +298,17 @@ export function Page({ title, children }: { title: string | null; children: Reac
 }
 ```
 
-**Why good:** use() can be called after conditional returns (unlike useContext), simplifies component logic, no need to restructure component to satisfy hooks rules
+**Why good:** `use()` after an early return is legal where `useContext` is not, so the component keeps its guard clause instead of being restructured around the hook. React 19 also renders the context object directly — no `.Provider`.
 
-### Bad Example - use() in try-catch
-
-```typescript
-// WRONG - use() cannot be called in try-catch blocks
-import { use } from "react";
-
-function Comments({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
-  try {
-    const comments = use(commentsPromise); // This will throw an error
-    return <ul>{/* ... */}</ul>;
-  } catch (error) {
-    return <p>Failed to load comments</p>;
-  }
-}
-```
-
-**Why bad:** use() cannot be called inside try-catch blocks, must use Error Boundary for error handling instead
-
-### Good Example - Error handling with use()
+### Handling a rejected promise
 
 ```typescript
 import { use, Suspense } from "react";
-import { ErrorBoundary } from "./error-boundary"; // See error-boundaries.md
+import { ErrorBoundary } from "./error-boundary"; // your own class boundary
 
 function CommentList({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
   const comments = use(commentsPromise);
-  return (
-    <ul>
-      {comments.map((comment) => (
-        <li key={comment.id}>{comment.text}</li>
-      ))}
-    </ul>
-  );
+  return <ul>{comments.map((c) => <li key={c.id}>{c.text}</li>)}</ul>;
 }
 
 export function CommentsSection({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
@@ -404,13 +322,11 @@ export function CommentsSection({ commentsPromise }: { commentsPromise: Promise<
 }
 ```
 
-**Why good:** ErrorBoundary catches rejected promises, Suspense handles loading state, clean separation of concerns, proper error handling without try-catch
+**Why good:** `use()` throws to suspend, so a `try`/`catch` around it swallows the suspension as well as the rejection. The boundary outside `<Suspense>` is the only place a rejection can be handled.
 
 ---
 
-## Ref Cleanup Functions (React 19)
-
-### Good Example - Ref with automatic cleanup
+## Ref callback cleanup
 
 ```typescript
 function VideoPlayer({ src }: { src: string }) {
@@ -419,10 +335,8 @@ function VideoPlayer({ src }: { src: string }) {
       ref={(video) => {
         if (!video) return;
 
-        // Setup - runs when element mounts
         video.play();
 
-        // Cleanup function - runs when element unmounts
         return () => {
           video.pause();
           video.currentTime = 0;
@@ -435,9 +349,7 @@ function VideoPlayer({ src }: { src: string }) {
 }
 ```
 
-**Why good:** cleanup function runs automatically when element unmounts, no need for separate useEffect, no useCallback wrapper needed (React Compiler handles memoization)
-
-### Good Example - Intersection observer with cleanup
+**Why good:** setup and teardown sit in one function next to the element they act on, rather than split across a `useRef` and a `useEffect` whose dependency array has to name the same node.
 
 ```typescript
 const INTERSECTION_THRESHOLD = 0.5;
@@ -462,10 +374,7 @@ function LazyImage({ src, alt }: { src: string; alt: string }) {
 
         observer.observe(img);
 
-        // Cleanup - disconnect observer when element unmounts
-        return () => {
-          observer.disconnect();
-        };
+        return () => observer.disconnect();
       }}
       alt={alt}
       loading="lazy"
@@ -474,4 +383,4 @@ function LazyImage({ src, alt }: { src: string; alt: string }) {
 }
 ```
 
-**Why good:** observer is automatically cleaned up when component unmounts, no memory leaks, named constant for threshold, simpler than useEffect + useRef combination
+**Why good:** the observer is created and disconnected in the same closure, so there is no path where one runs without the other.

@@ -1,6 +1,6 @@
 # web-editor-tiptap
 
-Rich text editor framework with TipTap and ProseMirror
+Headless rich text editor framework built on ProseMirror. Use when building an editor with TipTap — setup, extensions, custom nodes and marks, menus, node views, serialization.
 
 ## Installation
 

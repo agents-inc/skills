@@ -1,10 +1,14 @@
-# CSS Transitions Examples
+# CSS Animations - Transition Examples
 
-> State-triggered transition patterns. See [core.md](core.md) for basic examples.
+> State-triggered transition patterns, continuing the numbering from
+> [core.md](core.md).
+
+**Prerequisites:** the token set from [core.md](core.md) Pattern 1 — every rule below reads
+`--duration-*` and `--ease-*` from it.
 
 ---
 
-## Pattern 1: Multi-Property Transitions
+## Pattern 11: Multi-Property Transitions
 
 ### Good Example - Explicit Property List
 
@@ -23,9 +27,10 @@
 }
 ```
 
-**Why good:** Each property explicitly listed with appropriate timing, filter uses slower duration for subtlety
+**Why good:** Each property gets the timing that suits it — the filter runs slower so the brightness
+shift is felt rather than seen.
 
-### Bad Example - Using "all"
+### Bad Example - `all`
 
 ```css
 .card {
@@ -33,17 +38,17 @@
 }
 ```
 
-**Why bad:** Transitions ALL properties including layout-triggering ones, unexpected behavior when new properties added, magic number
+**Why bad:** Transitions every property including layout-triggering ones, and silently picks up
+whatever is added to the rule next.
 
 ---
 
-## Pattern 2: Different Timing Per Property
+## Pattern 12: Different Timing Per Property
 
-### Good Example - Staggered Property Timing
+### Good Example - Opacity Ahead of Movement
 
 ```css
 .dropdown {
-  /* Opacity fades faster than movement */
   transition:
     opacity var(--duration-fast) var(--ease-out),
     transform var(--duration-normal) var(--ease-out);
@@ -61,11 +66,13 @@
 }
 ```
 
-**Why good:** Opacity completes before movement for perception of speed, uses data attributes for state
+**Why good:** Finishing the fade before the movement makes the menu feel faster than its slowest
+property; `pointer-events: none` on the closed state keeps the invisible panel from swallowing
+clicks.
 
 ---
 
-## Pattern 3: Transition Delay for Sequencing
+## Pattern 13: Transition Delay for Sequencing
 
 ### Good Example - Menu Item Reveal
 
@@ -83,7 +90,6 @@
   transform: translateX(0);
 }
 
-/* Stagger delays */
 .menu[data-state="open"] .menu-item:nth-child(1) {
   transition-delay: 0ms;
 }
@@ -98,13 +104,14 @@
 }
 ```
 
-**Why good:** Creates staggered reveal effect, delays only apply on open (not close)
+**Why good:** The delays hang off the open state only, so closing collapses everything at once rather
+than unwinding in slow motion.
 
 ---
 
-## Pattern 4: Transition Origin Control
+## Pattern 14: Transform Origin Control
 
-### Good Example - Scale from Corner
+### Good Example - Scale from the Anchor
 
 ```css
 .tooltip {
@@ -123,31 +130,28 @@
   opacity: 1;
 }
 
-/* Adjust origin based on position */
 .tooltip[data-position="top"] {
   transform-origin: bottom center;
 }
-
 .tooltip[data-position="bottom"] {
   transform-origin: top center;
 }
-
 .tooltip[data-position="left"] {
   transform-origin: right center;
 }
-
 .tooltip[data-position="right"] {
   transform-origin: left center;
 }
 ```
 
-**Why good:** Scale animates from tooltip anchor point, spring easing adds polish, uses data attributes for positioning
+**Why good:** The origin follows the placement attribute, so the tooltip always grows out of the
+element it describes rather than out of its own centre.
 
 ---
 
-## Pattern 5: Color Transitions
+## Pattern 15: Colour Transitions
 
-### Good Example - Theme-Aware Color Transition
+### Good Example - Token-Driven Hover
 
 ```css
 .button {
@@ -163,7 +167,6 @@
   background-color: var(--button-bg-hover);
 }
 
-/* Focus uses different color */
 .button:focus-visible {
   background-color: var(--button-bg);
   outline: 2px solid var(--color-focus);
@@ -171,16 +174,16 @@
 }
 ```
 
-**Why good:** Color transitions are acceptable (repaint only), uses design tokens, maintains focus visibility
+**Why good:** Colour costs a repaint but no layout, so it is the one non-composited property worth
+transitioning; focus resets the background so the ring is read against a known colour.
 
 ---
 
-## Pattern 6: Accordion Expand/Collapse
+## Pattern 16: Accordion Expand and Collapse
 
-### Good Example - Height Animation with Grid
+### Good Example - Grid Row Animation
 
 ```css
-/* Modern approach using grid */
 .accordion-content {
   display: grid;
   grid-template-rows: 0fr;
@@ -196,9 +199,11 @@
 }
 ```
 
-**Why good:** Grid-based height animation is more performant than animating height directly, no fixed heights needed
+**Why good:** `0fr` to `1fr` animates to the content's real height, so nothing has to be measured and
+no height is hard-coded. The inner wrapper's `overflow: hidden` is required — without it the content
+spills out of the collapsing row.
 
-### Alternative - Max-Height Approach
+### Alternative - Max-Height
 
 ```css
 .accordion-content {
@@ -214,23 +219,22 @@
 }
 ```
 
-**Why acceptable:** max-height approach works but requires estimating content height, timing can feel off if estimate is wrong
+**Why acceptable:** Works everywhere, but the duration applies to the estimated height rather than
+the real one, so an over-estimate leaves a visible pause at the end of the open.
 
 ---
 
-## Pattern 7: Transition on Enter Only
+## Pattern 17: Transition on Enter Only
 
-### Good Example - Appear Animation Without Exit
+### Good Example - Animated In, Instant Out
 
 ```css
 .notification {
-  /* No transition by default (instant exit) */
   opacity: 0;
   transform: translateY(var(--distance-sm));
 }
 
 .notification[data-state="visible"] {
-  /* Transition only applies when entering */
   transition:
     opacity var(--duration-normal) var(--ease-out),
     transform var(--duration-normal) var(--ease-out);
@@ -239,13 +243,14 @@
 }
 ```
 
-**Why good:** Enter has animation, exit is instant (often desired for dismissing notifications)
+**Why good:** Declaring the transition on the visible state rather than the base rule is what makes
+the exit instant — dismissal should feel like the click landed, not like a wait.
 
 ---
 
-## Pattern 8: Interactive States with Transitions
+## Pattern 18: Input Field States
 
-### Good Example - Complete Input Field
+### Good Example - Hover, Focus and Invalid
 
 ```css
 .input-field {
@@ -274,13 +279,14 @@
 }
 ```
 
-**Why good:** All states have smooth transitions, error state maintained through focus, uses data attribute for validation state
+**Why good:** The invalid state survives focus, so a field being corrected still reads as the one in
+error.
 
 ---
 
-## Pattern 9: Link Underline Animation
+## Pattern 19: Link Underline
 
-### Good Example - Expanding Underline
+### Good Example - Expanding Rule
 
 ```css
 .link {
@@ -305,19 +311,19 @@
   transform: scaleX(1);
 }
 
-/* Alternative: expand from center */
 .link--center::after {
   transform-origin: center;
 }
 ```
 
-**Why good:** Uses transform: scaleX (GPU-accelerated), respects currentColor, configurable origin
+**Why good:** A full-width rule scaled from 0 animates on the compositor, where animating `width`
+would relayout; the origin is the only thing a variant needs to change.
 
 ---
 
-## Pattern 10: Disabled State Transition
+## Pattern 20: Disabled State
 
-### Good Example - Smooth Disable/Enable
+### Good Example - Both Disabled Spellings
 
 ```css
 .button {
@@ -334,11 +340,11 @@
   pointer-events: none;
 }
 
-/* Prevent hover animation while disabled */
 .button:disabled:hover,
 .button[aria-disabled="true"]:hover {
   transform: none;
 }
 ```
 
-**Why good:** Smooth transition to disabled state, supports both disabled attribute and aria-disabled, prevents hover effects when disabled
+**Why good:** `aria-disabled` covers controls that stay focusable so a screen reader can still reach
+them, and the explicit hover reset stops a latched hover state from surviving the disable.

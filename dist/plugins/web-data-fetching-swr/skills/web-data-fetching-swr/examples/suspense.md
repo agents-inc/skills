@@ -1,17 +1,20 @@
-# SWR - Suspense & SSR Examples
+# SWR — Suspense and Hydration Examples
 
-> Suspense integration and server-side rendering patterns. See [core.md](core.md) for basic patterns.
+> Suspense mode, and starting from data a server already fetched. See [core.md](core.md) for the
+> ordinary state-branching alternative.
 
 ---
 
-## React Suspense Integration
+## Suspense mode
 
-### Basic Suspense Mode
+With `suspense: true` the component suspends instead of returning `isLoading`, and `data` is
+non-null wherever the component actually renders.
 
 ```typescript
-// components/suspense-data.tsx
+// components/user-profile.tsx
 import useSWR from "swr";
 import { Suspense } from "react";
+import { fetcher } from "../lib/fetcher";
 
 interface User {
   id: string;
@@ -20,13 +23,9 @@ interface User {
 }
 
 function UserData({ userId }: { userId: string }) {
-  // With suspense: true, component suspends until data is ready
-  const { data } = useSWR<User>(`/api/users/${userId}`, fetcher, {
-    suspense: true,
-  });
+  const { data } = useSWR<User>(`/api/users/${userId}`, fetcher, { suspense: true });
 
-  // No need for loading check -- Suspense handles it
-  // data is guaranteed to be available here
+  // no loading branch, and no `data?.` — reaching this line means the data arrived
   return (
     <div>
       <h1>{data.name}</h1>
@@ -42,154 +41,26 @@ function UserProfile({ userId }: { userId: string }) {
     </Suspense>
   );
 }
-
-export { UserProfile };
 ```
 
-**Why good:** Suspense handles loading state declaratively, data is guaranteed non-null in component, cleaner component code
+The boundary is not optional. Without one the thrown promise travels to the nearest error boundary,
+or past it.
+
+`suspense` can be set globally in `SWRConfig` and turned off per hook with `suspense: false`, which
+is worth doing for anything optional — a suspending hook holds up everything inside its boundary,
+including content that had nothing to wait for.
 
 ---
 
-## Global Suspense Configuration
+## Independent boundaries
 
-### Enable Suspense Globally
-
-```typescript
-// providers/suspense-swr-provider.tsx
-// Mark as client component if using an SSR framework
-import { SWRConfig } from "swr";
-import type { ReactNode } from "react";
-
-function SuspenseSWRProvider({ children }: { children: ReactNode }) {
-  return (
-    <SWRConfig
-      value={{
-        suspense: true,
-      }}
-    >
-      {children}
-    </SWRConfig>
-  );
-}
-
-export { SuspenseSWRProvider };
-```
-
-### Opt-Out Per Query
+Each boundary suspends only what it wraps, so the page fills in section by section rather than
+waiting for the slowest request.
 
 ```typescript
-// components/non-suspense-data.tsx
-import useSWR from "swr";
-
-// Even with global suspense: true, this query opts out
-function NonSuspenseData() {
-  const { data, isLoading } = useSWR("/api/optional-data", fetcher, {
-    suspense: false, // Override global setting
-  });
-
-  if (isLoading) return <Skeleton />;
-  return <DataView data={data} />;
-}
-
-export { NonSuspenseData };
-```
-
-**Why good:** Global config reduces repetition, per-query override for special cases, flexibility without duplication
-
----
-
-## Error Boundaries with Suspense
-
-### Suspense + Error Boundary Pattern
-
-```typescript
-// components/data-boundary.tsx
-import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import useSWR from "swr";
-
-interface User {
-  id: string;
-  name: string;
-}
-
-function UserDataInner({ userId }: { userId: string }) {
-  const { data } = useSWR<User>(`/api/users/${userId}`, fetcher, {
-    suspense: true,
-  });
-
-  return (
-    <div>
-      <h1>{data.name}</h1>
-    </div>
-  );
-}
-
-// Alternative: throwOnError option (SWR 2.0+)
-// Throws errors to error boundary WITHOUT suspense mode
-function UserDataWithThrow({ userId }: { userId: string }) {
-  const { data, isLoading } = useSWR<User>(`/api/users/${userId}`, fetcher, {
-    throwOnError: true, // Throws to error boundary
-  });
-
-  if (isLoading) return <Skeleton />;
-
-  return (
-    <div>
-      <h1>{data.name}</h1>
-    </div>
-  );
-}
-
-function UserDataWithBoundary({ userId }: { userId: string }) {
-  return (
-    <ErrorBoundary
-      fallback={
-        <ErrorCard>
-          <p>Failed to load user</p>
-          <button onClick={() => window.location.reload()}>Reload</button>
-        </ErrorCard>
-      }
-      onError={(error) => {
-        console.error("User data error:", error);
-      }}
-    >
-      <Suspense fallback={<UserSkeleton />}>
-        <UserDataInner userId={userId} />
-      </Suspense>
-    </ErrorBoundary>
-  );
-}
-
-export { UserDataWithBoundary };
-```
-
-### Nested Suspense Boundaries
-
-```typescript
-// components/dashboard.tsx
-import { Suspense } from "react";
-import useSWR from "swr";
-
-function UserInfo() {
-  const { data } = useSWR("/api/user", fetcher, { suspense: true });
-  return <UserCard user={data} />;
-}
-
-function Notifications() {
-  const { data } = useSWR("/api/notifications", fetcher, { suspense: true });
-  return <NotificationList items={data} />;
-}
-
-function RecentActivity() {
-  const { data } = useSWR("/api/activity", fetcher, { suspense: true });
-  return <ActivityFeed items={data} />;
-}
-
 function Dashboard() {
   return (
     <div className="dashboard">
-      {/* Each section has its own Suspense boundary */}
       <Suspense fallback={<UserInfoSkeleton />}>
         <UserInfo />
       </Suspense>
@@ -206,147 +77,57 @@ function Dashboard() {
     </div>
   );
 }
-
-export { Dashboard };
 ```
 
-**Why good:** Error boundary catches suspense errors, nested boundaries enable progressive loading, each section loads independently
+One boundary around all three would have made the whole dashboard wait for the slowest of them.
 
 ---
 
-## SSR Data Hydration
+## Failures in suspense mode
 
-SWR supports server-side data hydration through `fallbackData` (per-hook) and `SWRConfig fallback` (global). This works with any SSR framework.
-
-### Per-Hook Fallback
+Suspense mode throws on failure, so the pair is a `Suspense` boundary for the wait and an error
+boundary above it for the failure.
 
 ```typescript
-// components/user-profile.tsx
-// Mark as client component if using an SSR framework
-import useSWR from "swr";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface UserProfileProps {
-  initialData: User;
-  userId: string;
-}
-
-function UserProfile({ initialData, userId }: UserProfileProps) {
-  // Use initialData from server, revalidate on client
-  const { data } = useSWR<User>(`/api/users/${userId}`, fetcher, {
-    fallbackData: initialData,
-  });
-
+function UserDataWithBoundary({ userId }: { userId: string }) {
   return (
-    <div>
-      <h1>{data?.name}</h1>
-      <p>{data?.email}</p>
-    </div>
+    <ErrorBoundary fallback={<ErrorCard>Failed to load user</ErrorCard>}>
+      <Suspense fallback={<UserSkeleton />}>
+        <UserData userId={userId} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
-
-export { UserProfile };
 ```
 
-### Global Fallback via SWRConfig
+`throwOnError: true` gets the same failure routing without suspending — see
+[error-handling.md](error-handling.md) for when each is the right trade.
+
+---
+
+## Starting from server-fetched data
+
+Both options seed the cache so the first client render has a value instead of a loading state, and
+revalidation proceeds normally afterwards. `SWRProviderProps` below is the one declared in
+[core.md](core.md).
 
 ```typescript
-// providers/swr-provider.tsx
-// Mark as client component if using an SSR framework
-import { SWRConfig } from "swr";
-import type { ReactNode } from "react";
-
-interface SWRProviderProps {
-  children: ReactNode;
-  fallback?: Record<string, unknown>;
+// One hook: fallbackData is the value for this key
+function UserProfile({ initialData, userId }: { initialData: User; userId: string }) {
+  const { data } = useSWR<User>(`/api/users/${userId}`, fetcher, { fallbackData: initialData });
+  return <h1>{data?.name}</h1>;
 }
+```
 
+```typescript
+// Many hooks: fallback is a map of key to value, passed down from the server render
 function SWRProvider({ children, fallback = {} }: SWRProviderProps) {
-  return (
-    <SWRConfig
-      value={{
-        fallback,
-        revalidateOnFocus: true,
-        revalidateOnReconnect: true,
-      }}
-    >
-      {children}
-    </SWRConfig>
-  );
+  return <SWRConfig value={{ fallback }}>{children}</SWRConfig>;
 }
 
-export { SWRProvider };
+// fallback = { "/api/users/1": user, "/api/posts": posts }
 ```
 
-**Why good:** Server-fetched data hydrates client (no loading flash), `fallbackData` is per-hook, `fallback` in SWRConfig enables multi-key hydration, framework-agnostic approach
-
----
-
-## Preloading Data
-
-> See [caching.md](caching.md) for `preload()` prefetch patterns (hover prefetch, batch prefetch on mount).
-
----
-
-## Anti-Pattern Examples
-
-```typescript
-// BAD: Using suspense without Suspense boundary (crashes app)
-function BadSuspense() {
-  const { data } = useSWR("/api/data", fetcher, { suspense: true });
-  // If no <Suspense> parent, this throws to nearest error boundary or crashes
-  return <div>{data.value}</div>;
-}
-
-// BAD: SSR without fallback (loading flash on hydration)
-function BadSSR({ serverData }) {
-  const { data } = useSWR("/api/data", fetcher);
-  // Shows loading state on client even though we have serverData
-  return <div>{data?.value}</div>;
-}
-
-// BAD: Mixing suspense with manual loading check
-function BadSuspenseMix() {
-  const { data, isLoading } = useSWR("/api/data", fetcher, { suspense: true });
-  if (isLoading) return <Spinner />; // This never runs with suspense!
-  return <div>{data.value}</div>;
-}
-```
-
-```typescript
-// GOOD: Suspense with Suspense boundary
-function GoodSuspense() {
-  return (
-    <Suspense fallback={<Spinner />}>
-      <DataComponent />
-    </Suspense>
-  );
-}
-
-function DataComponent() {
-  const { data } = useSWR("/api/data", fetcher, { suspense: true });
-  return <div>{data.value}</div>;
-}
-
-// GOOD: SSR with fallback/fallbackData
-function GoodSSR({ serverData }) {
-  const { data } = useSWR("/api/data", fetcher, {
-    fallbackData: serverData, // Use server data, revalidate on client
-  });
-  return <div>{data?.value}</div>;
-}
-
-// GOOD: Suspense handles loading state
-function GoodSuspenseClean() {
-  // With suspense: true, data is guaranteed non-null
-  const { data } = useSWR("/api/data", fetcher, { suspense: true });
-  return <div>{data.value}</div>; // No loading check needed
-}
-```
-
-**Why bad examples fail:** Missing Suspense boundary crashes app, no fallback causes loading flash, isLoading never true with suspense mode
+Neither works with an approximate key. `fallback` is matched exactly, so `/api/users/1` and
+`/api/users/1/` are different entries and a trailing slash on one side means the hydration silently
+does nothing — the page renders a loading state where the data was already on the wire.

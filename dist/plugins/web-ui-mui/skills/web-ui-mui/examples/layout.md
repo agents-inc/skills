@@ -2,11 +2,7 @@
 
 > Grid, Stack, Box, Container layout patterns. See [SKILL.md](../SKILL.md) for core patterns.
 
-**Related examples:**
-
-- [navigation.md](navigation.md) -- AppBar, Drawer, Tabs (app-level layout)
-- [form-inputs.md](form-inputs.md) -- Form layout with Stack
-- [styling.md](styling.md) -- sx prop, responsive values
+**Related examples:** [navigation.md](navigation.md), [form-inputs.md](form-inputs.md), [styling.md](styling.md)
 
 ---
 
@@ -168,26 +164,16 @@ export { ActionBar };
 
 ---
 
-## Box: Flex Container with sx
+## Box
 
-See [styling.md](styling.md) for sx prop patterns including theme-aware values, responsive breakpoints, and callback syntax.
+`Box` is a `div` with `sx` support, and `component` changes the element it renders — which is how a
+wrapper stays semantic without a second nesting level.
 
 ```typescript
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-
-// Box is a div with full sx prop support -- use for flex containers, wrappers, sections
-<Box
-  component="section"
-  sx={{
-    display: "flex",
-    alignItems: "center",
-    gap: 2,
-    p: 3,
-    bgcolor: "background.paper",
-    borderRadius: 1,
-  }}
->
+<Box component="section" sx={{ display: "flex", alignItems: "center", gap: 2, p: 3 }}>
   <Typography variant="h6">Content</Typography>
 </Box>
 ```
+
+`sx` patterns themselves — theme-aware values, breakpoints, the callback form — are in
+[styling.md](styling.md).

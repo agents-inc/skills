@@ -87,19 +87,22 @@ onUnmounted(() => {
 
 ### Resource Cleanup Checklist
 
+`ExternalResource`, `openResource()` and `.dispose()` are placeholders for whatever library you are
+wrapping — none of them is a Vue API. The shape is the point: one variable, one `cleanup()` that is
+safe to call twice, and both hooks.
+
 ```typescript
-// Pattern for any external resource
-let resource: SomeResource | null = null;
+let resource: ExternalResource | null = null;
 
 function cleanup() {
   if (resource) {
-    resource.dispose(); // Or .close(), .disconnect(), etc.
+    resource.dispose(); // or .close(), .disconnect(), .unsubscribe()
     resource = null;
   }
 }
 
 onMounted(() => {
-  resource = createResource();
+  resource = openResource();
 });
 
 onUnmounted(() => {

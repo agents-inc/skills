@@ -4,18 +4,7 @@
 
 ---
 
-## Understanding Rooms vs Namespaces
-
-**Rooms:** Server-side grouping mechanism. Clients are unaware of rooms - they're purely a server concept for organizing which sockets receive which broadcasts.
-
-**Namespaces:** Protocol-level separation. Clients explicitly connect to namespaces. Each namespace is a distinct communication channel that can have its own event handlers and middleware.
-
-| Feature          | Rooms                 | Namespaces                          |
-| ---------------- | --------------------- | ----------------------------------- |
-| Client awareness | No                    | Yes                                 |
-| Join/Leave       | Server-side only      | Client connects to                  |
-| Use case         | Targeted broadcasting | Feature separation                  |
-| Example          | Chat rooms            | `/chat`, `/admin`, `/notifications` |
+The side-by-side comparison is in [reference.md](../reference.md) under "Rooms vs Namespaces"; the choice between them is in [SKILL.md](../SKILL.md).
 
 ---
 

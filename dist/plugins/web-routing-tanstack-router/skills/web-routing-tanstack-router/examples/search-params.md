@@ -289,19 +289,3 @@ function ProductsPage() {
 ```
 
 **Why bad:** Bypasses `validateSearch` entirely losing all type safety. No default handling or validation. Breaks SSR compatibility. Does not react to URL changes.
-
----
-
-## Decision: Zod Adapter vs Plain Function
-
-```
-Validating search params?
-  +-- Complex schema with many fields?
-  |   -> Zod adapter (zodValidator + fallback)
-  +-- Simple 1-2 params?
-  |   -> Plain validateSearch function
-  +-- Need shared schema with forms?
-  |   -> Zod adapter (share schema between route and form)
-  +-- Zod 3.24.0+ / Zod 4+ with Standard Schema?
-  |   -> Can use Zod directly without adapter (use `.catch()` for defaults)
-```

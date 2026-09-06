@@ -1,6 +1,6 @@
 # web-testing-react-testing-library
 
-React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing
+React Testing Library — query hierarchy, userEvent, async utilities, renderHook, custom render with providers. Load when writing or reviewing tests that render React components or hooks.
 
 ## Installation
 

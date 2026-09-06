@@ -1,17 +1,12 @@
-# React Three Fiber - Interaction Examples
+# React Three Fiber — Interaction Examples
 
-> Pointer events, raycasting, hover/click, drag, and pointer capture. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
-
-**Related examples:**
-
-- [core.md](core.md) - Canvas, meshes, materials, lights, camera, useFrame
-- [performance.md](performance.md) - Instancing, LOD, disposal, frame loop control
+> The event object, propagation, hover, click-versus-drag, pointer capture, the full event list. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for the event type, [core.md](core.md) for scene setup, [performance.md](performance.md) for scaling.
 
 ---
 
 ## Pattern 1: Event Object Properties
 
-R3F pointer events contain both DOM event data and Three.js intersection data.
+An R3F pointer event is the DOM event plus the raycast intersection.
 
 ```tsx
 function DebugMesh() {
@@ -41,8 +36,7 @@ function DebugMesh() {
 
 ### event.object vs event.eventObject
 
-- `event.object` -- the actual Three.js mesh that was hit by the raycast (may be a deep child)
-- `event.eventObject` -- the mesh/group where the event handler is attached (may be a parent)
+`event.object` is the mesh the ray actually hit, which may be a deep descendant. `event.eventObject` is where the handler is attached. They differ whenever a handler sits on a group — which is the usual way to treat an imported model as one clickable thing while still knowing which part was hit.
 
 ```tsx
 // eventObject = group, object = the specific child mesh hit
@@ -68,9 +62,9 @@ function DebugMesh() {
 
 ## Pattern 2: Event Propagation and stopPropagation
 
-Events hit the nearest mesh first, then propagate to ancestors, then to farther (occluded) objects. `stopPropagation()` prevents both bubbling AND delivery to occluded objects.
+Events reach the nearest mesh first, then its ancestors, then objects further along the same ray. `stopPropagation()` stops both — the bubbling and the delivery to occluded objects. That second half has no DOM equivalent and is what surprises people.
 
-### Good Example - Preventing Click-Through
+### Good — preventing click-through
 
 ```tsx
 const INNER_SCALE = 0.5;
@@ -106,17 +100,16 @@ function LayeredBoxes() {
 }
 ```
 
-**Why good:** stopPropagation on front box prevents the click from reaching the back box; without it, both handlers fire
+**Why good:** the front box's `stopPropagation()` is what makes it opaque to clicks. Note that it is opaque visually only at 80% — visual transparency and event transparency are unrelated, and a fully transparent mesh still intercepts every ray unless its handlers are removed.
 
-### Bad Example - Missing stopPropagation
+### Bad — missing stopPropagation
 
 ```tsx
-// BAD: both boxes fire onClick when clicking the front one
 <mesh onClick={() => console.log("front")}><boxGeometry /></mesh>
 <mesh onClick={() => console.log("back")}><boxGeometry args={[2, 2, 2]} /></mesh>
 ```
 
-**Why bad:** Without stopPropagation, the raycast hits both meshes and fires both handlers
+**Why bad:** one click logs both. The raycast returns every intersection along the ray, and R3F delivers to all of them in near-to-far order until something stops it.
 
 ---
 
@@ -151,7 +144,7 @@ export function HoverableMesh() {
 }
 ```
 
-**Why good:** Cursor change provides visual affordance, stopPropagation prevents hover from leaking to objects behind, cleanup on pointer out
+**Why good:** the canvas is one element, so the cursor cannot be set per mesh in CSS — writing `document.body.style.cursor` is how a 3D object signals that it is clickable. Resetting it in `onPointerOut` is what stops the pointer cursor sticking after the mesh moves or unmounts under the cursor.
 
 ---
 
@@ -179,13 +172,13 @@ function ClickOnlyMesh() {
 }
 ```
 
-**Why good:** prevents accidental clicks when user is orbiting with OrbitControls (orbit = drag = high delta)
+**Why good:** an orbit drag ends in a `click` on whatever mesh is under the pointer, so without the threshold every camera move that finishes over an object also selects it. `delta` is the pixel distance travelled between press and release, which separates the two.
 
 ---
 
-## Pattern 5: onPointerMissed (Deselection)
+## Pattern 5: onPointerMissed — deselection
 
-`onPointerMissed` fires on the Canvas when a click hits no mesh -- useful for deselecting.
+`onPointerMissed` fires on the Canvas for a click that hit no mesh — the 3D equivalent of clicking the background.
 
 ```tsx
 import { Canvas } from "@react-three/fiber";
@@ -213,7 +206,7 @@ export function SelectableScene() {
 
 ## Pattern 6: Pointer Capture
 
-Pointer capture ensures events continue to be delivered to a specific object even when the pointer moves off it -- useful for drag operations.
+Capture keeps events flowing to one object after the pointer has left it — without it a drag stops the moment the cursor outruns the mesh.
 
 ```tsx
 import { useRef, useState } from "react";
@@ -251,11 +244,11 @@ export function DraggableMesh() {
 }
 ```
 
-**Gotcha:** Pointer capture uses `e.target` (the DOM element), not the Three.js object. The captured object is ADDED to the hit test, not replacing other hits.
+**Gotcha:** capture is taken on `e.target`, the DOM canvas element, not on the Three.js object — and the captured object is _added_ to the hit test rather than replacing it, so other objects still receive events during the drag unless propagation is stopped.
 
 ---
 
-## Pattern 7: Supported Events Reference
+## Pattern 7: The full event list
 
 ```tsx
 <mesh

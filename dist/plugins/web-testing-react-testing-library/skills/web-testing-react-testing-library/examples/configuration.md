@@ -1,13 +1,14 @@
 # React Testing Library - Configuration Examples
 
-> Non-obvious configuration patterns. See [core.md](core.md) for query patterns.
+> The `userEvent.setup()` options that change behaviour, and the global `configure()` values worth moving. See [core.md](core.md) for queries and [async-testing.md](async-testing.md) for the timeouts these interact with.
+
+> `useFakeTimers`, `useRealTimers`, `advanceTimersBy` and `advanceTimersByAsync` below stand for your test runner's fake-timer controls, and `fn()` for its mock-function factory. Installing fake timers, and what they patch, is the runner's concern; what is this skill's concern is the one option that has to be handed the runner's advance function.
 
 ---
 
-## userEvent with Fake Timers
+## Fake timers, and the option that makes them work
 
 ```typescript
-// Good Example - userEvent with fake timers
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DebounceSearch } from "./debounce-search";
@@ -15,165 +16,107 @@ import { DebounceSearch } from "./debounce-search";
 const DEBOUNCE_DELAY_MS = 300;
 
 describe("DebounceSearch", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  beforeEach(() => useFakeTimers());
+  afterEach(() => useRealTimers());
 
   test("debounces search input", async () => {
-    // CRITICAL: Pass advanceTimers when using fake timers
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime,
-    });
+    // Without advanceTimers, userEvent's own inter-event delay is scheduled on the
+    // patched clock, nothing advances it, and the first interaction never resolves
+    const user = userEvent.setup({ advanceTimers: advanceTimersBy });
 
-    const onSearch = vi.fn();
+    const onSearch = fn();
     render(<DebounceSearch onSearch={onSearch} debounceMs={DEBOUNCE_DELAY_MS} />);
 
-    // Type triggers debounce
     await user.type(screen.getByRole("searchbox"), "react");
-
-    // Not called yet (debounce pending)
     expect(onSearch).not.toHaveBeenCalled();
 
-    // Advance timers past debounce delay
-    await vi.advanceTimersByTimeAsync(DEBOUNCE_DELAY_MS);
+    await advanceTimersByAsync(DEBOUNCE_DELAY_MS); // async form: lets promises settle too
 
-    // Now called
     expect(onSearch).toHaveBeenCalledWith("react");
   });
 });
 ```
 
-**Why good:** Required for tests using fake timers - without advanceTimers, userEvent delays hang indefinitely
+**Why good:** the hang this prevents presents as a timeout with no error, which is the hardest failure to attribute. The async advance matters as well — advancing synchronously fires the timer but does not let the promise chain it starts resolve before the assertion.
 
 ---
 
-## userEvent Pointer Events Check
+## Interacting with an element the CSS has disabled for pointers
 
 ```typescript
-// Good Example - Skipping pointer events check
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoadingButton } from "./loading-button";
 
-test("clicks button with pointer-events: none during loading", async () => {
-  // Skip pointer events check for elements with pointer-events: none
-  const user = userEvent.setup({
-    pointerEventsCheck: 0, // 0 = never check
-  });
+test("the click handler still fires while loading", async () => {
+  const user = userEvent.setup({ pointerEventsCheck: 0 });
 
-  const onClick = vi.fn();
-  render(<LoadingButton onClick={onClick} isLoading={true} />);
+  const onClick = fn();
+  render(<LoadingButton onClick={onClick} isLoading />);
 
-  // Button has pointer-events: none when loading
-  // Without pointerEventsCheck: 0, this would fail
   await user.click(screen.getByRole("button"));
 
-  // Click still fires (tests event handler, not CSS behavior)
   expect(onClick).toHaveBeenCalled();
 });
 ```
 
-**Pointer events check levels:**
-
-- `0` = Never check (skip all checks)
-- `1` = Check once per target element
-- `2` = Check per API call (default, most thorough)
+`pointerEventsCheck` takes `0` (never check), `1` (check once per target) or `2` (check on every API call, the default). Turning it off asserts about the handler and stops asserting about the CSS, so reach for it only when the CSS is deliberately not the subject — a component that is _meant_ to be unclickable should keep the check and assert that the click was refused.
 
 ---
 
-## Combined Configuration with Fake Timers
+## Raising the async timeout for a slow subject
 
 ```typescript
-// Good Example - Test-specific configuration
 import { render, screen, configure } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ComplexForm } from "./complex-form";
 
-const LONG_TIMEOUT_MS = 10000;
-
-describe("ComplexForm with slow API", () => {
-  beforeAll(() => {
-    // Increase timeout for slow async operations
-    configure({ asyncUtilTimeout: LONG_TIMEOUT_MS });
-  });
-
-  afterAll(() => {
-    // Reset to default
-    configure({ asyncUtilTimeout: 1000 });
-  });
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+describe("ComplexForm with a slow submission", () => {
+  beforeAll(() => configure({ asyncUtilTimeout: 10_000 }));
+  afterAll(() => configure({ asyncUtilTimeout: 1000 })); // back to the default
 
   test("handles slow form submission", async () => {
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime,
-      delay: null, // Fast typing
-    });
+    const user = userEvent.setup({ delay: null }); // no inter-event wait
 
     render(<ComplexForm />);
 
     await user.type(screen.getByLabelText(/email/i), "test@example.com");
     await user.click(screen.getByRole("button", { name: /submit/i }));
 
-    // Wait for slow response (uses increased timeout)
-    const successMessage = await screen.findByText(/success/i);
-    expect(successMessage).toBeInTheDocument();
+    expect(await screen.findByText(/success/i)).toBeInTheDocument();
   });
 });
 ```
 
-**Why good:** Combines global config changes with userEvent setup for specific test scenarios
+Prefer the per-query `{ timeout }` option when one subject is slow; move it to `configure` only when the whole suite is.
 
 ---
 
-## Reset Configuration Between Tests
+## Restoring configuration between suites
 
 ```typescript
-// Good Example - Saving and restoring configuration
 import { configure, getConfig } from "@testing-library/react";
 
-describe("tests with custom config", () => {
+describe("tests with a custom test id attribute", () => {
   let originalConfig: ReturnType<typeof getConfig>;
 
   beforeAll(() => {
-    // Save original config
-    originalConfig = getConfig();
-
-    // Apply custom config
-    configure({
-      testIdAttribute: "data-custom-id",
-      asyncUtilTimeout: 3000,
-    });
+    originalConfig = getConfig(); // capture before mutating
+    configure({ testIdAttribute: "data-custom-id", asyncUtilTimeout: 3000 });
   });
 
-  afterAll(() => {
-    // Restore original config
-    configure(originalConfig);
-  });
+  afterAll(() => configure(originalConfig));
 
-  test("uses custom config", () => {
+  test("uses the custom attribute", () => {
     expect(getConfig().testIdAttribute).toBe("data-custom-id");
-    expect(getConfig().asyncUtilTimeout).toBe(3000);
   });
 });
 ```
 
-**Why good:** Prevents config changes from leaking between test suites
+**Why good:** `configure` mutates one module-level object shared by every file in the process. Capturing and restoring the whole config, rather than resetting the two keys you remember changing, is what keeps a later suite from inheriting a setting it never asked for.
+
+The full option table is in [reference.md](../reference.md).
 
 ---
 
-_For more patterns, see:_
-
-- [core.md](core.md) - Query hierarchy
-- [async-testing.md](async-testing.md) - Async utilities with custom timeouts
-- [user-events.md](user-events.md) - userEvent patterns
+_Back to [core.md](core.md) for the query hierarchy._

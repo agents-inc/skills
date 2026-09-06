@@ -2,11 +2,7 @@
 
 > Dialog, Snackbar, Alert, CircularProgress, Skeleton patterns. See [SKILL.md](../SKILL.md) for core patterns.
 
-**Related examples:**
-
-- [form-inputs.md](form-inputs.md) -- TextField inside Dialog forms
-- [navigation.md](navigation.md) -- Menu, contextual actions
-- [data-grid.md](data-grid.md) -- Action dialogs for table rows
+**Related examples:** [form-inputs.md](form-inputs.md), [navigation.md](navigation.md), [data-grid.md](data-grid.md)
 
 ---
 

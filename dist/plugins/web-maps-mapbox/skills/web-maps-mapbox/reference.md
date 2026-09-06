@@ -1,6 +1,8 @@
 # Mapbox GL JS Reference
 
-> Decision frameworks, layer types, expression operators, and anti-patterns. See [SKILL.md](SKILL.md) for concepts and red flags, and [examples/](examples/) for code examples.
+> v3 migration, slots and configuration, layer and source tables, the full expression operator list,
+> the event table and performance tuning. See [SKILL.md](SKILL.md) for the decisions and the red
+> flags, [examples/](examples/) for code.
 
 ---
 
@@ -182,76 +184,3 @@ Interpolation types: `["linear"]`, `["exponential", base]`, `["cubic-bezier", x1
 | `visibility: "none"` for hidden layers | Cheaper than removing and re-adding |
 | Avoid animating on `render` event      | 60fps callback is expensive         |
 | `queryRenderedFeatures` with `layers`  | Filter reduces work significantly   |
-
----
-
-## Anti-Patterns
-
-### Adding Sources/Layers Before Load
-
-```typescript
-// WRONG -- style not loaded yet
-const map = new mapboxgl.Map({ container: "map" });
-map.addSource("data", { type: "geojson", data: myData }); // Throws
-
-// CORRECT
-map.on("load", () => {
-  map.addSource("data", { type: "geojson", data: myData });
-});
-```
-
-### Using Markers for Large Datasets
-
-```typescript
-// WRONG -- 5000 DOM elements
-data.forEach((d) => new mapboxgl.Marker().setLngLat(d.coords).addTo(map));
-
-// CORRECT -- GPU-rendered circle layer
-map.addSource("points", {
-  type: "geojson",
-  data,
-  cluster: true,
-  clusterRadius: 50,
-});
-map.addLayer({
-  id: "points",
-  type: "circle",
-  source: "points",
-  paint: { "circle-radius": 6 },
-});
-```
-
-### Iterating Features for Styling
-
-```typescript
-// WRONG -- O(n) JavaScript loop, defeats GPU rendering
-features.forEach((f) => {
-  if (f.properties.type === "park") { /* set green */ }
-});
-
-// CORRECT -- GPU expression handles all features
-paint: { "circle-color": ["match", ["get", "type"], "park", "#2ecc71", "#95a5a6"] }
-```
-
-### Coordinates in Wrong Order
-
-```typescript
-// WRONG -- [lat, lng] is a common mistake
-new mapboxgl.Marker().setLngLat([40.7128, -74.006]); // Places marker in the wrong hemisphere
-
-// CORRECT -- Mapbox uses [lng, lat]
-new mapboxgl.Marker().setLngLat([-74.006, 40.7128]);
-```
-
-### Missing Source Guard
-
-```typescript
-// WRONG -- getSource can return undefined
-map.getSource("data").setData(newData); // TypeError if source doesn't exist
-
-// CORRECT
-const source = map.getSource("data");
-if (source && source.type === "geojson") {
-  source.setData(newData);
-}
-```

@@ -1,160 +1,96 @@
 # SolidJS Reference
 
-> Decision frameworks, anti-patterns, and red flags for SolidJS development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision trees, the anti-pattern routing table, the import cheat sheet and review checklists. See [SKILL.md](SKILL.md) for the patterns and red flags, and [examples/](examples/) for full code.
 
 ---
 
-## Decision Frameworks
+## Decision trees
 
-### Signal vs Store vs Context
-
-```
-What type of state are you managing?
-├─ Simple primitive (string, number, boolean)?
-│   └─ createSignal ✓
-├─ Object or array with nested updates?
-│   └─ createStore ✓
-├─ Shared across distant components?
-│   └─ Context + Store ✓
-└─ Async data from server?
-    └─ createResource or createAsync ✓
-```
-
-### Effect vs Memo
+### Signal, store or context
 
 ```
-Do you need to derive a new value?
-├─ YES → createMemo ✓
-│   (cached, re-evaluated only when dependencies change)
-└─ NO → Do you need to perform side effects?
-    ├─ YES → createEffect ✓
-    │   (DOM updates, network calls, logging, timers)
-    └─ NO → You probably don't need either
+What is being held?
+├─ A primitive (string, number, boolean) → createSignal
+├─ An object or array updated in place → createStore
+├─ State several distant components read → context over a store
+└─ Data from the server → createResource, or createAsync under SolidStart
 ```
 
-### For vs Index
+### Memo or effect
 
 ```
-What changes in your list?
-├─ Items added/removed/reordered?
-│   └─ For ✓ (keys by reference, items stable)
-└─ Values change but positions stay same?
-    └─ Index ✓ (keys by index, values as signals)
+Deriving a value?
+├─ YES → createMemo (cached, recomputed only when a dependency changes)
+└─ NO  → Acting on the outside world — DOM, network, storage, logging?
+    ├─ YES → createEffect, with onCleanup for anything it opens
+    └─ NO  → Neither; a plain expression in JSX is already reactive
 ```
 
-### Show vs Switch/Match
+### For or Index
 
 ```
-How many conditions do you have?
-├─ Simple boolean or truthy/falsy?
-│   └─ Show ✓
-├─ Multiple exclusive conditions?
-│   └─ Switch/Match ✓
-└─ Nested conditions?
-    └─ Switch/Match ✓ (avoid nested Shows)
+What changes in the list?
+├─ Items added, removed or reordered → <For> (keys by reference, rows survive a move)
+└─ Length fixed, values change in place → <Index> (keys by position, item is a signal)
 ```
 
-### createResource vs createAsync
+### Show or Switch/Match
 
 ```
-What environment are you in?
-├─ SolidStart with @solidjs/router?
-│   └─ createAsync + query ✓ (SSR-friendly, recommended for Solid 2.0)
-└─ Plain SolidJS without router?
-    └─ createResource ✓
+How many branches?
+├─ One condition, optionally with a fallback → <Show>
+└─ Several exclusive conditions, or nested ones → <Switch>/<Match>
 ```
 
-**Note:** The `cache` API is deprecated since Solid Router v0.15.0. Use `query` instead.
-
-### When to Use onCleanup
+### createResource or createAsync
 
 ```
-Does your effect create:
-├─ Event listeners? → onCleanup to removeEventListener ✓
-├─ Timers (setInterval, setTimeout)? → onCleanup to clear ✓
-├─ Subscriptions? → onCleanup to unsubscribe ✓
-├─ Abort controllers? → onCleanup to abort ✓
-└─ None of the above? → No cleanup needed
+Is the router present?
+├─ SolidStart with @solidjs/router → createAsync + query
+└─ Plain SolidJS → createResource
 ```
+
+The `cache` API was replaced by `query` in Solid Router v0.15.0.
+
+### What needs onCleanup
+
+An effect that adds an event listener, starts a timer, opens a subscription or creates an `AbortController` registers the matching teardown in the same effect. An effect that only reads and computes needs none.
 
 ---
 
-## RED FLAGS
+## Anti-pattern routing table
 
-### High Priority Issues
+Each row names where the corrected good/bad pair lives.
 
-- **Reading signal without parentheses** - `count` instead of `count()` doesn't read the value or track dependencies
-- **Destructuring props** - `const { name } = props` breaks reactivity; use `props.name` or `splitProps()`
-- **Using ternary instead of Show** - `{condition ? <A /> : <B />}` bypasses Solid's optimizations
-- **Using .map() instead of For** - `{items().map(...)}` doesn't get fine-grained list updates
-- **Missing onCleanup in effects** - Event listeners, timers, subscriptions will leak memory
-- **Async operations inside createEffect tracking scope** - Code after `await` loses tracking context
-
-### Medium Priority Issues
-
-- **Not using createMemo for expensive computations** - Recalculates on every access without memo
-- **Side effects in createMemo** - Memos should be pure; use createEffect for side effects
-- **Creating signals inside render** - Signals created in loops/maps get recreated
-- **Not handling resource loading/error states** - Accessing `resource()` when loading causes issues
-- **Missing Suspense boundary for async components** - UI flickers without proper loading state
-
-### Common Mistakes
-
-- **Expecting component to re-run** - Component function runs once; only expressions re-evaluate
-- **Using React patterns directly** - `useState`, `useEffect` don't exist; use Solid equivalents
-- **Returning null for conditional render** - Use `<Show>` component instead
-- **Nested reactive assignments** - Assigning `store.field = signal()` loses reactivity
-- **Forgetting to call signals** - `<div>{count}</div>` shows function, not value
-
-### Gotchas and Edge Cases
-
-- **Signals read outside reactive context aren't tracked** - Code in event handlers doesn't auto-track
-- **Stores only track property access, not the store itself** - `store` doesn't trigger updates, `store.field` does
-- **onMount runs after first render, not after mount** - It's synchronous, not truly "after mount"
-- **Children is a getter in Solid** - Use `children()` helper when iterating over children
-- **Index provides values as signals** - Call `item()` inside Index, not in For
-- **Dynamic component with expressions** - Use `<Dynamic>` component for runtime component selection
-- **Props spreading loses reactivity** - `{...props}` is fine, but extracted values aren't reactive
+| Anti-pattern                    | What goes wrong                                  | Where the fix is                                                                   |
+| ------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Destructuring props**         | Values captured once, never update               | `props.name` or `splitProps()` ([components.md](examples/components.md))           |
+| **Ternary or `.map()`**         | Subtree rebuilt instead of a node updated        | `<Show>`, `<For>`, `<Switch>` ([components.md](examples/components.md))            |
+| **Missing signal parentheses**  | Renders the function, tracks nothing             | `count()` ([core.md](examples/core.md))                                            |
+| **Missing `onCleanup`**         | One leaked listener or timer per effect run      | `onCleanup(() => …)` inside the effect ([core.md](examples/core.md))               |
+| **Side effect in `createMemo`** | Runs on an unpredictable schedule                | `createEffect` for the effect ([core.md](examples/core.md))                        |
+| **Signals read after `await`**  | Tracking scope ended at the `await`              | Read dependencies first, or use a resource ([resources.md](examples/resources.md)) |
+| **`createEffect` for fetching** | No cancellation, no `<Suspense>`, races on input | `createResource` or `createAsync` ([resources.md](examples/resources.md))          |
+| **Direct store mutation**       | Assignment bypasses the proxy                    | `setStore` path syntax, or `produce` ([stores.md](examples/stores.md))             |
 
 ---
 
-## Anti-Patterns Summary
-
-Concise list - see example files for full good/bad code pairs.
-
-| Anti-Pattern                       | What Goes Wrong                                    | Correct Approach                                                                        |
-| ---------------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Destructuring props**            | Breaks reactivity - values captured once           | `props.name` or `splitProps()` ([components.md](examples/components.md))                |
-| **Ternary / .map()**               | Bypasses fine-grained list and conditional updates | `<Show>`, `<For>`, `<Switch>` ([components.md](examples/components.md))                 |
-| **Missing signal parentheses**     | Shows `[Function]`, no dependency tracking         | Always call `count()` not `count` ([core.md](examples/core.md))                         |
-| **Missing onCleanup**              | Listeners, timers, subscriptions leak memory       | `onCleanup(() => ...)` inside effect ([core.md](examples/core.md))                      |
-| **Side effects in createMemo**     | Memos must be pure                                 | Use `createEffect` for side effects ([core.md](examples/core.md))                       |
-| **Async in effect tracking scope** | Code after `await` loses tracking context          | Read deps before await, or use `createResource` ([resources.md](examples/resources.md)) |
-| **createEffect for data fetching** | Manual loading/error state, no Suspense            | `createResource` or `createAsync` ([resources.md](examples/resources.md))               |
-| **Direct store mutation**          | `store.field = x` bypasses proxy                   | Use `setStore` path syntax or `produce` ([stores.md](examples/stores.md))               |
-
----
-
-## Quick Reference
-
-### Import Cheat Sheet
+## Import cheat sheet
 
 ```typescript
-// Core reactivity
 import {
   createSignal,
   createEffect,
   createMemo,
   createResource,
+  createContext,
+  useContext,
+  createUniqueId,
   batch,
   untrack,
   on,
   onMount,
   onCleanup,
-} from "solid-js";
-
-// Control flow
-import {
   Show,
   For,
   Index,
@@ -165,13 +101,9 @@ import {
   lazy,
 } from "solid-js";
 
-// Web utilities
 import { Portal, Dynamic } from "solid-js/web";
-
-// Store
 import { createStore, produce, reconcile, unwrap } from "solid-js/store";
 
-// Component types
 import type {
   Component,
   ParentComponent,
@@ -181,102 +113,40 @@ import type {
 } from "solid-js";
 ```
 
-### Signal Checklist
+---
 
-- [ ] Using `createSignal` for primitives
-- [ ] Calling signal as function to read: `count()`
-- [ ] Using functional updates when depending on previous: `setCount(c => c + 1)`
-- [ ] TypeScript generic for complex types: `createSignal<User | null>(null)`
+## When to reach for a performance primitive
 
-### Effect Checklist
-
-- [ ] Using `createEffect` for side effects only
-- [ ] Using `onCleanup` for event listeners, timers, subscriptions
-- [ ] Using `on()` when need explicit dependency control
-- [ ] NOT using effects for derived values (use `createMemo`)
-
-### Component Checklist
-
-- [ ] NOT destructuring props
-- [ ] Using `splitProps` to separate custom from HTML props
-- [ ] Using `mergeProps` for default prop values
-- [ ] Using correct component type (`Component`, `ParentComponent`, `VoidComponent`)
-- [ ] Refs work without forwardRef - just pass as prop
-
-### Control Flow Checklist
-
-- [ ] `<Show>` for boolean/truthy conditions
-- [ ] `<For>` for dynamic lists (keyed by reference)
-- [ ] `<Index>` for lists where index is the key
-- [ ] `<Switch>`/`<Match>` for multiple exclusive conditions
-- [ ] `<Suspense>` wrapping async components
-- [ ] `<ErrorBoundary>` wrapping error-prone components
-
-### Store Checklist
-
-- [ ] Using `createStore` for nested objects/arrays
-- [ ] Using path syntax for updates: `setStore('user', 'name', 'New Name')`
-- [ ] Using `produce` for complex mutations
-- [ ] Using `reconcile` for replacing data from external sources
-- [ ] NOT mutating store directly: `store.field = x` won't trigger updates
-
-### Resource Checklist
-
-- [ ] Using `createResource` for async data
-- [ ] Handling `resource.loading` state
-- [ ] Handling `resource.error` state
-- [ ] Wrapping in `<Suspense>` for loading UI
-- [ ] Using `mutate` for optimistic updates
-- [ ] Using `refetch` to reload data
+| Situation                         | Primitive       |
+| --------------------------------- | --------------- |
+| An expensive derivation           | `createMemo`    |
+| Several setters in one handler    | `batch()`       |
+| A route or panel loaded on demand | `lazy()`        |
+| A read that must not subscribe    | `untrack()`     |
+| A non-urgent update               | `useTransition` |
 
 ---
 
-## Performance Patterns
+## Review checklists
 
-### When to Optimize
+### Reactivity
 
-| Situation                 | Solution                |
-| ------------------------- | ----------------------- |
-| Expensive computation     | `createMemo`            |
-| Multiple related updates  | `batch()`               |
-| Large code bundles        | `lazy()`                |
-| Frequent list updates     | Use `For` (not `Index`) |
-| Non-reactive reads needed | `untrack()`             |
-| Non-urgent UI updates     | `useTransition`         |
+- [ ] Every signal read is a call — `count()`
+- [ ] Updates that depend on the previous value use the function form — `setCount((c) => c + 1)`
+- [ ] Derived values are memos, not effects
+- [ ] `on()` used where an effect must ignore some of what it reads
+- [ ] Every listener, timer, subscription and controller has an `onCleanup`
 
-### Fine-Grained Reactivity Benefits
+### Components
 
-```typescript
-// Solid automatically optimizes this
-function Dashboard() {
-  const [count, setCount] = createSignal(0);
-  const [name, setName] = createSignal('');
+- [ ] Props reached through `props.x`, or split with `splitProps`
+- [ ] Defaults applied with `mergeProps`
+- [ ] Component type matches the children contract — `VoidComponent`, `ParentComponent`, `Component`
+- [ ] Refs passed as plain props
 
-  return (
-    <div>
-      {/* Only this span updates when count changes */}
-      <span>Count: {count()}</span>
-      {/* Only this span updates when name changes */}
-      <span>Name: {name()}</span>
-    </div>
-  );
-}
-// No useMemo, React.memo, or shouldComponentUpdate needed!
-```
+### Control flow and data
 
----
-
-## React to Solid Translation
-
-| React                  | Solid                    | Notes                                            |
-| ---------------------- | ------------------------ | ------------------------------------------------ |
-| `useState(initial)`    | `createSignal(initial)`  | Returns `[getter, setter]` not `[value, setter]` |
-| `useEffect(fn, deps)`  | `createEffect(fn)`       | No dependency array - auto-tracks                |
-| `useMemo(fn, deps)`    | `createMemo(fn)`         | No dependency array - auto-tracks                |
-| `useRef(null)`         | `let ref;` + `ref={ref}` | No `useRef` needed                               |
-| `useContext`           | `useContext`             | Same API                                         |
-| `React.memo(Comp)`     | Not needed               | Fine-grained by default                          |
-| `forwardRef`           | Not needed               | Refs are just props                              |
-| `{cond ? <A/> : <B/>}` | `<Show when={cond}>`     | Use control flow components                      |
-| `{items.map(...)}`     | `<For each={items()}>`   | Use For component                                |
-| `children` prop        | `props.children`         | Never destructure                                |
+- [ ] `<For>` for reorderable lists, `<Index>` for fixed positions
+- [ ] `<Switch>`/`<Match>` rather than nested `<Show>`
+- [ ] Async reads sit under `<Suspense>`, with `<ErrorBoundary>` above it
+- [ ] Store updates go through `setStore` paths, `produce` or `reconcile`

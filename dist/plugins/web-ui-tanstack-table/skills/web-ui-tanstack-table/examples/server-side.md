@@ -106,7 +106,7 @@ export function ServerSideUserTable() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    // CRITICAL: Enable manual mode for server-side
+    // Manual mode: the array below is already sorted, filtered and paged
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
@@ -199,14 +199,18 @@ export function ServerSideUserTable() {
 }
 ```
 
-**Why good:** all manual options set for server-side, `rowCount` enables correct page count, query params memoized for stability, page reset on filter change, loading state handled
+**Why good:** `rowCount` is the piece with no local substitute — the table is holding one page and
+cannot count what it never received, so without it there is no last page to navigate to. Resetting
+`pageIndex` on a filter change avoids landing on page nine of a result set that now has two.
+`autoResetPageIndex` has to be off here, because in server-side mode the arrival of new data _is_ the
+page change, and the default would undo it.
 
 ---
 
 ## Key Server-Side Options
 
 ```typescript
-// CRITICAL: All three manual options for server-side
+// All three, or the table redoes locally whatever the server already did
 const table = useReactTable({
   data: apiData ?? [],
   columns,

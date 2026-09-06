@@ -1,42 +1,40 @@
 # VueUse State Examples
 
-> createGlobalState, useRefHistory, syncRef, and persistence patterns. See [core.md](core.md) for basics.
-
-**Prerequisites**: Understand VueUse composable calling conventions from core examples first.
+> `createGlobalState`, ref history and `syncRef`. See [SKILL.md](../SKILL.md) for the decisions and
+> [core.md](core.md) for storage.
 
 ---
 
-## createGlobalState - Shared Reactive State
+## createGlobalState
 
-### Good Example - Application-Wide State
+The factory runs once, on first call, and every caller after that receives the same refs.
 
 ```typescript
-// stores/app-state.ts
-import { createGlobalState } from "@vueuse/core";
-import { useLocalStorage } from "@vueuse/core";
+// app-state.ts
+import { createGlobalState, useLocalStorage } from "@vueuse/core";
 import { computed, shallowRef } from "vue";
 
 type Language = "en" | "fr" | "de" | "ja";
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 export const useAppState = createGlobalState(() => {
-  // Persistent state
+  // Survives a reload
   const language = useLocalStorage<Language>("app-lang", "en");
   const sidebarCollapsed = useLocalStorage("sidebar-collapsed", false);
 
-  // Transient state (lost on refresh)
+  // Does not
   const isLoading = shallowRef(false);
   const activeModal = shallowRef<string | null>(null);
 
-  // Computed
-  const isRtl = computed(() => ["ar", "he"].includes(language.value));
+  const isRtl = computed(() => RTL_LANGUAGES.includes(language.value));
 
-  // Actions
-  function setLanguage(lang: Language): void {
-    language.value = lang;
+  function setLanguage(next: Language): void {
+    language.value = next;
   }
 
-  function openModal(modalId: string): void {
-    activeModal.value = modalId;
+  function openModal(id: string): void {
+    activeModal.value = id;
   }
 
   function closeModal(): void {
@@ -46,9 +44,9 @@ export const useAppState = createGlobalState(() => {
   return {
     language,
     sidebarCollapsed,
+    isRtl,
     isLoading,
     activeModal,
-    isRtl,
     setLanguage,
     openModal,
     closeModal,
@@ -56,171 +54,102 @@ export const useAppState = createGlobalState(() => {
 });
 ```
 
-**Why good:** mixes persistent (`useLocalStorage`) and transient (`shallowRef`) state, computed derivations, action methods for controlled state changes, singleton pattern via `createGlobalState`
+```vue
+<script setup lang="ts">
+import { useAppState } from "./app-state";
 
-### Bad Example - Direct State Mutation
-
-```typescript
-// BAD: exposing raw refs without action methods
-export const useAppState = createGlobalState(() => {
-  const language = ref("en");
-  return { language }; // anyone can mutate directly
-});
-
-// In component:
-const { language } = useAppState();
-language.value = "invalid-lang"; // no validation, no type safety
+const { language, isRtl, setLanguage } = useAppState();
+</script>
 ```
 
-**Why bad:** no validation or constraint enforcement, debugging becomes difficult when any component can mutate state directly
+Returning actions alongside the refs is what keeps the write points countable. Return the writable
+ref itself and every component becomes a mutation site, which is fine for a toggle and painful for
+anything with an invariant — expose `readonly(ref)` plus a setter where the invariant matters.
+
+Two limits worth knowing. The state is a module-lifetime singleton: it outlives every component and
+is cleared only by a reload, so anything user-scoped needs an explicit reset on sign-out. And the
+factory runs inside no component's scope, so a composable called in it that registers teardown has
+nothing to attach to — keep the factory to refs, computeds and functions.
 
 ---
 
-## useRefHistory - Undo/Redo
-
-### Good Example - Undo/Redo for Form Data
+## Undo and Redo
 
 ```vue
 <script setup lang="ts">
 import { useRefHistory } from "@vueuse/core";
 import { ref } from "vue";
 
-interface FormData {
+interface Draft {
   title: string;
   content: string;
   tags: string[];
 }
 
-const MAX_HISTORY = 50;
-const AUTO_COMMIT_DELAY_MS = 1000;
+const draft = ref<Draft>({ title: "", content: "", tags: [] });
 
-const formData = ref<FormData>({
-  title: "",
-  content: "",
-  tags: [],
+const { undo, redo, canUndo, canRedo, history, clear } = useRefHistory(draft, {
+  deep: true, // without this, nested edits are not recorded
+  capacity: 50, // without this, the log grows for the session
+  dump: (value) => JSON.parse(JSON.stringify(value)), // snapshot, not a reference
+  parse: (value) => value,
 });
-
-const { undo, redo, canUndo, canRedo, history, clear } = useRefHistory(
-  formData,
-  {
-    deep: true,
-    capacity: MAX_HISTORY,
-    dump: (v) => JSON.parse(JSON.stringify(v)), // snapshot serialization
-    parse: (v) => v,
-  },
-);
 </script>
 
 <template>
-  <div>
-    <input v-model="formData.title" placeholder="Title" />
-    <textarea v-model="formData.content" placeholder="Content" />
-
-    <div>
-      <button :disabled="!canUndo" @click="undo()">Undo</button>
-      <button :disabled="!canRedo" @click="redo()">Redo</button>
-      <span>{{ history.length }} snapshots</span>
-    </div>
-  </div>
+  <button :disabled="!canUndo" @click="undo()">Undo</button>
+  <button :disabled="!canRedo" @click="redo()">Redo</button>
 </template>
 ```
 
-**Why good:** automatic history tracking, capacity limit prevents memory bloat, `canUndo`/`canRedo` for button state, deep tracking for nested objects
-
----
-
-## useManualRefHistory - Explicit Snapshots
-
-### Good Example - Save Points
+Every change is a snapshot, so bound to a text input this records one entry per keystroke. Either
+debounce the source, or take explicit save points instead:
 
 ```vue
 <script setup lang="ts">
 import { useManualRefHistory } from "@vueuse/core";
 import { ref } from "vue";
 
-const documentContent = ref("Initial content");
-
-const { commit, undo, redo, canUndo, canRedo } =
-  useManualRefHistory(documentContent);
+const content = ref("");
+const { commit, undo, redo, canUndo } = useManualRefHistory(content);
 
 function save(): void {
-  commit(); // create explicit snapshot
-  console.log("Saved!");
-}
-
-function handleInput(newContent: string): void {
-  documentContent.value = newContent; // no automatic history
+  commit(); // one history entry per save, not per keystroke
+  persist(content.value);
 }
 </script>
 ```
 
-**Why good:** snapshots only on explicit `commit()`, avoids capturing every keystroke, useful for discrete save points
+`useRefHistory` snapshots by reference for objects unless a `dump`/`parse` pair is given — with
+`deep: true` and a mutable object, the recorded entries otherwise all point at the same object and
+undo appears to do nothing.
 
 ---
 
-## syncRef - Two-Way Ref Synchronization
+## syncRef
 
-### Good Example - Synced Refs
-
-```vue
-<script setup lang="ts">
+```typescript
 import { syncRef } from "@vueuse/core";
 import { ref } from "vue";
 
-const sourceRef = ref("hello");
-const targetRef = ref("");
+const source = ref("hello");
+const target = ref("");
 
-// Two-way sync: changes to either ref update the other
-const { stop } = syncRef(sourceRef, targetRef);
+const stop = syncRef(source, target); // two-way
 
-sourceRef.value = "world"; // targetRef is now "world"
-targetRef.value = "foo"; // sourceRef is now "foo"
+source.value = "world"; // target is "world"
+target.value = "foo"; // source is "foo"
 
-// One-way sync
-const { stop: stopOneWay } = syncRef(sourceRef, targetRef, {
-  direction: "ltr", // left-to-right only
-});
-</script>
-```
-
-**Why good:** automatic synchronization between refs, direction control, `stop()` for cleanup
-
----
-
-## createGlobalState with Persistence
-
-### Good Example - Theme Store with localStorage
-
-```typescript
-// stores/theme.ts
-import {
-  createGlobalState,
-  useLocalStorage,
-  usePreferredDark,
-} from "@vueuse/core";
-import { computed } from "vue";
-
-type ThemeMode = "light" | "dark" | "auto";
-
-export const useThemeStore = createGlobalState(() => {
-  const mode = useLocalStorage<ThemeMode>("theme-mode", "auto");
-  const systemIsDark = usePreferredDark();
-
-  const isDark = computed(() => {
-    if (mode.value === "auto") return systemIsDark.value;
-    return mode.value === "dark";
-  });
-
-  function setMode(newMode: ThemeMode): void {
-    mode.value = newMode;
-  }
-
-  function toggleDark(): void {
-    mode.value = isDark.value ? "light" : "dark";
-  }
-
-  return { mode, isDark, setMode, toggleDark };
+// Both directions, with a transform on each edge — "ltr" or "rtl" limits it to one
+syncRef(celsius, fahrenheit, {
+  direction: "both",
+  transform: {
+    ltr: (c) => c * 1.8 + 32,
+    rtl: (f) => (f - 32) / 1.8,
+  },
 });
 ```
 
-**Why good:** combines `createGlobalState` (singleton), `useLocalStorage` (persistence), and `usePreferredDark` (system detection) into a complete theme solution
+Reach for it when two refs are genuinely owned by different pieces of code — a prop mirrored into
+local state, or a value shared with a third-party widget. Where one value is derived from another,
+`computed` is the honest shape, because it cannot drift.

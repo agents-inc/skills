@@ -1,6 +1,6 @@
 # web-data-fetching-graphql-urql
 
-URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions
+URQL GraphQL client patterns — the exchange pipeline, document and normalized caching, queries, mutations, subscriptions, and authentication
 
 ## Installation
 

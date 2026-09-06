@@ -1,6 +1,8 @@
-# Remix - Resource Routes Examples
+# Remix — Resource Routes
 
-> Patterns for API endpoints, webhooks, and file downloads (no UI component).
+> A route module with no default export renders nothing and returns whatever its loader or action
+> does — JSON, binary data, or a redirect. Both `loader` (GET) and `action` (everything else) are
+> available.
 
 ---
 
@@ -34,52 +36,61 @@ export async function loader() {
 }
 ```
 
-**Why good:** No default export makes it a resource route (JSON API), returns proper status codes, includes timestamp for debugging
+**Why good:** A monitor reads the status code rather than the body, so returning 503 on a failed
+dependency is what makes the endpoint useful to one — and the per-check breakdown says which
+dependency to look at.
 
 ---
 
 ## Webhook Endpoint
 
 ```typescript
-// app/routes/api.webhooks.stripe.ts
+// app/routes/api.webhooks.payments.ts
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 
 const HTTP_BAD_REQUEST = 400;
 
 export async function action({ request }: ActionFunctionArgs) {
-  const signature = request.headers.get("stripe-signature");
+  const signature = request.headers.get("webhook-signature");
 
   if (!signature) {
     return json({ error: "Missing signature" }, { status: HTTP_BAD_REQUEST });
   }
 
+  // Read the raw text, not request.json() — the signature covers the exact bytes sent
   const payload = await request.text();
 
   try {
-    const event = stripe.webhooks.constructEvent(
+    // Placeholder for the sending provider's own verification call. It has to be
+    // theirs — the signing algorithm is defined at their end — and it throws on a
+    // mismatch, which is what the catch below is for.
+    const event = verifyWebhookSignature(
       payload,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      process.env.WEBHOOK_SECRET,
     );
 
     switch (event.type) {
-      case "checkout.session.completed":
-        await handleCheckoutComplete(event.data.object);
+      case "checkout.completed":
+        await handleCheckoutComplete(event.data);
         break;
-      case "invoice.payment_failed":
-        await handlePaymentFailed(event.data.object);
+      case "payment.failed":
+        await handlePaymentFailed(event.data);
         break;
     }
 
     return json({ received: true });
-  } catch (err) {
+  } catch (error) {
     return json({ error: "Invalid signature" }, { status: HTTP_BAD_REQUEST });
   }
 }
 ```
 
-**Why good:** Validates webhook signature before processing, switch handles different event types, returns appropriate status codes
+**Why good:** The signature is verified before anything reads the payload, so a forged request never
+reaches the handlers. Reading `request.text()` rather than parsing first matters — re-serialising
+JSON changes the bytes and the signature stops matching. Unrecognised event types fall through and
+still return 200, so the sender does not retry them forever.
 
 ---
 
@@ -125,7 +136,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 ```
 
-**Why good:** Auth and authorization checks, proper Content-Type and Content-Disposition headers for downloads, returns raw Response for binary data
+**Why good:** A resource route can return a raw `Response`, which is what lets it serve a PDF at all.
+`Content-Disposition: attachment` is the difference between the browser downloading the file and
+rendering it, and the ownership check runs before the report is generated rather than after.
 
 ---
 
@@ -168,23 +181,17 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 ```
 
-**Why good:** Query params for transformation options, long cache for immutable images, returns binary image data
+**Why good:** The transformation options are in the URL, so each variant is a distinct cache key — and
+`immutable` tells the browser never to revalidate it, which is safe precisely because a different
+size is a different URL.
 
 ---
 
-## Key Concepts
+## Response Headers
 
-### Resource Route Rules
-
-- **No default export** = resource route (API endpoint)
-- Returns JSON, binary data, or redirects
-- Can have both `loader` (GET) and `action` (POST/PUT/DELETE)
-
-### Common Headers
-
-| Header                | Purpose                      |
-| --------------------- | ---------------------------- |
-| `Content-Type`        | MIME type of response        |
-| `Content-Disposition` | Force download vs inline     |
-| `Cache-Control`       | Browser/CDN caching          |
-| `Content-Length`      | Size for progress indicators |
+| Header                | What it decides                          |
+| --------------------- | ---------------------------------------- |
+| `Content-Type`        | How the browser interprets the bytes     |
+| `Content-Disposition` | Download versus render inline            |
+| `Cache-Control`       | How long the browser and CDN may keep it |
+| `Content-Length`      | Whether a progress bar can be drawn      |

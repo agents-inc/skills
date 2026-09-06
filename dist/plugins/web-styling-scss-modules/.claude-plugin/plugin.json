@@ -1,8 +1,8 @@
 {
   "name": "web-styling-scss-modules",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
-  "description": "SCSS Modules, cva, design tokens",
+  "description": "SCSS Modules - locally scoped component stylesheets, cascade layers, the Sass module system, mixins, and build-time versus runtime values",
   "author": {
     "name": "@vince"
   },

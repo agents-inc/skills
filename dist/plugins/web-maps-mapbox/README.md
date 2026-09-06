@@ -1,6 +1,6 @@
 # web-maps-mapbox
 
-Mapbox GL JS interactive maps - map initialization, markers, popups, sources, layers, expressions, clustering, 3D terrain, geocoding, directions
+Mapbox GL JS interactive vector maps. Use when building a map with sources and layers, expressions, clustering, 3D terrain, geocoding or directions.
 
 ## Installation
 

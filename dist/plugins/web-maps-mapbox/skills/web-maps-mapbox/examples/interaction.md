@@ -44,7 +44,9 @@ map.on("style.load", () => {
 });
 ```
 
-**Why good:** Named constants for terrain config, uses `style.load` (survives style changes), exaggeration enhances elevation visibility, high pitch for 3D perspective
+**Why good:** `style.load` fires again on every `setStyle`, so terrain registered here survives a
+basemap switch where `load` would have run once and never again; pitch is what makes the elevation
+visible at all, since a top-down camera sees none of it
 
 ---
 
@@ -95,7 +97,8 @@ function setNightMode() {
 }
 ```
 
-**Why good:** Typed fog preset interface, named constants for shared values, presets are reusable and switchable
+**Why good:** the `FogPreset` type holds both presets to the same shape, so a key added to one and
+forgotten in the other is a compile error rather than a difference nobody sees until night mode
 
 ---
 
@@ -134,7 +137,9 @@ map.on("style.load", () => {
 });
 ```
 
-**Why good:** Named constants, minzoom avoids rendering at low zoom, height from data properties, placed below labels for readability
+**Why good:** finding the first symbol layer with a `text-field` gives an insertion point that works
+across classic styles without hardcoding a layer id; `minzoom` keeps thousands of building
+footprints out of a view where they would be a smear
 
 ### Good Example - Custom Fill-Extrusion from GeoJSON
 
@@ -171,7 +176,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** Height and color driven by data property, expression-based extrusion scales with density
+**Why good:** height and colour read the same property, so the two encodings cannot disagree, and
+`fill-extrusion-height` takes an expression rather than needing a height baked into the data
 
 ---
 
@@ -251,7 +257,10 @@ map.addLayer({
 });
 ```
 
-**Why good:** Weight by property for meaningful density, zoom-responsive intensity/radius, color gradient from cool to hot, fade-out at high zoom to transition to individual points
+**Why good:** `heatmap-weight` makes density mean severity rather than record count; radius and
+intensity both track zoom, because a fixed radius reads as one blob when zoomed out and as isolated
+dots when zoomed in; and the opacity ramp hands over to a point layer at close zoom, where a heatmap
+no longer says anything
 
 ---
 
@@ -291,7 +300,9 @@ geocoder.on("clear", () => {
 });
 ```
 
-**Why good:** Proximity bias improves local search relevance, country and type filters reduce noise, event listeners for custom behavior
+**Why good:** `proximity` biases results toward the visible map rather than ranking globally, which
+is what makes a search for a street name return the right city; `countries` and `types` narrow the
+result set before it is ranked
 
 ---
 
@@ -334,7 +345,9 @@ directions.on(
 );
 ```
 
-**Why good:** Profile includes traffic data, alternatives enabled for multiple route options, programmatic origin/destination for integration with app logic
+**Why good:** the plugin owns its own source and layer, so the route needs none of your own; setting
+origin and destination programmatically is what connects it to selections made elsewhere in the app
+rather than only to its own inputs
 
 ---
 
@@ -369,7 +382,10 @@ map.on("click", (e) => {
 });
 ```
 
-**Why good:** Layer filter limits results to relevant features, bounding box for touch-friendly target, property access with optional chaining
+**Why good:** an unfiltered query returns every basemap feature under the point — roads, labels,
+land — so the `layers` option is what makes the result mean anything; the bounding box gives a touch
+target larger than one pixel. This only sees features currently rendered in the viewport;
+`querySourceFeatures` reaches the rest.
 
 ---
 
@@ -408,4 +424,6 @@ function updateRadarImage(newUrl: string) {
 }
 ```
 
-**Why good:** Coordinates define exact geographic bounds of image, opacity allows map to show through, type guard before updating
+**Why good:** the four corners are listed clockwise from top-left and are what georeference the
+image; `updateImage` swaps the picture without removing the source, which is how an animated overlay
+avoids a flash between frames

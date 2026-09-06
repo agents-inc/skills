@@ -1,8 +1,8 @@
 {
   "name": "web-files-file-upload-patterns",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
-  "description": "File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)",
+  "description": "File upload patterns - drag-drop dropzones, chunked and resumable uploads, presigned URL flows, file validation (MIME type, magic bytes), progress tracking, accessibility (ARIA)",
   "author": {
     "name": "@vince"
   },

@@ -1,6 +1,7 @@
 # Mantine v7 Reference
 
-> Decision frameworks, anti-patterns, and quick lookup tables. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Component selection, lookup tables and anti-pattern code. See [SKILL.md](SKILL.md) for the
+> decisions and [examples/](examples/) for full implementations.
 
 ---
 
@@ -65,16 +66,16 @@ How to style a Mantine component?
 
 ```
 Building a form?
-├─ Simple form (few fields, basic validation)?
+├─ Few fields, per-field rules?
 │   └─ useForm with inline validate functions
-├─ Complex validation (schemas)?
-│   └─ useForm with zodResolver or yupResolver
+├─ Validation already expressed as a schema?
+│   └─ useForm with a mantine-form-*-resolver adapter in `validate`
 ├─ Dynamic field lists?
 │   └─ useForm with insertListItem / removeListItem
 ├─ Nested objects?
 │   └─ useForm with dot-notation paths: 'address.city'
-└─ Multi-step form?
-    └─ useForm with form.validate() per step, single form instance
+└─ Multi-step?
+    └─ One useForm instance, form.validate() per step
 ```
 
 ---
@@ -94,17 +95,6 @@ const useStyles = createStyles((theme) => ({
 // component.module.css: .root { background: var(--mantine-color-blue-0); }
 import classes from "./component.module.css";
 <Box className={classes.root} />;
-```
-
-### Hardcoding Colors
-
-```tsx
-// WRONG - bypasses theming
-<Button style={{ backgroundColor: "#228be6" }}>Click</Button>
-
-// CORRECT - use variant system or theme colors
-<Button variant="filled" color="blue">Click</Button>
-<Button bg="blue.6" c="white">Click</Button>
 ```
 
 ### Wrong Color Scheme Toggle
@@ -132,31 +122,18 @@ const isDark = computed === "dark";
 ### Incomplete Custom Color
 
 ```tsx
-// WRONG - fewer than 10 shades
-const theme = createTheme({
-  colors: {
-    brand: ["#f0e4ff", "#c28dff", "#7b0bff"], // Only 3 shades - TypeScript error
-  },
-});
+// WRONG - the palette type is a 10-tuple, so this is a TypeScript error
+colors: {
+  brand: ["#f0e4ff", "#c28dff", "#7b0bff"];
+}
 
-// CORRECT - exactly 10 shades required
-const theme = createTheme({
-  colors: {
-    brand: [
-      "#f0e4ff",
-      "#d9b8ff",
-      "#c28dff",
-      "#aa61ff",
-      "#9336ff",
-      "#7b0bff",
-      "#6700d9",
-      "#5300b3",
-      "#3f008c",
-      "#2b0066",
-    ],
-  },
-});
+// CORRECT - exactly 10, index 0 lightest to index 9 darkest
+colors: {
+  brand: [...BRAND_COLORS];
+}
 ```
+
+Full tuple and usage: [examples/theming.md](examples/theming.md).
 
 ---
 

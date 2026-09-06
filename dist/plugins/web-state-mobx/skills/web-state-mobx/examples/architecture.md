@@ -1,6 +1,6 @@
 # MobX - Architecture Examples
 
-> Architecture patterns for multi-store setups, TypeScript integration, and performance optimization. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Multi-store setups, TypeScript annotations and render granularity. See [SKILL.md](../SKILL.md) for the decision frameworks and red flags.
 
 **Additional Examples:**
 
@@ -26,8 +26,6 @@ class RootStore {
   uiStore: UIStore;
 
   constructor(transportLayer: TransportLayer) {
-    // Each store receives a reference to the root store
-    // enabling cross-store communication
     this.userStore = new UserStore(this, transportLayer);
     this.todoStore = new TodoStore(this, transportLayer);
     this.uiStore = new UIStore(this);
@@ -37,17 +35,15 @@ class RootStore {
 export { RootStore };
 ```
 
-**Why good:** Central coordinator for all stores, transport layer injected at root level for testability, each store can access peer stores through root reference, simple setup with strong typing
+**Why good:** Each store receives the root, so cross-store reads are an explicit reference rather than an import cycle. The transport layer enters once, at the top, which is what makes the whole graph constructible in a test.
 
-### Good Example - Domain Store with Root Reference
+### Good Example - Domain Store Reading a Peer
 
 ```typescript
 // stores/todo-store.ts
 import { makeAutoObservable, runInAction } from "mobx";
 import type { RootStore } from "./root-store";
 import type { TransportLayer } from "../transport-layer";
-
-const INITIAL_LOADING_STATE = false;
 
 interface Todo {
   id: string;
@@ -58,27 +54,19 @@ interface Todo {
 
 class TodoStore {
   todos: Todo[] = [];
-  isLoading = INITIAL_LOADING_STATE;
+  isLoading = false;
 
   constructor(
     private rootStore: RootStore,
     private transportLayer: TransportLayer,
   ) {
-    makeAutoObservable(this, {
-      rootStore: false,
-      transportLayer: false,
-    });
+    makeAutoObservable(this, { rootStore: false, transportLayer: false });
   }
 
-  // Cross-store computed: accesses userStore through rootStore
   get todosForCurrentUser(): Todo[] {
     const currentUserId = this.rootStore.userStore.currentUserId;
     if (!currentUserId) return [];
     return this.todos.filter((todo) => todo.authorId === currentUserId);
-  }
-
-  get completedCount(): number {
-    return this.todos.filter((t) => t.completed).length;
   }
 
   async fetchTodos(): Promise<void> {
@@ -96,17 +84,6 @@ class TodoStore {
     }
   }
 
-  addTodo(title: string): void {
-    const currentUserId = this.rootStore.userStore.currentUserId;
-    if (!currentUserId) return;
-    this.todos.push({
-      id: crypto.randomUUID(),
-      title,
-      authorId: currentUserId,
-      completed: false,
-    });
-  }
-
   toggleTodo(id: string): void {
     const todo = this.todos.find((t) => t.id === id);
     if (todo) {
@@ -119,7 +96,7 @@ export { TodoStore };
 export type { Todo };
 ```
 
-**Why good:** Cross-store access via `rootStore` reference, non-observable dependencies excluded with overrides, computed value derives data from both local and peer store, transport layer abstracted for testability
+**Why good:** `todosForCurrentUser` reads an observable in a peer store, so it invalidates when the current user changes as readily as when a todo does. Both injected dependencies are excluded from observability — a transport client has no business being proxied.
 
 ### Good Example - UI Store
 
@@ -128,33 +105,19 @@ export type { Todo };
 import { makeAutoObservable } from "mobx";
 import type { RootStore } from "./root-store";
 
-const DEFAULT_SIDEBAR_STATE = true;
-const DEFAULT_MODAL_STATE = false;
-const DEFAULT_THEME = "light" as const;
-
 type Theme = "light" | "dark";
 
 class UIStore {
-  sidebarOpen = DEFAULT_SIDEBAR_STATE;
-  modalOpen = DEFAULT_MODAL_STATE;
-  theme: Theme = DEFAULT_THEME;
+  sidebarOpen = true;
+  modalOpen = false;
+  theme: Theme = "light";
 
   constructor(private rootStore: RootStore) {
-    makeAutoObservable(this, {
-      rootStore: false,
-    });
+    makeAutoObservable(this, { rootStore: false });
   }
 
   toggleSidebar(): void {
     this.sidebarOpen = !this.sidebarOpen;
-  }
-
-  openModal(): void {
-    this.modalOpen = true;
-  }
-
-  closeModal(): void {
-    this.modalOpen = false;
   }
 
   setTheme(theme: Theme): void {
@@ -165,9 +128,9 @@ class UIStore {
 export { UIStore };
 ```
 
-**Why good:** UI-specific state separated from domain logic, named constants for all defaults, simple actions for UI state mutations, root reference excluded from observability
+**Why good:** Presentation state sits apart from the domain stores, so a component reading the sidebar does not subscribe to anything a fetch can change.
 
-### Good Example - Root Store Provider and Hook
+### Good Example - Provider and Hooks
 
 ```typescript
 // context/root-store-context.tsx
@@ -185,7 +148,6 @@ function useRootStore(): RootStore {
   return store;
 }
 
-// Convenience hooks for individual stores
 function useTodoStore() {
   return useRootStore().todoStore;
 }
@@ -198,18 +160,8 @@ function useUIStore() {
   return useRootStore().uiStore;
 }
 
-function RootStoreProvider({
-  store,
-  children,
-}: {
-  store: RootStore;
-  children: ReactNode;
-}): JSX.Element {
-  return (
-    <RootStoreContext.Provider value={store}>
-      {children}
-    </RootStoreContext.Provider>
-  );
+function RootStoreProvider({ store, children }: { store: RootStore; children: ReactNode }) {
+  return <RootStoreContext.Provider value={store}>{children}</RootStoreContext.Provider>;
 }
 
 export {
@@ -221,9 +173,9 @@ export {
 };
 ```
 
-**Why good:** Context provides root store via dependency injection (store value never changes), convenience hooks avoid repeated `useRootStore().todoStore` access, error boundary on missing provider, named exports
+**Why good:** The provider value is one reference that never changes, so this is injection and carries none of Context's re-render cost — reactivity comes from `observer`. The per-store hooks keep components from reaching through the root to get at one field.
 
-### Good Example - App Setup with Root Store
+### Good Example - Construction at Startup
 
 ```typescript
 // app.tsx
@@ -232,13 +184,10 @@ import { RootStore } from "./stores/root-store";
 import { createTransportLayer } from "./transport-layer";
 import { AppContent } from "./components/app-content";
 
-const API_BASE_URL = "/api";
-
-// Create stores once at app initialization
-const transportLayer = createTransportLayer(API_BASE_URL);
+const transportLayer = createTransportLayer("/api");
 const rootStore = new RootStore(transportLayer);
 
-function App(): JSX.Element {
+function App() {
   return (
     <RootStoreProvider store={rootStore}>
       <AppContent />
@@ -249,15 +198,11 @@ function App(): JSX.Element {
 export { App };
 ```
 
-**Why good:** Root store created once at module level, transport layer injected with configuration, single provider wraps the entire app, clean separation of initialization from rendering
+**Why good:** One construction site, so a test builds its own root with a stub transport and renders the same tree.
 
-### Bad Example - Stores Without Coordination
+### Bad Example - Uncoordinated Module Singletons
 
 ```typescript
-// stores/uncoordinated-stores.ts
-import { makeAutoObservable } from "mobx";
-
-// BAD: Independent stores with no way to communicate
 class IsolatedTodoStore {
   todos: Todo[] = [];
   constructor() {
@@ -272,101 +217,19 @@ class IsolatedUserStore {
   }
 }
 
-// BAD: Importing stores directly creates hidden dependencies
-// and makes testing much harder
 const todoStore = new IsolatedTodoStore();
 const userStore = new IsolatedUserStore();
 
 export { todoStore, userStore };
 ```
 
-**Why bad:** Stores cannot access each other for cross-store computed values, module-level singletons are hard to test (cannot inject mocks), no central place to initialize or reset stores, hidden dependency graph
+**Why bad:** A cross-store computed has nothing to reach through, so the dependency reappears as a direct import and the graph goes unstated. The instances are created at module load, which leaves a test no seam to inject a stub or reset state between cases.
 
 ---
 
 ## Pattern 11: TypeScript Integration
 
-### Good Example - Fully Typed Class Store
-
-```typescript
-// stores/notification-store.ts
-import { makeAutoObservable } from "mobx";
-
-const MAX_NOTIFICATIONS = 50;
-const NOTIFICATION_DISMISS_DELAY_MS = 5000;
-
-type NotificationType = "success" | "error" | "warning" | "info";
-
-interface Notification {
-  id: string;
-  type: NotificationType;
-  message: string;
-  timestamp: number;
-  dismissed: boolean;
-}
-
-class NotificationStore {
-  notifications: Notification[] = [];
-
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  // TypeScript infers return type from computed getter
-  get activeNotifications(): Notification[] {
-    return this.notifications.filter((n) => !n.dismissed);
-  }
-
-  get errorCount(): number {
-    return this.activeNotifications.filter((n) => n.type === "error").length;
-  }
-
-  get hasErrors(): boolean {
-    return this.errorCount > 0;
-  }
-
-  addNotification(type: NotificationType, message: string): void {
-    const notification: Notification = {
-      id: crypto.randomUUID(),
-      type,
-      message,
-      timestamp: Date.now(),
-      dismissed: false,
-    };
-
-    this.notifications.push(notification);
-
-    // Enforce max notification limit
-    if (this.notifications.length > MAX_NOTIFICATIONS) {
-      this.notifications = this.notifications.slice(-MAX_NOTIFICATIONS);
-    }
-  }
-
-  dismiss(id: string): void {
-    const notification = this.notifications.find((n) => n.id === id);
-    if (notification) {
-      notification.dismissed = true;
-    }
-  }
-
-  dismissAll(): void {
-    this.notifications.forEach((n) => {
-      n.dismissed = true;
-    });
-  }
-
-  clearDismissed(): void {
-    this.notifications = this.notifications.filter((n) => !n.dismissed);
-  }
-}
-
-export { NotificationStore };
-export type { Notification, NotificationType };
-```
-
-**Why good:** Full TypeScript type safety on all properties, methods, and computed values, named constants for limits, type alias exported with `export type`, notification type union prevents invalid states
-
-### Good Example - Private Fields with makeAutoObservable
+### Good Example - Private Fields
 
 ```typescript
 // stores/auth-store.ts
@@ -387,22 +250,16 @@ class AuthStore {
   private token: string | null = null;
 
   constructor(private apiClient: ApiClient) {
-    // Generic parameter tells makeAutoObservable about private fields
     makeAutoObservable<AuthStore, "token" | "apiClient">(this, {
-      token: true, // Make private field observable
-      apiClient: false, // Exclude from observability
+      token: true,
+      apiClient: false,
     });
 
-    // Restore token from storage
     this.token = localStorage.getItem(TOKEN_STORAGE_KEY);
   }
 
   get isAuthenticated(): boolean {
     return this.user !== null && this.token !== null;
-  }
-
-  get isAdmin(): boolean {
-    return this.user?.role === "admin";
   }
 
   async login(email: string, password: string): Promise<void> {
@@ -434,9 +291,9 @@ export { AuthStore };
 export type { AuthUser };
 ```
 
-**Why good:** Generic parameter `<AuthStore, "token" | "apiClient">` tells TypeScript about private field annotations, private token is observable (tracked by computed `isAuthenticated`), apiClient excluded from observability, `import type` for type-only imports
+**Why good:** The second type parameter names the private members, which is what lets the annotation object mention them at all — without it `token` and `apiClient` are not assignable keys. `token` is observable so `isAuthenticated` invalidates on login; `apiClient` is not.
 
-### Good Example - Typed Factory Function Store
+### Good Example - Typed Factory Store
 
 ```typescript
 // stores/theme-store.ts
@@ -457,7 +314,6 @@ interface ThemeStore {
   readonly cssVariables: Record<string, string>;
   readonly isDark: boolean;
   setColorScheme: (scheme: ColorScheme) => void;
-  setAccentColor: (color: AccentColor) => void;
   increaseFontSize: () => void;
   decreaseFontSize: () => void;
 }
@@ -487,10 +343,6 @@ function createThemeStore(): ThemeStore {
       this.colorScheme = scheme;
     },
 
-    setAccentColor(color: AccentColor): void {
-      this.accentColor = color;
-    },
-
     increaseFontSize(): void {
       if (this.fontSize < MAX_FONT_SIZE_PX) {
         this.fontSize += FONT_SIZE_STEP_PX;
@@ -509,13 +361,15 @@ export { createThemeStore };
 export type { ThemeStore, ColorScheme, AccentColor };
 ```
 
-**Why good:** Factory function with explicit return type interface, generic parameter ensures type safety on the created observable, named constants for all font size boundaries, union types prevent invalid states, types exported separately
+**Why good:** The declared interface marks the getters `readonly`, so callers cannot assign over a computed, and the union types make an invalid scheme a compile error rather than a runtime one.
+
+**A caveat on `isDark`:** `matchMedia` is not observable, so `cssVariables` will not recompute when the operating system theme changes. Feeding that through an observable field updated by a `change` listener is what makes it reactive.
 
 ---
 
-## Pattern 12: Performance Optimization
+## Pattern 12: Render Granularity
 
-### Good Example - Small Observer Components (Dereference Late)
+### Good Example - Dereference Late
 
 ```typescript
 // components/user-list.tsx
@@ -523,7 +377,6 @@ import { observer } from "mobx-react-lite";
 import type { User } from "../stores/user-store";
 import { useUserStore } from "../context/root-store-context";
 
-// GOOD: Parent passes observable OBJECTS, not extracted primitives
 export const UserList = observer(function UserList() {
   const userStore = useUserStore();
 
@@ -532,7 +385,6 @@ export const UserList = observer(function UserList() {
       <h2>Users ({userStore.userCount})</h2>
       <ul>
         {userStore.users.map((user) => (
-          // Pass the observable user object, NOT user.name, user.email
           <UserRow key={user.id} user={user} />
         ))}
       </ul>
@@ -540,8 +392,6 @@ export const UserList = observer(function UserList() {
   );
 });
 
-// GOOD: Small dedicated component dereferences observables late
-// Only THIS component re-renders when THIS user's properties change
 const UserRow = observer(function UserRow({ user }: { user: User }) {
   return (
     <li>
@@ -555,36 +405,23 @@ const UserRow = observer(function UserRow({ user }: { user: User }) {
 export { UserRow };
 ```
 
-**Why good:** Observables dereferenced as late as possible (inside the smallest component), `UserRow` only re-renders when its specific user changes (not when other users change), `UserList` only re-renders when the array itself changes (adds/removes), fine-grained reactivity
+**Why good:** `UserList` reads the array and the count; each `UserRow` reads its own fields. Renaming one user re-renders one row. Adding a level — page, list, item — pushes the boundary further still, so a header reading a count is untouched by an edit inside the list.
 
-### Bad Example - Extracting Primitives Early (Dereference Too Soon)
+### Bad Example - Dereference Early
 
 ```typescript
-// components/broken-user-list.tsx
-import { observer } from "mobx-react-lite";
-import { useUserStore } from "../context/root-store-context";
-
-// BAD: Extracting primitive values at the parent level
 export const BrokenUserList = observer(function BrokenUserList() {
   const userStore = useUserStore();
 
   return (
     <ul>
       {userStore.users.map((user) => (
-        // BAD: Extracting primitives here - parent re-renders for ALL user changes
-        <UserRow
-          key={user.id}
-          name={user.name}
-          email={user.email}
-          role={user.role}
-        />
+        <UserRow key={user.id} name={user.name} email={user.email} role={user.role} />
       ))}
     </ul>
   );
 });
 
-// This component receives plain strings, NOT observables
-// It cannot benefit from fine-grained tracking
 const UserRow = observer(function UserRow({
   name,
   email,
@@ -602,77 +439,20 @@ const UserRow = observer(function UserRow({
     </li>
   );
 });
-
-export { UserRow };
 ```
 
-**Why bad:** Parent component dereferences `user.name`, `user.email`, `user.role` -- it subscribes to ALL user properties, any user property change causes the ENTIRE list to re-render, child receives plain strings (not observables) so `observer` on child is useless
+**Why bad:** The three property reads happen in the parent, so the parent subscribes to every field of every user and one rename re-renders the whole list. `observer` on the child now wraps a component that receives plain strings and has nothing to track.
 
-### Good Example - Dedicated List Component
-
-```typescript
-// components/todo-page.tsx
-import { observer } from "mobx-react-lite";
-import { useTodoStore } from "../context/root-store-context";
-import type { Todo } from "../stores/todo-store";
-
-// GOOD: Page component only reads non-list data
-export const TodoPage = observer(function TodoPage() {
-  const todoStore = useTodoStore();
-
-  return (
-    <div>
-      <h1>Todos</h1>
-      <p>Completed: {todoStore.completedCount}</p>
-      {/* Dedicated list component prevents page re-render on item changes */}
-      <TodoList todos={todoStore.filteredTodos} />
-    </div>
-  );
-});
-
-// GOOD: Dedicated list component isolates array rendering
-// Only re-renders when the filtered array changes (add/remove/filter change)
-const TodoList = observer(function TodoList({
-  todos,
-}: {
-  todos: Todo[];
-}) {
-  return (
-    <ul>
-      {todos.map((todo) => (
-        <TodoItem key={todo.id} todo={todo} />
-      ))}
-    </ul>
-  );
-});
-
-// GOOD: Individual item component - only re-renders when THIS todo changes
-const TodoItem = observer(function TodoItem({ todo }: { todo: Todo }) {
-  return (
-    <li data-completed={todo.completed}>
-      <span>{todo.title}</span>
-    </li>
-  );
-});
-
-export { TodoList, TodoItem };
-```
-
-**Why good:** Three-level component hierarchy (page/list/item) enables maximum granularity, changing a todo title only re-renders that specific `TodoItem`, adding/removing todos only re-renders `TodoList` (not the page header), `completedCount` is a computed value cached by MobX
-
-### Good Example - Using toJS for Non-MobX Libraries
+### Good Example - toJS at a Library Boundary
 
 ```typescript
 // utils/export-data.ts
 import { toJS } from "mobx";
 import type { TodoStore } from "../stores/todo-store";
 
-// Some libraries expect plain JS objects, not MobX observables
 function exportTodosToCSV(todoStore: TodoStore): string {
-  // toJS recursively converts observable objects to plain JS
   const plainTodos = toJS(todoStore.todos);
 
-  // Now safe to pass to libraries that don't understand MobX proxies
   const headers = "id,title,completed";
   const rows = plainTodos.map((t) => `${t.id},${t.title},${t.completed}`);
   return [headers, ...rows].join("\n");
@@ -681,32 +461,22 @@ function exportTodosToCSV(todoStore: TodoStore): string {
 export { exportTodosToCSV };
 ```
 
-**Why good:** `toJS` creates a plain JS copy for non-MobX-aware libraries, prevents issues with Proxy-based observables in serialization, keeps the observable store intact
+**Why good:** Observables are proxies, and a library that walks or serialises them sees the proxy rather than the data. `toJS` hands over a plain copy and leaves the store untouched.
 
-### Good Example - Configure MobX for Development
+### Good Example - Development Configuration
 
 ```typescript
 // config/mobx-config.ts
 import { configure } from "mobx";
 
-// Recommended development configuration
-// Catches common mistakes early
 configure({
-  // Throw if observables are modified outside actions
   enforceActions: "always",
-  // Warn if computed values are accessed outside reactions
   computedRequiresReaction: true,
-  // Warn if reactions don't read any observables
   reactionRequiresObservable: true,
-  // Warn if observables are created but never observed
   observableRequiresReaction: true,
 });
-
-export {};
 ```
 
-**Why good:** `enforceActions: "always"` catches state mutations outside actions (the most common MobX bug), other flags catch misuse of computed/reactions, should be enabled in development for early error detection
+**Why good:** `enforceActions` turns the commonest MobX bug into a throw at the point of the mistake, and the three warnings catch a computed read outside any reaction, a reaction tracking nothing, and an observable nothing observes — each a sign the reactive graph is not wired the way it looks.
 
-**When to use:** Development builds for catching reactivity bugs early.
-
-**When not to use:** Production builds (the checks add runtime overhead).
+These checks cost time on every access, so they belong in development builds rather than production ones.

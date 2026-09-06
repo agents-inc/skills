@@ -204,30 +204,16 @@ const author = await getEntry(post.data.author);
 
 ### Good Example - Cross-Collection References
 
+`reference()` takes a collection name. Wrap it in `z.array()` for a many-to-many relationship — the
+surrounding collection definitions are as in Pattern 1.
+
 ```typescript
-// src/content.config.ts
-import { defineCollection, reference } from "astro:content";
-import { glob, file } from "astro/loaders";
-import { z } from "astro/zod";
-
-const authors = defineCollection({
-  loader: file("src/data/authors.json"),
-  schema: z.object({
-    name: z.string(),
-    role: z.string(),
-  }),
-});
-
-const blog = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
-  schema: z.object({
-    title: z.string(),
-    author: reference("authors"), // Single reference
-    relatedPosts: z.array(reference("blog")).default([]), // Array of references
-  }),
-});
-
-export const collections = { authors, blog };
+// src/content.config.ts — schema fields only
+schema: z.object({
+  title: z.string(),
+  author: reference("authors"),                          // single reference
+  relatedPosts: z.array(reference("blog")).default([]),  // array of references
+}),
 ```
 
 ```astro
@@ -329,9 +315,12 @@ export const collections = { blog };
 // src/live.config.ts - live collections (SEPARATE file from content.config.ts)
 import { defineLiveCollection } from "astro:content";
 import { z } from "astro/zod";
+// A live loader is one you write (or install): it fetches per request rather
+// than at build time. Nothing in `astro/loaders` is live.
+import { storeLoader } from "./loaders/store-loader";
 
 const products = defineLiveCollection({
-  loader: myStoreLoader({
+  loader: storeLoader({
     apiKey: process.env.STORE_API_KEY, // Use process.env for runtime secrets
   }),
   schema: z.object({
@@ -377,7 +366,7 @@ if (error) {
 ```typescript
 // BAD: Blog posts don't change between requests - use defineCollection instead
 const blog = defineLiveCollection({
-  loader: myBlogLoader(),
+  loader: cmsLoader(), // any live loader, as in the example above
   schema: z.object({ title: z.string() }),
 });
 ```

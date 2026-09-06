@@ -1,29 +1,31 @@
-# Recharts Quick Reference
+# Recharts Reference
 
-> Related: [SKILL.md](SKILL.md) for patterns and decision frameworks, [examples/core.md](examples/core.md) for basic charts, [examples/advanced.md](examples/advanced.md) for composed charts and animations.
+> Prop tables. See [SKILL.md](SKILL.md) for decisions and red flags, [examples/core.md](examples/core.md) and [examples/advanced.md](examples/advanced.md) for code.
 
----
-
-## Chart Types
-
-| Chart Type       | Import     | Use Case                                  |
-| ---------------- | ---------- | ----------------------------------------- |
-| `LineChart`      | `recharts` | Trends over time, continuous data         |
-| `BarChart`       | `recharts` | Categorical comparisons, discrete periods |
-| `AreaChart`      | `recharts` | Trends with volume emphasis               |
-| `PieChart`       | `recharts` | Part-of-whole (< 8 categories)            |
-| `ComposedChart`  | `recharts` | Mixed types (Bar + Line + Area)           |
-| `ScatterChart`   | `recharts` | Correlation between two variables         |
-| `RadarChart`     | `recharts` | Multi-dimensional comparison              |
-| `RadialBarChart` | `recharts` | Circular bar comparison                   |
-| `FunnelChart`    | `recharts` | Conversion funnels                        |
-| `Treemap`        | `recharts` | Hierarchical data proportions             |
+Every component below is imported from `recharts`.
 
 ---
 
-## Essential Component Props
+## Chart types
 
-### Chart Containers
+| Chart            | Use case                                  |
+| ---------------- | ----------------------------------------- |
+| `LineChart`      | Trends over time, continuous data         |
+| `BarChart`       | Categorical comparisons, discrete periods |
+| `AreaChart`      | Trends with volume emphasis               |
+| `PieChart`       | Part-of-whole (< 8 categories)            |
+| `ComposedChart`  | Mixed types (Bar + Line + Area)           |
+| `ScatterChart`   | Correlation between two variables         |
+| `RadarChart`     | Multi-dimensional comparison              |
+| `RadialBarChart` | Circular bar comparison                   |
+| `FunnelChart`    | Conversion funnels                        |
+| `Treemap`        | Hierarchical data proportions             |
+
+---
+
+## Component props
+
+### Chart containers
 
 | Prop            | Type                         | Default        | Notes                                |
 | --------------- | ---------------------------- | -------------- | ------------------------------------ |
@@ -38,17 +40,17 @@
 
 ### XAxis / YAxis
 
-| Prop            | Type                                              | Default                                | Notes                                           |
-| --------------- | ------------------------------------------------- | -------------------------------------- | ----------------------------------------------- |
-| `dataKey`       | `string \| function`                              | --                                     | Data field to bind                              |
-| `type`          | `"category" \| "number"`                          | XAxis: `"category"`, YAxis: `"number"` | Axis value type                                 |
-| `domain`        | `[min, max]`                                      | `["auto", "auto"]`                     | Numeric range, accepts `"dataMin"`, `"dataMax"` |
-| `tickFormatter` | `(value) => string`                               | --                                     | Format tick labels                              |
-| `tickCount`     | `number`                                          | `5`                                    | Number of ticks (numeric axis only)             |
-| `scale`         | `"auto" \| "log" \| "symlog"`                     | `"auto"`                               | Scale type                                      |
-| `hide`          | `boolean`                                         | `false`                                | Hide axis                                       |
-| `orientation`   | `"top" \| "bottom"` (X) / `"left" \| "right"` (Y) | `"bottom"` / `"left"`                  | Axis position                                   |
-| `width`         | `number \| "auto"`                                | `60` (Y)                               | YAxis width; `"auto"` in v3                     |
+| Prop            | Type                                              | Default                                | Notes                                                 |
+| --------------- | ------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| `dataKey`       | `string \| function`                              | --                                     | Data field to bind                                    |
+| `type`          | `"category" \| "number"`                          | XAxis: `"category"`, YAxis: `"number"` | Axis value type                                       |
+| `domain`        | `[min, max]`                                      | `["auto", "auto"]`                     | Numeric range, accepts `"dataMin"`, `"dataMax"`       |
+| `tickFormatter` | `(value) => string`                               | --                                     | Format tick labels                                    |
+| `tickCount`     | `number`                                          | `5`                                    | Number of ticks (numeric axis only)                   |
+| `scale`         | `"auto" \| "log" \| "symlog" \| scale function`   | `"auto"`                               | A scale function reaches types the enum does not name |
+| `hide`          | `boolean`                                         | `false`                                | Hide axis                                             |
+| `orientation`   | `"top" \| "bottom"` (X) / `"left" \| "right"` (Y) | `"bottom"` / `"left"`                  | Axis position                                         |
+| `width`         | `number \| "auto"`                                | `60` (Y)                               | YAxis width; `"auto"` in v3                           |
 
 ### Tooltip
 
@@ -61,7 +63,7 @@
 | `active`         | `boolean`                        | --                      | Control tooltip visibility                 |
 | `defaultIndex`   | `number`                         | --                      | Default active data index                  |
 
-### Data Series (Line / Bar / Area)
+### Data series (Line / Bar / Area)
 
 | Prop                | Type                           | Default                     | Notes                           |
 | ------------------- | ------------------------------ | --------------------------- | ------------------------------- |
@@ -88,27 +90,13 @@
 
 ### ResponsiveContainer
 
-| Prop        | Type                      | Default  | Notes                 |
-| ----------- | ------------------------- | -------- | --------------------- |
-| `width`     | `number \| string`        | `"100%"` | Container width       |
-| `height`    | `number \| string`        | `"100%"` | Container height      |
-| `aspect`    | `number`                  | --       | Width-to-height ratio |
-| `debounce`  | `number`                  | `0`      | Resize debounce (ms)  |
-| `minWidth`  | `number \| string`        | `0`      | Minimum width         |
-| `maxHeight` | `number`                  | --       | Maximum height        |
-| `onResize`  | `(width, height) => void` | --       | Resize callback       |
-
----
-
-## Anti-Patterns Checklist
-
-| Anti-Pattern                                 | Fix                                                           |
-| -------------------------------------------- | ------------------------------------------------------------- |
-| Inline `data={rawData.map(...)}`             | `const data = useMemo(() => rawData.map(...), [rawData])`     |
-| Missing dimensions, chart renders nothing    | Add `width`/`height` or wrap in `ResponsiveContainer`         |
-| Custom tooltip returns SVG elements          | Return HTML `<div>`/`<p>` elements from tooltip content       |
-| `dataKey` function defined inline            | Extract to `useCallback` or define outside component          |
-| All pie slices same color                    | Add `Cell` components with `fill` for each slice              |
-| `CartesianGrid` missing with custom axis IDs | Set `xAxisId`/`yAxisId` on `CartesianGrid` matching your axes |
-| Animations on real-time data                 | Set `isAnimationActive={false}` and use `throttleDelay`       |
-| Duplicate `XAxis`/`YAxis` without unique IDs | Add `xAxisId`/`yAxisId` to distinguish multiple axes          |
+| Prop               | Type                      | Default  | Notes                                        |
+| ------------------ | ------------------------- | -------- | -------------------------------------------- |
+| `width`            | `number \| string`        | `"100%"` | Container width                              |
+| `height`           | `number \| string`        | `"100%"` | Container height                             |
+| `aspect`           | `number`                  | --       | Width-to-height ratio                        |
+| `debounce`         | `number`                  | `0`      | Resize debounce (ms)                         |
+| `minWidth`         | `number \| string`        | `0`      | Minimum width                                |
+| `maxHeight`        | `number`                  | --       | Maximum height                               |
+| `onResize`         | `(width, height) => void` | --       | Resize callback                              |
+| `initialDimension` | `{ width, height }`       | --       | First-paint size before ResizeObserver fires |

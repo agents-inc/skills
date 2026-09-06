@@ -1,12 +1,12 @@
-# @dnd-kit - Advanced Examples
+# @dnd-kit — Advanced Examples
 
-> Multi-container sorting, DragOverlay patterns, modifiers, and custom collision detection. See [SKILL.md](../SKILL.md) for concepts and decision frameworks, [core.md](core.md) for basic drag/drop and sortable patterns.
+> DragOverlay with sortables, multi-container Kanban, modifiers, custom collision detection, disabled items, item metadata. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for signatures and tables, [core.md](core.md) for the basic hooks and sensors.
 
 ---
 
-## Pattern 1: DragOverlay with Sortable List
+## Pattern 1: DragOverlay with a Sortable List
 
-When using DragOverlay with a sortable list, the original item can be hidden or styled differently while the overlay provides the drag preview.
+The overlay carries the preview, which leaves the item in the list free to be dimmed, hidden or left as a placeholder gap.
 
 ```tsx
 import {
@@ -86,7 +86,7 @@ function SortableListWithOverlay() {
         ))}
       </SortableContext>
 
-      {/* CRITICAL: DragOverlay always mounted, children conditionally rendered */}
+      {/* Mounted unconditionally; only its child is conditional */}
       <DragOverlay
         dropAnimation={{
           duration: DROP_ANIMATION_DURATION_MS,
@@ -99,7 +99,7 @@ function SortableListWithOverlay() {
   );
 }
 
-// Presentational preview (NOT a draggable -- no useDraggable inside DragOverlay)
+// Presentational only — no useDraggable or useSortable inside a DragOverlay child
 function ItemPreview({ label }: { label: string }) {
   return (
     <div
@@ -111,13 +111,15 @@ function ItemPreview({ label }: { label: string }) {
 }
 ```
 
-**Why good:** DragOverlay stays mounted and only renders children when activeItem exists, the preview component is purely presentational (no hooks), drop animation is configured with named constants, `onDragCancel` resets state for Escape key handling
+**Why good:** the drop animation is the overlay unmounting its child, so the overlay itself has to survive that moment — mounting it conditionally removes the element that would animate. `onDragCancel` clears `activeId` on the Escape path, which `onDragEnd` never sees; without it the preview is left on screen.
+
+`dropAnimation` defaults to 250ms `ease`, so it can be left off entirely; `dropAnimation={null}` turns it off, which is what a list that reorders instantly wants.
 
 ---
 
 ## Pattern 2: Multi-Container Kanban Board
 
-Items move between columns using `onDragOver` (real-time transfer) and `onDragEnd` (final placement). Each column wraps its items in a separate `SortableContext`.
+Two handlers split the work: `onDragOver` moves the item between columns as it crosses a boundary, and `onDragEnd` settles its index within whichever column it finished in.
 
 ```tsx
 import {
@@ -180,13 +182,17 @@ function KanbanBoard() {
     // Move item from one container to another
     setColumns((prev) => {
       const activeItems = [...prev[activeContainer]];
-      const overItems = [...prev[overContainer]];
       const activeIndex = activeItems.findIndex(
         (item) => item.id === active.id,
       );
+      // An earlier onDragOver in this batch already moved it
+      if (activeIndex === -1) return prev;
+
+      const overItems = [...prev[overContainer]];
       const overIndex = overItems.findIndex((item) => item.id === over.id);
 
       const [movedItem] = activeItems.splice(activeIndex, 1);
+      // over.id is the column itself when the pointer is over empty space
       const insertIndex = overIndex >= 0 ? overIndex : overItems.length;
       overItems.splice(insertIndex, 0, movedItem);
 
@@ -209,15 +215,16 @@ function KanbanBoard() {
       return;
 
     // Reorder within the same container
-    const items = columns[overContainer];
-    const oldIndex = items.findIndex((item) => item.id === active.id);
-    const newIndex = items.findIndex((item) => item.id === over.id);
-    if (oldIndex !== newIndex) {
-      setColumns((prev) => ({
-        ...prev,
-        [overContainer]: arrayMove(prev[overContainer], oldIndex, newIndex),
-      }));
-    }
+    setColumns((prev) => {
+      const items = prev[overContainer];
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      if (oldIndex === -1) return prev;
+      // over.id is the column itself when dropped on empty space: send it to the end
+      const target = newIndex === -1 ? items.length - 1 : newIndex;
+      if (oldIndex === target) return prev;
+      return { ...prev, [overContainer]: arrayMove(items, oldIndex, target) };
+    });
   }
 
   const activeItem = activeId
@@ -251,7 +258,7 @@ function KanbanBoard() {
 }
 ```
 
-### Kanban Column Component
+### The column component
 
 ```tsx
 import { useDroppable } from "@dnd-kit/core";
@@ -298,30 +305,30 @@ function KanbanColumn({ id, items }: KanbanColumnProps) {
 }
 ```
 
-**Why good:** `closestCorners` handles stacked columns better than closestCenter, each column registers as a droppable AND wraps its items in SortableContext, `onDragOver` handles cross-container transfer in real time, `onDragEnd` handles within-container reordering, `findContainer` helper locates items across all columns, DragOverlay renders the active item's preview
+**Why good:** each column is a droppable in its own right _and_ wraps a `SortableContext`, which is what lets an item be dropped into an empty column as well as between two cards. `findContainer` has to answer for a column id and an item id alike, because `over.id` is whichever of the two the collision resolved to — and that is why both handlers check their indexes for `-1`. A `-1` for `over` means the pointer resolved to the column rather than a card, and a `-1` for `active` means an earlier `onDragOver` already performed the transfer, since `findContainer` reads the state of the last render while the updater sees the newest.
 
-### Bad Example - Using closestCenter for Kanban
+`SortableKanbanCard` is the card's own `useSortable` component — `SortableItem` from [core.md](core.md) with the card's markup — and `KanbanCard` is its presentational twin, with no hook, for the overlay to render.
+
+The announcements in [core.md](core.md) index into one flat list, so a board needs its own: on a Kanban, "position 2 of 5" is ambiguous until it names the column.
+
+### Bad — closestCenter on a Kanban board
 
 ```tsx
-// BAD: closestCenter picks the column center instead of items within columns
 <DndContext collisionDetection={closestCenter}>
-  {/* Kanban columns stacked horizontally */}
+  {/* columns side by side, cards inside them */}
 </DndContext>
 ```
 
-**Why bad:** When droppable containers are stacked (columns side-by-side with items inside), closestCenter often returns the column droppable instead of the specific item droppable within. closestCorners measures all four corners and correctly resolves nested targets.
+**Why bad:** a column's centre is usually nearer the pointer than any individual card's, so the collision resolves to the column and the drop lands at the end of it rather than at the position shown. `closestCorners` measures all four corners, which resolves the nested card instead.
 
 ---
 
 ## Pattern 3: Modifiers for Constrained Drag
 
-### Vertical-Only Sortable List
+### Vertical-only sortable list
 
 ```tsx
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 <DndContext
   sensors={sensors}
@@ -329,11 +336,11 @@ import {
   modifiers={[restrictToVerticalAxis]}
   onDragEnd={handleDragEnd}
 >
-  {/* Vertical sortable list -- items can only move up/down */}
+  {/* items move up and down only */}
 </DndContext>;
 ```
 
-### Constrained to Parent with DragOverlay
+### Different constraints on the context and the overlay
 
 ```tsx
 import {
@@ -350,15 +357,15 @@ import {
 </DndContext>;
 ```
 
-**Why good:** DndContext and DragOverlay can have different modifiers -- constrain source items to parent but let the overlay move freely within the viewport, restrictToVerticalAxis eliminates horizontal jitter in vertical-only lists
+**Why good:** the two `modifiers` props are independent, so the items stay inside their container while the preview follows the cursor anywhere in the viewport. Locking a vertical list to its axis also removes the sideways drift that makes the target row ambiguous.
 
 ---
 
 ## Pattern 4: Custom Collision Detection
 
-### Trash Zone with Sortable List
+### A trash zone beside a sortable list
 
-Compose collision algorithms: use closestCenter for the sortable list, but pointerWithin for a "trash" drop zone.
+Partition the droppables and give each group the algorithm that suits it — precision for the bin, forgiveness for the list.
 
 ```tsx
 import {
@@ -370,7 +377,7 @@ import {
 
 const TRASH_ZONE_ID = "trash";
 
-const trashAwarCollision: CollisionDetection = (args) => {
+const trashAwareCollision: CollisionDetection = (args) => {
   // First check if pointer is within the trash zone
   const pointerCollisions = pointerWithin({
     ...args,
@@ -391,7 +398,7 @@ const trashAwarCollision: CollisionDetection = (args) => {
 };
 ```
 
-**Why good:** Trash zone requires precise "pointer inside" targeting (pointerWithin), sortable items benefit from forgiving closestCenter, filtering droppableContainers prevents the trash zone from interfering with sort detection
+**Why good:** filtering `droppableContainers` before delegating is what keeps the two algorithms from competing — the trash zone never appears in the list's collision set, so it cannot win a nearest-centre contest against the row the user is actually over. Deletion needs the pointer genuinely inside the bin; reordering does not.
 
 ---
 
@@ -435,13 +442,13 @@ export function SortableItem({
 }
 ```
 
-**Why good:** `disabled` prop on useSortable prevents the item from being dragged, listeners are conditionally spread so disabled items don't attach sensor handlers, visual feedback via opacity and cursor communicates disabled state
+**Why good:** `disabled` is a hook option rather than a conditional call, so the hook order stays stable as items become draggable and undraggable. Withholding `listeners` while keeping `attributes` leaves the item focusable and still announced — which is what a screen reader user needs to learn that it cannot be moved.
 
 ---
 
-## Pattern 6: Using data for Item Metadata
+## Pattern 6: Carrying Metadata on `data`
 
-The `data` property on useDraggable/useDroppable/useSortable lets you attach metadata accessible in event handlers.
+`data` is passed through to `active.data.current` and `over.data.current` in every handler.
 
 ```tsx
 // In draggable component
@@ -465,4 +472,4 @@ function handleDragEnd(event: DragEndEvent) {
 }
 ```
 
-**Why good:** `data.current` provides typed metadata without needing to look up items by ID in event handlers, useful for distinguishing between different kinds of draggables/droppables (tasks vs columns, items vs trash zones)
+**Why good:** the handler learns what it is holding without searching the state for it — which matters most where ids alone are ambiguous, since a Kanban `over.id` may be a card or a column and a `type` discriminator settles it in one read.

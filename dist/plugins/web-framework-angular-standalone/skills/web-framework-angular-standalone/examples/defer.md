@@ -11,10 +11,27 @@
 ```typescript
 // analytics-dashboard.component.ts
 import { Component, signal } from "@angular/core";
+import { KeyMetricsComponent } from "./key-metrics.component";
+import { RevenueChartComponent } from "./revenue-chart.component";
+import { UserActivityTableComponent } from "./user-activity-table.component";
+import { AdvancedAnalyticsComponent } from "./advanced-analytics.component";
+import { ExportOptionsComponent } from "./export-options.component";
+import { RelatedReportsComponent } from "./related-reports.component";
 
 @Component({
   selector: "app-analytics-dashboard",
   standalone: true,
+  // Deferred components still go in imports. Angular only splits out the ones
+  // that are standalone AND never referenced outside a @defer block in this
+  // file — KeyMetricsComponent is used eagerly, so it stays in the main bundle.
+  imports: [
+    KeyMetricsComponent,
+    RevenueChartComponent,
+    UserActivityTableComponent,
+    AdvancedAnalyticsComponent,
+    ExportOptionsComponent,
+    RelatedReportsComponent,
+  ],
   template: `
     <div class="dashboard">
       <h1>Analytics Dashboard</h1>
@@ -81,7 +98,9 @@ export class AnalyticsDashboardComponent {
 }
 ```
 
-**Why good:** viewport trigger for below-the-fold content, placeholder matches final layout to prevent CLS, loading delay prevents flicker, error block handles failures, prefetch on hover improves perceived performance, when condition for feature flags
+**Why good:** `on viewport` for below-the-fold content, a placeholder sized like the final layout to prevent CLS, `after` on `@loading` to stop a fast load flashing a spinner, an `@error` block for failures, `prefetch on hover` to start the download before the click, and `when` for feature flags.
+
+**Two rules the compiler enforces:** a deferred dependency must be standalone, and it must not be referenced anywhere outside a `@defer` block in the same file — a `viewChild` query or an eager usage pulls it back into the main bundle with no warning.
 
 ---
 
@@ -93,6 +112,8 @@ export class AnalyticsDashboardComponent {
 | `on interaction`   | Click-to-load features               |
 | `on idle`          | Non-critical background loading      |
 | `on immediate`     | Load ASAP after initial render       |
-| `on hover`         | Prefetch before user clicks          |
+| `on hover`         | Loads on mouseover or focusin        |
 | `on timer(Xms)`    | Delayed loading after X milliseconds |
 | `when condition()` | Conditional/feature-flagged content  |
+
+Every one of these also has a `prefetch on …` form, which starts the download without swapping the content in — `@defer (on viewport; prefetch on hover)` fetches on hover and renders on scroll. `on hover` on its own is a trigger, not a prefetch.

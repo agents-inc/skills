@@ -385,15 +385,21 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # deploy-pages authenticates through this environment — omit it and the step fails
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # showLastUpdateTime reads git history
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with: { path: build }
       - uses: actions/deploy-pages@v4
+        id: deployment
 ```
 
 ### Vercel / Netlify / Cloudflare Pages
@@ -414,8 +420,6 @@ For subdirectory deployments, set `baseUrl` in `docusaurus.config.js` accordingl
 | GitHub Pages (project) | `https://org.github.io`    | `/repo-name/` |
 | GitHub Pages (org)     | `https://org.github.io`    | `/`           |
 | Subdirectory           | `https://example.com`      | `/docs/`      |
-
-**Critical:** `baseUrl` must start AND end with `/`. Omitting the trailing slash breaks asset resolution.
 
 ---
 

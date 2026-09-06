@@ -1,374 +1,181 @@
 # Storybook - Core Story Examples
 
-> CSF 3.0 format, args, controls, and story organization. Reference from [SKILL.md](../SKILL.md).
+> CSF 3.0 files, args, argTypes, decorators, render functions and organisation. See [../SKILL.md](../SKILL.md) for the decisions, and [testing.md](testing.md), [docs.md](docs.md) and [addons.md](addons.md) for the other halves.
 
 ---
 
-## CSF 3.0 Basic Structure
-
-### Complete Story File Template
+## A Complete Story File
 
 ```typescript
 // button.stories.tsx
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "./button";
 
-// Constants for story args
-const BUTTON_TEXT_PRIMARY = "Primary Button";
-const BUTTON_TEXT_SECONDARY = "Secondary Button";
-const BUTTON_TEXT_DISABLED = "Disabled Button";
-
-// Meta object - default export
 const meta = {
   title: "Components/Button",
   component: Button,
   tags: ["autodocs"],
-  parameters: {
-    layout: "centered",
-  },
-  // Default args for all stories
-  args: {
-    children: "Button",
-  },
-  // Configure controls
+  parameters: { layout: "centered" },
+  args: { children: "Button" },
   argTypes: {
     variant: {
       control: { type: "select" },
       options: ["primary", "secondary", "outline", "ghost"],
       description: "Visual style variant",
     },
-    size: {
-      control: { type: "radio" },
-      options: ["sm", "md", "lg"],
-      description: "Button size",
-    },
-    disabled: {
-      control: { type: "boolean" },
-      description: "Disables the button",
-    },
-    onClick: {
-      action: "clicked",
-      description: "Click handler",
-    },
+    size: { control: { type: "radio" }, options: ["sm", "md", "lg"] },
+    disabled: { control: { type: "boolean" } },
+    onClick: { action: "clicked" },
   },
 } satisfies Meta<typeof Button>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Stories - named exports
 export const Default: Story = {};
 
 export const Primary: Story = {
-  args: {
-    variant: "primary",
-    children: BUTTON_TEXT_PRIMARY,
-  },
-};
-
-export const Secondary: Story = {
-  args: {
-    variant: "secondary",
-    children: BUTTON_TEXT_SECONDARY,
-  },
+  args: { variant: "primary", children: "Primary Button" },
 };
 
 export const Disabled: Story = {
-  args: {
-    disabled: true,
-    children: BUTTON_TEXT_DISABLED,
-  },
+  args: { disabled: true, children: "Disabled Button" },
 };
 ```
 
-**Why good:** Complete type safety with `satisfies Meta`, default args reduce duplication, argTypes provide documentation and controls, named constants for test data
+**Why good:** `satisfies Meta<typeof Button>` checks the meta against the component's props while leaving `StoryObj<typeof meta>` enough inference to check each story's args. Defaults on `meta` mean `Default` needs no body at all.
 
 ---
 
-## Args Patterns
+## Args
 
-### Inheriting and Overriding Args
+### Inheriting, overriding and spreading
 
 ```typescript
-// card.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Card } from "./card";
-
-const DEFAULT_TITLE = "Card Title";
-const DEFAULT_DESCRIPTION = "This is a description of the card content.";
-
 const meta = {
-  title: "Components/Card",
   component: Card,
-  tags: ["autodocs"],
-  // Default args applied to all stories
   args: {
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
+    title: "Card Title",
+    description: "This is a description of the card content.",
     variant: "default",
   },
 } satisfies Meta<typeof Card>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Inherits all default args
+// Inherits everything
 export const Default: Story = {};
 
-// Overrides only what changes
+// States only what differs
 export const Highlighted: Story = {
-  args: {
-    variant: "highlighted",
-    // title and description inherited from defaults
-  },
+  args: { variant: "highlighted" },
 };
 
-// Multiple overrides
-export const Compact: Story = {
-  args: {
-    variant: "compact",
-    title: "Compact Card",
-    showDescription: false,
-  },
-};
-
-// Spread and extend
+// Builds on another story's args
 export const WithIcon: Story = {
-  args: {
-    ...Default.args,
-    icon: "star",
-    title: "Featured Card",
-  },
+  args: { ...Default.args, icon: "star", title: "Featured Card" },
 };
 ```
 
-**Why good:** DRY principle applied to stories, easy to see what makes each story unique, defaults documented once
+**Why good:** the diff between stories is the story. A reader sees what makes each state different without comparing four near-identical objects.
 
----
-
-### Children as Args
+### Children as args
 
 ```typescript
-// alert.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Alert, AlertTitle, AlertDescription } from "./alert";
-
-const meta = {
-  title: "Components/Alert",
-  component: Alert,
-  tags: ["autodocs"],
-  argTypes: {
-    variant: {
-      control: { type: "select" },
-      options: ["default", "destructive", "success", "warning"],
-    },
-  },
-} satisfies Meta<typeof Alert>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Simple children
 export const Default: Story = {
-  args: {
-    children: "This is an alert message.",
-  },
+  args: { children: "This is an alert message." },
 };
 
-// Complex children with JSX
 export const WithTitleAndDescription: Story = {
-  args: {
-    variant: "default",
-    children: (
-      <>
-        <AlertTitle>Heads up!</AlertTitle>
-        <AlertDescription>
-          You can add components to your app using the CLI.
-        </AlertDescription>
-      </>
-    ),
-  },
-};
-
-// Destructive variant
-export const Destructive: Story = {
   args: {
     variant: "destructive",
     children: (
       <>
         <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          Your session has expired. Please log in again.
-        </AlertDescription>
+        <AlertDescription>Your session has expired.</AlertDescription>
       </>
     ),
   },
 };
 ```
 
-**Why good:** Children prop works naturally with args, JSX allowed for complex compositions
+**Why good:** `children` is an ordinary prop, so composition stays in args and the controls panel still edits the rest.
 
 ---
 
-## ArgTypes Configuration
+## ArgTypes
 
-### Control Type Examples
-
-```typescript
-// form-field.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { FormField } from "./form-field";
-
-const meta = {
-  title: "Components/FormField",
-  component: FormField,
-  tags: ["autodocs"],
-  argTypes: {
-    // Text input
-    label: {
-      control: { type: "text" },
-      description: "Field label",
-      table: {
-        type: { summary: "string" },
-        defaultValue: { summary: "Label" },
-      },
-    },
-
-    // Select dropdown
-    type: {
-      control: { type: "select" },
-      options: ["text", "email", "password", "number", "tel"],
-      description: "Input type",
-    },
-
-    // Radio buttons (inline)
-    size: {
-      control: { type: "inline-radio" },
-      options: ["sm", "md", "lg"],
-      description: "Field size",
-    },
-
-    // Boolean checkbox
-    required: {
-      control: { type: "boolean" },
-      description: "Whether the field is required",
-    },
-
-    // Number with range
-    maxLength: {
-      control: { type: "range", min: 1, max: 500, step: 10 },
-      description: "Maximum character length",
-    },
-
-    // Color picker
-    borderColor: {
-      control: { type: "color" },
-      description: "Border color on focus",
-    },
-
-    // Object editor
-    validation: {
-      control: { type: "object" },
-      description: "Validation rules object",
-    },
-
-    // Disable control (still shows in docs)
-    internalId: {
-      control: false,
-      description: "Internal identifier (read-only)",
-    },
-
-    // Hide from both controls and docs
-    __internal: {
-      table: { disable: true },
-    },
-
-    // Action handler
-    onChange: {
-      action: "changed",
-      description: "Called when value changes",
-    },
-  },
-} satisfies Meta<typeof FormField>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    label: "Email Address",
-    type: "email",
-    size: "md",
-    required: true,
-    maxLength: 100,
-  },
-};
-```
-
-**Why good:** Each control type matches the data type, descriptions serve as documentation, table configuration controls display
-
----
-
-### Mapping Values to Labels
+### The control per prop
 
 ```typescript
-// icon-button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { IconButton } from "./icon-button";
-// Import icons from your icon library
-import { HomeIcon, SettingsIcon, UserIcon, MailIcon, BellIcon, SearchIcon } from "./icons";
-
-const meta = {
-  title: "Components/IconButton",
-  component: IconButton,
-  tags: ["autodocs"],
-  argTypes: {
-    icon: {
-      control: { type: "select" },
-      options: ["home", "settings", "user", "mail", "bell", "search"],
-      mapping: {
-        home: <HomeIcon />,
-        settings: <SettingsIcon />,
-        user: <UserIcon />,
-        mail: <MailIcon />,
-        bell: <BellIcon />,
-        search: <SearchIcon />,
-      },
-      description: "Icon to display",
-    },
+argTypes: {
+  label: {
+    control: { type: "text" },
+    table: { type: { summary: "string" }, defaultValue: { summary: "Label" } },
   },
-} satisfies Meta<typeof IconButton>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    icon: "home",
-    "aria-label": "Home",
+  type: {
+    control: { type: "select" },
+    options: ["text", "email", "password", "number", "tel"],
   },
-};
+  size: { control: { type: "inline-radio" }, options: ["sm", "md", "lg"] },
+  maxLength: { control: { type: "range", min: 1, max: 500, step: 10 } },
+  borderColor: { control: { type: "color" } },
+  validation: { control: { type: "object" } },
+
+  // Documented but not editable
+  internalId: { control: false, description: "Internal identifier" },
+
+  // Hidden from controls and from the docs table
+  __internal: { table: { disable: true } },
+
+  onChange: { action: "changed" },
+},
 ```
 
-**Why good:** Mapping allows non-serializable values (React elements) in controls, user sees friendly names
+**Why good:** `control: false` and `table: { disable: true }` are different intentions — read-only in the docs, versus absent from them. The full prop-type-to-control mapping is in [../reference.md](../reference.md).
+
+### Non-serializable values through `mapping`
+
+```typescript
+argTypes: {
+  icon: {
+    control: { type: "select" },
+    options: ["home", "settings", "user"],
+    mapping: {
+      home: <HomeIcon />,
+      settings: <SettingsIcon />,
+      user: <UserIcon />,
+    },
+  },
+},
+```
+
+**Why good:** args have to be serializable, so the control offers the string keys and `mapping` exchanges the selection for the element the component actually receives.
 
 ---
 
 ## Decorators
 
-### Styling Decorators
+The same mechanism at three levels — global in `.storybook/preview`, component on `meta`, story on the story itself.
 
 ```typescript
-// tooltip.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Tooltip } from "./tooltip";
-
-const meta = {
-  title: "Components/Tooltip",
-  component: Tooltip,
-  tags: ["autodocs"],
+// .storybook/preview.tsx — every story gets the provider
+const preview: Preview = {
   decorators: [
-    // Add spacing for tooltip visibility
+    (Story) => (
+      <ThemeProvider>
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export default preview;
+```
+
+```typescript
+// tooltip.stories.tsx — this component needs room to be visible at all
+const meta = {
+  component: Tooltip,
+  decorators: [
     (Story) => (
       <div style={{ padding: "4rem", display: "flex", justifyContent: "center" }}>
         <Story />
@@ -377,114 +184,30 @@ const meta = {
   ],
 } satisfies Meta<typeof Tooltip>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    content: "This is a helpful tooltip",
-    children: <button>Hover me</button>,
-  },
-};
-
-// Story-specific decorator for dark background
+// One story needs a different surface
 export const OnDarkBackground: Story = {
   decorators: [
     (Story) => (
-      <div style={{ background: "#1a1a1a", padding: "2rem", borderRadius: "8px" }}>
+      <div style={{ background: "#1a1a1a", padding: "2rem" }}>
         <Story />
       </div>
     ),
   ],
-  args: {
-    content: "Tooltip on dark background",
-    children: <button style={{ color: "white" }}>Hover me</button>,
-  },
+  args: { content: "Tooltip on a dark surface" },
 };
 ```
 
-**Why good:** Decorators provide necessary context without modifying component, story-level decorators allow variations
-
----
-
-### Provider Decorators
-
-```typescript
-// themed-button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "./button";
-import { ThemeProvider } from "../theme-provider";
-
-const meta = {
-  title: "Components/ThemedButton",
-  component: Button,
-  tags: ["autodocs"],
-  decorators: [
-    (Story) => (
-      <ThemeProvider defaultTheme="light">
-        <Story />
-      </ThemeProvider>
-    ),
-  ],
-} satisfies Meta<typeof Button>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Light: Story = {
-  args: {
-    children: "Light Theme Button",
-  },
-};
-
-export const Dark: Story = {
-  decorators: [
-    (Story) => (
-      <ThemeProvider defaultTheme="dark">
-        <div className="dark bg-slate-900 p-8 rounded">
-          <Story />
-        </div>
-      </ThemeProvider>
-    ),
-  ],
-  args: {
-    children: "Dark Theme Button",
-  },
-};
-```
-
-**Why good:** Provider wrapping allows context-dependent components to work, theme variations are explicit
+**Why good:** context that every story needs is declared once, and the component never learns it is being rendered by Storybook. Decorators run outermost to innermost, so a provider depending on another is listed after it.
 
 ---
 
 ## Render Functions
 
-### Custom Composition
+### Composition args cannot express
 
 ```typescript
-// list.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { List, ListItem } from "./list";
+const SAMPLE_ITEMS = ["First Item", "Second Item", "Third Item"];
 
-const SAMPLE_ITEMS = ["First Item", "Second Item", "Third Item", "Fourth Item"];
-
-const meta = {
-  title: "Components/List",
-  component: List,
-  tags: ["autodocs"],
-} satisfies Meta<typeof List>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Args-only for simple case
-export const Empty: Story = {
-  args: {
-    children: null,
-  },
-};
-
-// Render function for composition
 export const WithItems: Story = {
   render: (args) => (
     <List {...args}>
@@ -493,174 +216,56 @@ export const WithItems: Story = {
       ))}
     </List>
   ),
-  args: {
-    variant: "default",
-  },
-};
-
-// Render function with interactive items
-export const WithSelectableItems: Story = {
-  render: (args) => (
-    <List {...args}>
-      {SAMPLE_ITEMS.map((item) => (
-        <ListItem key={item} selectable>
-          {item}
-        </ListItem>
-      ))}
-    </List>
-  ),
-  args: {
-    variant: "selectable",
-  },
+  args: { variant: "default" },
 };
 ```
 
-**Why good:** Render functions enable compositions that args can't express, args still control the wrapper component
+**Why good:** spreading `args` into the wrapper keeps the controls live for the props the story is actually about, while the children come from the render.
 
----
-
-### Render with Hooks
+### State, through a named function
 
 ```typescript
-// dialog.stories.tsx
-import { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
-import { Button } from "./button";
-
-const meta = {
-  title: "Components/Dialog",
-  component: Dialog,
-  tags: ["autodocs"],
-} satisfies Meta<typeof Dialog>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Uncontrolled dialog (default behavior)
-export const Default: Story = {
-  render: (args) => (
-    <Dialog {...args}>
-      <DialogTrigger asChild>
-        <Button>Open Dialog</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Dialog Title</DialogTitle>
-        </DialogHeader>
-        <p>This is the dialog content.</p>
-      </DialogContent>
-    </Dialog>
-  ),
-};
-
-// Controlled dialog with hooks
-// NOTE: Named function enables hooks
 export const Controlled: Story = {
   render: function Render(args) {
     const [open, setOpen] = useState(false);
 
     return (
-      <div>
-        <Button onClick={() => setOpen(true)}>Open Controlled Dialog</Button>
+      <>
+        <Button onClick={() => setOpen(true)}>Open dialog</Button>
         <Dialog {...args} open={open} onOpenChange={setOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Controlled Dialog</DialogTitle>
-            </DialogHeader>
-            <p>This dialog is controlled by React state.</p>
-            <Button onClick={() => setOpen(false)}>Close</Button>
-          </DialogContent>
+          <DialogTitle>Controlled dialog</DialogTitle>
+          <Button onClick={() => setOpen(false)}>Close</Button>
         </Dialog>
-      </div>
+      </>
     );
   },
 };
 ```
 
-**Why good:** Named render functions allow hooks, demonstrates both controlled and uncontrolled patterns
+**Why good:** hooks are only legal inside a component, and a named function is what Storybook can treat as one. An arrow expression here throws at render.
 
 ---
 
-## Story Organization
-
-### Grouped Stories
+## Organisation
 
 ```typescript
-// button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "./button";
-
 const meta = {
+  // Nested segments become the sidebar hierarchy
   title: "Design System/Atoms/Button",
   component: Button,
   tags: ["autodocs"],
 } satisfies Meta<typeof Button>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+// Names are read by people: say what the state is
+export const Primary: Story = { args: { variant: "primary" } };
+export const Loading: Story = { args: { isLoading: true } };
+export const WithValidationError: Story = { args: { error: "Required" } };
 
-// Variants group
-export const Primary: Story = {
-  args: { variant: "primary", children: "Primary" },
-};
-
-export const Secondary: Story = {
-  args: { variant: "secondary", children: "Secondary" },
-};
-
-export const Outline: Story = {
-  args: { variant: "outline", children: "Outline" },
-};
-
-export const Ghost: Story = {
-  args: { variant: "ghost", children: "Ghost" },
-};
-
-// Sizes group
-export const Small: Story = {
-  args: { size: "sm", children: "Small" },
-};
-
-export const Medium: Story = {
-  args: { size: "md", children: "Medium" },
-};
-
-export const Large: Story = {
-  args: { size: "lg", children: "Large" },
-};
-
-// States group
-export const Disabled: Story = {
-  args: { disabled: true, children: "Disabled" },
-};
-
-export const Loading: Story = {
-  args: { isLoading: true, children: "Loading" },
-};
-
-// With icon
-export const WithLeftIcon: Story = {
-  args: {
-    children: "Settings",
-    leftIcon: "settings",
-  },
-};
-
-export const WithRightIcon: Story = {
-  args: {
-    children: "Next",
-    rightIcon: "arrow-right",
-  },
-};
+// Not: Story1, Test, New2
 ```
 
-**Why good:** Stories grouped by concern (variants, sizes, states), title hierarchy creates navigation structure
+**Why good:** the export name is what appears in the sidebar and in the docs page, so it is documentation whether or not it was written as any.
 
 ---
 
-_For more patterns, see:_
-
-- [docs.md](docs.md) - Autodocs and MDX documentation
-- [testing.md](testing.md) - Play functions and interaction testing
-- [addons.md](addons.md) - Addon configuration
+_See also:_ [testing.md](testing.md) · [docs.md](docs.md) · [addons.md](addons.md)

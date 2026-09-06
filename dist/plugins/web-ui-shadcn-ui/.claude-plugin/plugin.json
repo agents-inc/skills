@@ -1,6 +1,6 @@
 {
   "name": "web-ui-shadcn-ui",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
   "description": "shadcn/ui component library patterns, CLI usage, theming, customization",
   "author": {

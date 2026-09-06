@@ -1,8 +1,8 @@
 {
   "name": "web-editor-lexical",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
-  "description": "Extensible text editor framework by Meta",
+  "description": "Extensible text editor framework by Meta. Use when building a rich text editor on Lexical — editor setup, custom nodes, commands, transforms, and serialization.",
   "author": {
     "name": "@vince"
   },

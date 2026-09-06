@@ -1,12 +1,12 @@
-# @dnd-kit - Core Examples
+# @dnd-kit — Core Examples
 
-> Core drag-and-drop patterns for @dnd-kit. See [SKILL.md](../SKILL.md) for concepts and decision frameworks, [advanced.md](advanced.md) for multi-container and DragOverlay patterns, [reference.md](../reference.md) for API quick reference.
+> Draggable and droppable components, sortable lists, sensor setup, collision composition, announcements, drag handles. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for signatures and tables, [advanced.md](advanced.md) for DragOverlay, Kanban and modifiers.
 
 ---
 
 ## Pattern 1: Basic Drag and Drop
 
-### useDraggable Component
+### The draggable
 
 ```tsx
 import { useDraggable } from "@dnd-kit/core";
@@ -35,9 +35,9 @@ export function Draggable({ id, children }: DraggableProps) {
 }
 ```
 
-**Why good:** `attributes` provides ARIA roles (`role="button"`, `aria-roledescription="draggable"`), `listeners` attaches sensor event handlers, `CSS.Transform.toString` handles null safely, opacity feedback signals drag state
+**Why good:** three things have to be spread or attached and each does one job — `setNodeRef` registers the node for measurement, `listeners` carries the sensor handlers, and `attributes` carries the ARIA and `tabindex` that make it keyboard-reachable. Dropping `attributes` is the usual way a draggable becomes mouse-only.
 
-### useDroppable Component
+### The droppable
 
 ```tsx
 import { useDroppable } from "@dnd-kit/core";
@@ -64,9 +64,9 @@ export function Droppable({ id, children }: DroppableProps) {
 }
 ```
 
-**Why good:** `isOver` provides visual feedback when a draggable hovers, `setNodeRef` registers the DOM node for collision detection, styling uses CSS custom properties (not hardcoded colors)
+**Why good:** `isOver` is the only feedback a drop target gets, and without it the user cannot tell a valid target from an invalid one mid-drag. `setNodeRef` is what gives collision detection a rectangle to measure.
 
-### Wiring DndContext
+### Wiring the context
 
 ```tsx
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
@@ -93,10 +93,9 @@ function App() {
 }
 ```
 
-### Bad Example - Missing DndContext
+### Bad — no DndContext
 
 ```tsx
-// BAD: useDraggable/useDroppable without DndContext wrapper
 function BrokenApp() {
   return (
     <div>
@@ -107,13 +106,13 @@ function BrokenApp() {
 }
 ```
 
-**Why bad:** Hooks require DndContext to function -- they read sensor and collision data from React context. Without the provider, drag events never fire.
+**Why bad:** the hooks read sensors and collision state from context, and with no provider they return inert values instead of throwing. Nothing drags, nothing logs, and there is no error to search for.
 
 ---
 
 ## Pattern 2: Sortable List
 
-### SortableItem Component
+### The sortable item
 
 ```tsx
 import { useSortable } from "@dnd-kit/sortable";
@@ -150,9 +149,9 @@ export function SortableItem({ id, children }: SortableItemProps) {
 }
 ```
 
-**Why good:** `useSortable` composes useDraggable + useDroppable into one hook, `transition` provides smooth CSS transitions between positions (default 250ms ease), `transform` positions the element without DOM reordering
+**Why good:** `useSortable` registers the item as both draggable and droppable, so it is a target for its neighbours as well as a thing to drag. `transition` is what animates the _other_ items as they displace — omit it and they jump.
 
-### Sortable List Container
+### The list container
 
 ```tsx
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -202,12 +201,11 @@ function TaskList() {
 }
 ```
 
-**Why good:** `SortableContext items` receives an array of IDs matching the rendered order, `closestCenter` is forgiving for vertical lists, `arrayMove` returns a new array (immutable update), `verticalListSortingStrategy` optimizes animations for vertical layout
+**Why good:** the early return covers both non-drops (`over` is null) and no-op drops, so `arrayMove` is only called when the order actually changes. `closestCenter` needs no overlap between the dragged item and its target, which is what makes a list forgiving to drag in.
 
-### Bad Example - SortableContext items Mismatch
+### Bad — items out of step with the children
 
 ```tsx
-// BAD: items prop doesn't match rendered children's IDs
 <SortableContext items={["a", "b", "c"]}>
   {data.map((item) => (
     <SortableItem key={item.id} id={item.id}>
@@ -217,13 +215,13 @@ function TaskList() {
 </SortableContext>
 ```
 
-**Why bad:** `SortableContext items` must contain the exact same IDs in the same order as the rendered `useSortable` children. Mismatches cause animation glitches and incorrect drop positions.
+**Why bad:** the strategy computes each item's displacement from its index in `items`, so ids that are not the rendered ones — or are in a different order — produce offsets for a list that is not on screen. Items slide the wrong way and drop into the wrong slot.
 
 ---
 
 ## Pattern 3: Sensor Configuration
 
-### Standard Sensor Setup
+### Pointer plus keyboard
 
 ```tsx
 import {
@@ -252,9 +250,9 @@ const sensors = useDndSensors();
 <DndContext sensors={sensors}>{/* ... */}</DndContext>;
 ```
 
-**Why good:** Distance constraint prevents accidental drags when clicking, KeyboardSensor with sortableKeyboardCoordinates moves items to next position on arrow key (not by fixed pixels), extracted as custom hook for reuse
+**Why good:** the distance threshold is what keeps a click a click — without it an item that is also a link cannot be followed. `sortableKeyboardCoordinates` translates an arrow key into the coordinates of the next item rather than a fixed pixel step, which is the difference between reordering and nudging.
 
-### Touch Sensor with Delay
+### Touch, with a delay
 
 ```tsx
 import {
@@ -286,22 +284,21 @@ const sensors = useSensors(
 );
 ```
 
-**Why good:** Touch delay prevents accidental drag while scrolling, tolerance allows slight finger movement during the delay, separate mouse/touch sensors instead of PointerSensor for different constraints per input type
+**Why good:** touch needs a different constraint from mouse, which is the reason to split `PointerSensor` into its two halves. A distance threshold on touch would fight scrolling — a swipe travels far immediately — so touch uses a hold delay instead, with a tolerance so that a slightly unsteady finger during the hold does not cancel it.
 
-### Bad Example - No Activation Constraint
+### Bad — no activation constraint
 
 ```tsx
-// BAD: PointerSensor without distance constraint
 const sensors = useSensors(useSensor(PointerSensor));
 ```
 
-**Why bad:** Every click immediately starts a drag operation. Users who click items to select or navigate trigger unintended drags. Always add a distance or delay constraint.
+**Why bad:** the drag begins on pointerdown, so any item that is also clickable stops being clickable — the click is consumed as the start of a drag that ends in the same place.
 
 ---
 
 ## Pattern 4: Collision Detection
 
-### Composing Collision Detection for Mixed Layouts
+### Composing algorithms for a mixed layout
 
 ```tsx
 import {
@@ -321,29 +318,15 @@ const composedCollision: CollisionDetection = (args) => {
 <DndContext collisionDetection={composedCollision}>{/* ... */}</DndContext>;
 ```
 
-**Why good:** pointerWithin gives precise "pointer must be inside" behavior for pointer users, closestCenter provides a fallback for keyboard users (since pointerWithin requires pointer position), composition pattern avoids building custom collision algorithms from scratch
+**Why good:** a collision function is just `(args) => Collision[]`, so the built-ins compose rather than needing to be replaced. The fallback is load-bearing: a keyboard drag has no pointer, so `pointerWithin` alone returns an empty array and dropping resolves to nothing.
 
-### When to Use Each Algorithm
-
-```tsx
-// Sortable list: closestCenter (forgiving, works without overlap)
-<DndContext collisionDetection={closestCenter}>{/* vertical/horizontal lists */}</DndContext>
-
-// Kanban/stacked containers: closestCorners (better for overlapping regions)
-<DndContext collisionDetection={closestCorners}>{/* columns with nested sortables */}</DndContext>
-
-// Precision targets (trash, category bins): pointerWithin
-<DndContext collisionDetection={pointerWithin}>{/* distinct drop zones */}</DndContext>
-
-// Default/general: rectIntersection (bounding box overlap)
-<DndContext collisionDetection={rectIntersection}>{/* general purpose */}</DndContext>
-```
+Which algorithm suits which layout is tabulated in [reference.md](../reference.md).
 
 ---
 
 ## Pattern 5: Keyboard and Screen Reader Accessibility
 
-### Position-Based Announcements
+### Position-based announcements
 
 ```tsx
 import type { UniqueIdentifier } from "@dnd-kit/core";
@@ -393,9 +376,9 @@ const announcements = createAnnouncements(items);
 <DndContext announcements={announcements}>{/* ... */}</DndContext>;
 ```
 
-**Why good:** Position-based messages ("position 2 of 5") are meaningful to screen reader users, dynamic announcements update as items list changes, factory function makes announcements reusable across lists
+**Why good:** the defaults announce the item's id, which for `task-3` tells a screen reader user nothing about where the item went. "Position 2 of 5" is the information a sighted user gets from seeing the list. Building the object from the current `items` is what keeps the total correct as the list grows.
 
-### Custom Screen Reader Instructions
+### Custom screen reader instructions
 
 ```tsx
 <DndContext
@@ -411,9 +394,9 @@ const announcements = createAnnouncements(items);
 </DndContext>
 ```
 
-**Why good:** Custom instructions match actual keyboard behavior, critical for localization (defaults are English only)
+**Why good:** these are read when a draggable receives focus, before the user has committed to anything. They ship in English only, so this prop is the localization point — and it is where a non-default key binding has to be described, since the text is static.
 
-### Drag Handle with Separate Activator
+### Drag handle with a separate activator
 
 ```tsx
 import { useSortable } from "@dnd-kit/sortable";
@@ -457,4 +440,4 @@ export function SortableItemWithHandle({
 }
 ```
 
-**Why good:** `setActivatorNodeRef` separates the drag handle from the sortable container, ARIA attributes and listeners attach to the handle (not the whole item), the handle is a `button` for keyboard accessibility, `aria-label` describes the action
+**Why good:** `setNodeRef` marks what moves and `setActivatorNodeRef` marks what starts the drag, so the rest of the item stays clickable and its text selectable. The handle is a real `button`, which is what makes it focusable and what `attributes` expects — a `div` handle would need the role and tabindex supplying by hand.

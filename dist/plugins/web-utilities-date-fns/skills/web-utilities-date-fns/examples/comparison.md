@@ -1,12 +1,14 @@
 # date-fns Comparison & Interval Examples
 
-> Comparison, validation, and interval patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Comparisons, interval generation, overlap detection and validation. See [SKILL.md](../SKILL.md)
+> for the decisions and [relative.md](relative.md) for duration rendering.
 
 ---
 
-## Date Comparisons
+## Comparisons
 
-### Good Example - Semantic Comparison Functions
+The `isSame*` family truncates to the unit named, which is what the hand-rolled version keeps
+getting wrong.
 
 ```typescript
 import {
@@ -15,79 +17,37 @@ import {
   isEqual,
   isSameDay,
   isSameMonth,
-  isSameYear,
   isSameWeek,
-  isSameHour,
   compareAsc,
   compareDesc,
 } from "date-fns";
 
-const date1 = new Date(2026, 0, 15, 10, 0);
-const date2 = new Date(2026, 0, 20, 14, 30);
-const date3 = new Date(2026, 0, 15, 18, 0);
+const morning = new Date(2026, 0, 15, 10, 0);
+const evening = new Date(2026, 0, 15, 18, 0);
 
-// Basic comparisons
-const isLater = isAfter(date2, date1); // true
-const isEarlier = isBefore(date1, date2); // true
-const areSame = isEqual(date1, date1); // true
+isAfter(evening, morning); // true
+isEqual(morning, morning); // true — exact instant
+isSameDay(morning, evening); // true — time-of-day ignored
+isSameWeek(morning, evening, { weekStartsOn: 1 });
 
-// Same period comparisons (ignore smaller units)
-const sameDay = isSameDay(date1, date3); // true (both Jan 15)
-const sameMonth = isSameMonth(date1, date2); // true (both January)
-const sameYear = isSameYear(date1, date2); // true (both 2026)
-const sameWeek = isSameWeek(date1, date2, { weekStartsOn: 1 }); // true/false
+// compareAsc / compareDesc are comparator functions, not predicates
+const sorted = [...dates].sort(compareAsc);
 
-// Sorting arrays of dates
-const dates = [date2, date1, date3];
-const ascending = dates.sort(compareAsc); // [date1, date3, date2]
-const descending = dates.sort(compareDesc); // [date2, date3, date1]
-
-// Type-safe comparison utility
 function sortByDate<T>(
-  items: T[],
+  items: readonly T[],
   getDate: (item: T) => Date,
   direction: "asc" | "desc" = "asc",
 ): T[] {
-  const compareFn = direction === "asc" ? compareAsc : compareDesc;
-  return [...items].sort((a, b) => compareFn(getDate(a), getDate(b)));
+  const compare = direction === "asc" ? compareAsc : compareDesc;
+  return [...items].sort((a, b) => compare(getDate(a), getDate(b)));
 }
-
-// Usage
-interface Event {
-  name: string;
-  date: Date;
-}
-
-const events: Event[] = [
-  { name: "Meeting", date: new Date(2026, 0, 20) },
-  { name: "Lunch", date: new Date(2026, 0, 15) },
-];
-
-const sortedEvents = sortByDate(events, (e) => e.date, "asc");
 ```
 
-**Why good:** semantic function names are self-documenting, handles edge cases like different times on same day, type-safe sorting utility
-
-### Bad Example - Manual Timestamp Comparison
-
-```typescript
-// Verbose and error-prone
-const isLater = date2.getTime() > date1.getTime();
-
-// Same day check is complex
-const sameDay =
-  date1.getFullYear() === date2.getFullYear() &&
-  date1.getMonth() === date2.getMonth() &&
-  date1.getDate() === date2.getDate();
-```
-
-**Why bad:** verbose, easy to make mistakes, doesn't handle edge cases
+`sort` mutates in place, so the spread is what keeps the caller's array intact.
 
 ---
 
 ## Convenience Checks
-
-### Good Example - Common Date Checks
 
 ```typescript
 import {
@@ -97,185 +57,71 @@ import {
   isPast,
   isFuture,
   isWeekend,
-  isMonday,
-  isTuesday,
-  isWednesday,
-  isThursday,
-  isFriday,
-  isSaturday,
-  isSunday,
   isFirstDayOfMonth,
   isLastDayOfMonth,
   isLeapYear,
 } from "date-fns";
 
-const date = new Date(2026, 0, 15);
-
-// Relative to now
-const todayCheck = isToday(date); // depends on current date
-const yesterdayCheck = isYesterday(date);
-const tomorrowCheck = isTomorrow(date);
-const pastCheck = isPast(date); // true if before now
-const futureCheck = isFuture(date); // true if after now
-
-// Day of week
-const weekendCheck = isWeekend(date); // false (Thursday)
-const fridayCheck = isFriday(date); // false
-
-// Month boundaries
-const firstOfMonth = isFirstDayOfMonth(date); // false
-const lastOfMonth = isLastDayOfMonth(date); // false
-
-// Year check
-const leapYear = isLeapYear(date); // false (2026 is not leap year)
-
-// Practical example: conditional rendering
-function getDateBadge(date: Date): string | null {
+// These read the host clock and the host zone, which makes them awkward to test —
+// the `is*Day` family has no reference-date argument
+function dateBadge(date: Date): string | null {
   if (isToday(date)) return "Today";
   if (isYesterday(date)) return "Yesterday";
   if (isTomorrow(date)) return "Tomorrow";
   return null;
 }
 
-// Practical example: business day check
-function isBusinessDay(date: Date): boolean {
-  return !isWeekend(date);
-}
+const isBusinessDay = (date: Date) => !isWeekend(date);
 ```
 
-**Why good:** readable intent, handles timezone-aware "today" check, useful for UI badges
+For a testable equivalent, compare with `isSameDay(date, referenceDate)` and pass the reference in.
 
 ---
 
-## Interval Operations
+## Interval Generation
 
-### Good Example - Date Range Generation
+An interval is a plain `{ start, end }` object, and every `each*OfInterval` function returns an
+array ready to render.
 
 ```typescript
 import {
   eachDayOfInterval,
   eachWeekOfInterval,
   eachMonthOfInterval,
-  eachYearOfInterval,
-  eachHourOfInterval,
   eachWeekendOfInterval,
   isWithinInterval,
-  areIntervalsOverlapping,
-  intervalToDuration,
+  isWeekend,
 } from "date-fns";
 
-interface DateRange {
-  start: Date;
-  end: Date;
-}
+const january = { start: new Date(2026, 0, 1), end: new Date(2026, 0, 31) };
 
-// Generate all days in a range (for calendars)
-function getDaysInRange(range: DateRange): Date[] {
-  return eachDayOfInterval(range);
-}
+eachDayOfInterval(january); // 31 Dates
+eachWeekOfInterval(january, { weekStartsOn: 1 }); // week-start Dates
+eachMonthOfInterval({ start: jan, end: dec }); // month-start Dates
+eachWeekendOfInterval(january); // Saturdays and Sundays
 
-// Generate weeks (for weekly views)
-const WEEK_STARTS_ON_MONDAY = 1;
+// Business days: filter, since there is no eachBusinessDayOfInterval
+const businessDays = eachDayOfInterval(january).filter((d) => !isWeekend(d));
 
-function getWeeksInRange(range: DateRange): Date[] {
-  return eachWeekOfInterval(range, { weekStartsOn: WEEK_STARTS_ON_MONDAY });
-}
-
-// Generate months (for month pickers)
-function getMonthsInRange(range: DateRange): Date[] {
-  return eachMonthOfInterval(range);
-}
-
-// Check if date is within range
-function isDateInRange(date: Date, range: DateRange): boolean {
-  return isWithinInterval(date, range);
-}
-
-// Check if two ranges overlap
-function doRangesOverlap(range1: DateRange, range2: DateRange): boolean {
-  return areIntervalsOverlapping(range1, range2);
-}
-
-// Get duration between dates
-function getRangeDuration(range: DateRange): Duration {
-  return intervalToDuration(range);
-}
-
-// Usage
-const january = {
-  start: new Date(2026, 0, 1),
-  end: new Date(2026, 0, 31),
-};
-
-const daysInJanuary = getDaysInRange(january);
-// [Jan 1, Jan 2, ..., Jan 31] - 31 Date objects
-
-const weeksInJanuary = getWeeksInRange(january);
-// [Jan 1 (or week start), Jan 6, Jan 13, Jan 20, Jan 27]
-
-const isInJanuary = isDateInRange(new Date(2026, 0, 15), january);
-// true
-
-const duration = getRangeDuration(january);
-// { days: 30 } (Jan 1 to Jan 31 = 30 day difference)
+// Inclusive of both endpoints
+isWithinInterval(new Date(2026, 0, 15), january); // true
 ```
 
-**Why good:** generates arrays directly usable for rendering, handles edge cases, typed intervals
-
-### Good Example - Weekend and Business Day Iteration
-
-```typescript
-import { eachWeekendOfInterval, eachDayOfInterval, isWeekend } from "date-fns";
-
-interface DateRange {
-  start: Date;
-  end: Date;
-}
-
-// Get all weekends in a range
-function getWeekendsInRange(range: DateRange): Date[] {
-  return eachWeekendOfInterval(range);
-}
-
-// Get business days only
-function getBusinessDaysInRange(range: DateRange): Date[] {
-  return eachDayOfInterval(range).filter((date) => !isWeekend(date));
-}
-
-// Count business days
-function countBusinessDays(range: DateRange): number {
-  return getBusinessDaysInRange(range).length;
-}
-
-// Usage
-const q1 = {
-  start: new Date(2026, 0, 1),
-  end: new Date(2026, 2, 31),
-};
-
-const weekends = getWeekendsInRange(q1);
-const businessDays = getBusinessDaysInRange(q1);
-const workingDaysCount = countBusinessDays(q1);
-```
-
-**Why good:** efficient iteration, useful for business day calculations, calendar generation
+Validate user-supplied ranges before passing them. Since v3, `isWithinInterval` and
+`areIntervalsOverlapping` sort the two endpoints internally, and `eachDayOfInterval` walks an
+inverted interval and hands the array back reversed. None of the three reports the inversion, so a
+range the user got backwards produces a plausible answer rather than an error.
 
 ---
 
-## Date Differences
-
-### Good Example - Calculating Differences
+## Differences
 
 ```typescript
 import {
   differenceInDays,
-  differenceInWeeks,
+  differenceInCalendarDays,
   differenceInMonths,
-  differenceInYears,
   differenceInHours,
-  differenceInMinutes,
-  differenceInSeconds,
-  differenceInMilliseconds,
   differenceInBusinessDays,
   intervalToDuration,
 } from "date-fns";
@@ -283,55 +129,25 @@ import {
 const start = new Date(2026, 0, 1);
 const end = new Date(2026, 5, 15);
 
-// Simple differences (returns integer, rounds down)
-const daysDiff = differenceInDays(end, start); // 165
-const weeksDiff = differenceInWeeks(end, start); // 23
-const monthsDiff = differenceInMonths(end, start); // 5
-const yearsDiff = differenceInYears(end, start); // 0
+differenceInDays(end, start); // 165 — whole 24-hour spans
+differenceInMonths(end, start); // 5 — truncated, never 5.5
+differenceInHours(end, start); // 3960
+differenceInBusinessDays(end, start); // weekends excluded
 
-// Time differences
-const hoursDiff = differenceInHours(end, start); // 3960
-const minutesDiff = differenceInMinutes(end, start); // 237600
-
-// Business days (excludes weekends)
-const businessDaysDiff = differenceInBusinessDays(end, start);
-
-// Full duration breakdown
-const duration = intervalToDuration({ start, end });
-// { months: 5, days: 14 }
-
-// Utility: Human-readable duration
-function formatDurationConcise(duration: Duration): string {
-  const parts: string[] = [];
-
-  if (duration.years && duration.years > 0) {
-    parts.push(`${duration.years} year${duration.years > 1 ? "s" : ""}`);
-  }
-  if (duration.months && duration.months > 0) {
-    parts.push(`${duration.months} month${duration.months > 1 ? "s" : ""}`);
-  }
-  if (duration.days && duration.days > 0) {
-    parts.push(`${duration.days} day${duration.days > 1 ? "s" : ""}`);
-  }
-
-  return parts.join(", ") || "0 days";
-}
-
-// Usage
-const d = intervalToDuration({ start, end });
-const readable = formatDurationConcise(d); // "5 months, 14 days"
+// The whole breakdown at once
+intervalToDuration({ start, end }); // { months: 5, days: 14 }
 ```
 
-**Why good:** clear function names, handles rounding correctly, business day calculation is built-in
+`differenceInDays` counts elapsed 24-hour spans while `differenceInCalendarDays` counts date
+boundaries crossed — 23:00 to 01:00 the next night is `0` and `1` respectively. Calendar days are
+almost always what a UI means.
 
 ---
 
-## Interval Overlap Detection
-
-### Good Example - Booking Conflict Detection
+## Overlap Detection
 
 ```typescript
-import { areIntervalsOverlapping, isWithinInterval } from "date-fns";
+import { areIntervalsOverlapping } from "date-fns";
 
 interface Booking {
   id: string;
@@ -339,86 +155,31 @@ interface Booking {
   end: Date;
 }
 
-// Check if new booking conflicts with existing bookings
-function hasBookingConflict(
-  newBooking: { start: Date; end: Date },
-  existingBookings: Booking[],
-): boolean {
-  return existingBookings.some((booking) =>
-    areIntervalsOverlapping(
-      { start: newBooking.start, end: newBooking.end },
-      { start: booking.start, end: booking.end },
-    ),
-  );
-}
-
-// Find all conflicting bookings
 function findConflicts(
-  newBooking: { start: Date; end: Date },
-  existingBookings: Booking[],
+  candidate: { start: Date; end: Date },
+  existing: readonly Booking[],
 ): Booking[] {
-  return existingBookings.filter((booking) =>
-    areIntervalsOverlapping(
-      { start: newBooking.start, end: newBooking.end },
-      { start: booking.start, end: booking.end },
-    ),
+  return existing.filter((booking) =>
+    areIntervalsOverlapping(candidate, booking),
   );
 }
 
-// Check if time slot is available
-function isSlotAvailable(
-  slotStart: Date,
-  slotEnd: Date,
-  bookings: Booking[],
-): boolean {
-  return !hasBookingConflict({ start: slotStart, end: slotEnd }, bookings);
-}
-
-// Usage
-const existingBookings: Booking[] = [
-  {
-    id: "1",
-    start: new Date(2026, 0, 15, 10, 0),
-    end: new Date(2026, 0, 15, 11, 0),
-  },
-  {
-    id: "2",
-    start: new Date(2026, 0, 15, 14, 0),
-    end: new Date(2026, 0, 15, 15, 0),
-  },
-];
-
-const newBooking = {
-  start: new Date(2026, 0, 15, 10, 30),
-  end: new Date(2026, 0, 15, 11, 30),
-};
-
-const hasConflict = hasBookingConflict(newBooking, existingBookings);
-// true (overlaps with booking "1")
-
-const conflicts = findConflicts(newBooking, existingBookings);
-// [{ id: "1", ... }]
+// Back-to-back slots do not overlap by default: 10:00–11:00 and 11:00–12:00 are clear.
+// Pass inclusive: true to treat a shared endpoint as a conflict.
+areIntervalsOverlapping(slotA, slotB, { inclusive: true });
 ```
-
-**Why good:** handles edge cases (adjacent bookings, contained bookings), reusable for any scheduling system
 
 ---
 
-## Validation Patterns
+## Validation
 
-### Good Example - Comprehensive Date Validation
+Parsing, existence, range and direction, returning every failure rather than the first.
 
 ```typescript
 import { isValid, parse, isAfter, isBefore, format } from "date-fns";
 
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-  date: Date | null;
-}
-
 interface ValidationOptions {
-  format?: string;
+  pattern?: string;
   minDate?: Date;
   maxDate?: Date;
   required?: boolean;
@@ -426,63 +187,55 @@ interface ValidationOptions {
   allowFuture?: boolean;
 }
 
-const DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  date: Date | null;
+}
 
 function validateDate(
   value: string,
   options: ValidationOptions = {},
 ): ValidationResult {
-  const errors: string[] = [];
   const {
-    format: dateFormat = DEFAULT_DATE_FORMAT,
+    pattern = "yyyy-MM-dd",
     minDate,
     maxDate,
     required = false,
     allowPast = true,
     allowFuture = true,
   } = options;
+  const errors: string[] = [];
 
-  // Empty check
-  if (!value || value.trim() === "") {
-    if (required) {
-      errors.push("Date is required");
-    }
+  if (value.trim() === "") {
+    if (required) errors.push("Date is required");
     return { isValid: !required, errors, date: null };
   }
 
-  // Parse
-  const parsed = parse(value, dateFormat, new Date());
+  const parsed = parse(value, pattern, new Date());
 
   if (!isValid(parsed)) {
-    errors.push(`Invalid date format. Expected: ${dateFormat}`);
-    return { isValid: false, errors, date: null };
+    return {
+      isValid: false,
+      errors: [`Invalid date format. Expected ${pattern}`],
+      date: null,
+    };
   }
 
-  // Verify round-trip (catches Feb 30, etc.)
-  if (format(parsed, dateFormat) !== value) {
-    errors.push("Invalid date");
-    return { isValid: false, errors, date: null };
+  // Round-trip rejects "2026-02-30", which parse rolls forward into March
+  if (format(parsed, pattern) !== value) {
+    return { isValid: false, errors: ["That date does not exist"], date: null };
   }
 
   const now = new Date();
-
-  // Past/future restrictions
-  if (!allowPast && isBefore(parsed, now)) {
+  if (!allowPast && isBefore(parsed, now))
     errors.push("Date cannot be in the past");
-  }
-
-  if (!allowFuture && isAfter(parsed, now)) {
+  if (!allowFuture && isAfter(parsed, now))
     errors.push("Date cannot be in the future");
-  }
-
-  // Range validation
-  if (minDate && isBefore(parsed, minDate)) {
-    errors.push(`Date must be after ${format(minDate, dateFormat)}`);
-  }
-
-  if (maxDate && isAfter(parsed, maxDate)) {
-    errors.push(`Date must be before ${format(maxDate, dateFormat)}`);
-  }
+  if (minDate && isBefore(parsed, minDate))
+    errors.push(`Date must be on or after ${format(minDate, pattern)}`);
+  if (maxDate && isAfter(parsed, maxDate))
+    errors.push(`Date must be on or before ${format(maxDate, pattern)}`);
 
   return {
     isValid: errors.length === 0,
@@ -490,17 +243,7 @@ function validateDate(
     date: errors.length === 0 ? parsed : null,
   };
 }
-
-// Usage
-const result = validateDate("2026-01-15", {
-  required: true,
-  minDate: new Date(2026, 0, 1),
-  maxDate: new Date(2026, 11, 31),
-});
-
-if (result.isValid && result.date) {
-  // Safe to use result.date
-}
 ```
 
-**Why good:** comprehensive validation, returns structured result, handles all edge cases, round-trip verification
+The round-trip check is the step most validators skip, and it is the one that catches Feb 30, Apr
+31 and Feb 29 in a non-leap year — all of which `parse` accepts and rolls into the next month.

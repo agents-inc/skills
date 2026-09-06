@@ -1,12 +1,13 @@
-# SvelteKit Load Functions Examples
+# SvelteKit — Load Functions
 
-> Complete code examples for SvelteKit load function patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Server and universal loads, layout data, streaming, `parent()` and invalidation. The input matrix
+> and the server-versus-universal decision tree are in [reference.md](../reference.md).
 
 ---
 
 ## Pattern 1: Server Load with Database Access
 
-### Good Example — Full Server Load Pattern
+### Good Example — the full shape
 
 ```typescript
 // src/routes/products/+page.server.ts
@@ -49,13 +50,15 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 };
 ```
 
-**Why good:** Named constant for page size, parallel queries with `Promise.all`, validation of page param, type-safe with `$types`
+**Why good:** The page number comes from the URL, so it is unvalidated input — checking it before it
+reaches the query is what stops a negative offset. The count and the rows run concurrently rather
+than one after the other.
 
 ---
 
 ## Pattern 2: Universal Load with External API
 
-### Good Example — Public API Fetch
+### Good Example — a public API
 
 ```typescript
 // src/routes/weather/[city]/+page.ts
@@ -81,9 +84,11 @@ export const load: PageLoad = async ({ fetch, params }) => {
 };
 ```
 
-**Why good:** Universal load runs on both server and client, `fetch` is SvelteKit's enhanced version, error handling with proper status codes
+**Why good:** After the first render this runs in the browser, so navigating between cities calls the
+weather API directly rather than routing through the app's own server. Nothing here needs a secret,
+which is what makes that safe.
 
-### Bad Example — Direct Fetch in Component
+### Bad Example — fetching in a component effect
 
 ```svelte
 <!-- BAD: Fetch in component effect -->
@@ -99,13 +104,15 @@ export const load: PageLoad = async ({ fetch, params }) => {
 </script>
 ```
 
-**Why bad:** Fetch happens after render (waterfall), no SSR, no error handling, no loading state management, no deduplication
+**Why bad:** The effect runs after the component has rendered, so the page paints empty first and the
+markup the server sent contains nothing. It also misses the deduplication SvelteKit's own `fetch`
+provides, so two components asking for the same thing ask twice.
 
 ---
 
 ## Pattern 3: Layout Load for Shared Data
 
-### Good Example — Auth and Navigation Data
+### Good Example — auth plus navigation data
 
 ```typescript
 // src/routes/+layout.server.ts
@@ -174,13 +181,15 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 </div>
 ```
 
-**Why good:** Root layout provides user data to all pages, dashboard layout adds auth check and dashboard-specific data, data cascades down to child pages, parallel fetching in dashboard layout
+**Why good:** Layout data merges downward, so a page under `dashboard/` sees `user` from the root and
+`notifications` from here without either load knowing about the page. The redirect lives in the
+layout, so a route added under it tomorrow is protected without anyone remembering.
 
 ---
 
 ## Pattern 4: Streaming Promises
 
-### Good Example — Fast and Slow Data
+### Good Example — fast data now, slow data later
 
 ```typescript
 // src/routes/dashboard/+page.server.ts
@@ -251,13 +260,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 {/await}
 ```
 
-**Why good:** Critical data (user) renders immediately, slow data streams in progressively, each section has loading/error/success states, `{#await}` handles all three states
+**Why good:** A three-second aggregation no longer delays the greeting. `{#await}` covers pending,
+resolved and rejected in one block, and the `{:catch}` branch is what keeps a failing analytics query
+from taking the whole page to `+error.svelte`.
 
 ---
 
 ## Pattern 5: Using Parent Data
 
-### Good Example — Child Page Using Layout Data
+### Good Example — reading the layout's data
 
 ```typescript
 // src/routes/dashboard/analytics/+page.server.ts
@@ -282,9 +293,10 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 };
 ```
 
-**Why good:** Independent data fetched first (avoids waterfall), `parent()` called after independent fetch, type-safe access to layout data
+**Why good:** The chart query is already running when `parent()` is awaited, so the two overlap. The
+order of these two lines is the whole point of the pattern.
 
-### Bad Example — Waterfall with parent()
+### Bad Example — parent() first
 
 ```typescript
 // BAD: Calling parent() first blocks independent data
@@ -298,13 +310,15 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 };
 ```
 
-**Why bad:** `parent()` blocks until layout load completes, `chartData` fetch waits unnecessarily, creates a waterfall where parallel loading was possible
+**Why bad:** `parent()` waits for the layout load to finish, and the chart query has not started yet —
+so two independent queries run back to back for no reason. Nothing reports this; the page is just
+slower.
 
 ---
 
 ## Pattern 6: Data Invalidation
 
-### Good Example — Manual Invalidation
+### Good Example — a custom invalidation key
 
 ```typescript
 // src/routes/notifications/+page.server.ts
@@ -360,13 +374,15 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 {/each}
 ```
 
-**Why good:** `depends('app:notifications')` registers custom invalidation key, `invalidate()` reruns only matching load functions, periodic refresh with cleanup, named constant for interval
+**Why good:** `depends` names a dependency SvelteKit cannot infer, so `invalidate` can rerun this one
+load rather than everything on the page. Returning the `clearInterval` from the effect is what stops
+the timer surviving navigation.
 
 ---
 
-## Pattern 7: Using SvelteKit's Enhanced Fetch
+## Pattern 7: SvelteKit's Enhanced Fetch
 
-### Good Example — Internal API Call from Load
+### Good Example — calling an internal route from a load
 
 ```typescript
 // src/routes/dashboard/+page.ts
@@ -384,8 +400,11 @@ export const load: PageLoad = async ({ fetch }) => {
 };
 ```
 
-**Why good:** SvelteKit's `fetch` calls internal routes directly on server (no HTTP overhead), cookies inherited automatically, works identically on server and client
+**Why good:** On the server this invokes the `+server.ts` handler in-process — no socket, no
+serialisation, no second trip through the hooks. The same line makes a real HTTP request in the
+browser, and cookies are attached either way.
 
 ---
 
-_For form action patterns, see [form-actions.md](form-actions.md). For hooks, see [hooks.md](hooks.md)._
+_Mutations are in [form-actions.md](form-actions.md); request-wide concerns in
+[hooks.md](hooks.md)._

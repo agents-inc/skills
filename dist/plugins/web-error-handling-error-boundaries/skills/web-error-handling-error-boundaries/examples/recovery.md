@@ -1,17 +1,17 @@
-# Error Boundaries - Recovery Patterns
+# Error Boundaries — Recovery Patterns
 
-> Advanced recovery patterns including retry limits and error classification. See [core.md](core.md) for basic patterns.
+> Retry limits, backoff and error classification. See [core.md](core.md) for the boundary itself.
 
-**Prerequisites**: Understand the basic ErrorBoundary component and reset functionality from core examples first.
+**Prerequisites:** the boundary and its reset callback, from [core.md](core.md).
 
 ---
 
-## Pattern 7: Retry Limit Boundaries
+## Pattern 8: Retry limit
 
-### Good Example - Retry Tracking Boundary
+An unconditional retry button on a permanent failure is a loop the user drives. Count the attempts
+and change what the fallback offers once they run out.
 
 ```typescript
-// src/components/error-boundary/retry-limited-boundary.tsx
 import { useState, useCallback, type ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
@@ -32,25 +32,19 @@ export function RetryLimitedBoundary({
   const [retryCount, setRetryCount] = useState(0);
   const [lastError, setLastError] = useState<Error | null>(null);
 
-  const handleError = useCallback((error: Error) => {
-    setLastError(error);
-  }, []);
+  const handleError = useCallback((error: Error) => setLastError(error), []);
 
   const handleReset = useCallback(() => {
-    const newCount = retryCount + 1;
-    setRetryCount(newCount);
-
-    if (newCount >= maxRetries && lastError) {
-      onMaxRetriesReached?.(lastError);
-    }
+    const nextCount = retryCount + 1;
+    setRetryCount(nextCount);
+    if (nextCount >= maxRetries && lastError) onMaxRetriesReached?.(lastError);
   }, [retryCount, maxRetries, lastError, onMaxRetriesReached]);
 
   if (retryCount >= maxRetries) {
     return (
       <div role="alert">
         <h3>Unable to load</h3>
-        <p>We tried {maxRetries} times but couldn't load this content.</p>
-        <p>Please refresh the page or try again later.</p>
+        <p>We tried {maxRetries} times and could not load this content.</p>
         <button onClick={() => window.location.reload()}>Refresh page</button>
       </div>
     );
@@ -60,10 +54,12 @@ export function RetryLimitedBoundary({
     <ErrorBoundary
       onError={handleError}
       onReset={handleReset}
-      fallbackRender={({ error, resetErrorBoundary }: FallbackProps) => (
+      fallbackRender={({ resetErrorBoundary }: FallbackProps) => (
         <div role="alert">
           <p>Something went wrong</p>
-          <p>Attempt {retryCount + 1} of {maxRetries}</p>
+          <p>
+            Attempt {retryCount + 1} of {maxRetries}
+          </p>
           <button onClick={resetErrorBoundary}>Try again</button>
         </div>
       )}
@@ -74,20 +70,23 @@ export function RetryLimitedBoundary({
 }
 ```
 
-**Why good:** Prevents infinite retry loops, provides escalation path after max retries, tracks retry count for user feedback
+**Why good:** the count lives outside the boundary, so it survives the reset the boundary performs;
+telling the user which attempt they are on is what makes the eventual escalation read as reasonable.
 
 ---
 
-### Good Example - Exponential Backoff Retry
+## Pattern 9: Exponential backoff
+
+Immediate retries against a struggling server are the retry storm that keeps it struggling. Double
+the wait each attempt and cap it.
 
 ```typescript
-// src/components/error-boundary/backoff-retry-boundary.tsx
 import { useState, useCallback, useRef, type ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
 
-const BASE_DELAY_MS = 1000;
-const MAX_DELAY_MS = 30000;
+const BASE_DELAY_MS = 1_000;
+const MAX_DELAY_MS = 30_000;
 const MAX_RETRIES = 5;
 
 interface BackoffRetryBoundaryProps {
@@ -105,35 +104,29 @@ export function BackoffRetryBoundary({
 }: BackoffRetryBoundaryProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [isWaiting, setIsWaiting] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const calculateDelay = useCallback(
-    (attempt: number): number => {
-      const delay = baseDelayMs * Math.pow(2, attempt);
-      return Math.min(delay, maxDelayMs);
-    },
-    [baseDelayMs, maxDelayMs]
+    (attempt: number) => Math.min(baseDelayMs * 2 ** attempt, maxDelayMs),
+    [baseDelayMs, maxDelayMs],
   );
 
   const handleRetry = useCallback(
     (resetErrorBoundary: () => void) => {
-      const delay = calculateDelay(retryCount);
       setIsWaiting(true);
-
       timeoutRef.current = setTimeout(() => {
         setIsWaiting(false);
-        setRetryCount((prev) => prev + 1);
+        setRetryCount((previous) => previous + 1);
         resetErrorBoundary();
-      }, delay);
+      }, calculateDelay(retryCount));
     },
-    [retryCount, calculateDelay]
+    [retryCount, calculateDelay],
   );
 
   if (retryCount >= maxRetries) {
     return (
       <div role="alert">
         <h3>Maximum retries reached</h3>
-        <p>Please try again later or contact support.</p>
         <button onClick={() => window.location.reload()}>Refresh page</button>
       </div>
     );
@@ -142,18 +135,19 @@ export function BackoffRetryBoundary({
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }: FallbackProps) => {
-        const nextDelay = calculateDelay(retryCount);
-        const nextDelaySeconds = Math.round(nextDelay / 1000);
+        const waitSeconds = Math.round(calculateDelay(retryCount) / 1_000);
 
         return (
           <div role="alert">
             <p>Something went wrong: {error.message}</p>
-            <p>Retry {retryCount + 1} of {maxRetries}</p>
+            <p>
+              Retry {retryCount + 1} of {maxRetries}
+            </p>
             {isWaiting ? (
-              <p>Retrying in {nextDelaySeconds} seconds...</p>
+              <p>Retrying in {waitSeconds} seconds…</p>
             ) : (
               <button onClick={() => handleRetry(resetErrorBoundary)}>
-                Retry (wait {nextDelaySeconds}s)
+                Retry (wait {waitSeconds}s)
               </button>
             )}
           </div>
@@ -166,125 +160,17 @@ export function BackoffRetryBoundary({
 }
 ```
 
-**Why good:** Exponential backoff prevents server overload, shows wait time to user, respects max delay cap
+**Why good:** the wait is shown before it is spent, so the delay reads as deliberate rather than as
+the page hanging; the cap stops the sixth attempt landing half a minute out.
 
 ---
 
-## Pattern 8: Error Classification
+## Pattern 10: Classifying the error
 
-### Good Example - Classified Error Handling
-
-```typescript
-// src/components/error-boundary/classified-boundary.tsx
-import { ErrorBoundary } from "react-error-boundary";
-import type { ReactNode } from "react";
-import type { FallbackProps } from "react-error-boundary";
-
-// Error classification types
-type ErrorCategory = "network" | "auth" | "validation" | "unknown";
-
-interface ClassifiedError extends Error {
-  category?: ErrorCategory;
-  retryable?: boolean;
-}
-
-function classifyError(error: Error): ClassifiedError {
-  const classified = error as ClassifiedError;
-
-  // Classify based on error characteristics
-  if (error.message.includes("fetch") || error.message.includes("network")) {
-    classified.category = "network";
-    classified.retryable = true;
-  } else if (error.message.includes("401") || error.message.includes("403")) {
-    classified.category = "auth";
-    classified.retryable = false;
-  } else if (error.message.includes("validation")) {
-    classified.category = "validation";
-    classified.retryable = false;
-  } else {
-    classified.category = "unknown";
-    classified.retryable = true;
-  }
-
-  return classified;
-}
-
-function ClassifiedFallback({ error, resetErrorBoundary }: FallbackProps) {
-  const classified = classifyError(error);
-
-  switch (classified.category) {
-    case "network":
-      return (
-        <div role="alert">
-          <h3>Connection Issue</h3>
-          <p>Please check your internet connection.</p>
-          <button onClick={resetErrorBoundary}>Retry</button>
-        </div>
-      );
-
-    case "auth":
-      return (
-        <div role="alert">
-          <h3>Session Expired</h3>
-          <p>Please log in again to continue.</p>
-          <button onClick={() => window.location.href = "/login"}>
-            Go to Login
-          </button>
-        </div>
-      );
-
-    case "validation":
-      return (
-        <div role="alert">
-          <h3>Invalid Data</h3>
-          <p>There was a problem with the data. Please try again.</p>
-        </div>
-      );
-
-    default:
-      return (
-        <div role="alert">
-          <h3>Something went wrong</h3>
-          <p>An unexpected error occurred.</p>
-          {classified.retryable && (
-            <button onClick={resetErrorBoundary}>Try again</button>
-          )}
-        </div>
-      );
-  }
-}
-
-interface ClassifiedBoundaryProps {
-  children: ReactNode;
-  onError?: (error: ClassifiedError) => void;
-}
-
-export function ClassifiedBoundary({ children, onError }: ClassifiedBoundaryProps) {
-  const handleError = (error: Error) => {
-    const classified = classifyError(error);
-    onError?.(classified);
-  };
-
-  return (
-    <ErrorBoundary
-      FallbackComponent={ClassifiedFallback}
-      onError={handleError}
-    >
-      {children}
-    </ErrorBoundary>
-  );
-}
-```
-
-**Why good:** Different recovery actions based on error type, user-friendly messages per category, programmatic error classification
-
----
-
-### Good Example - HTTP Status-Based Classification
+One fallback for every failure means the retry button appears on errors retrying cannot fix. Classify
+first, then choose the recovery the class allows.
 
 ```typescript
-// src/utils/error-classification.ts
-
 interface HttpError extends Error {
   status: number;
   statusText: string;
@@ -295,10 +181,10 @@ export function isHttpError(error: Error): error is HttpError {
 }
 
 export type HttpErrorCategory =
-  | "client-error" // 4xx
-  | "server-error" // 5xx
-  | "network-error" // No response
-  | "timeout-error"; // Request timeout
+  | "client-error"
+  | "server-error"
+  | "network-error"
+  | "timeout-error";
 
 export interface CategorizedHttpError {
   category: HttpErrorCategory;
@@ -307,26 +193,19 @@ export interface CategorizedHttpError {
   technicalDetails: string;
 }
 
-const RETRY_DELAY_MS = 5000;
+const RATE_LIMIT_STATUS = 429;
+const CLIENT_ERROR_MESSAGES: Record<number, string> = {
+  400: "Invalid request. Please check your input.",
+  401: "Please log in to continue.",
+  403: "You do not have permission to access this.",
+  404: "The requested resource was not found.",
+  422: "The submitted data is invalid.",
+  429: "Too many requests. Please wait a moment.",
+};
 
 export function categorizeHttpError(error: Error): CategorizedHttpError {
   if (!isHttpError(error)) {
-    // Network error - no response received
-    if (
-      error.message.includes("NetworkError") ||
-      error.message.includes("fetch")
-    ) {
-      return {
-        category: "network-error",
-        retryable: true,
-        userMessage:
-          "Unable to connect. Please check your internet connection.",
-        technicalDetails: error.message,
-      };
-    }
-
-    // Timeout
-    if (error.message.includes("timeout") || error.name === "AbortError") {
+    if (error.name === "AbortError" || error.message.includes("timeout")) {
       return {
         category: "timeout-error",
         retryable: true,
@@ -335,151 +214,73 @@ export function categorizeHttpError(error: Error): CategorizedHttpError {
       };
     }
 
-    // Unknown error
     return {
-      category: "client-error",
-      retryable: false,
-      userMessage: "An unexpected error occurred.",
+      category: "network-error",
+      retryable: true,
+      userMessage: "Unable to connect. Please check your internet connection.",
       technicalDetails: error.message,
     };
   }
 
   const { status, statusText } = error;
+  const technicalDetails = `HTTP ${status}: ${statusText}`;
 
-  // 4xx Client errors
-  if (status >= 400 && status < 500) {
-    const messages: Record<number, string> = {
-      400: "Invalid request. Please check your input.",
-      401: "Please log in to continue.",
-      403: "You don't have permission to access this.",
-      404: "The requested resource was not found.",
-      422: "The submitted data is invalid.",
-      429: `Too many requests. Please wait ${RETRY_DELAY_MS / 1000} seconds.`,
-    };
-
-    return {
-      category: "client-error",
-      retryable: status === 429, // Only rate limit is retryable
-      userMessage: messages[status] || `Request failed: ${statusText}`,
-      technicalDetails: `HTTP ${status}: ${statusText}`,
-    };
-  }
-
-  // 5xx Server errors
   if (status >= 500) {
     return {
       category: "server-error",
       retryable: true,
       userMessage: "Server error. Please try again in a moment.",
-      technicalDetails: `HTTP ${status}: ${statusText}`,
+      technicalDetails,
     };
   }
 
   return {
     category: "client-error",
-    retryable: false,
-    userMessage: "An unexpected error occurred.",
-    technicalDetails: `HTTP ${status}: ${statusText}`,
+    // A rate limit is the only 4xx that the same request can clear
+    retryable: status === RATE_LIMIT_STATUS,
+    userMessage:
+      CLIENT_ERROR_MESSAGES[status] ?? `Request failed: ${statusText}`,
+    technicalDetails,
   };
 }
 ```
 
-**Why good:** HTTP-aware classification, appropriate retry logic per status code, clear separation of user vs technical messages
-
----
-
-### Good Example - Combined Classification and Retry
+**Why good:** `retryable` is derived once, from the status rather than from the wording of a message;
+the user-facing string and the technical one are separate fields, so neither has to serve both
+audiences.
 
 ```typescript
-// src/components/error-boundary/smart-recovery-boundary.tsx
-import { useState, useCallback, type ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
-import { categorizeHttpError, type CategorizedHttpError } from "../utils/error-classification";
+import { categorizeHttpError } from "./error-classification";
 
-const MAX_AUTO_RETRIES = 2;
-const RETRY_DELAY_MS = 2000;
+const isDevelopment = process.env.NODE_ENV !== "production";
 
-interface SmartRecoveryBoundaryProps {
-  children: ReactNode;
-  onError?: (categorized: CategorizedHttpError) => void;
-}
-
-export function SmartRecoveryBoundary({
-  children,
-  onError,
-}: SmartRecoveryBoundaryProps) {
-  const [autoRetryCount, setAutoRetryCount] = useState(0);
-  const [categorized, setCategorized] = useState<CategorizedHttpError | null>(null);
-
-  const handleError = useCallback(
-    (error: Error) => {
-      const result = categorizeHttpError(error);
-      setCategorized(result);
-      onError?.(result);
-    },
-    [onError]
-  );
-
-  const handleReset = useCallback(() => {
-    setAutoRetryCount(0);
-    setCategorized(null);
-  }, []);
+function ClassifiedFallback({ error, resetErrorBoundary }: FallbackProps) {
+  const { category, retryable, userMessage, technicalDetails } = categorizeHttpError(error);
 
   return (
-    <ErrorBoundary
-      onError={handleError}
-      onReset={handleReset}
-      fallbackRender={({ resetErrorBoundary }: FallbackProps) => {
-        if (!categorized) {
-          return <div role="alert">An error occurred</div>;
-        }
-
-        const canAutoRetry =
-          categorized.retryable && autoRetryCount < MAX_AUTO_RETRIES;
-
-        // Auto-retry for retryable errors
-        if (canAutoRetry) {
-          setTimeout(() => {
-            setAutoRetryCount((prev) => prev + 1);
-            resetErrorBoundary();
-          }, RETRY_DELAY_MS);
-
-          return (
-            <div role="alert">
-              <p>{categorized.userMessage}</p>
-              <p>Retrying automatically... (Attempt {autoRetryCount + 1}/{MAX_AUTO_RETRIES})</p>
-            </div>
-          );
-        }
-
-        return (
-          <div role="alert">
-            <p>{categorized.userMessage}</p>
-            {process.env.NODE_ENV === "development" && (
-              <details>
-                <summary>Technical Details</summary>
-                <pre>{categorized.technicalDetails}</pre>
-              </details>
-            )}
-            {categorized.retryable && (
-              <button onClick={resetErrorBoundary}>Try Again</button>
-            )}
-            {categorized.category === "client-error" && (
-              <button onClick={() => window.location.href = "/login"}>
-                Return to Login
-              </button>
-            )}
-          </div>
-        );
-      }}
-    >
-      {children}
-    </ErrorBoundary>
+    <div role="alert">
+      <p>{userMessage}</p>
+      {isDevelopment && (
+        <details>
+          <summary>Technical details</summary>
+          <pre>{technicalDetails}</pre>
+        </details>
+      )}
+      {retryable && <button onClick={resetErrorBoundary}>Try again</button>}
+      {category === "client-error" && <a href="/login">Log in again</a>}
+    </div>
   );
 }
 ```
 
-**Why good:** Combines classification with intelligent retry, auto-retries for transient errors, appropriate actions per error category
+**Why good:** the retry button is absent on failures a retry cannot fix, which is the difference
+between an honest fallback and one that invites the user to press a button five times.
 
----
+**Retrying without being asked:** a `retryable` classification can also drive the first attempt or
+two automatically, combining this with the count from Pattern 8. Schedule that retry from an effect
+in the fallback, never from its render — calling `setTimeout` and `setState` while rendering is the
+phase violation `getDerivedStateFromError` exists to avoid, and it fires again on every render the
+fallback performs. Tell the user it is happening; a fallback that silently reloads itself reads as a
+flicker.

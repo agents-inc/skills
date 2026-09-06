@@ -1,14 +1,16 @@
-# Remix → React Router v7 Migration Examples
+# Remix to React Router v7
 
-> Patterns for migrating from Remix v2 to React Router v7, including route configuration, type generation, clientAction, and Single Fetch.
+> The migration in code: `routes.ts`, generated types, `clientAction`, Single Fetch, and the import
+> and entry-file renames. The mapping table is in [SKILL.md](../SKILL.md).
 
 ---
 
 ## Route Configuration with routes.ts
 
-React Router v7 framework mode uses `app/routes.ts` as the route configuration entry point. File-based routing is optional via `@react-router/fs-routes`.
+`app/routes.ts` is the entry point in framework mode. File conventions still work, as an opt-in
+through `@react-router/fs-routes`.
 
-### Config-Based Routes (Default)
+### Config-based routes (the default)
 
 ```typescript
 // app/routes.ts
@@ -35,9 +37,10 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-**Why good:** Explicit route tree, full control over nesting/layout, type-safe with `satisfies RouteConfig`
+**Why good:** The route tree is a value rather than a naming convention, so nesting is visible at a
+glance instead of inferred from dots and underscores — and `satisfies RouteConfig` type-checks it.
 
-### File-Based Routes (Opt-In)
+### File-based routes (opt-in)
 
 ```typescript
 // app/routes.ts -- use @react-router/fs-routes for Remix-style file conventions
@@ -47,9 +50,10 @@ import { flatRoutes } from "@react-router/fs-routes";
 export default flatRoutes() satisfies RouteConfig;
 ```
 
-**Why good:** Same flat route naming conventions from Remix v2 (`$param`, `_layout`, `_index`), opt-in rather than default, can be combined with config-based routes
+**Why good:** The Remix v2 naming conventions (`$param`, `_layout`, `_index`) keep working, so an
+existing `app/routes/` directory migrates without being rewritten.
 
-### Hybrid Approach
+### Both at once
 
 ```typescript
 // app/routes.ts -- combine config + file-based
@@ -62,13 +66,15 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-**Key change from Remix v2:** Remix v2 used file conventions by default. React Router v7 uses `routes.ts` as the entry point, with file-based routing as an explicit opt-in.
+**Key change:** Remix v2 read the file tree by default; React Router v7 reads `routes.ts`, and the file
+tree only if that file asks for it.
 
 ---
 
-## Type Generation with Route Module Types
+## Generated Route Types
 
-React Router v7 generates types automatically from your routes. Use generated types instead of `typeof loader`.
+Types are generated from the route tree, so `typeof loader` is no longer how a component learns its
+data's shape.
 
 ```typescript
 // app/routes/products.$productId.tsx
@@ -123,13 +129,15 @@ export default function ProductPage({
 }
 ```
 
-**Why good:** Generated types from `./+types/route-name` eliminate manual `typeof loader`, TypeScript knows exact types for params/loaderData/actionData, no need for `useLoaderData<typeof loader>()` in components
+**Why good:** `params` is typed from the route pattern rather than as `Record<string, string |
+undefined>`, so a typo in a parameter name is a compile error. The component takes `loaderData` as a
+prop, which means it can be rendered in a test without a router around it.
 
 ---
 
-## clientAction for Browser-Only Mutations
+## clientAction
 
-Use `clientAction` when you want mutations to run entirely in the browser (no server round-trip).
+A `clientAction` runs the mutation in the browser instead of sending it to the server.
 
 ```typescript
 // app/routes/settings.preferences.tsx
@@ -182,29 +190,22 @@ export default function PreferencesPage({ actionData }: Route.ComponentProps) {
 }
 ```
 
-**Why good:** clientAction takes priority when both exist, server action can still sync to database if needed, browser-only code (localStorage, DOM manipulation) stays in clientAction, no network round-trip for local-only operations
+**Why good:** `localStorage` and DOM writes cannot happen on the server, so this is where they belong —
+and the theme applies with no round trip at all.
 
-**When to use clientAction:**
-
-- Saving to localStorage/IndexedDB
-- Updating client-only UI state
-- Client-side API calls (not to your own server)
-- Actions that don't need server validation
-
-**When to use action:**
-
-- Database operations
-- Authentication/authorization
-- File uploads to server storage
-- Operations requiring secrets/environment variables
+`clientAction` suits browser storage, client-only UI state, and calls to a third-party API. `action`
+suits anything touching the database, the session, server storage, or a secret. Note which one wins:
+when both exist, only `clientAction` runs, and the server `action` is skipped unless the
+`clientAction` invokes it.
 
 ---
 
-## Single Fetch with Raw Object Returns
+## Single Fetch
 
-Single Fetch makes a single HTTP call for all loaders on client transitions (instead of multiple parallel requests).
+One HTTP request carries every loader's data on a client transition, rather than one request per
+loader.
 
-### Before: Using json() utility
+### Before: the json() wrapper
 
 ```typescript
 // Old Remix v2 pattern
@@ -227,7 +228,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 ```
 
-### After: Raw objects with data() for headers
+### After: raw objects, with data() only for headers
 
 ```typescript
 // React Router v7 with Single Fetch
@@ -256,15 +257,15 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 ```
 
-**Why good:** No unnecessary json() wrapper, data() utility only when needed for headers/status, named constant for cache duration, raw object return is simpler
+**Why good:** Single Fetch serialises richer types than JSON does — `Date`, `Error`, `Promise`,
+`RegExp` and `Map` survive the trip — so the `json()` round trip through a string was both a step and
+a downgrade. `data()` remains for the case the raw return cannot express: a custom status or header.
 
 ---
 
-## Streaming with Single Fetch (Replacing defer)
+## Streaming without defer()
 
-Single Fetch allows returning Promises directly without `defer()`.
-
-### Before: Using defer()
+### Before: defer()
 
 ```typescript
 // Old Remix v2 pattern
@@ -298,7 +299,7 @@ export default function Dashboard() {
 }
 ```
 
-### After: Raw Promise returns with Single Fetch
+### After: return the Promise
 
 ```typescript
 // React Router v7 with Single Fetch
@@ -333,13 +334,13 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 }
 ```
 
-**Why good:** No defer() wrapper needed, Promise returned directly in object, Single Fetch handles streaming automatically, Await/Suspense pattern remains the same
+**Why good:** A Promise in the returned object is now enough to mark it streamable, so the distinction
+between awaited and streamed data is visible in the loader itself rather than in a wrapper call. The
+`Suspense` and `Await` half of the pattern is unchanged.
 
 ---
 
-## Import Migration
-
-Update imports from `@remix-run/*` packages to `react-router` / `@react-router/*`.
+## Imports
 
 ```typescript
 // Before: Remix v2 imports
@@ -365,9 +366,7 @@ import { createFileSessionStorage } from "@react-router/node";
 
 ---
 
-## Entry File Migration
-
-Update entry files to use new React Router v7 components.
+## Entry Files
 
 ### entry.server.tsx
 
@@ -429,13 +428,12 @@ hydrateRoot(
 );
 ```
 
-**Why good:** Component name changes are straightforward, API remains the same (context + url props)
+**Why good:** Only the component names change; the props and the surrounding code are identical, so
+both entry files are a rename.
 
 ---
 
 ## package.json Scripts
-
-Update scripts to use React Router CLI instead of Remix CLI.
 
 ```json
 {
@@ -457,9 +455,9 @@ Update scripts to use React Router CLI instead of Remix CLI.
 
 ---
 
-## Red Flags During Migration
+## What Goes Wrong
 
-### Missing Type Generation Setup
+### Still using typeof loader
 
 ```typescript
 // WRONG - Still using typeof loader after migration
@@ -475,9 +473,11 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 }
 ```
 
-**Why wrong:** React Router v7 generates types automatically, `typeof loader` is the old pattern, generated types are more accurate and include params/searchParams
+**Why wrong:** It still compiles, which is what makes it easy to leave behind — but the generated types
+know the route's params and search params as well as its loader data, and `typeof loader` knows only
+the last.
 
-### Using json() with Single Fetch
+### json() under Single Fetch
 
 ```typescript
 // WRONG - json() is deprecated with Single Fetch
@@ -512,31 +512,23 @@ export async function loader() {
 }
 ```
 
-**Why wrong:** json() serialization is unnecessary with Single Fetch, raw objects are simpler and support more types (Date, Error, Promise, RegExp), data() utility exists specifically for headers/status
+**Why wrong:** The wrapper narrows what can cross the boundary — a `Date` comes back as a string, and a
+`Promise` cannot be sent at all, which is the whole of what Single Fetch adds.
 
 ---
 
-## Gotchas During Migration
+## Migration Gotchas
 
-**1. Single Fetch changes revalidation behavior**
+**Revalidation changed.** GET navigations revalidate every loader by default; `shouldRevalidate` is
+the opt-out. Action submissions returning 4xx or 5xx no longer revalidate, and that is now the
+opt-in.
 
-- GET navigations now revalidate loaders by default (opt-out with `shouldRevalidate`)
-- Action submissions with 4xx/5xx no longer revalidate automatically (opt-in required)
+**Types have to be generated.** Run `react-router typegen` to create the `./+types/` directories, add
+`.react-router/` to `.gitignore`, and include `.react-router/types/**/*` in `tsconfig.json`. Without
+this step every `./+types/` import fails to resolve.
 
-**2. Types must be generated**
+**`clientAction` wins.** When both exist, only `clientAction` runs — the server `action` is skipped
+unless the `clientAction` calls it explicitly.
 
-- Run `react-router typegen` to generate `./+types/` directories
-- Add `.react-router/` to `.gitignore`
-- Include `.react-router/types/**/*` in `tsconfig.json`
-
-**3. clientAction takes priority**
-
-- If both `action` and `clientAction` exist, only `clientAction` runs
-- Server `action` is completely skipped when `clientAction` is present
-- Use this intentionally for progressive enhancement
-
-**4. Node 20+ required**
-
-- Single Fetch requires Node 20+'s native `fetch`
-- Must call `installGlobals({ nativeFetch: true })` in custom servers
-- Old `@remix-run/web-fetch` polyfill won't work
+**Node 20+.** Single Fetch depends on the native `fetch`; a custom server needs
+`installGlobals({ nativeFetch: true })`, and the `@remix-run/web-fetch` polyfill does not work.

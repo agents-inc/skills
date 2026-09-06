@@ -1,17 +1,12 @@
-# React Three Fiber - Core Examples
+# React Three Fiber — Core Examples
 
-> Core patterns for R3F scenes, meshes, animation, asset loading, and drei helpers. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
-
-**Related examples:**
-
-- [interaction.md](interaction.md) - Events, raycasting, hover/click, drag
-- [performance.md](performance.md) - Instancing, LOD, disposal, frame loop control
+> Canvas setup, lighting rigs, `useFrame` animation, asset loading, drei helpers, physics. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for props and signatures, [interaction.md](interaction.md) for events, [performance.md](performance.md) for scaling.
 
 ---
 
 ## Pattern 1: Canvas and Scene Setup
 
-### Good Example - Complete Scene with Lighting
+### Good — scene with a lighting rig and shadows
 
 ```tsx
 import { Canvas } from "@react-three/fiber";
@@ -70,16 +65,16 @@ function SceneContent() {
 }
 ```
 
-**Why good:** Named constants for camera config, shadow map size explicit, dpr clamped, Suspense for async helpers, scene content separated into its own component
+**Why good:** shadows are enabled in all three places they have to be — on the Canvas, on the caster, and on the receiver — with the shadow map sized explicitly, since the default 512 gives visibly blocky edges. `<Environment>` suspends, so it sits inside the boundary.
 
-### Bad Example - Inline Numbers and Missing Shadows
+### Bad — flat lighting, no boundary
 
 ```tsx
-// BAD: magic numbers everywhere, no shadows, no Suspense
 function BadScene() {
   return (
     <Canvas camera={{ position: [3, 3, 3] }}>
       <ambientLight intensity={0.5} />
+      <Environment preset="studio" />
       <mesh position={[0, 0.5, 0]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="orange" />
@@ -89,9 +84,9 @@ function BadScene() {
 }
 ```
 
-**Why bad:** Magic numbers for position, no shadow configuration, no Suspense boundary for future async children, no directional light for depth
+**Why bad:** `<Environment>` fetches an HDRI and suspends, and with no `<Suspense>` above it the tree unmounts. Ambient light alone also lights every face equally, so a cube renders as a flat orange hexagon with no edges — depth needs a directional source.
 
-### Orthographic Camera
+### Orthographic camera
 
 ```tsx
 const ORTHO_ZOOM = 50;
@@ -105,7 +100,7 @@ const ORTHO_ZOOM = 50;
 
 ## Pattern 2: Per-Frame Animation with useFrame
 
-### Good Example - Delta-Based Rotation
+### Good — delta-based rotation, clock-based bobbing
 
 ```tsx
 import { useRef } from "react";
@@ -137,16 +132,15 @@ export function AnimatedBox() {
 }
 ```
 
-**Why good:** delta multiplication ensures consistent speed regardless of frame rate, clock-based sine for smooth periodic motion, null guard on ref
+**Why good:** the two kinds of motion use the two different inputs — rotation accumulates and so scales by `delta`, while the bob is a function of absolute time and so reads `clock.elapsedTime`. Deriving the bob from an accumulator instead would drift out of phase as frame times varied.
 
-### Bad Example - setState in useFrame
+### Bad — setState in useFrame
 
 ```tsx
-// BAD: React re-render every single frame
 function BadAnimatedBox() {
   const [rotY, setRotY] = useState(0);
   useFrame((_, delta) => {
-    setRotY((r) => r + 0.5 * delta); // setState in render loop!
+    setRotY((r) => r + 0.5 * delta);
   });
   return (
     <mesh rotation-y={rotY}>
@@ -157,9 +151,9 @@ function BadAnimatedBox() {
 }
 ```
 
-**Why bad:** setState triggers React reconciliation ~60 times/second, causing massive overhead; use ref mutation instead
+**Why bad:** every frame schedules a React render, so a spinning cube costs a full reconciliation pass sixty times a second — for a value React never needed to know. Writing `meshRef.current.rotation.y` skips all of it.
 
-### Conditional Animation (Pause/Resume)
+### Pausing and resuming
 
 ```tsx
 export function PausableSpinner({ paused }: { paused: boolean }) {
@@ -179,7 +173,9 @@ export function PausableSpinner({ paused }: { paused: boolean }) {
 }
 ```
 
-### Reusing Objects in useFrame
+Returning early leaves the ref untouched, which freezes the object in place rather than resetting it.
+
+### Reusing objects across frames
 
 ```tsx
 import { useMemo } from "react";
@@ -209,13 +205,13 @@ export function OrbitingLight() {
 }
 ```
 
-**Why good:** Vector3 allocated once via useMemo, reused every frame; never allocate inside useFrame
+**Why good:** one `Vector3` for the component's lifetime, rewritten in place each frame with `.set()`. Constructing it inside the callback would allocate sixty short-lived objects a second, and the resulting GC pauses read as stutter rather than as slowness.
 
 ---
 
 ## Pattern 3: Asset Loading
 
-### GLTF Model with useGLTF
+### GLTF model with useGLTF
 
 ```tsx
 import { useGLTF } from "@react-three/drei";
@@ -245,9 +241,9 @@ export function Car(props: JSX.IntrinsicElements["group"]) {
 useGLTF.preload("/car.glb");
 ```
 
-**Why good:** typed GLTF result for autocomplete, geometry/material reused from loaded model, preload for faster first render
+**Why good:** the `GLTFResult` type names the nodes and materials the file actually contains, so a renamed mesh in the exported model becomes a type error rather than an undefined at runtime. `preload` starts the fetch at module evaluation instead of at mount, which removes one round trip from the waterfall.
 
-### Texture Loading
+### Texture loading
 
 ```tsx
 import { useLoader } from "@react-three/fiber";
@@ -268,7 +264,9 @@ export function TexturedPlane() {
 }
 ```
 
-### Draco-Compressed GLTF
+Passing an array of urls returns an array of textures and issues one suspend for the batch, rather than one per call.
+
+### Draco-compressed GLTF
 
 ```tsx
 import { useGLTF } from "@react-three/drei";
@@ -282,9 +280,9 @@ export function CompressedModel() {
 
 ---
 
-## Pattern 4: Common Light Setups
+## Pattern 4: Lighting Rigs
 
-### Three-Point Lighting
+### Three-point lighting
 
 ```tsx
 const KEY_LIGHT_POS: [number, number, number] = [5, 5, 5];
@@ -309,7 +307,9 @@ export function ThreePointLighting() {
 }
 ```
 
-### Environment-Based Lighting
+The key light does the work and casts the shadow; the fill lifts the shadow side without casting its own, and the back light separates the subject from the background. Only the key needs `castShadow` — three shadow-casting lights means three shadow map renders per frame.
+
+### Environment-based lighting
 
 ```tsx
 import { Environment } from "@react-three/drei";
@@ -324,7 +324,7 @@ import { Environment } from "@react-three/drei";
 
 ## Pattern 5: Drei Helpers
 
-### OrbitControls with Limits
+### OrbitControls with limits
 
 ```tsx
 import { OrbitControls } from "@react-three/drei";
@@ -342,7 +342,9 @@ const MAX_POLAR_ANGLE = Math.PI / 2; // Prevent going below ground
 />;
 ```
 
-### Html Overlay at 3D Position
+`maxPolarAngle` at `Math.PI / 2` stops the camera passing under the ground plane, which is the usual way an orbit-controlled scene looks broken.
+
+### Html overlay anchored to a 3D position
 
 ```tsx
 import { Html } from "@react-three/drei";
@@ -371,9 +373,9 @@ export function LabeledObject() {
 }
 ```
 
-**Why good:** distanceFactor scales HTML based on 3D distance, center prop centers the HTML on the point
+**Why good:** the label is real DOM, so it takes ordinary markup and remains selectable and readable by assistive technology — which text drawn into the canvas is not. `distanceFactor` scales it with camera distance so it recedes like the geometry it labels.
 
-### Text (SDF-Based 3D Text)
+### Text — SDF glyphs rendered as geometry
 
 ```tsx
 import { Text } from "@react-three/drei";
@@ -391,7 +393,9 @@ const FONT_SIZE = 0.8;
 </Text>;
 ```
 
-### ContactShadows (Soft Ground Shadows)
+`<Text>` lives in the scene, so it is occluded by geometry and lit like it — the trade against `<Html>` is that it cannot be selected or read aloud.
+
+### ContactShadows — soft ground shadows
 
 ```tsx
 import { ContactShadows } from "@react-three/drei";
@@ -407,7 +411,9 @@ const SHADOW_BLUR = 2;
 />;
 ```
 
-### Float (Hovering Animation)
+A cheap alternative to a shadow-casting light: one blurred plane instead of a shadow map render per frame.
+
+### Float — idle hovering motion
 
 ```tsx
 import { Float } from "@react-three/drei";
@@ -427,11 +433,13 @@ const FLOAT_AMPLITUDE = 0.3;
 </Float>;
 ```
 
+`<Float>` drives its children's transform itself, so it replaces a `useFrame` for this — and it composes, wrapping anything.
+
 ---
 
 ## Pattern 6: Physics with @react-three/rapier
 
-### Collision Events
+### Collision events
 
 ```tsx
 import { Physics, RigidBody } from "@react-three/rapier";
@@ -474,7 +482,9 @@ export function PhysicsWorld() {
 }
 ```
 
-### Sensor Colliders (Trigger Zones)
+`type="fixed"` gives the floor infinite mass, so it takes collisions without being pushed by them. Omitting it makes the floor dynamic and the whole scene falls together.
+
+### Sensor colliders — trigger zones
 
 ```tsx
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
@@ -499,7 +509,9 @@ function TriggerZone() {
 }
 ```
 
-### Applying Forces via Ref
+A `sensor` collider detects overlap without resolving it, so bodies pass through — and it reports through `onIntersectionEnter`/`Exit` rather than the `onCollision` pair.
+
+### Applying forces through a ref
 
 ```tsx
 import { useRef } from "react";
@@ -528,3 +540,5 @@ export function JumpingBox() {
   );
 }
 ```
+
+**Why good:** the simulation owns the body's transform, so setting `position` on the mesh would be overwritten on the next step. Impulses and forces are the way in, and the second argument wakes a body the solver has put to sleep — without it a settled object ignores the impulse entirely.

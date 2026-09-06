@@ -256,18 +256,3 @@ function SearchResults() {
 ```
 
 **Why bad:** `window.location.search` is not reactive — the component does not re-render when the URL changes. Bypasses the router's navigation cycle (loaders do not re-run). Use `useSearchParams()` or read `request.url` in loaders.
-
----
-
-## Navigation Decision Quick Reference
-
-```
-Need to navigate?
-  +-- Clickable element in JSX?
-  |   +-- YES -> <Link> or <NavLink>
-  |   +-- NO -> After side effect (logout, mutation)?
-  |       +-- YES -> useNavigate()
-  |       +-- NO -> In a loader or action?
-  |           +-- YES -> throw redirect()
-  |           +-- NO -> router.navigate() (rare)
-```

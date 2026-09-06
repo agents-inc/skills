@@ -1,96 +1,92 @@
-# Color Accessibility Patterns
+# Accessibility — Colour
 
-> Contrast ratios, color-independent indicators, accessible link styling, and design tokens.
+> Contrast, colour-independent status and link styling. Ratios are in [reference.md](../reference.md).
 
 ---
 
-## Color Contrast
-
-### Example: Checking Contrast Ratios
+## Contrast in practice
 
 ```css
-/* Sufficient contrast */
+/* Passes */
 .button-primary {
-  background: #0066cc; /* Blue */
-  color: #ffffff; /* White */
-  /* Contrast ratio: 7.37:1 (Passes AAA) */
+  background: #0066cc;
+  color: #ffffff; /* 5.6:1 — clears AA, short of AAA's 7:1 */
 }
 
 .text-body {
-  color: #333333; /* Dark gray */
-  background: #ffffff; /* White */
-  /* Contrast ratio: 12.6:1 (Passes AAA) */
+  color: #333333;
+  background: #ffffff; /* 12.6:1 */
 }
 
-/* Insufficient contrast */
-.button-bad {
-  background: #ffeb3b; /* Yellow */
-  color: #ffffff; /* White */
-  /* Contrast ratio: 1.42:1 (Fails AA - needs 4.5:1) */
+/* Fails */
+.button-warning {
+  background: #ffeb3b;
+  color: #ffffff; /* 1.2:1 — a bright background is not a light one */
 }
 
-.text-bad {
-  color: #999999; /* Light gray */
-  background: #ffffff; /* White */
-  /* Contrast ratio: 2.85:1 (Fails AA for normal text) */
+.text-muted {
+  color: #999999;
+  background: #ffffff; /* 2.85:1 — needs 4.5:1 at body size */
 }
 ```
 
-**Testing:** Use WebAIM Contrast Checker or axe DevTools to verify ratios.
+**Why the second pair fails:** contrast is a luminance ratio, not a perceived difference in hue.
+Yellow is bright, so white text on it has almost no ratio at all, however different the two colours
+look side by side. Grey placeholder text at `#999` is the single commonest failure in real designs.
+
+The ratio is against what is actually behind the text — a semi-transparent overlay, a gradient or a
+photograph all change it, and the worst point in the gradient is the one that has to pass.
 
 ---
 
-## Color-Independent Status Indicators
-
-### Example: Using Color + Icon + Text
+## Pattern 9: Status without colour
 
 ```typescript
-// GOOD: Color + Icon + Text
-interface StatusBadgeProps {
-  status: 'success' | 'error' | 'warning';
-  className?: string;
-}
+type Status = "success" | "error" | "warning";
 
-function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = {
-    success: { symbol: '✓', text: 'Success', color: 'var(--color-success)' },
-    error: { symbol: '×', text: 'Error', color: 'var(--color-error)' },
-    warning: { symbol: '!', text: 'Warning', color: 'var(--color-warning)' },
-  };
+const STATUS_CONFIG: Record<Status, { symbol: string; label: string; className: string }> = {
+  success: { symbol: "✓", label: "Success", className: "status-success" },
+  error: { symbol: "×", label: "Error", className: "status-error" },
+  warning: { symbol: "!", label: "Warning", className: "status-warning" },
+};
 
-  const { symbol, text, color } = config[status];
+export function StatusBadge({ status }: { status: Status }) {
+  const { symbol, label, className } = STATUS_CONFIG[status];
 
   return (
-    <div className={className} style={{ color }}>
-      {/* Use your icon component here, or simple symbol */}
+    <span className={className}>
       <span aria-hidden="true">{symbol}</span>
-      <span>{text}</span>
-    </div>
-  );
-}
-
-// BAD: Color only
-function BadStatusBadge({ status }: { status: 'success' | 'error' }) {
-  const color = status === 'success' ? 'green' : 'red';
-
-  return (
-    <div style={{ backgroundColor: color, width: 20, height: 20 }} />
-    // No way for color-blind users to distinguish!
+      <span>{label}</span>
+    </span>
   );
 }
 ```
 
+**Why good:** three signals — shape, word and colour — and removing any one leaves the meaning
+intact. The symbol is hidden from assistive technology because the adjacent word already carries it;
+announcing both gives "times error".
+
+```typescript
+// Bad
+function BadStatusBadge({ isSuccess }: { isSuccess: boolean }) {
+  return <div style={{ backgroundColor: isSuccess ? "green" : "red", width: 20, height: 20 }} />;
+}
+```
+
+**Why bad:** red and green are the pair most colour-blind readers cannot separate, and there is no
+text at all, so a screen reader announces nothing whatsoever.
+
+The same applies to charts: a legend keyed only by colour is unreadable, so lines need shapes or
+patterns and direct labels beat a legend either way.
+
 ---
 
-## Accessible Link Styling
-
-### Example: Underlined Links in Body Text
+## Links in prose
 
 ```css
-/* GOOD: Underlined links in body text */
 .content a {
-  color: var(--color-primary);
-  text-decoration: underline; /* Color + underline */
+  color: var(--color-link);
+  text-decoration: underline;
 }
 
 .content a:hover {
@@ -98,37 +94,36 @@ function BadStatusBadge({ status }: { status: 'success' | 'error' }) {
 }
 
 .content a:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-}
-
-/* BAD: Color-only links */
-.bad-content a {
-  color: var(--color-primary);
-  text-decoration: none; /* Only color distinguishes links */
 }
 ```
 
-**Why good:** Underlines ensure links are identifiable regardless of color perception.
+**Why good:** the underline is what identifies the link; the colour is decoration. Removing it means
+a reader who cannot separate the link colour from the body colour cannot find the links at all —
+which is why WCAG treats colour-only links as a contrast failure between the link and the text
+around it.
+
+Navigation and buttons are different: position and shape already identify them, so an underline is
+not owed there.
 
 ---
 
-## Design Tokens for Accessible Colors
-
-### Example: Token Definitions with Contrast Ratios
+## Tokens that carry their ratio
 
 ```css
-/* Design tokens - define in your global styles */
 :root {
-  /* Text colors with sufficient contrast */
-  --color-text-default: var(--gray-12); /* #1a1a1a - 16.1:1 on white */
-  --color-text-muted: var(--gray-10); /* #4a4a4a - 9.7:1 on white */
-  --color-text-subtle: var(--gray-8); /* #6b6b6b - 5.7:1 on white */
+  /* Ratios measured against --color-surface-base */
+  --color-text-default: #1a1a1a; /* 17.4:1 */
+  --color-text-muted: #4a4a4a; /* 8.9:1 */
+  --color-text-subtle: #6b6b6b; /* 5.3:1 — lowest that still clears AA at body size */
 
-  /* Surface colors */
-  --color-surface-base: var(--gray-0); /* #ffffff */
-  --color-surface-subtle: var(--gray-2); /* #f5f5f5 */
-
-  /* Ensure all tokens meet WCAG AA minimum */
+  --color-surface-base: #ffffff;
+  --color-surface-subtle: #f5f5f5;
 }
 ```
+
+**Why good:** recording the ratio beside the value makes the constraint visible at the point someone
+would otherwise lighten it by one step. Naming the surface each ratio was measured against matters
+too — the same text token on `--color-surface-subtle` is a different ratio, and a token that passes
+on white can fail on the grey it was never checked against.

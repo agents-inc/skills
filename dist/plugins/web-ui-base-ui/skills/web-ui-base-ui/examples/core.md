@@ -11,9 +11,6 @@
 ```tsx
 import { Popover } from "@base-ui/react/popover";
 
-const SIDE_OFFSET_PX = 8;
-const COLLISION_PADDING_PX = 16;
-
 export function HelpPopover({ children }: { children: React.ReactNode }) {
   return (
     <Popover.Root>
@@ -22,8 +19,8 @@ export function HelpPopover({ children }: { children: React.ReactNode }) {
         <Popover.Positioner
           side="bottom"
           align="start"
-          sideOffset={SIDE_OFFSET_PX}
-          collisionPadding={COLLISION_PADDING_PX}
+          sideOffset={8}
+          collisionPadding={16}
         >
           <Popover.Popup className="popup">
             <Popover.Arrow className="arrow" />
@@ -47,7 +44,7 @@ export function HelpPopover({ children }: { children: React.ReactNode }) {
 }
 ```
 
-**Why good:** every part carries its own class so each can be styled independently, positioning props sit on `Positioner` where the transform is applied, `Popup` stays free for your own transforms and animations, `Viewport` keeps content from jumping while the popup resizes, `Title` and `Description` produce the ARIA relationships automatically, named constants instead of inline numbers
+**Why good:** every part carries its own class so each can be styled independently, positioning props sit on `Positioner` where the transform is applied, `Popup` stays free for your own transforms and animations, `Viewport` keeps content from jumping while the popup resizes, `Title` and `Description` produce the ARIA relationships automatically
 
 ### Bad Example - Positioning Props on the Wrong Part
 
@@ -118,8 +115,6 @@ const containerRef = useRef<HTMLDivElement>(null);
 ```tsx
 import { Menu } from "@base-ui/react/menu";
 
-const MENU_SIDE_OFFSET_PX = 6;
-
 export function ViewMenu({
   showGrid,
   onShowGridChange,
@@ -131,7 +126,7 @@ export function ViewMenu({
     <Menu.Root>
       <Menu.Trigger className="trigger">View</Menu.Trigger>
       <Menu.Portal>
-        <Menu.Positioner sideOffset={MENU_SIDE_OFFSET_PX} align="start">
+        <Menu.Positioner sideOffset={6} align="start">
           <Menu.Popup className="popup">
             <Menu.Arrow className="arrow" />
 

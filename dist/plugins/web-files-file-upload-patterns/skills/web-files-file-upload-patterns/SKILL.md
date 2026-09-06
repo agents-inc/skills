@@ -1,64 +1,91 @@
 ---
 name: web-files-file-upload-patterns
-description: File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)
+description: File upload patterns - drag-drop dropzones, chunked and resumable uploads, presigned URL flows, file validation (MIME type, magic bytes), progress tracking, accessibility (ARIA)
 ---
 
 # File Upload Patterns
 
-> **Quick Guide:** Use drag-and-drop dropzones with fallback file inputs for uploads. Validate files client-side (MIME + magic bytes) AND server-side. For files >5MB use chunked uploads with progress tracking. Upload directly to S3 using presigned URLs to avoid server bottlenecks. Always implement proper accessibility with keyboard support and ARIA announcements. Use XHR (not fetch) for upload progress events.
+> **Quick Guide:** A dropzone is a keyboard-operable button wrapping a hidden file input, with drag
+> as an enhancement. Validate for the user's benefit on the client — extension, MIME type, then the
+> file's own magic bytes — and again on the server, because none of the client checks are security.
+> Progress needs `XMLHttpRequest`; `fetch` has no upload progress event. Past roughly 100MB, chunk
+> the file so a failure costs one chunk. Large files go straight to storage on a presigned URL the
+> server issues, so no request body is ever proxied.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — file input, dropzone, file list state and rendering, the assembled component
+- [examples/validation.md](examples/validation.md) — rule-based validator, magic-byte detection, dimension checks, a validation hook
+- [examples/progress.md](examples/progress.md) — XHR progress with speed and ETA, progress bar, formatters, concurrent uploads
+- [examples/preview.md](examples/preview.md) — a preview thumbnail for a selected file, with cleanup
+- [examples/presigned-upload.md](examples/presigned-upload.md) — PUT and POST-policy uploads, the server contract, multipart parts, the whole flow as a hook
+- [examples/resumable.md](examples/resumable.md) — chunked uploader with retry, resume across a reload, a tus client, the tus server contract
+- [examples/accessibility.md](examples/accessibility.md) — announcing selection and progress, focus return after the file dialog
+- [reference.md](reference.md) — method selection by size, expiry guidance, validation order, CORS, review checklist
+
+---
+
+## Which path applies
+
+The destination decides almost everything else.
+
+- **The file goes to your own endpoint** — one `POST` with `FormData`, progress from XHR, and a size
+  cap the server can enforce. [examples/core.md](examples/core.md) and
+  [examples/progress.md](examples/progress.md) are the whole of it.
+- **The file goes to object storage** — the server issues a presigned URL and the browser uploads to
+  it directly, so no bytes pass through your application.
+  [examples/presigned-upload.md](examples/presigned-upload.md).
+- **The file is large enough that a failure hurts** — split it, upload the parts with a concurrency
+  limit, and record which parts landed so a retry resumes.
+  [examples/resumable.md](examples/resumable.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing upload code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Validate on the server as well as in the browser.** Client validation exists to tell the user
+quickly what will be rejected; anyone can skip it entirely, so it settles nothing about safety.
 
-**(You MUST validate files BOTH client-side AND server-side - client validation is UX only, not security)**
+**Read the file's first bytes when the type matters.** Extensions and MIME types are both supplied
+by whoever made the file, and a renamed executable passes every check that trusts them.
 
-**(You MUST use magic bytes detection for security-critical uploads - MIME types and extensions can be spoofed)**
+**Revoke every object URL you create.** A preview holds the whole file in memory until
+`URL.revokeObjectURL()` runs, so a user who changes their mind three times leaks three files.
 
-**(You MUST cleanup object URLs with `URL.revokeObjectURL()` to prevent memory leaks)**
+**Make the dropzone reachable from the keyboard.** `role="button"`, `tabIndex={0}` and an
+Enter/Space handler that opens the file dialog, with drag layered on top — mobile has no drag at
+all, so the click path is the real one.
 
-**(You MUST provide keyboard support for dropzones - Enter/Space to open file dialog)**
-
-**(You MUST use presigned URLs for cloud storage uploads - never proxy large files through your server)**
+**Have the server issue a short-lived presigned URL rather than proxying the body.** The upload then
+costs your application nothing, and no storage credential is ever in reach of the browser.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** file upload, dropzone, drag-drop, drag and drop upload, useDropzone, TUS protocol, presigned URL, multipart upload, file validation, magic bytes, MIME type, progress indicator, upload progress, XHR upload, S3 upload, file input, aria-label upload, chunked upload, resumable upload
+**Auto-detection:** dropzone, dataTransfer.files, dragenter, dragleave, dragover, input type="file",
+event.target.files, accept attribute, xhr.upload.addEventListener, lengthComputable, presigned URL,
+uploadUrl, multipart upload, UploadPart, ETag, chunked upload, file.slice, Content-Range, resumable
+upload, tus, Tus-Resumable, Upload-Offset, magic bytes, file signature, FormData append file
 
-**When to use:**
+**Applies to:**
 
-- Building file upload interfaces (single or multi-file)
-- Implementing drag-and-drop upload areas
-- Uploading to cloud storage directly from browser
-- Validating file types before upload
-- Showing upload progress with speed/ETA
-- Handling large file uploads with chunking/resumable support
-- Creating accessible file upload components
+- Selecting files by click, keyboard or drag
+- Validating type, size and dimensions before anything is sent
+- Reporting progress, speed and remaining time, and cancelling
+- Uploading straight to storage on a URL the server signed
+- Splitting a large file into chunks and resuming an interrupted upload
+- Announcing selection, progress and failure to a screen reader
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Server-side file processing (use backend skills)
-- File storage architecture (use infrastructure skills)
-- Video/audio streaming (use media handling skills)
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Dropzone, file list, combined upload component
-- [examples/validation.md](examples/validation.md) - MIME type, magic bytes, dimension validation
-- [examples/progress.md](examples/progress.md) - Progress tracking, speed, abort, multi-file
-- [examples/preview.md](examples/preview.md) - Image preview, thumbnails, EXIF orientation
-- [examples/s3-upload.md](examples/s3-upload.md) - Presigned URLs, multipart uploads
-- [examples/resumable.md](examples/resumable.md) - Chunked uploads, TUS protocol
-- [examples/accessibility.md](examples/accessibility.md) - ARIA patterns, keyboard, announcements
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, checklists
+- Receiving, scanning and storing the bytes once they arrive
+- Resizing, cropping or converting an image before it is sent — this skill sends the `File` it is
+  given
+- Where the stored object lives, how it is served, and what its URL looks like
+- Streaming playback of media that was uploaded
 
 ---
 
@@ -66,24 +93,18 @@ description: File upload patterns - drag-drop dropzones, chunked/resumable uploa
 
 ## Philosophy
 
-File uploads are deceptively complex. A simple file input works for basic cases, but production apps need validation, progress feedback, error handling, and accessibility. The key insight is that **client-side validation is for UX, not security** - always validate on the server too.
+An upload is three independent problems that get conflated: choosing a file, checking it, and moving
+its bytes. Keeping them separate is what makes any of them replaceable.
 
-**Core Principles:**
+The checking half has a rule that never bends. **Client validation is a user-experience feature, and
+the server's is the only one that is a control.** Everything the browser knows about a file — its
+name, its extension, its `type` — came from the file itself. Reading magic bytes raises the bar but
+does not change the category: it is still a check the client can be made to skip.
 
-1. **Defense in depth** - Validate extension + MIME type + magic bytes + server-side
-2. **Progressive enhancement** - Drag-drop enhances but doesn't replace click-to-browse
-3. **Direct uploads** - Use presigned URLs to upload to cloud storage directly, not through your server
-4. **Chunked for reliability** - Large files need chunking for resumability and progress
-5. **Accessibility first** - Keyboard navigation and screen reader support from day one
-
-**File Size Strategy:**
-
-| File Size | Upload Method       | Progress UI            | Storage Pattern      |
-| --------- | ------------------- | ---------------------- | -------------------- |
-| < 5MB     | Single request      | Spinner or bar         | Direct presigned PUT |
-| 5-50MB    | Single request      | Progress bar           | Presigned PUT        |
-| 50MB-5GB  | Chunked             | Progress + ETA         | Multipart presigned  |
-| > 5GB     | Chunked + resumable | Progress + ETA + pause | Multipart required   |
+The moving half scales by a different axis: not how many files, but how long a single request is
+open. A short request can fail and be retried whole. A long one accumulates the probability of a
+dropped connection until retrying whole is unacceptable, and that is the point at which chunking
+starts paying for its complexity — not at a particular byte count.
 
 </philosophy>
 
@@ -91,51 +112,44 @@ File uploads are deceptively complex. A simple file input works for basic cases,
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Drag-and-Drop Dropzone
+### Pattern 1: Dropzone
 
-Build a dropzone with drag-and-drop and fallback file input. Key elements:
-
-- Track drag state with a counter ref (not boolean) to handle nested element events
-- `role="button"` + `tabIndex={0}` + Enter/Space key handlers for keyboard access
-- Hidden `<input type="file">` triggered by click/keyboard
-- Type validation via `accept` attribute plus runtime checking
-- Reset `event.target.value = ''` after selection to allow re-selecting same file
+Count drag events rather than tracking a boolean. `dragenter` and `dragleave` fire for every nested
+element, so a boolean flickers off the moment the pointer crosses a child.
 
 ```typescript
-// Key structure - full implementation in examples/core.md
-export function FileDropzone({ onFilesSelected, accept, multiple, disabled }: FileDropzoneProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dragCounterRef = useRef(0); // Handles nested element drag events
+const dragCounterRef = useRef(0);
 
-  return (
-    <div
-      onDrop={handleDrop}
-      onDragEnter={() => { dragCounterRef.current++; setState('drag-over'); }}
-      onDragLeave={() => { dragCounterRef.current--; if (dragCounterRef.current === 0) setState('idle'); }}
-      onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      aria-label="File upload area. Click or drag files to upload."
-    >
-      <input ref={inputRef} type="file" hidden aria-hidden="true" tabIndex={-1} />
-    </div>
-  );
-}
+<div
+  onDragEnter={() => { dragCounterRef.current++; setState("drag-over"); }}
+  onDragLeave={() => {
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setState("idle");
+  }}
+  onDragOver={(e) => e.preventDefault()} // without this, drop never fires
+  onDrop={handleDrop}
+  onClick={() => inputRef.current?.click()}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+  }}
+  role="button"
+  tabIndex={disabled ? -1 : 0}
+  aria-label="File upload area. Click or drag files to upload."
+>
+  <input ref={inputRef} type="file" hidden aria-hidden="true" tabIndex={-1} />
+</div>
 ```
 
-See [examples/core.md](examples/core.md) for full implementation.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 2: File list state
 
-### Pattern 2: File List Management Hook
-
-Track multiple files with status, progress, and preview URLs:
+One entry per file with its own status, so a failure is per-file rather than per-batch. Rejections
+come back with reasons the UI can show.
 
 ```typescript
-// use-file-list.ts - full implementation in examples/core.md
 interface FileWithId {
   id: string;
   file: File;
@@ -145,79 +159,51 @@ interface FileWithId {
   error?: string;
 }
 
-export function useFileList(options: UseFileListOptions = {}) {
-  const [files, setFiles] = useState<FileWithId[]>([]);
-
-  // addFiles returns { added, rejected } with rejection reasons
-  // removeFile cleans up object URLs via URL.revokeObjectURL()
-  // clearFiles revokes all object URLs before clearing
-
-  return {
-    files,
-    addFiles,
-    removeFile,
-    updateFile,
-    clearFiles,
-    hasFiles,
-    canAddMore,
-  };
-}
+// addFiles returns { added, rejected }, each rejection carrying its reason
+// removeFile and clearFiles revoke any preview URL before dropping the entry
 ```
 
-Key: Always `URL.revokeObjectURL()` on remove and clear. Return rejected files with reasons for user feedback.
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/core.md](examples/core.md) for full hook.
+### Pattern 3: Progress with XHR
 
----
-
-### Pattern 3: Upload Progress with XHR
-
-The Fetch API does not support upload progress events. Use XHR:
+`fetch` reports download progress and not upload progress, so upload progress means
+`XMLHttpRequest`. Average the last few samples or the speed reading jitters unusably.
 
 ```typescript
-// use-upload-progress.ts - full implementation in examples/progress.md
 const xhr = new XMLHttpRequest();
 xhr.upload.addEventListener("progress", (event) => {
-  if (event.lengthComputable) {
-    const speed = calculateRollingAverageSpeed(event.loaded, performance.now());
-    const remaining = (event.total - event.loaded) / speed;
-    setProgress({
-      loaded: event.loaded,
-      total: event.total,
-      percentage,
-      speed,
-      remainingTime: remaining,
-    });
-  }
+  if (!event.lengthComputable) return; // no total: show a spinner, not a bar
+  const speed = rollingAverageSpeed(event.loaded, performance.now());
+  setProgress({
+    loaded: event.loaded,
+    total: event.total,
+    percentage: Math.round((event.loaded / event.total) * 100),
+    speed,
+    remainingTime: (event.total - event.loaded) / speed,
+  });
 });
 ```
 
-Key: Use a rolling average (5 samples) for smooth speed display. Always provide abort capability via `xhr.abort()`.
+`xhr.abort()` is the cancel. Streaming a `fetch` body measures bytes you handed the stream rather
+than bytes on the wire, which is why it is not a substitute.
 
-**Note:** Fetch streams measure bytes taken from your stream, not actual network transmission ([Jake Archibald's analysis](https://jakearchibald.com/2025/fetch-streams-not-for-progress/)). A native fetch progress API is in development. Until then, use XHR.
+Full code: [examples/progress.md](examples/progress.md)
 
-See [examples/progress.md](examples/progress.md) for full hook and multi-file manager.
+### Pattern 4: Magic-byte detection
 
----
-
-### Pattern 4: Magic Bytes File Type Detection
-
-MIME types and extensions can be spoofed. Read actual file bytes:
+Read the first twelve bytes and compare against known signatures. Never read the whole file — a
+large one freezes the tab.
 
 ```typescript
-// file-type-detection.ts - full implementation in examples/validation.md
-const FILE_SIGNATURES: FileSignature[] = [
+const FILE_SIGNATURES = [
   { mime: "image/jpeg", extension: "jpg", signature: [0xff, 0xd8, 0xff] },
-  {
-    mime: "image/png",
-    extension: "png",
-    signature: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
-  },
+  { mime: "image/png", extension: "png", signature: [0x89, 0x50, 0x4e, 0x47] },
   {
     mime: "application/pdf",
     extension: "pdf",
     signature: [0x25, 0x50, 0x44, 0x46],
-  }, // %PDF
+  },
   {
     mime: "application/zip",
     extension: "zip",
@@ -225,72 +211,56 @@ const FILE_SIGNATURES: FileSignature[] = [
   },
 ];
 
-export async function detectFileType(
-  file: File,
-): Promise<DetectionResult | null> {
-  const HEADER_SIZE = 12;
-  const buffer = await file.slice(0, HEADER_SIZE).arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  // Match against signatures, return { mime, extension, confidence }
-}
+const buffer = await file.slice(0, 12).arrayBuffer();
+const bytes = new Uint8Array(buffer);
 ```
 
-Key: Only read first 8-12 bytes (not entire file). Office documents (.docx/.xlsx/.pptx) are ZIP files - detect by checking for `word/`/`xl/`/`ppt/` in the first 1000 bytes.
+Office documents are ZIP archives, so a ZIP match needs a second look: `word/`, `xl/` or `ppt/` in
+the first kilobyte identifies which.
 
-See [examples/validation.md](examples/validation.md) for full detection and validator class.
+Full code: [examples/validation.md](examples/validation.md)
 
----
+### Pattern 5: Presigned upload
 
-### Pattern 5: Direct-to-Storage Upload with Presigned URLs
+Four steps, and your application never holds the bytes:
 
-Upload directly to cloud storage from the browser. The flow:
-
-1. Client requests presigned URL from your server (with file metadata)
-2. Server generates time-limited presigned URL and returns it
-3. Client uploads directly to storage using the presigned URL
-4. Server never touches the file bytes
+1. The client asks your server for a URL, sending name, type and size.
+2. The server authorises the request, sanitises the name, builds a key, and signs a short-lived URL.
+3. The client `PUT`s the file to that URL.
+4. The client tells your server the key, and the server records it.
 
 ```typescript
-// Client-side upload - full implementation in examples/s3-upload.md
-export async function uploadWithPresignedPut(
-  file: File,
-  presignedUrl: string,
-  options: {
-    onProgress?: (progress: number) => void;
-    abortSignal?: AbortSignal;
-  } = {},
-): Promise<void> {
-  const xhr = new XMLHttpRequest();
-  // XHR for progress + PUT to presigned URL
-  xhr.open("PUT", presignedUrl);
-  xhr.setRequestHeader("Content-Type", file.type);
-  xhr.send(file);
-}
+const { uploadUrl, key } = await requestPresignedUrl(file);
+
+const xhr = new XMLHttpRequest();
+xhr.open("PUT", uploadUrl);
+xhr.setRequestHeader("Content-Type", file.type);
+xhr.upload.addEventListener("progress", reportProgress);
+xhr.send(file);
 ```
 
-Key: For POST uploads, add presigned fields to FormData **before** the file (order matters). For large files (>100MB), use multipart upload with per-part presigned URLs. Always sanitize filenames server-side.
+A POST-policy URL instead of a PUT lets the storage service enforce size and content-type itself —
+at the cost of `FormData` field order mattering, with the file appended last.
 
-See [examples/s3-upload.md](examples/s3-upload.md) for POST/PUT uploads, multipart, and full flow hook.
+Full code: [examples/presigned-upload.md](examples/presigned-upload.md)
 
----
+### Pattern 6: Chunked and resumable
 
-### Pattern 6: Chunked and Resumable Uploads
-
-For files >100MB, split into chunks with concurrency control:
+Slice the file, upload the slices with a concurrency limit, and retry a failed slice with
+exponential backoff rather than restarting.
 
 ```typescript
-// chunked-upload.ts - full implementation in examples/resumable.md
-const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
 
-// Upload chunks in parallel with concurrency limit
-// Retry failed chunks with exponential backoff
-// Save progress to localStorage for browser refresh recovery
-// Support pause/resume/cancel
+const start = chunkIndex * chunkSize;
+const chunk = file.slice(start, Math.min(start + chunkSize, file.size));
 ```
 
-Key: Use localStorage keyed by `filename-size-lastModified` to persist completed chunks. Expire stored progress after 24 hours. For standards-based resumable uploads, implement the TUS protocol (POST to create, HEAD to check offset, PATCH to upload chunks).
+Persist the completed chunk indexes keyed on `name-size-lastModified`, so a reload resumes rather
+than restarts, and expire that record after a day. For an interoperable protocol rather than your
+own, tus is `POST` to create, `HEAD` to learn the offset, `PATCH` to append.
 
-See [examples/resumable.md](examples/resumable.md) for chunked uploader, localStorage persistence, and TUS client.
+Full code: [examples/resumable.md](examples/resumable.md)
 
 </patterns>
 
@@ -298,61 +268,36 @@ See [examples/resumable.md](examples/resumable.md) for chunked uploader, localSt
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Not validating files on server - client validation can be bypassed completely
-- Trusting MIME type or extension alone - both can be spoofed; use magic bytes
-- Not cleaning up object URLs - causes memory leaks with `URL.createObjectURL`
-- Proxying large files through server - bottlenecks server; use presigned URLs
-- No keyboard support for dropzones - accessibility violation
-- Exposing cloud storage credentials in client code - use presigned URLs from server
+- No `event.preventDefault()` on `dragover` — `drop` never fires and the browser navigates to the
+  file instead — prevent the default on both `dragover` and `drop`
+- A boolean for drag state — it flickers as the pointer crosses child elements — count `dragenter`
+  and `dragleave` in a ref
+- The file input's value left set after a selection — choosing the same file twice fires no
+  `change` event — assign `event.target.value = ""` after reading `files`
+- `fetch` used where progress is required — there is no upload progress event and stream progress
+  measures the wrong thing — use `XMLHttpRequest`
+- `file.text()` or `readAsDataURL()` to inspect a type — the whole file is read into memory — slice
+  the first 12 bytes
+- An object URL created in a render body — a new one per render, none revoked — create it in an
+  effect and revoke in the cleanup
+- No CORS configuration on the storage bucket — a direct upload fails preflight — allow the origin
+  and the methods, and expose `ETag` for multipart
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- No progress feedback for large uploads - users don't know if it's working
-- Using fetch for uploads - no upload progress events; use XHR
-- Not handling upload abort - users can't cancel stuck uploads
-- Long presigned URL expiration - security risk; keep under 1 hour
-- Fake progress bars - show real progress or spinner, not fake animation
-
-**Common Mistakes:**
-
-- Not resetting file input after selection - can't select same file twice
-- Using `e.stopPropagation()` without `e.preventDefault()` on drop - browser opens file
-- Loading entire file into memory for validation - only read first bytes
-- Creating object URLs on every render without cleanup
-
-**Gotchas & Edge Cases:**
-
-- Safari handles drag events differently - test cross-browser
-- Mobile has no drag-drop - ensure click-to-browse works
-- CORS required for direct cloud storage uploads - configure bucket policy
-- Large files may cause browser tab to freeze - use chunked upload
-- EXIF orientation in photos - images may appear rotated (modern browsers auto-rotate for display, but manual handling needed for Canvas processing)
-- `dragenter`/`dragleave` fire for nested elements - use a counter ref, not boolean state
+- A presigned URL is a bearer token: whoever holds it can perform that operation until it expires
+- Extension, MIME type and `File.type` all come from the client and are all forgeable
+- Mobile browsers have no drag and drop, so the click path is the only path there
+- `lengthComputable` is false for a request with no known length, and the percentage is meaningless
+  until it is true
+- A multipart upload that is neither completed nor aborted leaves parts billed and invisible; set a
+  lifecycle rule to expire them
+- Safari's drag events differ enough from Chromium's to be worth testing separately
+- A photo carries EXIF orientation that the browser applies on display and canvas processing does
+  not
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST validate files BOTH client-side AND server-side - client validation is UX only, not security)**
-
-**(You MUST use magic bytes detection for security-critical uploads - MIME types and extensions can be spoofed)**
-
-**(You MUST cleanup object URLs with `URL.revokeObjectURL()` to prevent memory leaks)**
-
-**(You MUST provide keyboard support for dropzones - Enter/Space to open file dialog)**
-
-**(You MUST use presigned URLs for cloud storage uploads - never proxy large files through your server)**
-
-**Failure to follow these rules will create security vulnerabilities, memory leaks, and accessibility issues.**
-
-</critical_reminders>

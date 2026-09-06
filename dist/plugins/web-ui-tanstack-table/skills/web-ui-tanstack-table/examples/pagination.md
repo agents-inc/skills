@@ -9,7 +9,7 @@
 ### Good Example - Pagination with page size selector
 
 ```typescript
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -144,7 +144,11 @@ export function PaginatedTable<T extends object>({
 }
 ```
 
-**Why good:** named constants for defaults, aria-labels for accessibility, disabled states prevent invalid navigation, shows entry count for context
+**Why good:** the navigation buttons take their disabled state from `getCanPreviousPage()` and
+`getCanNextPage()` rather than from arithmetic on the page index, so they stay correct when a filter
+shrinks the row count under the current page. Each is labelled, since an arrow glyph alone is
+announced as "button". The "showing X of Y" line is what tells a user whether a filter is active at
+all.
 
 ---
 

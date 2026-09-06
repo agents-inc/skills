@@ -1,6 +1,6 @@
 # Component Library Packaging - Core Examples
 
-> Complete artifacts for the five packaging contracts. See [SKILL.md](../SKILL.md) for the decisions behind them, the decision frameworks and the red flags.
+> Complete artifacts for the five packaging contracts. See [../SKILL.md](../SKILL.md) for the decisions behind them, and [../reference.md](../reference.md) for the per-tool and consumption tables.
 
 ---
 
@@ -22,7 +22,7 @@
 }
 ```
 
-**Why good:** the two side-effectful things in the package are named — the stylesheet, which binds no exports, and the registration module, which is only ever imported for what it does. Everything else stays prunable, so a consumer importing one component does not pull the rest.
+**Why good:** the two side-effectful things are named — the stylesheet, which binds no exports, and the registration module, which is only ever imported for what it does. Everything else stays prunable, so a consumer importing one component does not pull the rest.
 
 ### Bad Example - The pure-utility template
 
@@ -37,7 +37,7 @@
 
 **Why bad:** `import "your-lib/styles.css"` binds no names, so a production bundler drops it and the consumer ships unstyled components. Their dev server does not tree-shake, so nobody sees it until release.
 
-### Good Example - Utility-native delivery, both halves of the contract
+### Good Example - Class-names-only delivery, both halves of the contract
 
 ```tsx
 // src/badge.tsx — complete, statically analyzable class strings
@@ -64,7 +64,7 @@ export const sources = [
 ];
 ```
 
-**Why good:** every class exists verbatim in `dist`, so the consumer's scanner finds it; the published path (not `src`) is what they scan, because `src` is not in the package.
+**Why good:** every class exists verbatim in `dist`, so the consumer's scanner finds it; the published path is what they scan, because `src` is not in the package.
 
 ### Bad Example - Classes assembled at runtime
 
@@ -74,7 +74,7 @@ export function Badge({ tone }: { readonly tone: string }) {
 }
 ```
 
-**Why bad:** the scanner reads text, not semantics. Neither class is ever generated, the component renders unstyled, and nothing in either build reports a problem.
+**Why bad:** the scanner reads text, not semantics. Neither class is generated, the component renders unstyled, and both builds stay silent.
 
 ---
 
@@ -107,7 +107,7 @@ export function Badge({ tone }: { readonly tone: string }) {
 }
 ```
 
-**Why good:** one name enters the consumer's layer namespace, sub-layers order your own rules, and the consumer's ordinary unlayered `.btn { background: red }` wins with no `!important` — because unlayered beats layered regardless of specificity. Custom properties give a second override path that does not touch the cascade at all.
+**Why good:** one name enters the consumer's layer namespace, sub-layers order your own rules, and their unlayered `.btn { background: red }` wins with no `!important` — unlayered beats layered regardless of specificity. Custom properties give a second override path that does not touch the cascade at all.
 
 ```css
 /* The consumer's entry stylesheet, when they want explicit control */
@@ -115,7 +115,7 @@ export function Badge({ tone }: { readonly tone: string }) {
 @import "your-lib/styles.css" layer(vendor);
 ```
 
-**Why good:** the layer statement is one of the few rules allowed before `@import`, so the order is fixed before the first byte of library CSS arrives.
+**Why good:** a layer statement is one of the few rules allowed before `@import`, so the order is fixed before the first byte of library CSS arrives.
 
 ### Bad Example - Unlayered, escalating
 
@@ -125,7 +125,7 @@ export function Badge({ tone }: { readonly tone: string }) {
 }
 ```
 
-**Why bad:** unlayered CSS competes on specificity against code you cannot see, so you escalate and the consumer escalates further. Note the trap in the good direction too: `!important` **inside** a layer inverts layer order, so an important declaration in your earlier layer beats the consumer's in a later one and defeats the override path you documented.
+**Why bad:** unlayered CSS competes on specificity against code you cannot see, so you escalate and the consumer escalates further. The trap in the good direction too: `!important` **inside** a layer inverts layer order, so an important declaration in your earlier layer beats the consumer's in a later one and defeats the override path you documented.
 
 ---
 
@@ -160,7 +160,7 @@ export function Disclosure({ summary, children }: DisclosureProps) {
 export { Disclosure } from "./disclosure.js";
 ```
 
-**Why good:** the boundary follows the module graph, so the directive belongs on the module that actually needs client features. The barrel re-exports without widening the boundary.
+**Why good:** the boundary follows the module graph, so the directive belongs on the module that needs client features. The barrel re-exports without widening it.
 
 ### Good Example - A build that preserves it
 
@@ -169,11 +169,9 @@ export { Disclosure } from "./disclosure.js";
 import { preserveDirectives } from "rollup-plugin-preserve-directives";
 import typescript from "@rollup/plugin-typescript";
 
-const EXTERNAL = [/^react($|\/)/, /^react-dom($|\/)/];
-
 export default {
   input: { index: "src/index.ts", "client/index": "src/client/index.ts" },
-  external: EXTERNAL,
+  external: [/^react($|\/)/, /^react-dom($|\/)/],
   output: {
     dir: "dist",
     format: "es",
@@ -188,7 +186,7 @@ export default {
 };
 ```
 
-**Why good:** one output file per source module is the only shape that can carry a per-module directive; the plugin stops the strip; `onwarn` silences exactly the warning this setup provokes, rather than training the team to ignore all of them.
+**Why good:** one output file per source module is the only shape that can carry a per-module directive; the plugin stops the strip; `onwarn` silences exactly the warning this setup provokes, rather than training the team to ignore all of them. React stays external, so the peer contract holds.
 
 ### Good Example - The verification that makes it real
 
@@ -213,7 +211,7 @@ fi
     ./scripts/verify-directives.sh
 ```
 
-**Why good:** stripping is silent, so the check is the only thing standing between a green local build and a consumer's server-components crash. Run it on the **minified** output, since a minifier that treats directives as dead string statements removes them after the bundler got it right (in terser, `compress.directives: false`).
+**Why good:** stripping is silent, so this check is the only thing between a green local build and a consumer's server-components crash. Run it against the **minified** output, since a minifier that treats directives as dead string statements removes them after the bundler got it right.
 
 ### Bad Example - A banner
 
@@ -223,7 +221,7 @@ export default {
 };
 ```
 
-**Why bad:** the banner lands on every emitted file, so pure helpers and presentational components become client modules. Nothing errors — the consumer's bundle just grows and their server rendering stops happening.
+**Why bad:** the banner lands on every emitted file, so pure helpers and presentational components become client modules. Nothing errors — the consumer's bundle grows and their server rendering stops happening.
 
 ---
 
@@ -236,10 +234,10 @@ export default {
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
-    "react-router": "^7.0.0"
+    "your-router": "^7.0.0"
   },
   "peerDependenciesMeta": {
-    "react-router": { "optional": true }
+    "your-router": { "optional": true }
   },
   "devDependencies": {
     "react": "19.2.8",
@@ -251,7 +249,7 @@ export default {
 }
 ```
 
-**Why good:** anything carrying identity — the renderer, a router's context — is a peer, so exactly one copy is installed and shared. The optional peer belongs to a single entry, so consumers who never import it are not forced to install it. The pinned devDependency states what you test against without imposing it, and the leaf utility stays an ordinary dependency because two copies of it are harmless.
+**Why good:** anything carrying identity — the renderer, a router's context — is a peer, so one copy is installed and shared. The optional peer belongs to a single entry, so consumers who never import that entry are not forced to install it. The pinned devDependency states what you test against without imposing it, and the leaf utility stays an ordinary dependency because two copies of it are harmless.
 
 ### Bad Example - React as a dependency
 
@@ -275,7 +273,7 @@ Duplication that appears only under `npm link` is a linking artifact — check t
 
 ## Pattern 5: Entry Granularity
 
-### Good Example - A split that the import specifier enforces
+### Good Example - A split the import specifier enforces
 
 ```
 src/
@@ -314,4 +312,4 @@ export { Badge } from "./badge.js";
 export { Disclosure } from "./client/disclosure.js"; // drags the whole entry client-side
 ```
 
-**Why bad:** one interactive component makes the entire library client-only for every consumer, and their only escape is deep-importing paths you never published. Verify the split the same way you verify the directives — if a `"use client"` appears in any `dist` file reachable from `.`, the "server-safe" entry is mislabeled.
+**Why bad:** one interactive component makes the entire library client-only for every consumer, and their only escape is deep-importing paths you never published. Verify the split the way you verify the directives — a `"use client"` in any `dist` file reachable from `.` means the server-safe entry is mislabeled.

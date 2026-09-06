@@ -1,12 +1,12 @@
-# Apollo Client GraphQL - Error Handling Patterns
+# Apollo Client — Error Handling Examples
 
-> Error handling strategies. See [core.md](core.md) for basic patterns.
+> Component states and the global error link. See [core.md](core.md) for client setup.
 
-**Prerequisites**: Understand Pattern 1 (Client Setup) from core examples first.
+**Prerequisites**: Pattern 1 (client setup) from core.
 
 ---
 
-## Component-Level Error Handling
+## Rendering partial data
 
 ```typescript
 // components/user-dashboard.tsx
@@ -104,18 +104,19 @@ function UserDashboard() {
 export { UserDashboard };
 ```
 
-**Why good:** errorPolicy: "all" allows partial data rendering, cache-and-network shows stale data while refreshing, separate error states for complete vs partial failures
+Two failure renders, not one: `error && !data` is a dead screen and gets the full error state, while
+`error` with data is a banner over content the user can still read. Collapsing them to a single
+`if (error)` throws away a working page whenever one field of the query fails.
 
 ---
 
-## Global Error Link with Logging
+## Global error link
 
 ```typescript
 // lib/apollo-error-link.ts
 import { onError } from "@apollo/client/link/error";
 
 const AUTH_ERROR_CODES = ["UNAUTHENTICATED", "FORBIDDEN"];
-const NETWORK_ERROR_THRESHOLD_MS = 5000;
 
 const errorLink = onError(
   ({ graphQLErrors, networkError, operation, forward }) => {
@@ -171,4 +172,6 @@ const errorLink = onError(
 export { errorLink };
 ```
 
-**Why good:** Centralized error link handles auth and logging consistently, separate handling for GraphQL vs network errors, rate limiting support, offline detection
+GraphQL errors and network errors arrive on separate arguments and mean different things: the first
+is a 200 response carrying an `errors` array, the second is a request that never completed. Handling
+only `networkError` misses every authorization failure.

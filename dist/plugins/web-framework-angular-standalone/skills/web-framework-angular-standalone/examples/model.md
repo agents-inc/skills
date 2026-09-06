@@ -1,6 +1,6 @@
 # Two-Way Binding with model() Examples
 
-> Two-way binding patterns using model() for Angular 17+ standalone components. See [core.md](core.md) for standalone and signal basics.
+> `model()` two-way binding for Angular 17+ standalone components. See [core.md](core.md) for standalone and signal basics.
 
 ---
 
@@ -10,9 +10,7 @@
 
 ```typescript
 // color-picker.component.ts
-import { Component, input, model, signal, computed } from "@angular/core";
-
-type ColorFormat = "hex" | "rgb" | "hsl";
+import { Component, input, model } from "@angular/core";
 
 @Component({
   selector: "app-color-picker",
@@ -76,7 +74,9 @@ export class ColorPickerComponent {
 />
 ```
 
-**Why good:** model() creates two-way bindable signals, parent uses [(color)] syntax, component can read and write the value, no boilerplate for @Input + @Output combo
+**Why good:** `model()` gives the parent `[(color)]` and the child a signal it can both read and write, with none of the `@Input` plus `@Output` pairing that used to be needed.
+
+**When not to use it:** `input()` plus `output()` keeps the data flow one-way and is the better default. Reach for `model()` only where the child genuinely owns the edit — pickers, inputs, and other form-like controls.
 
 ---
 

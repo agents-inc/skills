@@ -1,6 +1,6 @@
 # web-editor-lexical
 
-Extensible text editor framework by Meta
+Extensible text editor framework by Meta. Use when building a rich text editor on Lexical — editor setup, custom nodes, commands, transforms, and serialization.
 
 ## Installation
 

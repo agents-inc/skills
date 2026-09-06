@@ -5,159 +5,201 @@ description: VeeValidate v4 patterns - useForm, useField, defineField, useFieldA
 
 # VeeValidate Form Validation Patterns
 
-> **Quick Guide:** Use VeeValidate v4 for Vue 3 form validation with Composition API. Use `useForm` for form state, `defineField` for quick field setup, `useField` for custom input components, and `useFieldArray` for dynamic lists. Always wrap schema libraries with `toTypedSchema()`. Always use `field.key` (not index) as iteration key in field arrays.
+> **Quick Guide:** `useForm` owns the form state; `defineField` returns a `[model, attrs]` tuple to
+> `v-model` onto a native input, and `useField` binds a field inside a reusable input component —
+> with its name passed as a getter so it stays reactive. A schema reaches `validationSchema` through
+> `toTypedSchema()`, which is also what supplies the types. `useFieldArray` drives repeatable groups
+> and iterates on `field.key`. Everything here is v4; v5 removes the adapter, so check
+> [reference.md](reference.md) before targeting it.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — `defineField`, inline rules, a reusable input built on `useField`, form meta, eager validation
+- [examples/validation.md](examples/validation.md) — schema through `toTypedSchema`, conditional schemas, all errors per field
+- [examples/arrays.md](examples/arrays.md) — `useFieldArray`, nested arrays, reordering
+- [reference.md](reference.md) — return-value tables, composition helpers, worked anti-patterns, v5 migration
+
+---
+
+## Which path applies
+
+- **The form is built in the component around native inputs** — `useForm` plus `defineField`, and
+  `v-model` on the returned model. Follow [examples/core.md](examples/core.md).
+- **A reusable input component** — `useField` inside the component, taking its name as
+  `() => props.name`. Follow [examples/core.md](examples/core.md) Pattern 3.
+- **The renderless `<Form>` and `<Field>` components** — an alternative to the Composition API
+  rather than a companion to it. Each creates its own form context, so a component that calls
+  `useForm` and also renders `<Form>` has two, and the fields register with whichever they are
+  nested in.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing VeeValidate code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap a schema in `toTypedSchema()` before handing it to `validationSchema`.** The adapter converts
+the schema's result into the shape the form reads and is what supplies the value types; a raw schema
+is accepted without complaint and then validates nothing.
 
-**(You MUST use `toTypedSchema()` wrapper when using schema libraries in v4 - raw schemas won't work)**
+**Pass `useField` its name as `() => props.name` or `toRef(props, "name")`.** A plain `props.name` is
+read once at setup, so the field keeps binding to the name the component first mounted with.
 
-**(You MUST use `field.key` as iteration key in useFieldArray - NEVER use array index)**
+**Give `initialValues` an entry for every field, arrays included.** Field arrays iterate their value
+and fail on `undefined`, and a cross-field rule is skipped entirely when one of the keys it compares
+is missing.
 
-**(You MUST use function form `() => props.name` or `toRef()` in useField for prop reactivity)**
-
-**(You MUST initialize field array values in `initialValues` - undefined arrays cause errors)**
+**Iterate `useFieldArray` on `field.key`.** It is the identity VeeValidate assigns each entry and it
+survives insertion and reordering, which a positional index does not.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** VeeValidate, vee-validate, useForm, useField, defineField, useFieldArray, toTypedSchema, ErrorMessage, Form component
+**Auto-detection:** vee-validate, @vee-validate/zod, @vee-validate/yup, @vee-validate/valibot,
+useForm, useField, defineField, useFieldArray, toTypedSchema, validationSchema, errorBag,
+handleSubmit, resetForm, setFieldError, setErrors, validateOnValueUpdate, keepValuesOnUnmount,
+ErrorMessage, useFormContext
 
-**When to use:**
+**Applies to:**
 
-- Building Vue 3 forms with validation requirements
-- Managing complex form state with multiple fields
-- Creating dynamic forms with add/remove field capabilities
-- Integrating schema validation libraries with `toTypedSchema()`
-- Building multi-step wizard forms
+- Vue form state, validation timing and submission
+- Reusable input components that bind themselves to a named field
+- Repeatable field groups that add, remove and reorder
+- Surfacing server-side validation failures against individual fields
+- Multi-step forms where fields unmount between steps
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Single input without validation (use native v-model)
-- Server-only forms with server actions (use native form submission)
-- Read-only data display (not a form scenario)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - defineField, useField, form meta, eager validation
-- [examples/validation.md](examples/validation.md) - Zod/Yup/Valibot schema integration, conditional validation
-- [examples/arrays.md](examples/arrays.md) - useFieldArray, nested arrays, reordering
-- [reference.md](reference.md) - Decision frameworks, API reference tables, anti-patterns
+- Authoring the validation schema — `toTypedSchema` adapts whatever schema it is given, and how that
+  schema states its rules is settled by whatever owns it.
+- Choosing a schema library — an adapter package exists for each, and the choice sits outside this
+  skill.
+- Markup and styling of the inputs — every example uses plain elements, so the classes are yours.
+- Where the initial values came from — `initialValues` is a plain object the form does not fetch.
 
 ---
 
 <philosophy>
 
-## Philosophy
+Validation is declared once, at the form, and read per field. `useForm` holds the schema and the
+values; each field asks the form for its own slice, so a field knows its error without knowing the
+rule that produced it. That is what lets an input component be written without knowing which form it
+will be dropped into — it takes a name and binds itself.
 
-VeeValidate v4 embraces Vue 3's Composition API as the primary approach, enabling seamless integration with any UI library. Validation logic is decoupled from presentation, allowing schema-first validation with full TypeScript inference.
-
-**Core Principles:**
-
-1. **Composition API first** - Use `useForm`, `useField`, `defineField` for seamless Vue 3 integration
-2. **Schema-first validation** - Prefer declarative schemas over inline rules
-3. **Full type safety** - TypeScript inference from schemas and generics
-4. **UI agnostic** - Works with any component library or native inputs
-5. **Minimal re-renders** - Efficient reactivity through Vue's reactive system
-
-**defineField vs useField:**
-
-| Feature          | `defineField`                       | `useField`                                |
-| ---------------- | ----------------------------------- | ----------------------------------------- |
-| **Use case**     | Quick form setup with native inputs | Building reusable custom input components |
-| **Form context** | Always requires form context        | Optional form integration                 |
-| **Best for**     | Application-level forms             | Component library development             |
+Reactivity is the thing to keep intact. Everything a field receives from the form is a ref or a
+getter, and the common failure is flattening one of them: reading `props.name` instead of passing a
+getter, or unwrapping a computed schema with `.value` before the form can track it.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## defineField or useField
+
+|              | `defineField`                               | `useField`                                    |
+| ------------ | ------------------------------------------- | --------------------------------------------- |
+| Returns      | `[model, attrs]` for `v-model` and `v-bind` | `value`, `errorMessage`, `meta`, handlers     |
+| Form context | Required — it comes off a `useForm` result  | Optional; falls back to standalone validation |
+| Best for     | The form's own template, native inputs      | A component that binds itself by name         |
+
+`defineField` where the form and the inputs are in one component. `useField` where the input is a
+component in its own right, or where the binding needs handlers rather than a `v-model`.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic Form with defineField
+### Pattern 1: useForm with defineField
 
-Use `useForm` with `defineField` for the fastest form setup. `defineField` returns a `[model, attrs]` tuple for v-model binding. See [examples/core.md](examples/core.md) for full examples.
+`defineField` returns a tuple: the model for `v-model`, and the attrs carrying the event handlers
+that drive validation timing.
 
 ```vue
 <script setup lang="ts">
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/zod";
-import { z } from "zod";
-
-const schema = toTypedSchema(
-  z.object({
-    email: z.string().email("Invalid email"),
-    password: z.string().min(8, "At least 8 characters"),
-  }),
-);
-
 const { handleSubmit, errors, defineField } = useForm({
   validationSchema: schema,
+  initialValues: { email: "", password: "" },
 });
 
 const [email, emailAttrs] = defineField("email");
 
-const onSubmit = handleSubmit((values) => {
-  // values is fully typed from schema
+const onSubmit = handleSubmit(async (values) => {
+  await login(values);
 });
 </script>
+
+<template>
+  <input v-model="email" v-bind="emailAttrs" />
+  <span v-if="errors.email" role="alert">{{ errors.email }}</span>
+</template>
 ```
+
+Dropping `v-bind="emailAttrs"` leaves the model bound but the handlers unattached, so the field
+never blurs and never validates.
+
+Full code: [examples/core.md](examples/core.md) Pattern 1
 
 ---
 
-### Pattern 2: Custom Input Components with useField
+### Pattern 2: useField in a reusable input
 
-Use `useField` when building reusable input components. **Critical:** use function form `() => props.name` to maintain reactivity. See [examples/core.md](examples/core.md) for full component example.
+The name arrives as a getter so the field re-binds if the prop changes.
 
 ```vue
 <script setup lang="ts">
-import { useField } from "vee-validate";
-
 const props = defineProps<{ name: string }>();
 
-// CRITICAL: Function form maintains reactivity
-const { value, errorMessage, handleBlur, meta } = useField<string>(
-  () => props.name,
-  undefined,
-  { validateOnValueUpdate: false },
-);
+const { value, errorMessage, handleBlur, handleChange, meta } =
+  useField<string>(() => props.name, undefined, {
+    validateOnValueUpdate: false,
+  });
 </script>
 ```
 
+`validateOnValueUpdate: false` holds validation back to blur, which is what stops errors appearing
+while the user is still typing the first character.
+
+Full code: [examples/core.md](examples/core.md) Pattern 3
+
 ---
 
-### Pattern 3: Schema Validation with toTypedSchema
+### Pattern 3: Schema through toTypedSchema
 
-Always wrap schema libraries with `toTypedSchema()`. Initialize ALL fields used in `refine/superRefine` - Zod skips refinements when keys are undefined. See [examples/validation.md](examples/validation.md) for Zod, Yup, and Valibot examples.
+The adapter is the boundary: the schema states the rules, and `toTypedSchema` renders them as
+VeeValidate errors and as the type of `values`.
 
 ```typescript
 import { toTypedSchema } from "@vee-validate/zod";
 
-// CORRECT: Wrapped schema
-const schema = toTypedSchema(z.object({ email: z.string().email() }));
+const schema = toTypedSchema(registrationSchema);
 
-// WRONG: Raw schema won't work with VeeValidate
-const schema = z.object({ email: z.string().email() });
+const { handleSubmit, errors } = useForm({
+  validationSchema: schema,
+  initialValues: { email: "", password: "", confirmPassword: "" },
+});
 ```
+
+Every key a cross-field rule compares needs an entry in `initialValues` — a rule reading a key that
+is `undefined` is skipped rather than failed, so the form submits as valid.
+
+Full code: [examples/validation.md](examples/validation.md)
 
 ---
 
-### Pattern 4: Dynamic Arrays with useFieldArray
+### Pattern 4: useFieldArray
 
-Use `useFieldArray` for add/remove/reorder patterns. **Always** use `field.key` as `:key`, never array index. Initialize arrays in `initialValues`. See [examples/arrays.md](examples/arrays.md) for full patterns.
+`fields` carries a `key` and a `value` per entry. The key is the iteration key; the value is what
+the inputs bind to.
 
 ```vue
 <script setup lang="ts">
-import { useForm, useFieldArray } from "vee-validate";
-
 const { handleSubmit } = useForm({
   initialValues: { users: [{ name: "", email: "" }] },
 });
@@ -166,47 +208,47 @@ const { fields, push, remove } = useFieldArray("users");
 </script>
 
 <template>
-  <!-- CORRECT: field.key as key -->
   <div v-for="(field, index) in fields" :key="field.key">
     <input v-model="field.value.name" />
+    <button type="button" @click="remove(index)">Remove</button>
   </div>
 </template>
 ```
 
+Full code: [examples/arrays.md](examples/arrays.md)
+
 ---
 
-### Pattern 5: Server-Side Error Handling
+### Pattern 5: Server-side errors
 
-Set errors from API responses using `setErrors` (multiple) or `setFieldError` (single).
+`setErrors` takes a record of field names to messages, and `setFieldError` sets one. Both put a
+server's verdict where the field's own error would go, so the template needs no separate branch.
 
 ```typescript
-const { handleSubmit, setErrors, setFieldError } = useForm({ ... });
-
 const onSubmit = handleSubmit(async (values) => {
   try {
-    await api.createUser(values);
+    await createUser(values);
   } catch (error) {
-    if (error.response?.data?.errors) {
-      // Set multiple field errors from API
-      setErrors(mapApiErrors(error.response.data.errors));
+    const fieldErrors = extractFieldErrors(error);
+    if (fieldErrors) {
+      setErrors(fieldErrors);
     } else {
-      setFieldError("apiError", "Something went wrong");
+      setFieldError("email", "Could not create the account");
     }
   }
 });
 ```
 
+The next validation run clears them — a server error persists only until the field it names changes,
+which is why a rejected submission needs the message re-set rather than remembered.
+
 ---
 
-### Pattern 6: Form Meta and State
+### Pattern 6: Form meta
 
-Access aggregated form state for UX features like dirty tracking, submit button state, and reset. See [examples/core.md](examples/core.md) for full example.
+`meta` aggregates the fields: `valid`, `dirty`, `touched` and `pending` describe the form as a whole.
 
 ```vue
-<script setup lang="ts">
-const { handleSubmit, meta, isSubmitting, resetForm } = useForm({ ... });
-</script>
-
 <template>
   <button :disabled="!meta.valid || !meta.dirty || isSubmitting">
     {{ isSubmitting ? "Saving..." : "Save" }}
@@ -215,58 +257,46 @@ const { handleSubmit, meta, isSubmitting, resetForm } = useForm({ ... });
 </template>
 ```
 
+After a successful save, `resetForm({ values: saved })` makes the saved data the new baseline, which
+is what returns `meta.dirty` to false.
+
+Full code: [examples/core.md](examples/core.md) Pattern 4
+
 </patterns>
 
 ---
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Missing `toTypedSchema()` wrapper - raw schemas silently fail to validate
-- Using array index as `:key` in `useFieldArray` - causes form state corruption on add/remove
-- Direct `props.name` in `useField` - loses reactivity when prop changes
-- Undefined `initialValues` for field arrays - causes runtime errors
+- A schema handed to `validationSchema` without `toTypedSchema()` — it is accepted and then never
+  validates, so the form submits whatever it holds.
+- `props.name` passed to `useField` instead of a getter — the field binds to the name captured at
+  setup and ignores every later change.
+- `initialValues` missing a field array — the composable iterates `undefined` and throws.
+- An array index as the `useFieldArray` iteration key — Vue matches the wrong entries, so removing
+  a middle row shifts every value below it up one.
+- `resetForm(data)` in place of `resetForm({ values: data })` — the argument shape is wrong, and the
+  reset takes no effect rather than reporting.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- `validateOnValueUpdate` enabled everywhere - validates on every keystroke (noisy UX)
-- Not handling async validation errors - API failures need `setErrors()` or `setFieldError()`
-- Forgetting `resetForm()` after submission - form stays dirty after success
-- Multiple `useForm` calls in same component - creates conflicting form contexts
-- Not using `meta.touched` for error display - shows errors before user interaction
+- `errors` holds the first error per field; `errorBag` holds all of them as arrays. A password rule
+  set showing one unmet requirement at a time is reading the wrong one.
+- `meta.valid` is false on the first render, before validation has run — a submit button gated on it
+  alone starts disabled.
+- `keepValuesOnUnmount` defaults to false, so a field that unmounts loses its value. Set it true for
+  anything that hides fields between steps.
+- Nested fields address by dot notation (`defineField("user.profile.name")`) and array items by
+  brackets (`errors["items[0].name"]`) — the two are not interchangeable.
+- A computed schema must be passed as the computed itself, not `.value` — unwrapped, the form binds
+  to one snapshot and stops tracking it.
+- `validateOnValueUpdate` left on validates every keystroke, including the first.
+- Errors shown without checking `meta.touched` appear before the user has reached the field.
 
-**Gotchas & Edge Cases:**
-
-- `errors` has first error per field; `errorBag` has ALL errors per field as arrays
-- `meta.valid` may be false during initial render before validation runs
-- Nested fields use dot notation: `defineField('user.profile.name')`
-- Array field errors use bracket notation: `errors['items[0].name']`
-- `resetForm({ values: data })` not `resetForm(data)` - wrong structure silently fails
-- `keepValuesOnUnmount: false` (default) drops values of unmounted fields - set `true` for multi-step forms
-- Mixing `<Form>` component with `useForm()` creates conflicting contexts - pick one approach
-- Zod `refine/superRefine` do NOT execute when object keys are missing - always initialize all fields
+Worked before/after code for the most common of these is in [reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use `toTypedSchema()` wrapper when using schema libraries in v4 - raw schemas won't work)**
-
-**(You MUST use `field.key` as iteration key in useFieldArray - NEVER use array index)**
-
-**(You MUST use function form `() => props.name` or `toRef()` in useField for prop reactivity)**
-
-**(You MUST initialize field array values in `initialValues` - undefined arrays cause errors)**
-
-**Failure to follow these rules will break form validation, cause reactivity issues, and corrupt form state.**
-
-</critical_reminders>

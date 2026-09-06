@@ -38,6 +38,8 @@
 | `metaChunk`       | `boolean`                                           | `false`           | Extract page metadata to separate chunk     |
 | `rewrites`        | `Record<string, string>`                            | `{}`              | Source-to-URL path rewriting                |
 
+Two of those types are wider than the table shows: `ignoreDeadLinks` also accepts an array of matchers — `(string | RegExp | ((link: string, source: string) => boolean))[]` — for exempting particular links rather than all of them, and `appearance` also accepts a `UseDarkOptions` object for configuring the underlying dark-mode composable.
+
 ---
 
 ## Theme Config Options (`themeConfig`)
@@ -126,10 +128,12 @@ interface SidebarItem {
 | ---------------- | ------------------------------------------------------------------------------------------------------ |
 | `useData()`      | Access `site`, `page`, `theme`, `frontmatter`, `title`, `description`, `lang`, `isDark`, `localeIndex` |
 | `useRoute()`     | Access current route (`path`, `data`, `component`)                                                     |
-| `useRouter()`    | Programmatic navigation (`go`, `onBeforeRouteChange`, `onAfterRouteChanged`)                           |
+| `useRouter()`    | Programmatic navigation (`route`, `go`, and the navigation hooks)                                      |
 | `withBase(path)` | Prepend `base` to a path                                                                               |
 | `<Content />`    | Render page content in custom layouts                                                                  |
 | `<ClientOnly>`   | Render children only on client side (skip SSR)                                                         |
+
+`useData()` also returns `params` for a dynamic route, `dir` for text direction and `hash` for the current fragment. The router's four navigation hooks are `onBeforeRouteChange`, `onBeforePageLoad`, `onAfterPageLoad` and `onAfterRouteChange` — note the tense: the pair naming a _route_ change reads `Change`, not `Changed`.
 
 ---
 
@@ -141,11 +145,13 @@ createContentLoader(pattern: string, options?: {
   includeSrc?: boolean   // include raw markdown
   render?: boolean       // include rendered HTML
   excerpt?: boolean      // include excerpt (above first ---)
-  globOptions?: object   // fast-glob options
+  globOptions?: object   // extra options for the glob itself
   transform?: (data: ContentData[]) => any  // post-process
 })
 
 // Custom loader — for arbitrary data
+import { defineLoader } from "vitepress";
+
 export default defineLoader({
   watch: string[]    // glob patterns to watch in dev
   async load() {     // runs at build time

@@ -1,8 +1,6 @@
 # Jotai - Store, Provider, and Testing Examples
 
-> Extended examples for stores, providers, and test isolation. See [core.md](core.md) for fundamental atom patterns.
-
-**Prerequisites**: Understand primitive and derived atoms from core examples first.
+> Extended examples for stores, providers, and test isolation. See [core.md](core.md) for the atom shapes these build on.
 
 ---
 
@@ -33,7 +31,7 @@ const unsubscribe = myStore.sub(countAtom, () => {
 export { myStore, countAtom };
 ```
 
-**Why good:** Store enables Jotai state access in non-React code (event handlers, WebSocket callbacks, analytics)
+**Why good:** `get`, `set` and `sub` work with no component around them, so a socket handler or an analytics listener reads and writes the same state the UI does.
 
 ### Good Example - Provider with Custom Store
 
@@ -70,7 +68,7 @@ function Counter() {
 export { Counter };
 ```
 
-**Why good:** Provider-less mode works for simple apps, custom store enables external access
+**Why good:** With no Provider, atoms resolve against one global store — which is the whole configuration for an app that needs no isolation, and the reason tests need a store of their own.
 
 ---
 
@@ -105,7 +103,7 @@ function ResettableProvider({ children }: ResettableProviderProps) {
 export { ResettableProvider };
 ```
 
-**Why good:** Creating new store resets every atom to its initial value, useful for logout or "start over" features
+**Why good:** A new store has no values in it, so every atom falls back to its initial value at once — no reset action to write, and no atom that can be forgotten. This is what logout wants.
 
 ---
 
@@ -178,4 +176,4 @@ renderWithStore(<Counter />);
 // Counter shows 10, isolated from other tests
 ```
 
-**Why good:** Fresh store prevents state leakage between tests, pre-populate for specific scenarios, same pattern works for unit and integration tests
+**Why good:** The store is the seam: seeding it puts the component in the state the case is about, without driving the UI to get there, and a new one per test means no case depends on the order it runs in.

@@ -123,7 +123,10 @@ export function TableWithColumnToggle({ data }: { data: User[] }) {
 }
 ```
 
-**Why good:** `enableHiding: false` for required columns, `getCanHide()` to disable toggle, dropdown menu with proper ARIA roles, `getVisibleCells()` respects visibility state
+**Why good:** `enableHiding: false` and `getCanHide()` are the declaration and the query of one fact,
+so the toggle UI is generated from the column definitions rather than from a second hand-kept list.
+Rendering from `getVisibleCells()` rather than from all cells is what makes the state take effect —
+hidden columns stay in the table and keep filtering and sorting, and only the render is affected.
 
 ---
 

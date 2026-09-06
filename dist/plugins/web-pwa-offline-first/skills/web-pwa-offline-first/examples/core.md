@@ -1,44 +1,38 @@
-# Offline-First Core Examples
+# Offline-First — Core Examples
 
-> Core code examples for offline-first applications. See [SKILL.md](../SKILL.md) for concepts.
-
-**Extended patterns:** See [indexeddb.md](indexeddb.md) for database setup and [sync.md](sync.md) for conflict resolution and synchronization.
+> The local-first write path end to end. Decisions are in [SKILL.md](../SKILL.md);
+> [indexeddb.md](indexeddb.md) covers the store itself and [sync.md](sync.md) covers reconciliation.
 
 ---
 
-## Pattern 1: Syncable Entity Structure
+## Pattern 1: Syncable entity
 
-Every entity that needs synchronization must include metadata for tracking sync state.
+Sync metadata is prefixed so a merge can skip the whole set with one check, and a factory keeps
+creation consistent.
 
 ```typescript
-// ✅ Good Example - Syncable entity with full metadata
 interface SyncableEntity {
   id: string;
-
-  // Sync tracking fields
   _syncStatus: "synced" | "pending" | "conflicted";
-  _lastModified: number; // Client timestamp
-  _serverTimestamp?: number; // Server timestamp for conflict resolution
-  _localVersion: string; // Local revision ID (UUID)
-  _serverVersion?: string; // Server revision ID
-  _deletedAt?: number; // Soft delete timestamp (tombstone)
+  _lastModified: number; // client clock
+  _serverTimestamp?: number; // server clock, preferred when present
+  _localVersion: string; // new UUID on every local write
+  _serverVersion?: string; // the version the server last confirmed
+  _deletedAt?: number; // tombstone
 }
 
-// Named constants for sync status
 const SYNC_STATUS = {
   SYNCED: "synced",
   PENDING: "pending",
   CONFLICTED: "conflicted",
 } as const;
 
-// Example: Todo entity with sync metadata
 interface Todo extends SyncableEntity {
   title: string;
   completed: boolean;
   userId: string;
 }
 
-// Factory function for creating syncable entities
 function createTodo(title: string, userId: string): Todo {
   return {
     id: crypto.randomUUID(),
@@ -52,46 +46,25 @@ function createTodo(title: string, userId: string): Todo {
 }
 ```
 
-**Why good:** Clear separation of business data and sync metadata, named constants prevent typos, factory function ensures consistent creation, all fields have explicit types
-
-```typescript
-// ❌ Bad Example - No sync metadata
-interface Todo {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
-// No way to track:
-// - Whether this todo has been synced
-// - When it was last modified
-// - If there's a conflict
-// - If it's been soft-deleted
-```
-
-**Why bad:** No sync tracking means data can be lost during sync, no conflict detection possible, hard deletes prevent proper multi-device sync
+The IDs are client-generated. Waiting for the server to assign one means a record created offline
+has no identity until it syncs, which breaks every reference to it in the meantime.
 
 ---
 
-## Pattern 2: Repository Pattern for Data Access
+## Pattern 2: Repository
 
-Use a repository as the single access point for all data operations, encapsulating local storage and sync queue logic.
+The one place that knows a write is a local `put` plus an enqueue. Reads filter tombstones so no
+caller has to remember they exist.
 
 ```typescript
-// ✅ Good Example - Repository pattern
 import type { Table } from "dexie";
 
 interface DataRepository<T extends SyncableEntity> {
-  // Reads always from local
   get(id: string): Promise<T | null>;
   getAll(): Promise<T[]>;
   query(filter: (item: T) => boolean): Promise<T[]>;
-
-  // Writes go local first, then queue sync
   save(item: T): Promise<void>;
   delete(id: string): Promise<void>;
-
-  // Sync status
   getSyncStatus(id: string): Promise<SyncStatus>;
   getPendingCount(): Promise<number>;
 }
@@ -106,7 +79,6 @@ class TodoRepository implements DataRepository<Todo> {
 
   async get(id: string): Promise<Todo | null> {
     const todo = await this.localDb.get(id);
-    // Filter out soft-deleted items
     if (todo?._deletedAt) return null;
     return todo ?? null;
   }
@@ -118,7 +90,6 @@ class TodoRepository implements DataRepository<Todo> {
   async save(todo: Todo): Promise<void> {
     const now = Date.now();
 
-    // Update sync metadata
     const updatedTodo: Todo = {
       ...todo,
       _syncStatus: SYNC_STATUS.PENDING,
@@ -126,10 +97,8 @@ class TodoRepository implements DataRepository<Todo> {
       _localVersion: crypto.randomUUID(),
     };
 
-    // 1. Save to local database immediately
     await this.localDb.put(updatedTodo);
 
-    // 2. Queue for background sync
     await this.syncQueue.enqueue({
       type: "UPSERT",
       collection: "todos",
@@ -141,14 +110,12 @@ class TodoRepository implements DataRepository<Todo> {
   async delete(id: string): Promise<void> {
     const now = Date.now();
 
-    // Soft delete - update with tombstone
     await this.localDb.update(id, {
       _syncStatus: SYNC_STATUS.PENDING,
       _lastModified: now,
       _deletedAt: now,
     });
 
-    // Queue deletion for sync
     await this.syncQueue.enqueue({
       type: "DELETE",
       collection: "todos",
@@ -174,16 +141,15 @@ export { TodoRepository };
 export type { DataRepository, SyncStatus };
 ```
 
-**Why good:** Single access point for all data operations, encapsulates sync logic, soft deletes enable proper sync, sync status queryable, repository is testable in isolation
-
 ---
 
-## Pattern 3: Sync Queue Management
+## Pattern 3: Sync queue
 
-Queue operations when offline and process them reliably when connectivity returns.
+Operations are drained in timestamp order so a create is never replayed after the update that
+followed it. A failure increments the attempt count and reschedules; exceeding the ceiling emits an
+event rather than retrying forever.
 
 ```typescript
-// ✅ Good Example - Robust sync queue
 interface QueuedOperation {
   id: string;
   type: "CREATE" | "UPDATE" | "DELETE" | "UPSERT";
@@ -194,10 +160,9 @@ interface QueuedOperation {
   lastError?: string;
 }
 
-// Named constants
 const MAX_RETRY_ATTEMPTS = 5;
 const INITIAL_BACKOFF_MS = 1000;
-const MAX_BACKOFF_MS = 30000;
+const MAX_BACKOFF_MS = 30_000;
 const BACKOFF_MULTIPLIER = 2;
 const JITTER_FACTOR = 0.5;
 
@@ -207,7 +172,7 @@ function calculateBackoff(attempt: number): number {
     MAX_BACKOFF_MS,
   );
 
-  // Add jitter to prevent thundering herd
+  // jitter spreads reconnecting clients out instead of synchronising them
   const jitter = exponentialDelay * JITTER_FACTOR * (Math.random() * 2 - 1);
 
   return Math.floor(exponentialDelay + jitter);
@@ -217,14 +182,24 @@ class SyncQueue {
   private readonly db: LocalDatabase;
   private readonly STORE_NAME = "syncQueue";
   private processing = false;
+  private listeners = new Set<() => void>();
 
   constructor(db: LocalDatabase) {
     this.db = db;
 
-    // Listen for online events
     if (typeof window !== "undefined") {
       window.addEventListener("online", () => this.processQueue());
     }
+  }
+
+  /** Fires when the queue changes, so a view can re-read the count. */
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify(): void {
+    this.listeners.forEach((listener) => listener());
   }
 
   async enqueue(
@@ -235,11 +210,9 @@ class SyncQueue {
       id: crypto.randomUUID(),
       retryCount: 0,
     });
+    this.notify();
 
-    // Try to process immediately if online
-    if (navigator.onLine) {
-      this.processQueue();
-    }
+    if (navigator.onLine) this.processQueue();
   }
 
   async processQueue(): Promise<void> {
@@ -248,14 +221,11 @@ class SyncQueue {
 
     try {
       const operations = await this.db.getAll(this.STORE_NAME);
-
-      // Sort by timestamp to maintain order
       operations.sort((a, b) => a.timestamp - b.timestamp);
 
       for (const op of operations) {
         try {
           await this.executeOperation(op);
-          // Success - remove from queue
           await this.db.delete(this.STORE_NAME, op.id);
         } catch (error) {
           await this.handleOperationError(op, error);
@@ -263,13 +233,12 @@ class SyncQueue {
       }
     } finally {
       this.processing = false;
+      this.notify();
     }
   }
 
   private async executeOperation(op: QueuedOperation): Promise<void> {
-    const endpoint = `/api/${op.collection}`;
-
-    const response = await fetch(endpoint, {
+    const response = await fetch(`/api/${op.collection}`, {
       method: this.getHttpMethod(op.type),
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(op.data),
@@ -295,19 +264,10 @@ class SyncQueue {
     error: unknown,
   ): Promise<void> {
     if (op.retryCount >= MAX_RETRY_ATTEMPTS) {
-      // Move to dead letter queue or notify user
-      console.error(
-        `Operation ${op.id} failed after ${MAX_RETRY_ATTEMPTS} retries`,
-        error,
-      );
       await this.db.delete(this.STORE_NAME, op.id);
-      // Emit event for UI to handle
       this.emitSyncFailure(op);
       return;
     }
-
-    // Increment retry count and schedule retry
-    const delay = calculateBackoff(op.retryCount);
 
     await this.db.put(this.STORE_NAME, {
       ...op,
@@ -315,8 +275,7 @@ class SyncQueue {
       lastError: error instanceof Error ? error.message : "Unknown error",
     });
 
-    // Schedule retry
-    setTimeout(() => this.processQueue(), delay);
+    setTimeout(() => this.processQueue(), calculateBackoff(op.retryCount));
   }
 
   private emitSyncFailure(op: QueuedOperation): void {
@@ -333,21 +292,22 @@ export { SyncQueue };
 export type { QueuedOperation };
 ```
 
-**Why good:** Exponential backoff with jitter prevents server overload, retry limits prevent infinite loops, operations sorted by timestamp maintain consistency, dead letter handling for failed operations, event emission for UI feedback
+A dropped operation is a lost write, so `emitSyncFailure` has to reach the user. Silently deleting
+it is the worst of both.
 
 ---
 
-## Pattern 4: Network Status Detection
+## Pattern 4: Network status
 
-Reliably detect network status and adjust behavior accordingly.
+One manager, framework-agnostic, that combines the browser flag with a real request and reports a
+third state for a connection that is technically up and unusably slow.
 
 ```typescript
-// ✅ Good Example - Robust network status detection
 type NetworkStatus = "online" | "offline" | "slow";
 type NetworkListener = (status: NetworkStatus) => void;
 
 const SLOW_THRESHOLD_MS = 2000;
-const HEALTH_CHECK_INTERVAL_MS = 30000;
+const HEALTH_CHECK_INTERVAL_MS = 30_000;
 
 class NetworkStatusManager {
   private status: NetworkStatus = navigator.onLine ? "online" : "offline";
@@ -355,15 +315,6 @@ class NetworkStatusManager {
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    this.setupEventListeners();
-
-    // Initial health check if online
-    if (navigator.onLine) {
-      this.checkConnectionQuality();
-    }
-  }
-
-  private setupEventListeners(): void {
     window.addEventListener("online", () => {
       this.updateStatus("online");
       this.checkConnectionQuality();
@@ -373,13 +324,14 @@ class NetworkStatusManager {
       this.updateStatus("offline");
       this.stopHealthCheck();
     });
+
+    if (navigator.onLine) this.checkConnectionQuality();
   }
 
   private updateStatus(newStatus: NetworkStatus): void {
-    if (this.status !== newStatus) {
-      this.status = newStatus;
-      this.listeners.forEach((listener) => listener(newStatus));
-    }
+    if (this.status === newStatus) return;
+    this.status = newStatus;
+    this.listeners.forEach((listener) => listener(newStatus));
   }
 
   getStatus(): NetworkStatus {
@@ -399,13 +351,10 @@ class NetworkStatusManager {
 
     try {
       const start = performance.now();
-
-      // Use a small health endpoint
       const response = await fetch("/api/health", {
         method: "HEAD",
         cache: "no-store",
       });
-
       const latency = performance.now() - start;
 
       if (!response.ok) {
@@ -431,10 +380,9 @@ class NetworkStatusManager {
   }
 
   private stopHealthCheck(): void {
-    if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval);
-      this.healthCheckInterval = null;
-    }
+    if (!this.healthCheckInterval) return;
+    clearInterval(this.healthCheckInterval);
+    this.healthCheckInterval = null;
   }
 
   destroy(): void {
@@ -443,28 +391,31 @@ class NetworkStatusManager {
   }
 }
 
-// Singleton instance
 const networkStatus = new NetworkStatusManager();
 
 export { networkStatus, NetworkStatusManager };
 export type { NetworkStatus, NetworkListener };
 ```
 
-**Why good:** Doesn't rely solely on navigator.onLine (which can be unreliable), actual health check for real connectivity, slow connection detection, proper cleanup methods, event-based updates
-
 ---
 
-## Pattern 5: Optimistic UI with Rollback
+## Pattern 5: Optimistic updates with rollback
 
-Update UI immediately and roll back if sync fails.
+The rollback closure captures the previous value, so the caller's error path is a single call and
+cannot reconstruct the wrong state.
 
 ```typescript
-// ✅ Good Example - Optimistic updates with rollback support
 interface PendingChange<T> {
   id: string;
   previousValue: T | null;
   newValue: T;
   timestamp: number;
+}
+
+interface LocalStore<T> {
+  get: (id: string) => Promise<T | undefined>;
+  put: (value: T) => Promise<void>;
+  delete: (id: string) => Promise<void>;
 }
 
 class OptimisticUpdateManager<T extends SyncableEntity> {
@@ -473,18 +424,12 @@ class OptimisticUpdateManager<T extends SyncableEntity> {
   async applyOptimistically(
     id: string,
     newValue: T,
-    localDb: {
-      get: (id: string) => Promise<T | undefined>;
-      put: (value: T) => Promise<void>;
-      delete: (id: string) => Promise<void>;
-    },
+    localDb: LocalStore<T>,
     onUpdate: (items: T[]) => void,
     getAllItems: () => Promise<T[]>,
   ): Promise<() => Promise<void>> {
-    // Get current value for potential rollback
     const previousValue = (await localDb.get(id)) ?? null;
 
-    // Store pending change
     this.pendingChanges.set(id, {
       id,
       previousValue,
@@ -492,28 +437,19 @@ class OptimisticUpdateManager<T extends SyncableEntity> {
       timestamp: Date.now(),
     });
 
-    // Apply optimistic update
     await localDb.put(newValue);
+    onUpdate(await getAllItems());
 
-    // Notify UI
-    const allItems = await getAllItems();
-    onUpdate(allItems);
-
-    // Return rollback function
     return async () => {
       const pending = this.pendingChanges.get(id);
       if (!pending) return;
 
-      if (pending.previousValue) {
-        await localDb.put(pending.previousValue);
-      } else {
-        await localDb.delete(id);
-      }
+      // a null previous value means the record did not exist — undo is a delete
+      if (pending.previousValue) await localDb.put(pending.previousValue);
+      else await localDb.delete(id);
 
       this.pendingChanges.delete(id);
-
-      const updatedItems = await getAllItems();
-      onUpdate(updatedItems);
+      onUpdate(await getAllItems());
     };
   }
 
@@ -534,17 +470,14 @@ export { OptimisticUpdateManager };
 export type { PendingChange };
 ```
 
-**Why good:** Stores previous value for rollback, returns rollback function for error handling, tracks all pending changes, supports both update and create scenarios
-
 ---
 
-## Pattern 6: Connection-Aware Data Fetching
+## Pattern 6: Connection-aware fetching
 
-Fetch from network when online, gracefully fall back to cache when offline.
+Returns the provenance with the payload, so a screen can say where its data came from.
 
 ```typescript
-// ✅ Good Example - Connection-aware fetcher
-const FETCH_TIMEOUT_MS = 10000;
+const FETCH_TIMEOUT_MS = 10_000;
 
 interface FetchResult<T> {
   data: T;
@@ -563,12 +496,10 @@ async function fetchWithOfflineSupport<T>(
   options: RequestInit = {},
 ): Promise<FetchResult<T>> {
   const cacheKey = `fetch:${url}`;
+  type Cached = { data: T; timestamp: number };
 
-  // Check if online
   if (!navigator.onLine) {
-    const cached = await localCache.get<{ data: T; timestamp: number }>(
-      cacheKey,
-    );
+    const cached = await localCache.get<Cached>(cacheKey);
     if (cached) {
       return {
         data: cached.data,
@@ -585,22 +516,16 @@ async function fetchWithOfflineSupport<T>(
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = (await response.json()) as T;
     const timestamp = Date.now();
-
-    // Cache successful response
     await localCache.set(cacheKey, { data, timestamp });
 
     return { data, source: "network", timestamp };
   } catch (error) {
-    // Try cache on network failure
-    const cached = await localCache.get<{ data: T; timestamp: number }>(
-      cacheKey,
-    );
+    // a timeout or an unreachable host is still worth answering from cache
+    const cached = await localCache.get<Cached>(cacheKey);
     if (cached) {
       console.warn("Network failed, using cached data:", error);
       return {
@@ -617,174 +542,44 @@ export { fetchWithOfflineSupport };
 export type { FetchResult, LocalCache };
 ```
 
-**Why good:** Returns source metadata for UI indication, caches successful responses, falls back to cache on failure, timeout prevents hanging requests, typed cache interface
-
 ---
 
-## Pattern 7: React Hook for Network Status
+## Pattern 7: Subscribing a component to network status
 
-A hook for reactive network status in components.
-
-### Implementation
+`useSyncExternalStore` binds the manager from Pattern 4 without duplicating its logic, and its
+server snapshot keeps a server render from touching `navigator`.
 
 ```typescript
 // hooks/use-network-status.ts
-import { useSyncExternalStore, useCallback } from "react";
-
-type NetworkStatus = "online" | "offline" | "slow";
-
-interface NetworkStatusStore {
-  getStatus(): NetworkStatus;
-  subscribe(listener: () => void): () => void;
-}
-
-// Create a singleton store
-function createNetworkStatusStore(): NetworkStatusStore {
-  let status: NetworkStatus = navigator.onLine ? "online" : "offline";
-  const listeners = new Set<() => void>();
-
-  function updateStatus(newStatus: NetworkStatus): void {
-    if (status !== newStatus) {
-      status = newStatus;
-      listeners.forEach((listener) => listener());
-    }
-  }
-
-  // Setup event listeners
-  window.addEventListener("online", () => updateStatus("online"));
-  window.addEventListener("offline", () => updateStatus("offline"));
-
-  return {
-    getStatus: () => status,
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-  };
-}
-
-const networkStore = createNetworkStatusStore();
+import { useCallback, useSyncExternalStore } from "react";
+import { networkStatus, type NetworkStatus } from "../sync/network-status";
 
 function useNetworkStatus(): NetworkStatus {
-  const getSnapshot = useCallback(() => networkStore.getStatus(), []);
-
-  const subscribe = useCallback((callback: () => void) => {
-    return networkStore.subscribe(callback);
-  }, []);
-
-  // Server snapshot always returns 'online' for SSR
+  const subscribe = useCallback(
+    (callback: () => void) => networkStatus.subscribe(callback),
+    [],
+  );
+  const getSnapshot = useCallback(() => networkStatus.getStatus(), []);
   const getServerSnapshot = useCallback(() => "online" as NetworkStatus, []);
 
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export { useNetworkStatus };
-export type { NetworkStatus };
 ```
 
-### Usage
-
-```tsx
-// components/sync-indicator.tsx
-import { useNetworkStatus } from "../hooks/use-network-status";
-
-function SyncIndicator() {
-  const status = useNetworkStatus();
-
-  return (
-    <div role="status" aria-live="polite" data-status={status}>
-      {status === "offline" && (
-        <span>You are offline. Changes will sync when connected.</span>
-      )}
-      {status === "slow" && (
-        <span>Slow connection detected. Some features may be delayed.</span>
-      )}
-      {status === "online" && <span>Connected</span>}
-    </div>
-  );
-}
-
-export { SyncIndicator };
-```
-
-**Why good:** Uses useSyncExternalStore for proper React 18 integration, SSR-safe with server snapshot, semantic data attributes for styling, accessible with role and aria-live
+Rendering it: see [sync.md](sync.md) Pattern 24 for the status indicators.
 
 ---
 
-## Pattern 8: Pending Sync Counter Hook
+## Pattern 8: Offline-aware mutation
 
-Track the number of pending sync operations for UI feedback.
-
-```typescript
-// hooks/use-pending-sync-count.ts
-import { useState, useEffect } from "react";
-
-interface SyncQueue {
-  getQueueLength(): Promise<number>;
-  subscribe(listener: () => void): () => void;
-}
-
-function usePendingSyncCount(syncQueue: SyncQueue): number {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    // Initial fetch
-    syncQueue.getQueueLength().then(setCount);
-
-    // Subscribe to changes
-    const unsubscribe = syncQueue.subscribe(() => {
-      syncQueue.getQueueLength().then(setCount);
-    });
-
-    return unsubscribe;
-  }, [syncQueue]);
-
-  return count;
-}
-
-export { usePendingSyncCount };
-```
-
-### Usage with Badge
-
-```tsx
-// components/sync-badge.tsx
-import { usePendingSyncCount } from "../hooks/use-pending-sync-count";
-import { useSyncQueue } from "../context/sync-context";
-
-function SyncBadge() {
-  const syncQueue = useSyncQueue();
-  const pendingCount = usePendingSyncCount(syncQueue);
-
-  if (pendingCount === 0) {
-    return null;
-  }
-
-  return (
-    <span
-      role="status"
-      aria-label={`${pendingCount} changes pending sync`}
-      data-testid="pending-sync"
-    >
-      {pendingCount}
-    </span>
-  );
-}
-
-export { SyncBadge };
-```
-
-**Why good:** Reactive updates when queue changes, accessible labels, conditional rendering when empty
-
----
-
-## Pattern 9: Offline-Aware Form Submission
-
-Handle form submissions that work seamlessly online and offline.
+Separates the local write from the enqueue, and reports `isPending` for a change that saved locally
+but has not reached the server — the state the user most needs to see.
 
 ```typescript
 // hooks/use-offline-mutation.ts
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 interface MutationState<T> {
   data: T | null;
@@ -792,31 +587,29 @@ interface MutationState<T> {
   isSuccess: boolean;
   isError: boolean;
   error: Error | null;
-  isPending: boolean; // Queued but not synced
+  isPending: boolean; // saved locally, not yet synced
 }
 
 interface MutationOptions<TInput, TOutput> {
-  // Save to local database
   localMutation: (input: TInput) => Promise<TOutput>;
-  // Queue for server sync
   queueSync: (input: TInput) => Promise<void>;
-  // Optional: optimistic update for UI
   onOptimisticUpdate?: (input: TInput) => void;
-  // Optional: rollback on local failure
   onRollback?: (input: TInput, error: Error) => void;
 }
+
+const IDLE: MutationState<never> = {
+  data: null,
+  isLoading: false,
+  isSuccess: false,
+  isError: false,
+  error: null,
+  isPending: false,
+};
 
 function useOfflineMutation<TInput, TOutput>(
   options: MutationOptions<TInput, TOutput>,
 ) {
-  const [state, setState] = useState<MutationState<TOutput>>({
-    data: null,
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-    isPending: false,
-  });
+  const [state, setState] = useState<MutationState<TOutput>>(IDLE);
 
   const mutate = useCallback(
     async (input: TInput) => {
@@ -826,158 +619,69 @@ function useOfflineMutation<TInput, TOutput>(
         isError: false,
         error: null,
       }));
-
-      // Optimistic update
       options.onOptimisticUpdate?.(input);
 
       try {
-        // 1. Save to local database (always succeeds unless DB error)
         const result = await options.localMutation(input);
-
-        // 2. Queue for sync (will process when online)
         await options.queueSync(input);
 
         setState({
+          ...IDLE,
           data: result,
-          isLoading: false,
           isSuccess: true,
-          isError: false,
-          error: null,
           isPending: !navigator.onLine,
         });
 
         return result;
       } catch (error) {
         const err = error instanceof Error ? error : new Error("Unknown error");
-
-        // Rollback optimistic update
         options.onRollback?.(input, err);
-
-        setState({
-          data: null,
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err,
-          isPending: false,
-        });
-
+        setState({ ...IDLE, isError: true, error: err });
         throw error;
       }
     },
     [options],
   );
 
-  const reset = useCallback(() => {
-    setState({
-      data: null,
-      isLoading: false,
-      isSuccess: false,
-      isError: false,
-      error: null,
-      isPending: false,
-    });
-  }, []);
+  const reset = useCallback(() => setState(IDLE), []);
 
-  return {
-    ...state,
-    mutate,
-    reset,
-  };
+  return { ...state, mutate, reset };
 }
 
 export { useOfflineMutation };
 export type { MutationState, MutationOptions };
 ```
 
-### Usage in Form Component
+Wiring it to a form: the local mutation saves through the repository, the queue sync enqueues, and
+the form renders `isPending` as "Saved. Will sync when online."
 
 ```tsx
-// components/todo-form.tsx
-import { useState } from "react";
-import { useOfflineMutation } from "../hooks/use-offline-mutation";
-import { useTodoRepository } from "../context/repository-context";
-import { useSyncQueue } from "../context/sync-context";
-import { createTodo } from "../models/todo";
-import type { Todo } from "../models/todo";
-
-function TodoForm() {
-  const [title, setTitle] = useState("");
-  const todoRepository = useTodoRepository();
-  const syncQueue = useSyncQueue();
-
-  const { mutate, isLoading, isPending, isError, error, reset } =
-    useOfflineMutation<{ title: string }, Todo>({
-      localMutation: async ({ title }) => {
-        const todo = createTodo(title, "current-user");
-        await todoRepository.save(todo);
-        return todo;
-      },
-      queueSync: async ({ title }) => {
-        const todo = createTodo(title, "current-user");
-        await syncQueue.enqueue({
-          type: "CREATE",
-          collection: "todos",
-          data: todo,
-          timestamp: Date.now(),
-        });
-      },
+const { mutate, isLoading, isPending, isError, error } = useOfflineMutation<
+  { title: string },
+  Todo
+>({
+  localMutation: async ({ title }) => {
+    const todo = createTodo(title, currentUserId);
+    await todoRepository.save(todo);
+    return todo;
+  },
+  queueSync: async ({ title }) => {
+    await syncQueue.enqueue({
+      type: "CREATE",
+      collection: "todos",
+      data: createTodo(title, currentUserId),
+      timestamp: Date.now(),
     });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!title.trim()) return;
-
-    try {
-      await mutate({ title });
-      setTitle("");
-    } catch {
-      // Error handled in mutation state
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Add a todo..."
-        disabled={isLoading}
-        aria-describedby={isError ? "error-message" : undefined}
-      />
-
-      <button type="submit" disabled={isLoading || !title.trim()}>
-        {isLoading ? "Saving..." : "Add"}
-      </button>
-
-      {isPending && (
-        <span role="status">Saved locally. Will sync when online.</span>
-      )}
-
-      {isError && (
-        <span id="error-message" role="alert">
-          {error?.message}
-          <button type="button" onClick={reset}>
-            Dismiss
-          </button>
-        </span>
-      )}
-    </form>
-  );
-}
-
-export { TodoForm };
+  },
+});
 ```
-
-**Why good:** Separates local mutation from sync queue, tracks pending state for UI feedback, handles errors gracefully, form remains functional offline
 
 ---
 
-## Pattern 10: Offline-First Data Provider
+## Pattern 9: Offline data provider
 
-Context provider that manages offline-first data layer.
+Composes the database, the queue and the status into one context, and exposes a manual sync so a
+user who does not trust the automatic one has a button.
 
 ```typescript
 // context/offline-data-provider.tsx
@@ -1016,14 +720,11 @@ function OfflineDataProvider({
   const [pendingCount, setPendingCount] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 
-  // Initialize database and sync queue
   useEffect(() => {
     async function initialize() {
       try {
         setIsInitialized(true);
-
-        const count = await syncQueue.getQueueLength();
-        setPendingCount(count);
+        setPendingCount(await syncQueue.getQueueLength());
 
         if (navigator.onLine) {
           await syncQueue.processQueue();
@@ -1037,13 +738,10 @@ function OfflineDataProvider({
     initialize();
   }, [database, syncQueue]);
 
-  // Listen for network status changes
   useEffect(() => {
     function handleOnline() {
       setNetworkStatus('online');
-      syncQueue.processQueue().then(() => {
-        setLastSyncTime(Date.now());
-      });
+      syncQueue.processQueue().then(() => setLastSyncTime(Date.now()));
     }
 
     function handleOffline() {
@@ -1059,20 +757,15 @@ function OfflineDataProvider({
     };
   }, [syncQueue]);
 
-  // Subscribe to queue changes
-  useEffect(() => {
-    const unsubscribe = syncQueue.subscribe(() => {
+  useEffect(
+    () => syncQueue.subscribe(() => {
       syncQueue.getQueueLength().then(setPendingCount);
-    });
-
-    return unsubscribe;
-  }, [syncQueue]);
+    }),
+    [syncQueue]
+  );
 
   const forceSync = async () => {
-    if (!navigator.onLine) {
-      throw new Error('Cannot sync while offline');
-    }
-
+    if (!navigator.onLine) throw new Error('Cannot sync while offline');
     await syncQueue.processQueue();
     setLastSyncTime(Date.now());
   };
@@ -1106,56 +799,19 @@ export { OfflineDataProvider, useOfflineData };
 export type { OfflineDataContextValue };
 ```
 
-### App Setup
-
-```tsx
-// app.tsx
-import { OfflineDataProvider } from "./context/offline-data-provider";
-import { initDatabase } from "./db/database";
-import { createSyncQueue } from "./sync/sync-queue";
-
-const database = await initDatabase();
-const syncQueue = createSyncQueue(database);
-
-function App() {
-  return (
-    <OfflineDataProvider database={database} syncQueue={syncQueue}>
-      <AppContent />
-    </OfflineDataProvider>
-  );
-}
-
-function AppContent() {
-  const { isInitialized, networkStatus, pendingCount } = useOfflineData();
-
-  if (!isInitialized) {
-    return <LoadingScreen />;
-  }
-
-  return (
-    <main>
-      <header>
-        <SyncIndicator status={networkStatus} pendingCount={pendingCount} />
-      </header>
-      <TodoList />
-    </main>
-  );
-}
-
-export { App };
-```
-
-**Why good:** Centralizes offline data management, provides sync state to entire app, handles initialization gracefully, supports force sync for user-triggered sync
+The database and queue are constructed outside and passed in, which keeps the provider testable and
+lets the app decide when the database opens.
 
 ---
 
-## Pattern 11: Reactive Local Queries
+## Pattern 10: Reactive local queries
 
-Subscribe to local database changes for real-time UI updates.
+Where the store offers a live query, use it. Where it does not, this is the shape: fetch once, then
+re-fetch on a change notification.
 
 ```typescript
 // hooks/use-local-query.ts
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface QueryResult<T> {
   data: T[];
@@ -1166,7 +822,6 @@ interface QueryResult<T> {
 
 interface QueryOptions<T> {
   queryFn: () => Promise<T[]>;
-  // Subscribe to database changes
   subscribe?: (onUpdate: () => void) => () => void;
 }
 
@@ -1179,8 +834,7 @@ function useLocalQuery<T>(options: QueryOptions<T>): QueryResult<T> {
     try {
       setIsLoading(true);
       setError(null);
-      const result = await options.queryFn();
-      setData(result);
+      setData(await options.queryFn());
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Query failed"));
     } finally {
@@ -1188,40 +842,26 @@ function useLocalQuery<T>(options: QueryOptions<T>): QueryResult<T> {
     }
   }, [options.queryFn]);
 
-  // Initial fetch
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Subscribe to updates
-  useEffect(() => {
-    if (!options.subscribe) return;
+  useEffect(
+    () => options.subscribe?.(fetchData),
+    [options.subscribe, fetchData],
+  );
 
-    const unsubscribe = options.subscribe(() => {
-      fetchData();
-    });
-
-    return unsubscribe;
-  }, [options.subscribe, fetchData]);
-
-  return {
-    data,
-    isLoading,
-    error,
-    refetch: fetchData,
-  };
+  return { data, isLoading, error, refetch: fetchData };
 }
 
 export { useLocalQuery };
 export type { QueryResult, QueryOptions };
 ```
 
-### Usage with Dexie Live Query
+With Dexie the same query is one call, and `undefined` is the loading state:
 
 ```typescript
-// hooks/use-todos.ts
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db/database";
 
 function useTodos(userId: string) {
   const todos = useLiveQuery(
@@ -1234,13 +874,6 @@ function useTodos(userId: string) {
     [userId],
   );
 
-  return {
-    data: todos ?? [],
-    isLoading: todos === undefined,
-  };
+  return { data: todos ?? [], isLoading: todos === undefined };
 }
-
-export { useTodos };
 ```
-
-**Why good:** Automatically updates when database changes, supports any query function, handles loading and error states

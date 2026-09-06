@@ -1,22 +1,18 @@
-# Design Tokens - Utility-Framework Bridge Examples
+# Design Tokens - Projecting into a Generated-Class Layer
 
-> Extended examples for projecting a token set into a utility-class framework's theme surface. See [core.md](core.md) for the tier and delivery patterns this builds on.
+> Extended examples for feeding a token set into something that generates utility classes from a theme surface. See [core.md](core.md) for the tier and delivery patterns this builds on.
 
 **Prerequisites**: Understand [Pattern 1: Token Tiers](core.md#pattern-1-token-tiers-and-the-one-way-graph) and [Pattern 3: CSS Custom Properties as Delivery](core.md#pattern-3-css-custom-properties-as-delivery) first.
 
+The theme surface is a **projection** of the token set — one alias per token that should become a class — and never a second place a value is typed. The enclosing syntax belongs to whatever does the generating; every decision below holds regardless of which one it is.
+
 ---
 
-## Pattern 4: The Utility-Framework Bridge
+## Pattern 4: The Projection
 
-A utility-class framework that generates classes from theme variables needs those variables declared in its own theme block. That block must be a **projection** of the token set, not a second place values are typed.
-
-In Tailwind v4, `@theme` is a token-declaration surface: every variable inside it generates utility classes _and_ emits a standard CSS custom property. That dual role is what makes it a token concern rather than a utility-usage concern.
-
-### Good Example - The Canonical Mode-Swappable Bridge
+### Good Example - The Mode-Swappable Projection
 
 ```css
-@import "tailwindcss";
-
 /* 1. Primitives. Literal values, never reassigned. */
 :root {
   --palette-slate-50: oklch(0.98 0.003 250);
@@ -25,9 +21,9 @@ In Tailwind v4, `@theme` is a token-declaration surface: every variable inside i
   --palette-blue-400: oklch(0.72 0.15 258);
 }
 
-/* 2. Semantics. The real tokens - framework-agnostic, mode-swappable.
-      These live outside @theme precisely because @theme cannot be nested
-      under a selector or a media query. */
+/* 2. Semantics. The real tokens, and the only tier a mode reassigns.
+      These live outside the theme surface: a generated class is produced at
+      build time, so it cannot itself be conditional on a runtime scope. */
 :root {
   --app-canvas: var(--palette-slate-50);
   --app-ink: var(--palette-slate-900);
@@ -39,177 +35,105 @@ In Tailwind v4, `@theme` is a token-declaration surface: every variable inside i
   --app-ink: var(--palette-slate-50);
   --app-action: var(--palette-blue-400);
 }
-
-/* 3. Projection. The framework consumes the tokens; it does not define them.
-      `inline` resolves the value into the generated utilities directly. */
-@theme inline {
-  --color-canvas: var(--app-canvas);
-  --color-ink: var(--app-ink);
-  --color-action: var(--app-action);
-}
 ```
 
-**Why good:** the token set stays readable by anything that can resolve `var()`, the mode swap is a scope reassignment with no rebuild, and `@theme inline` is what makes the generated `bg-canvas` utility follow that reassignment. Every value is typed exactly once, in the semantic block.
+```
+/* 3. Projection, inside the generator's own theme surface.
+      Every entry is an alias; no value appears here for the first time. */
 
----
-
-### Bad Example - Omitting `inline`
-
-```css
-@import "tailwindcss";
-
-:root {
-  --app-canvas: oklch(0.98 0.003 250);
-}
-
-[data-theme="dark"] {
-  --app-canvas: oklch(0.21 0.02 250);
-}
-
-/* BAD: without `inline`, the theme variable emits a reference that the
-   generated utility resolves at the wrong scope. The dark value never
-   applies, and nothing errors. */
-@theme {
-  --color-canvas: var(--app-canvas);
-}
+   --color-canvas: var(--app-canvas);
+   --color-ink:    var(--app-ink);
+   --color-action: var(--app-action);
 ```
 
-**Why bad:** the generated utility carries a chained variable reference that is resolved where the theme variable was declared rather than where the utility is used, so the `[data-theme="dark"]` reassignment is invisible to it -- the page silently stays in light mode with no build warning and no console message.
+**Why good:** every value is typed exactly once, in the semantic block; a mode swap is a scope reassignment with no rebuild; and anything that resolves `var()` reads the same tokens without going through the generated classes at all.
 
----
-
-### Bad Example - Nesting `@theme`
-
-```css
-@import "tailwindcss";
-
-/* BAD: @theme is top-level only. Nested under a selector or a media query it
-   is not a valid theme block. */
-[data-theme="dark"] {
-  @theme {
-    --color-canvas: oklch(0.21 0.02 250);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-canvas: oklch(0.21 0.02 250);
-  }
-}
-```
-
-**Why bad:** the placement restriction is the whole reason the bridge exists -- theme variables generate utilities at build time, so they cannot be conditional on a runtime selector. Mode-conditional values belong in the semantic layer; only the mode-independent alias goes in `@theme`.
+**The mechanic to check in the generator's own documentation:** whether an aliased theme entry is resolved _into_ each class it emits, or emitted as a chained reference resolved where the theme entry was declared. Only the first follows a runtime scope reassignment. The second leaves the dark values unreachable, with no build warning and nothing in the console — which is exactly why the mode-conditional values belong in the semantic tier and only the mode-independent alias goes in the theme surface.
 
 ---
 
 ### Bad Example - Duplicated Source of Truth
 
-```css
-@import "tailwindcss";
+```
+/* :root */
+   --app-canvas: oklch(0.98 0.003 250);
 
-:root {
-  --app-canvas: oklch(0.98 0.003 250);
-}
-
-/* BAD: the value is typed a second time. The two copies are now free to drift,
-   and nothing fails when they do. */
-@theme {
-  --color-canvas: oklch(0.98 0.003 250);
-}
+/* the theme surface — BAD: the value is typed a second time. The two copies
+   are free to drift, and nothing fails when they do. */
+   --color-canvas: oklch(0.98 0.003 250);
 ```
 
-**Why bad:** two declarations of the same decision means the next edit lands in one of them, and the resulting mismatch shows up as a subtle colour difference between utility-styled and token-styled elements -- a class of bug that no type checker or build step catches.
+**Why bad:** the next edit lands in one of them, and the mismatch shows up as a subtle colour difference between class-styled and token-styled elements — a class of bug no type checker or build step catches.
 
 ---
 
-### Bad Example - Channel Triplets as Token Values
+### Bad Example - Mode Values in the Theme Surface
+
+```
+/* BAD: a theme surface is read once, at build time. Wrapping it in a runtime
+   selector or a media query does not make the classes it generates
+   conditional — it makes the block invalid or ineffective. */
+
+   [data-theme="dark"] { <theme surface> { --color-canvas: oklch(0.21 …); } }
+```
+
+**Why bad:** the placement restriction is the whole reason the projection pattern exists. Classes are emitted at build time, so a mode-conditional value cannot live where they are declared. Mode belongs in the semantic tier, which the cascade re-evaluates at runtime.
+
+---
+
+### Bad Example - Channel Triplets in a Projected Token
 
 ```css
-@import "tailwindcss";
-
 :root {
-  /* BAD: not a color. A bare triplet only works when something wraps it. */
+  /* BAD: not a colour. A bare triplet only works when something wraps it. */
   --app-canvas: 0 0% 100%;
 }
 
-@theme inline {
-  --color-canvas: var(--app-canvas);
-}
-
-/* `bg-canvas/50` compiles to:
+/* An opacity modifier on a generated class typically compiles to
    color-mix(in oklab, var(--color-canvas) 50%, transparent)
-   which receives "0 0% 100%" where a color is required -> invalid -> dropped. */
+   which receives "0 0% 100%" where a colour is required -> invalid -> dropped. */
 ```
 
-**Why bad:** opacity modifiers compile to `color-mix()` against the raw token value, so a triplet produces invalid CSS and the declaration is discarded rather than erroring. The element renders with no background at all, and the failure only appears on the utilities that use a modifier.
+**Why bad:** the modifier resolves against the raw token value, so a triplet produces invalid CSS that is discarded rather than reported. The element renders with no background at all, and only the classes carrying a modifier are affected — so the failure looks intermittent.
 
 ### The Fix
 
 ```css
 :root {
-  /* Complete color values. Works with color-mix(), oklch() interpolation,
-     relative color syntax, and every opacity modifier. */
+  /* A complete colour works with color-mix(), oklch() interpolation,
+     relative colour syntax, and every opacity modifier. */
   --app-canvas: oklch(1 0 0);
-}
-
-@theme inline {
-  --color-canvas: var(--app-canvas);
 }
 ```
 
-**Why good:** the token is a color in every context that consumes it, so the framework's opacity math, any `color-mix()` in hand-written CSS, and direct `var()` reads all behave identically.
+**Why good:** the token is a colour in every context that consumes it, so the generator's opacity maths, any `color-mix()` in hand-written CSS, and a direct `var()` read all behave identically.
 
 ---
 
-### Good Example - Projecting Only What Needs a Utility
+### Good Example - Projecting Only What Needs a Class
 
 ```css
-@import "tailwindcss";
-
 :root {
   --app-canvas: oklch(0.98 0.003 250);
   --app-action: oklch(0.55 0.19 258);
-  /* No utility should exist for these - they are internal plumbing */
+  /* Internal plumbing - no class should exist for these */
   --app-focus-ring-width: 2px;
   --app-transition-interaction: 150ms ease-out;
 }
 
-/* Only tokens that should become utility classes go in @theme */
-@theme inline {
-  --color-canvas: var(--app-canvas);
-  --color-action: var(--app-action);
-}
-
 .control:focus-visible {
-  /* Plumbing tokens are read directly - no utility, no theme entry */
+  /* Plumbing tokens are read directly - no class, no theme entry */
   outline: var(--app-focus-ring-width) solid var(--app-action);
   transition: outline-color var(--app-transition-interaction);
 }
 ```
 
-**Why good:** the rule of thumb -- `@theme` only when a token should map to a utility class, `:root` for everything else -- keeps the generated utility surface to things anyone would actually write in markup, instead of emitting classes nobody will ever use.
+**Why good:** only `--app-canvas` and `--app-action` are worth a class, so only those are projected. The rule of thumb — project a token when it should map to a class, leave everything else in `:root` — keeps the generated surface to what anyone would actually write in markup, instead of emitting classes nobody will use.
 
 ---
 
-### Good Example - Replacing a Namespace Rather Than Extending It
+### Replace the Generator's Default Palette Rather Than Extending It
 
-```css
-@import "tailwindcss";
+Most generators ship a default palette and offer a way to clear a namespace before your own tokens are defined. Clearing it is the right default: a palette left in place is an untracked parallel token set, and every default colour class is a value that bypasses the semantic tier. Reset it and a tier leak becomes a build-time missing class rather than a plausible-looking colour.
 
-@theme {
-  /* Drop the framework's default palette so only project tokens generate
-     colour utilities. Prevents `bg-red-500` from silently working and
-     bypassing the token set. */
-  --color-*: initial;
-}
-
-@theme inline {
-  --color-canvas: var(--app-canvas);
-  --color-ink: var(--app-ink);
-  --color-action: var(--app-action);
-}
-```
-
-**Why good:** a default palette left in place is an untracked parallel token set -- every default colour utility is a value that bypasses the semantic tier. Resetting the namespace makes the token set the only source of colour, so a tier leak becomes a build-time missing class rather than a silently plausible colour.
-
-**When not to use:** during an incremental migration, where removing the defaults breaks existing markup faster than it can be converted. Reset the namespace once the last default-palette utility is gone.
+**When not to:** during an incremental migration, where removing the defaults breaks existing markup faster than it can be converted. Reset the namespace once the last default-palette class is gone.

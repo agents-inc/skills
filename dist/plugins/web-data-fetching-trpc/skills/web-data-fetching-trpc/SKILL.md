@@ -1,64 +1,86 @@
 ---
 name: web-data-fetching-trpc
-description: tRPC type-safe API patterns, procedures, middleware, React Query integration
+description: tRPC type-safe API patterns — routers and procedures, input validation, context and middleware, TRPCError, and the typed client bridge
 ---
 
-# tRPC Type-Safe API Patterns
+# tRPC Patterns
 
-> **Quick Guide:** tRPC provides end-to-end type safety by sharing TypeScript types directly from server to client -- no code generation, no schema files. Export `AppRouter` type from your router (this is the key bridge). Use Zod for input validation, `TRPCError` with proper codes for errors, and middleware for auth. v11 is the current stable version: transformer goes inside `httpBatchLink()`, subscriptions use async generators (not `observable()`), and `@trpc/tanstack-react-query` is the recommended React integration.
+> **Quick Guide:** tRPC carries types from server to client through one exported type rather than
+> through a generated schema, so `export type AppRouter = typeof appRouter` is the whole bridge and
+> everything downstream fails without it. Procedures take a validated input and return a value;
+> `TRPCError` codes are what become HTTP statuses; middleware narrows the context type so an
+> authenticated procedure's `ctx.user` is non-nullable. In v11 the transformer moved inside the
+> link, subscriptions are async generators, and `@trpc/tanstack-react-query` is the current React
+> integration.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — initialization, context, a CRUD router, the provider, inferred types, `queryOptions`
+- [examples/middleware.md](examples/middleware.md) — logging, rate limiting, resource-scoped access
+- [examples/infinite-queries.md](examples/infinite-queries.md) — cursor pagination end to end
+- [examples/optimistic-updates.md](examples/optimistic-updates.md) — the full snapshot-and-rollback cycle
+- [examples/subscriptions.md](examples/subscriptions.md) — async generator subscriptions with resumable event ids
+- [examples/file-uploads.md](examples/file-uploads.md) — `File` in an input schema (v11+)
+- [reference.md](reference.md) — error code to HTTP status table, batching and invalidation notes, v10 → v11 migration
+
+---
+
+## Which path applies
+
+- **`@trpc/tanstack-react-query`** — the current integration. `createTRPCContext` yields a `useTRPC`
+  hook, and each procedure exposes `queryOptions()`, `mutationOptions()`, `infiniteQueryOptions()`
+  and `queryKey()` that go straight into the standard query hooks. Pattern 5.
+- **`@trpc/react-query`** — the classic integration, still supported in v11. Procedures carry their
+  own `trpc.x.useQuery()` hooks instead, and a cache key comes from `getQueryKey(trpc.x)` rather
+  than from a `queryKey()` on the procedure. Migrate when convenient; the two can coexist.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing tRPC code
 
-**(You MUST export `AppRouter` type from your tRPC router for client-side type inference)**
+**Export the router's type: `export type AppRouter = typeof appRouter`.** That single line is the
+whole client-side contract — without it the client falls back to `unknown` and every guarantee tRPC
+offers is gone, with no error at the point the export was forgotten.
 
-**(You MUST use `TRPCError` with appropriate error codes -- never throw raw Error objects)**
+**Give every procedure that accepts input a validator on `.input()`.** It is both the runtime check
+and the source of the handler's parameter type, so a procedure without one receives `unknown` and
+tempts a cast.
 
-**(You MUST use Zod for input validation on ALL procedures accepting user input)**
+**Throw `TRPCError` with a code rather than a bare `Error`.** The code is what maps to an HTTP
+status and what the client switches on; a bare `Error` arrives as an opaque 500.
 
-**(You MUST place transformer inside `httpBatchLink()` in v11 -- NOT at client level)**
+**Place the transformer inside `httpBatchLink()`, not on `createTRPCClient()`.** v11 moved it, and
+the old position raises an error at client construction.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** tRPC router, initTRPC, createTRPCClient, createTRPCContext, @trpc/server, @trpc/client, @trpc/react-query, @trpc/tanstack-react-query, TRPCError, procedure, publicProcedure, protectedProcedure, query, mutation, subscription, httpBatchLink, queryOptions, mutationOptions, useTRPC
+**Auto-detection:** `initTRPC`, `createTRPCClient`, `createTRPCContext`, `createTRPCOptionsProxy`,
+`@trpc/server`, `@trpc/client`, `@trpc/react-query`, `@trpc/tanstack-react-query`, `TRPCError`,
+`publicProcedure`, `protectedProcedure`, `httpBatchLink`, `httpSubscriptionLink`, `loggerLink`,
+`inferRouterInputs`, `inferRouterOutputs`, `useTRPC`, `tracked`, `AppRouter`
 
-**When to use:**
+**Applies to:**
 
-- Building APIs in TypeScript monorepos with shared types
-- End-to-end type safety without code generation
-- Full-stack TypeScript applications where both client and server are TypeScript
-- Projects where types should flow automatically from backend to frontend
+- Router and procedure definition, and composing routers into one
+- Input validation and the types inferred from it
+- Per-request context, and middleware that narrows it
+- Error codes and the shape the client receives
+- Turning a procedure into typed query and mutation options
+- Subscriptions, file inputs and cursor pagination
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Public APIs consumed by third parties (use OpenAPI/REST)
-- Non-TypeScript clients (mobile apps, other languages)
-- Need HTTP caching at CDN level (tRPC uses POST by default)
-- GraphQL requirements with partial queries
-
-**Key patterns covered:**
-
-- Router and procedure definition (initTRPC, router, procedure)
-- Input validation with Zod schemas
-- Context and middleware for authentication
-- Error handling with TRPCError codes
-- React integration via `@trpc/tanstack-react-query` (recommended) or `@trpc/react-query` (classic)
-- Optimistic updates, infinite queries, subscriptions
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Router setup, CRUD, provider, type inference, queryOptions
-- [examples/middleware.md](examples/middleware.md) - Logging, rate limiting, org-scoped access
-- [examples/infinite-queries.md](examples/infinite-queries.md) - Cursor pagination, infinite scroll
-- [examples/optimistic-updates.md](examples/optimistic-updates.md) - Optimistic updates with rollback
-- [examples/subscriptions.md](examples/subscriptions.md) - Async generator subscriptions, SSE
-- [examples/file-uploads.md](examples/file-uploads.md) - FormData file uploads (v11+)
-- [reference.md](reference.md) - Decision frameworks, error codes, anti-patterns, v11 migration
+- APIs published for third-party or non-TypeScript consumers, which want a language-neutral contract
+  document rather than a shared type
+- Caching policy, retries and invalidation semantics — this skill settles how a procedure becomes
+  the options a query client consumes, and the client decides what to do with them
+- The schema library used on `.input()`; any validator the version supports works, and the examples
+  show one
+- Session and token issuance; context consumes a session rather than establishing one
 
 ---
 
@@ -66,22 +88,15 @@ description: tRPC type-safe API patterns, procedures, middleware, React Query in
 
 ## Philosophy
 
-tRPC eliminates API layer friction by sharing types directly between server and client. No schemas to write, no code to generate -- export your router type and import it client-side for full autocompletion and type safety.
+There is no API description anywhere — no schema file, no generated client, no build step between
+the two halves. The router's inferred type _is_ the contract, and it is shared by importing a type
+across the codebase.
 
-**Core principles:**
-
-- **Zero schema duplication**: Types flow from backend to frontend automatically
-- **TypeScript-native**: Leverages TypeScript's type inference, not code generation
-- **Procedure-based**: Queries read data, mutations write data -- clear separation
-- **Composable middleware**: Build reusable authentication and validation layers
-- **Built on TanStack Query**: Full caching, invalidation, and optimistic updates via React Query
-
-**Trade-offs:**
-
-- Requires TypeScript on both ends (no polyglot support)
-- Best in monorepos where types can be shared directly
-- Not suitable for public APIs needing OpenAPI documentation
-- Uses POST by default -- no HTTP caching without configuration
+That buys immediate accuracy: a procedure's return type changes and every call site reddens in the
+same typecheck, with no regeneration step to forget. It costs polyglot support, a published
+contract, and HTTP caching — calls go out as POST by default, so a CDN in front of the endpoint has
+nothing to cache. Which is why tRPC suits an internal API in one TypeScript codebase and suits a
+public one badly.
 
 </philosophy>
 
@@ -89,18 +104,15 @@ tRPC eliminates API layer friction by sharing types directly between server and 
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: tRPC Initialization and Router Setup
+### Pattern 1: Initialization
 
-Initialize tRPC once per application. Export the router and procedure factories.
+Initialize once per application and export the factories the routers compose from.
 
 ```typescript
-import { initTRPC, TRPCError } from "@trpc/server";
-import { ZodError } from "zod";
-import type { Context } from "./context";
-
 const t = initTRPC.context<Context>().create({
+  transformer: superjson, // Date, Map and Set survive the wire
   errorFormatter({ shape, error }) {
     return {
       ...shape,
@@ -118,15 +130,14 @@ export const publicProcedure = t.procedure;
 export const middleware = t.middleware;
 ```
 
-**Why good:** Single initialization point, error formatter provides structured Zod errors to client, exported factories enable composition across router files
+The error formatter is what turns a validation failure into something a form can render per field,
+instead of one message.
 
-See [examples/core.md](examples/core.md) Pattern 1 for complete router and context factory.
+Full code: [examples/core.md](examples/core.md) — including the per-request context factory
 
 ---
 
-### Pattern 2: Procedures with Zod Input Validation
-
-Zod schemas provide runtime validation AND TypeScript inference from a single source.
+### Pattern 2: Procedures and input validation
 
 ```typescript
 const createUserSchema = z.object({
@@ -138,178 +149,126 @@ export const userRouter = router({
   create: protectedProcedure
     .input(createUserSchema)
     .mutation(async ({ input, ctx }) => {
-      // input is typed: { email: string; name: string }
+      // input: { email: string; name: string } — validated, and typed from the same schema
       return ctx.db.user.create({ data: input });
     }),
 });
 ```
 
-```typescript
-// BAD: No input validation -- input is 'unknown'
-publicProcedure.mutation(async ({ input }) => {
-  return ctx.db.user.create({ data: input as any }); // Dangerous!
-});
-```
-
-**Why bad:** Without Zod validation, input is unknown type, no runtime validation, injection risks, `as any` defeats TypeScript
-
-See [examples/core.md](examples/core.md) Pattern 2 for complete CRUD router.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Authentication Middleware
-
-Middleware narrows context types -- `ctx.user` becomes non-nullable after auth middleware.
+### Pattern 3: Middleware that narrows the context
 
 ```typescript
 const isAuthenticated = middleware(async ({ ctx, next }) => {
-  if (!ctx.session || !ctx.user) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
+  if (!ctx.session || !ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
   return next({ ctx: { ...ctx, session: ctx.session, user: ctx.user } });
 });
 
 export const protectedProcedure = publicProcedure.use(isAuthenticated);
 ```
 
-**Why good:** Auth enforced at procedure definition, TypeScript narrows `ctx.user` to non-nullable, eliminates duplicated if-checks in every handler
+The `next({ ctx })` return type is what makes `ctx.user` non-nullable in every procedure built on
+`protectedProcedure` — so forgetting the check becomes a compile error rather than a review comment.
 
-See [examples/middleware.md](examples/middleware.md) for logging, rate limiting, and org-scoped access patterns.
+Full code: [examples/middleware.md](examples/middleware.md)
 
 ---
 
-### Pattern 4: AppRouter Type Export
-
-This is the KEY to tRPC's type safety. Export the router type for client-side inference.
+### Pattern 4: The type bridge
 
 ```typescript
-export const appRouter = router({
-  user: userRouter,
-  post: postRouter,
-});
-
-// THIS IS ESSENTIAL -- without it, clients have no type inference
+export const appRouter = router({ user: userRouter, post: postRouter });
 export type AppRouter = typeof appRouter;
-```
 
-Use `inferRouterInputs`/`inferRouterOutputs` for extracting procedure types:
-
-```typescript
-import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 type RouterInputs = inferRouterInputs<AppRouter>;
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
-// Extract specific type
 type User = RouterOutputs["user"]["getById"];
 ```
 
-See [examples/core.md](examples/core.md) Pattern 4 for complete type inference utilities.
+Component props take `RouterOutputs[...]` rather than a hand-written interface, so a field removed
+from a procedure reddens every component that read it.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: React Integration (v11 Recommended)
-
-v11 introduces `@trpc/tanstack-react-query` with `queryOptions`/`mutationOptions` factories that work directly with TanStack Query hooks.
+### Pattern 5: Typed query and mutation options
 
 ```typescript
-// Setup: createTRPCContext provides typed hooks
-import { createTRPCContext } from "@trpc/tanstack-react-query";
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
-// Usage: standard TanStack Query hooks with tRPC type safety
 const trpc = useTRPC();
 const { data } = useQuery(trpc.user.getById.queryOptions({ id: userId }));
 ```
 
-**v11 CRITICAL:** Transformer must be inside `httpBatchLink()`, NOT at `createTRPCClient()` level.
+Each procedure carries `queryOptions()`, `mutationOptions()`, `infiniteQueryOptions()` and
+`queryKey()`. The options object goes into the ordinary hook, so anything the query client can do to
+an options object works here too.
 
-```typescript
-// BAD: v11 error
-createTRPCClient({ transformer: superjson, links: [...] });
-
-// GOOD: transformer inside the link
-httpBatchLink({ url: "/api/trpc", transformer: superjson });
-```
-
-See [examples/core.md](examples/core.md) Patterns 3 and 5 for complete provider and component setup.
+Full code: [examples/core.md](examples/core.md) — provider, links and a component
 
 ---
 
-### Pattern 6: Error Handling with TRPCError
-
-Use standardized error codes that map to HTTP status codes.
+### Pattern 6: Errors
 
 ```typescript
-// Server: throw TRPCError with appropriate code
-throw new TRPCError({
-  code: "NOT_FOUND",
-  message: "User not found",
-});
-
+// Server
+throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
 throw new TRPCError({
   code: "INTERNAL_SERVER_ERROR",
   message: "Failed to delete",
-  cause: error, // Preserves original stack trace
+  cause: error,
 });
 ```
 
 ```typescript
-// Client: typed error handling
-const trpc = useTRPC();
-const deletePost = useMutation({
-  ...trpc.post.delete.mutationOptions(),
-  onError: (error) => {
-    switch (error.data?.code) {
-      case "NOT_FOUND":
-        toast.error("Not found");
-        break;
-      case "FORBIDDEN":
-        toast.error("Not allowed");
-        break;
-    }
-  },
-});
+// Client
+onError: (error) => {
+  switch (error.data?.code) {
+    case "NOT_FOUND":
+      return toast.error("Not found");
+    case "FORBIDDEN":
+      return toast.error("Not allowed");
+  }
+};
 ```
 
-See [reference.md](reference.md) for complete error code table with HTTP status mappings.
+`cause` keeps the original stack for the server logs while the client still receives only the code
+and message. The code-to-status table is in [reference.md](reference.md).
 
 ---
 
-### Pattern 7: Optimistic Updates
+### Pattern 7: Optimistic updates
 
-Cancel queries, snapshot state, optimistically update, rollback on error, invalidate on settle.
+Cancel, snapshot, write, roll back on failure, invalidate when settled — all five, since the
+rollback is what makes the optimistic write safe.
 
 ```typescript
-const trpc = useTRPC();
-const queryClient = useQueryClient();
-
 const toggleTodo = useMutation({
   ...trpc.todo.toggle.mutationOptions(),
   onMutate: async ({ id }) => {
     await queryClient.cancelQueries({ queryKey: trpc.todo.list.queryKey() });
     const previousTodos = queryClient.getQueryData(trpc.todo.list.queryKey());
-    queryClient.setQueryData(trpc.todo.list.queryKey(), (old: any) =>
-      old?.map((t: any) =>
-        t.id === id ? { ...t, completed: !t.completed } : t,
-      ),
+    queryClient.setQueryData(trpc.todo.list.queryKey(), (old) =>
+      toggle(old, id),
     );
     return { previousTodos };
   },
-  onError: (err, vars, context) => {
-    if (context?.previousTodos)
-      queryClient.setQueryData(
-        trpc.todo.list.queryKey(),
-        context.previousTodos,
-      );
-  },
+  onError: (err, vars, context) =>
+    queryClient.setQueryData(trpc.todo.list.queryKey(), context?.previousTodos),
   onSettled: () =>
     queryClient.invalidateQueries({ queryKey: trpc.todo.list.queryKey() }),
 });
 ```
 
-**Why good:** Immediate UI feedback, automatic rollback on failure, eventual consistency via invalidation
+The `cancelQueries` is not optional: an in-flight refetch that resolves after the optimistic write
+overwrites it with the pre-mutation server state.
 
-See [examples/optimistic-updates.md](examples/optimistic-updates.md) for complete pattern with like button example.
+Full code: [examples/optimistic-updates.md](examples/optimistic-updates.md)
 
 </patterns>
 
@@ -317,50 +276,32 @@ See [examples/optimistic-updates.md](examples/optimistic-updates.md) for complet
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Missing `export type AppRouter`** -- clients have no type inference, defeats purpose of tRPC
-- **Raw `throw new Error()`** -- should use `TRPCError` with appropriate code for HTTP mapping
-- **Procedures without `.input()` validation** -- no runtime validation, type is `unknown`
-- **Auth checks in procedure body** -- should use middleware for protected procedures
-- **Transformer at client level in v11** -- must be inside `httpBatchLink()`, not at `createTRPCClient()` level
+- No `export type AppRouter` — the client infers `unknown` and every procedure call is untyped,
+  with nothing failing at the file that omitted it.
+- A transformer on `createTRPCClient()` in v11 — client construction throws, naming the link it
+  should have gone in.
+- A transformer configured on one side only — the two ends disagree about the wire format, and
+  `Date`, `Map` and `Set` arrive as something else.
+- `observable()` in a subscription — that is the v10 shape; v11 subscriptions are async generators.
+- `rawInput` in middleware — v11 replaced it with `await getRawInput()`.
+- An optimistic write with no snapshot and no `onError` — a failed mutation leaves the UI showing a
+  change that never happened.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Missing SuperJSON transformer** -- Date/Map/Set won't serialize correctly
-- **No error formatter** -- Zod errors should be formatted for better client DX
-- **Optimistic updates without rollback** -- must include `onError` handler to restore previous state
-- **Using `observable()` for subscriptions** -- v11 uses async generators; `observable()` is the v10 pattern
-- **Using `rawInput` in middleware** -- v11 changed to `getRawInput()` function
-
-**Gotchas & Edge Cases:**
-
-- `httpBatchLink` combines requests -- all batched requests share the same HTTP status code
-- SuperJSON transformer must be configured on BOTH client and server
-- Context is created per-request -- don't store mutable state in context
-- Middleware runs in order -- auth middleware should come before rate limiting
-- Query keys are auto-generated -- use `queryKey()` method (v11) or `getQueryKey()` for manual access
-- Subscription reconnection with `tracked()` requires `lastEventId` in input schema
-- Don't retry mutations (`retry: false`) -- retrying writes can cause duplicates
+- `httpBatchLink` merges concurrent calls into one request, so every procedure in a batch shares one
+  HTTP status — a 401 from one is the status the others see too.
+- Context is built per request, so anything mutable stored on it is discarded and never shared.
+- Middleware runs in declaration order, which decides what each layer can see: auth before rate
+  limiting means the limit is keyed on a known user.
+- A retried mutation repeats a write — set `retry: false` for mutations.
+- Resumable subscriptions need `lastEventId` in the input schema for `tracked()` to have somewhere
+  to resume from.
+- An auth check written in a procedure body leaves `ctx.user` nullable to the type system, so the
+  next procedure that forgets it compiles.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST export `AppRouter` type from your tRPC router for client-side type inference)**
-
-**(You MUST use `TRPCError` with appropriate error codes -- never throw raw Error objects)**
-
-**(You MUST use Zod for input validation on ALL procedures accepting user input)**
-
-**(You MUST place transformer inside `httpBatchLink()` in v11 -- NOT at client level)**
-
-**Failure to follow these rules will break type safety, cause runtime errors, and defeat the purpose of using tRPC.**
-
-</critical_reminders>

@@ -46,9 +46,9 @@ const BoundedCounter: Component = () => {
 export { BoundedCounter };
 ```
 
-**Why good:** Functional updates prevent stale closures, named constants for bounds, disabled state reactive via `count()`, component body runs once
+**Why good:** `disabled={count() <= MIN_COUNT}` is a reactive expression, so the button enables and disables itself without anything re-running the component. The `console.log` fires once, at creation — a render counter placed there would measure nothing.
 
-### Bad Example - React-style patterns
+### Bad Example - Signal read as a value
 
 ```typescript
 import { createSignal } from 'solid-js';
@@ -56,24 +56,24 @@ import { createSignal } from 'solid-js';
 const Counter = () => {
   const [count, setCount] = createSignal(0);
 
-  // BAD: Assuming this runs on every update (it doesn't!)
+  // BAD: the body runs once, so this logs the function at creation and never again
   console.log('Render count:', count);
 
-  // BAD: Direct value access without function call
-  const isMax = count >= 100; // Always false! Should be count() >= 100
+  // BAD: comparing the getter itself — always false
+  const isMax = count >= 100; // should be count() >= 100
 
   return (
     <div>
-      {/* BAD: Missing parentheses - shows function, not value */}
+      {/* BAD: renders the function's source, and subscribes to nothing */}
       <span>{count}</span>
-      {/* BAD: isMax never updates */}
+      {/* BAD: isMax was computed once, outside any tracking scope */}
       <button disabled={isMax}>+</button>
     </div>
   );
 };
 ```
 
-**Why bad:** Missing parentheses on signal reads, assuming component re-renders like React, `isMax` computed once and never updates
+**Why bad:** every one of these compiles. Without the call there is no read, so there is no dependency and no update — and `isMax` is a plain boolean fixed at creation.
 
 ---
 
@@ -111,7 +111,7 @@ const DocumentTitleSync: Component<{ defaultTitle: string }> = (props) => {
 export { DocumentTitleSync };
 ```
 
-**Why good:** Effect auto-tracks `pageTitle()`, onCleanup restores state, props accessed directly without destructuring
+**Why good:** the `onCleanup` is registered inside the effect, so it runs before each re-run as well as on disposal — the title is restored whether the component goes away or the value simply changes.
 
 ### Good Example - Window resize listener
 
@@ -154,7 +154,7 @@ const WindowSize: Component = () => {
 export { WindowSize };
 ```
 
-**Why good:** Debounced handler, cleans up both listener AND timeout, named constant for debounce delay
+**Why good:** the cleanup clears the pending timeout as well as removing the listener. Removing only the listener leaves a timer already scheduled, which still fires once after the component is gone.
 
 ### Bad Example - Missing cleanup
 
@@ -225,7 +225,7 @@ const SearchLogger = () => {
 export { SearchLogger };
 ```
 
-**Why good:** `on()` provides explicit dependency control, access to previous values, reads inside callback don't add dependencies
+**Why good:** `on()` moves dependency selection out of the callback, so `filter()` and `sortOrder()` can be read for their current values without becoming triggers. It also hands back the previous value, which auto-tracking has no way to give you.
 
 ---
 
@@ -282,37 +282,12 @@ const ItemList: Component<{ items: Item[] }> = (props) => {
 
   return (
     <div>
-      <input
-        placeholder="Search..."
-        value={searchTerm()}
-        onInput={(e) => setSearchTerm(e.currentTarget.value)}
-      />
-
-      <select
-        value={category() ?? ''}
-        onChange={(e) => setCategory(e.currentTarget.value || null)}
-      >
-        <option value="">All Categories</option>
-        <For each={categories()}>
-          {(cat) => <option value={cat}>{cat}</option>}
-        </For>
-      </select>
-
-      <select value={sortBy()} onChange={(e) => setSortBy(e.currentTarget.value as 'name' | 'price')}>
-        <option value="name">Sort by Name</option>
-        <option value="price">Sort by Price</option>
-      </select>
-
+      <input value={searchTerm()} onInput={(e) => setSearchTerm(e.currentTarget.value)} />
       <ul>
         <For each={sortedItems()}>
-          {(item) => (
-            <li>
-              {item.name} - ${item.price} ({item.category})
-            </li>
-          )}
+          {(item) => <li>{item.name} — {item.price}</li>}
         </For>
       </ul>
-
       <p>Showing {sortedItems().length} of {props.items.length} items</p>
     </div>
   );
@@ -321,7 +296,7 @@ const ItemList: Component<{ items: Item[] }> = (props) => {
 export { ItemList };
 ```
 
-**Why good:** Chained memos for progressive filtering, each memo only recalculates when its dependencies change, categories derived once from original items
+**Why good:** the chain means typing in the search box invalidates all three stages, while changing the sort order invalidates only the last one. `categories` reads `props.items` directly rather than the filtered list, so narrowing the search does not empty the dropdown it feeds.
 
 ### Bad Example - No memoization
 
@@ -331,12 +306,12 @@ import { createSignal, For } from 'solid-js';
 const ItemList = (props) => {
   const [searchTerm, setSearchTerm] = createSignal('');
 
-  // BAD: Runs on EVERY render/access, not memoized
+  // BAD: computed once, at creation — searchTerm() is read outside any tracking scope
   const filtered = props.items.filter(item =>
     item.name.includes(searchTerm())
   );
 
-  // BAD: Sorting happens every time sortedItems is accessed
+  // BAD: sorted once too, from a list that never changes
   const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
@@ -348,7 +323,7 @@ const ItemList = (props) => {
 };
 ```
 
-**Why bad:** No memoization means filtering/sorting runs on every access, using `.map()` instead of `<For>`, no key handling
+**Why bad:** the component body runs once, so `filtered` and `sorted` are plain arrays fixed at creation — typing in the box changes nothing. `createMemo` is what makes them re-run at all, and `<For>` is what keys the rows once they do.
 
 ---
 
@@ -405,7 +380,7 @@ const UserForm: Component = () => {
 export { UserForm };
 ```
 
-**Why good:** `batch()` combines multiple updates into single reactive cycle, prevents intermediate renders, cleaner than updating all at once
+**Why good:** without `batch`, each setter runs every effect and memo that reads it — a four-field load recomputes the derived values four times and paints three intermediate states on the way.
 
 ---
 

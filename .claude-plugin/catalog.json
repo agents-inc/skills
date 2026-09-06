@@ -921,6 +921,20 @@
       ],
       "path": "skills/ai-infrastructure-litellm/"
     },
+    "ai-infrastructure-modal": {
+      "id": "ai-infrastructure-modal",
+      "slug": "modal",
+      "displayName": "Modal",
+      "description": "Serverless GPU compute for model deployment and inference",
+      "usageGuidance": "Use when deploying ML models or GPU workloads on Modal — web endpoints for API access from TypeScript, serverless GPU functions, model serving, scheduled jobs, and container-based deployments.",
+      "category": "ai-infrastructure",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [],
+      "path": "skills/ai-infrastructure-modal/"
+    },
     "ai-infrastructure-ollama": {
       "id": "ai-infrastructure-ollama",
       "slug": "ollama",
@@ -1074,39 +1088,6 @@
       ],
       "path": "skills/ai-infrastructure-together-ai/"
     },
-    "ai-observability-langfuse": {
-      "id": "ai-observability-langfuse",
-      "slug": "langfuse",
-      "displayName": "Langfuse",
-      "description": "LLM observability — tracing, evaluations, prompt management",
-      "usageGuidance": "Use when adding observability to LLM applications — tracing LLM calls, tracking costs, evaluations, prompt management, session tracking, user feedback, and datasets for testing with Langfuse.",
-      "category": "ai-observability",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "ai-observability-promptfoo",
-          "purpose": "AI Evaluation / Observability"
-        }
-      ],
-      "path": "skills/ai-observability-langfuse/"
-    },
-    "ai-infrastructure-modal": {
-      "id": "ai-infrastructure-modal",
-      "slug": "modal",
-      "displayName": "Modal",
-      "description": "Serverless GPU compute for model deployment and inference",
-      "usageGuidance": "Use when deploying ML models or GPU workloads on Modal — web endpoints for API access from TypeScript, serverless GPU functions, model serving, scheduled jobs, and container-based deployments.",
-      "category": "ai-infrastructure",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [],
-      "path": "skills/ai-infrastructure-modal/"
-    },
     "ai-observability-promptfoo": {
       "id": "ai-observability-promptfoo",
       "slug": "promptfoo",
@@ -1171,6 +1152,25 @@
         }
       ],
       "path": "skills/ai-orchestration-llamaindex/"
+    },
+    "ai-observability-langfuse": {
+      "id": "ai-observability-langfuse",
+      "slug": "langfuse",
+      "displayName": "Langfuse",
+      "description": "LLM observability — tracing, evaluations, prompt management",
+      "usageGuidance": "Use when adding observability to LLM applications — tracing LLM calls, tracking costs, evaluations, prompt management, session tracking, user feedback, and datasets for testing with Langfuse.",
+      "category": "ai-observability",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "ai-observability-promptfoo",
+          "purpose": "AI Evaluation / Observability"
+        }
+      ],
+      "path": "skills/ai-observability-langfuse/"
     },
     "ai-orchestration-vercel-ai-sdk": {
       "id": "ai-orchestration-vercel-ai-sdk",
@@ -5895,7 +5895,7 @@
       "slug": "react-query",
       "displayName": "React Query",
       "description": "Server state and caching",
-      "usageGuidance": "Use when fetching API data with React Query, generating API clients from OpenAPI specs with hey-api, or configuring query caching and error handling.",
+      "usageGuidance": "Use when fetching API data with React Query, wiring typed clients generated from an API schema, or configuring query caching and error handling.",
       "category": "web-server-state",
       "author": "@vince",
       "conflictsWith": [
@@ -6176,20 +6176,6 @@
       ],
       "path": "skills/web-state-zustand/"
     },
-    "web-styling-cva": {
-      "id": "web-styling-cva",
-      "slug": "cva",
-      "displayName": "CVA",
-      "description": "Component variant styling",
-      "usageGuidance": "Use when building component variants with class-variance-authority.",
-      "category": "web-styling",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [],
-      "path": "skills/web-styling-cva/"
-    },
     "web-styling-design-tokens": {
       "id": "web-styling-design-tokens",
       "slug": "design-tokens",
@@ -6204,12 +6190,26 @@
       "alternatives": [],
       "path": "skills/web-styling-design-tokens/"
     },
+    "web-styling-cva": {
+      "id": "web-styling-cva",
+      "slug": "cva",
+      "displayName": "CVA",
+      "description": "Component variant styling",
+      "usageGuidance": "Use when building component variants with class-variance-authority.",
+      "category": "web-styling",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [],
+      "path": "skills/web-styling-cva/"
+    },
     "web-styling-scss-modules": {
       "id": "web-styling-scss-modules",
       "slug": "scss-modules",
       "displayName": "SCSS Modules",
       "description": "SCSS Modules styling",
-      "usageGuidance": "Use when styling with SCSS Modules, design tokens, or CSS cascade layers.",
+      "usageGuidance": "Use when writing scoped component styles in .module.scss, organising Sass with @use and @forward, or ordering styles with CSS cascade layers.",
       "category": "web-styling",
       "author": "@vince",
       "conflictsWith": [],
@@ -6549,7 +6549,7 @@
       "slug": "headless-ui",
       "displayName": "Headless UI",
       "description": "Unstyled accessible UI components by Tailwind Labs",
-      "usageGuidance": "Use when building accessible UI with Headless UI — Dialog, Menu, Listbox, Combobox, Popover, Tabs, Disclosure, and other unstyled primitives designed for Tailwind CSS.",
+      "usageGuidance": "Use when building accessible UI with Headless UI — Dialog, Menu, Listbox, Combobox, Popover, Tabs, Disclosure, and other unstyled primitives you style yourself.",
       "category": "web-ui-components",
       "author": "@vince",
       "conflictsWith": [],
@@ -9318,14 +9318,14 @@
     "slugToId": {
       "huggingface-inference": "ai-infrastructure-huggingface-inference",
       "litellm": "ai-infrastructure-litellm",
+      "modal": "ai-infrastructure-modal",
       "ollama": "ai-infrastructure-ollama",
       "replicate": "ai-infrastructure-replicate",
       "together-ai": "ai-infrastructure-together-ai",
-      "langfuse": "ai-observability-langfuse",
-      "modal": "ai-infrastructure-modal",
       "promptfoo": "ai-observability-promptfoo",
       "langchain": "ai-orchestration-langchain",
       "llamaindex": "ai-orchestration-llamaindex",
+      "langfuse": "ai-observability-langfuse",
       "vercel-ai-sdk": "ai-orchestration-vercel-ai-sdk",
       "tool-use-patterns": "ai-patterns-tool-use-patterns",
       "anthropic-sdk": "ai-provider-anthropic-sdk",
@@ -9526,8 +9526,8 @@
       "pinia": "web-state-pinia",
       "redux-toolkit": "web-state-redux-toolkit",
       "zustand": "web-state-zustand",
-      "cva": "web-styling-cva",
       "design-tokens": "web-styling-design-tokens",
+      "cva": "web-styling-cva",
       "scss-modules": "web-styling-scss-modules",
       "tailwind": "web-styling-tailwind",
       "theming": "web-styling-theming",

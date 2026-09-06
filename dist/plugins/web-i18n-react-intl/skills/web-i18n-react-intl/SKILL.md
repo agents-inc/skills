@@ -1,81 +1,87 @@
 ---
 name: web-i18n-react-intl
-description: ICU message format internationalization
+description: ICU message format internationalization for React — FormattedMessage, useIntl, defineMessages, and the FormatJS extraction workflow. Load when a project imports react-intl.
 ---
 
 # React-Intl (FormatJS) Internationalization Patterns
 
-> **Quick Guide:** Use react-intl for internationalization with ICU Message Format. `FormattedMessage` for JSX content, `useIntl` for string attributes and programmatic use, `defineMessages` for extractable message descriptors. Wrap app with `IntlProvider` and configure `onError` for missing translations. Always include the `other` category in plurals and selects.
->
-> **Version Note:** react-intl v7.x supports React 16.6+/17/18/19. v8+ requires React 19 only (React 18 support dropped). Current latest: v10.x.
+> **Quick Guide:** `FormattedMessage` renders translated text in JSX, `useIntl` returns strings for
+> attributes and programmatic use, and `defineMessages` produces descriptors the FormatJS CLI can
+> extract. `IntlProvider` supplies the context, and its `onError` is what separates a missing
+> translation from a real failure. Every `plural` and `select` needs an `other` branch. Version
+> boundary: v7.x runs on React 16.6 through 19; v8 and later require React 19.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — provider setup, FormattedMessage, useIntl, defineMessages, `createIntl`, locale switching, types, lazy loading
+- [examples/formatting.md](examples/formatting.md) — date, time, number, currency, relative time, list and display-name formatting
+- [examples/pluralization.md](examples/pluralization.md) — plural, ordinal, select, nested patterns, per-language categories, ICU escaping
+- [reference.md](reference.md) — decision trees, ICU syntax tables, API tables, anti-pattern code, checklists
+
+---
+
+## Which path applies
+
+- **Text rendered inside JSX** — `FormattedMessage`, including rich text with tag values. Follow
+  [examples/core.md](examples/core.md).
+- **A string is needed** — an attribute, a document title, a value passed to a third-party
+  component, or a comparison — `useIntl().formatMessage()`. Also in
+  [examples/core.md](examples/core.md).
+- **Outside a React tree** — a server render or a plain module — `createIntl` from
+  `@formatjs/intl`, optionally re-supplied through `RawIntlProvider`. In
+  [examples/core.md](examples/core.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing react-intl code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap the tree in `IntlProvider` with `locale`, `messages` and `defaultLocale`.** Every
+`FormattedMessage` and `useIntl` call reads that context, and `defaultLocale` is what a missing
+translation falls back to instead of surfacing the raw ID.
 
-**(You MUST wrap the application root with `IntlProvider` and configure locale, messages, and defaultLocale)**
+**Give every `plural` and `select` an `other` branch.** ICU requires it, and a message without one
+throws when formatted rather than when authored.
 
-**(You MUST include the `other` category in ALL plural and select ICU messages - omission causes runtime errors)**
-
-**(You MUST use named constants for locale codes - NO inline locale strings)**
-
-**(You MUST verify React version compatibility: v7.x supports React 16.6-19, v8+ requires React 19 only)**
+**Match the major version to the React version in the project.** v7.x covers React 16.6 through 19;
+v8 and later dropped everything before React 19.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** react-intl, FormatJS, FormattedMessage, useIntl, IntlProvider, defineMessages, ICU message format, formatMessage, FormattedDate, FormattedNumber, FormattedRelativeTime
+**Auto-detection:** react-intl, FormatJS, FormattedMessage, useIntl, IntlProvider, RawIntlProvider,
+defineMessages, defineMessage, createIntl, formatMessage, FormattedDate, FormattedNumber,
+FormattedRelativeTime, ICU message format
 
-**When to use:**
+**Applies to:**
 
-- Implementing internationalization in React applications
-- Rendering localized messages with ICU syntax (interpolation, pluralization, select)
-- Formatting dates, numbers, currency, and relative time per locale
-- Extracting and compiling translation messages for TMS workflows
-- Building type-safe i18n with TypeScript augmentation
+- Rendering messages with ICU interpolation, pluralization, select and rich text
+- Formatting dates, numbers, currency, relative time, lists and display names per locale
+- Structuring messages as descriptors so the CLI can extract and compile them
+- Typing message IDs so a typo fails at compile time
+- Loading a locale's messages on demand rather than bundling all of them
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- IntlProvider setup with error handling and default rich text elements
-- FormattedMessage vs useIntl: declarative JSX vs imperative strings
-- defineMessages for static message extraction
-- ICU Message Format syntax (plurals, select, ordinals, rich text)
-- Date, time, number, currency, relative time, and list formatting
-- TypeScript integration for type-safe message IDs
-- Lazy loading locale data with dynamic imports
-
-**When NOT to use:**
-
-- SSR frameworks with built-in i18n (use the framework's i18n solution for better SSR integration)
-- Simple single-locale applications (skip i18n complexity)
-- Server-side rendering without React context (use `createIntl` from `@formatjs/intl`)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - IntlProvider setup, FormattedMessage, useIntl, defineMessages, TypeScript integration, lazy loading
-- [examples/formatting.md](examples/formatting.md) - Date, time, number, currency, relative time, and list formatting
-- [examples/pluralization.md](examples/pluralization.md) - Plural, ordinal, select, nested ICU patterns
-- [reference.md](reference.md) - Decision frameworks, ICU syntax quick reference, API tables, anti-patterns
+- Where the locale value comes from and how it is persisted — this skill consumes a locale and
+  settles nothing about detection, routing or storage
+- A framework's own built-in i18n — a framework that resolves locale and messages per request will
+  do that better than a client-side provider, and this skill does not compete with it
+- Translation vendor workflow — the CLI produces and consumes JSON, and what happens to it in
+  between is not this skill's concern
+- Rendering and state — components receive messages through context and are otherwise ordinary
 
 ---
 
 <philosophy>
 
-## Philosophy
-
-React-intl follows the principle of **ICU Message Format standardization** with both declarative and imperative APIs. Translations use industry-standard ICU syntax enabling compatibility with professional translation management systems. The library is built on browser-native `Intl` APIs for optimal performance and accurate locale-aware formatting.
-
-**Core principles:**
-
-1. **ICU Standard**: Use industry-standard ICU Message Format for professional translation workflows
-2. **Dual API**: FormattedMessage for JSX content, useIntl for string contexts (attributes, programmatic use)
-3. **Native Intl**: Built on browser Intl APIs for accurate locale-specific formatting
-4. **Extractable**: defineMessages enables CLI extraction for translation management
+ICU Message Format is the point: it is what translation vendors already speak, so a message written
+in it moves through a professional workflow without a conversion step. Everything else follows.
+Formatting is delegated to the browser's own `Intl` APIs rather than reimplemented, which is why
+locale-specific behaviour is correct for locales nobody tested. And the API is deliberately doubled —
+a component for JSX and a hook for strings — because a `ReactNode` cannot be put in an attribute.
 
 </philosophy>
 
@@ -83,43 +89,33 @@ React-intl follows the principle of **ICU Message Format standardization** with 
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: IntlProvider Setup
+### Pattern 1: IntlProvider setup
 
-Wrap your application root with `IntlProvider`. Configure `onError` to distinguish missing translations from actual errors, set `defaultLocale` for fallback, and define `defaultRichTextElements` for consistent markup.
+`onError` is where a missing translation is separated from a real failure, and
+`defaultRichTextElements` gives `<b>`, `<i>` and `<br>` one definition for the whole app.
 
 ```typescript
-export function AppIntlProvider({ children, locale, messages }: Props) {
-  return (
-    <IntlProvider
-      locale={locale}
-      defaultLocale={DEFAULT_LOCALE}
-      messages={messages}
-      defaultRichTextElements={DEFAULT_RICH_TEXT_ELEMENTS}
-      onError={(err) => {
-        if (err.code === "MISSING_TRANSLATION") {
-          console.warn(`Missing translation: ${err.message}`);
-          return;
-        }
-        throw err;
-      }}
-    >
-      {children}
-    </IntlProvider>
-  );
-}
+<IntlProvider
+  locale={locale}
+  defaultLocale={DEFAULT_LOCALE}
+  messages={messages}
+  defaultRichTextElements={DEFAULT_RICH_TEXT_ELEMENTS}
+  onError={(err) => {
+    if (err.code === "MISSING_TRANSLATION") return;
+    throw err;
+  }}
+>
+  {children}
+</IntlProvider>
 ```
 
-**Why good:** custom onError distinguishes missing translations from actual errors, defaultLocale provides fallback, defaultRichTextElements ensure consistent markup
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/core.md](examples/core.md) for full setup with locale config, lazy loading, and app integration.
+### Pattern 2: FormattedMessage
 
----
-
-### Pattern 2: FormattedMessage (Declarative JSX)
-
-Use `FormattedMessage` for rendering translated text directly in JSX elements. Supports ICU syntax for interpolation, pluralization, and rich text.
+For text rendered directly in JSX, including messages carrying ICU syntax.
 
 ```typescript
 <FormattedMessage
@@ -129,41 +125,34 @@ Use `FormattedMessage` for rendering translated text directly in JSX elements. S
 />
 ```
 
-**When to use:** Text content rendered directly in JSX, rich text with embedded formatting.
+It returns a `ReactNode`, so an attribute — `placeholder`, `aria-label`, `title` — needs Pattern 3
+instead.
 
-**When not to use:** String attributes like placeholder, aria-label, title (use useIntl instead).
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 3: useIntl
 
-### Pattern 3: useIntl Hook (Imperative Strings)
-
-Use `useIntl` when you need formatted strings for attributes, props, or programmatic use.
+For any context that needs a string: attributes, document titles, third-party props, or a value the
+code then compares.
 
 ```typescript
 const intl = useIntl();
+
 const placeholder = intl.formatMessage({
   id: "search.placeholder",
   defaultMessage: "Search products...",
 });
-
-<input placeholder={placeholder} aria-label={ariaLabel} />
 ```
 
-**When to use:** Input placeholders, ARIA labels, document titles, third-party component props, conditional logic based on formatted values.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 4: defineMessages
 
-### Pattern 4: defineMessages for Static Extraction
-
-Group related messages with `defineMessages` for CLI extraction and IDE autocomplete.
+Descriptors the CLI can find statically. `description` is the only channel a translator has for
+context.
 
 ```typescript
 export const productMessages = defineMessages({
-  title: {
-    id: "product.title",
-    defaultMessage: "Product Details",
-    description: "Page title for product detail page",
-  },
   reviewCount: {
     id: "product.reviewCount",
     defaultMessage:
@@ -173,20 +162,19 @@ export const productMessages = defineMessages({
 });
 ```
 
-**Why good:** centralizes related messages, descriptions provide translator context, CLI extracts these automatically, IDE autocomplete for references
+Spread a descriptor into `FormattedMessage`, or pass it to `intl.formatMessage`.
 
-See [examples/core.md](examples/core.md) for usage patterns with FormattedMessage and useIntl.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 5: Rich text
 
-### Pattern 5: Rich Text Formatting
-
-Use XML-like tags in messages for embedded markup. Translators can reorder tags per language grammar while the complete sentence stays in one translation unit.
+Tags in the message map to values, so the sentence stays in one translation unit and the translator
+can reorder the tags to fit the target grammar.
 
 ```typescript
 <FormattedMessage
   id="terms.notice"
-  defaultMessage="By signing up, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
+  defaultMessage="You agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
   values={{
     terms: (chunks) => <a href="/terms">{chunks}</a>,
     privacy: (chunks) => <a href="/privacy">{chunks}</a>,
@@ -194,69 +182,53 @@ Use XML-like tags in messages for embedded markup. Translators can reorder tags 
 />
 ```
 
-Configure global tag handlers via `defaultRichTextElements` on `IntlProvider` for `<b>`, `<i>`, `<br>` tags.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 6: Formatting
 
-### Pattern 6: Formatting Components
-
-Locale-aware formatting for dates, numbers, currency, relative time, and lists.
+A component per value kind, each with an imperative twin on `useIntl` for string contexts.
 
 ```typescript
 <FormattedDate value={date} year="numeric" month="long" day="numeric" />
-// en-US: "January 15, 2024" | de-DE: "15. Januar 2024"
-
 <FormattedNumber value={amount} style="currency" currency={currency} />
-// en-US: "$1,234.56" | de-DE: "1.234,56 EUR"
-
 <FormattedList type="conjunction" value={names} />
-// en: "Alice, Bob, and Charlie" | es: "Alice, Bob y Charlie"
 ```
 
-Use imperative equivalents (`intl.formatDate()`, `intl.formatNumber()`) when you need strings for attributes or programmatic use.
+Full code: [examples/formatting.md](examples/formatting.md)
 
-See [examples/formatting.md](examples/formatting.md) for comprehensive date/time, number, currency, relative time, and list examples.
+### Pattern 7: Type-safe message IDs
 
----
-
-### Pattern 7: TypeScript Integration
-
-Enable type-safe message IDs with TypeScript module augmentation.
+Augment the `FormatjsIntl.Message` interface and a wrong ID becomes a compile error.
 
 ```typescript
-// src/types/intl.d.ts
-import type messages from "../lang/en.json";
-
-type MessageIds = keyof typeof messages;
-
 declare global {
   namespace FormatjsIntl {
     interface Message {
-      ids: MessageIds;
+      ids: keyof typeof messages;
     }
   }
 }
 ```
 
-Typos in message IDs become compile-time errors. Add `"esnext.intl"` to `compilerOptions.lib` in tsconfig.json.
+Add `"esnext.intl"` to `compilerOptions.lib`.
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 8: Message Extraction Workflow
+### Pattern 8: Extraction workflow
 
-Use FormatJS CLI for extracting and compiling messages.
+Extract descriptors, send the JSON out for translation, compile what comes back.
 
-1. **Extract** messages from source code: `formatjs extract 'src/**/*.{ts,tsx}' --out-file lang/en.json`
-2. **Send** to translation management system (TMS)
-3. **Compile** translations to AST format: `formatjs compile lang/en.json --out-file compiled/en.json --ast`
+```bash
+formatjs extract 'src/**/*.{ts,tsx}' --out-file lang/en.json
+formatjs compile lang/en.json --out-file compiled/en.json --ast
+```
 
-**Why compile to AST:** 30-50% faster initial render for large message catalogs - skips runtime parsing.
+Compiling to AST skips parsing at runtime — 30-50% off first render for a large catalog.
 
----
+### Pattern 9: ICU pluralization
 
-### Pattern 9: ICU Pluralization
-
-ICU plural syntax handles language-specific rules. Always include `other` as fallback.
+Plural category counts differ by language: English has `one`/`other`, Russian adds `few` and `many`,
+Arabic adds `zero` and `two`.
 
 ```
 {count, plural, =0 {No items} one {# item} other {# items}}
@@ -264,9 +236,7 @@ ICU plural syntax handles language-specific rules. Always include `other` as fal
 {gender, select, male {He} female {She} other {They}} liked your post.
 ```
 
-Different languages have different plural categories (English: one/other, Russian: one/few/many/other, Arabic: zero/one/two/few/many/other).
-
-See [examples/pluralization.md](examples/pluralization.md) for nested patterns, ordinals, select, and language-specific examples.
+Full code: [examples/pluralization.md](examples/pluralization.md)
 
 </patterns>
 
@@ -276,21 +246,17 @@ See [examples/pluralization.md](examples/pluralization.md) for nested patterns, 
 
 ## Performance
 
-### Message Compilation (AST Pre-parsing)
+**Compile to AST at build time** — Pattern 8's `formatjs compile --ast` step, which is where the
+largest single win is.
 
-Compile messages to AST at build time to skip runtime parsing. Impact: 30-50% faster initial render for large catalogs.
+**Load one locale at a time** with dynamic imports, and cache what comes back so a switch back is
+free. Implementation in [examples/core.md](examples/core.md).
 
-### Lazy Loading Locale Data
+**Define messages outside the component.** An object literal passed inline to `FormattedMessage` is
+a new reference every render, which defeats memoization.
 
-Use dynamic imports to load only the current locale's messages. Cache loaded messages to prevent duplicate fetches. See [examples/core.md](examples/core.md) for implementation.
-
-### RawIntlProvider with createIntl
-
-Use `createIntl` + `createIntlCache` + `RawIntlProvider` for manual control over intl object creation. Useful when you want to memoize the intl instance explicitly.
-
-### Avoid Inline Message Objects
-
-Define messages outside components with `defineMessages` rather than passing inline objects to `FormattedMessage`. Inline objects create new references each render, preventing memoization optimizations.
+**`createIntl` + `createIntlCache` + `RawIntlProvider`** puts the intl object under explicit control
+when you want to memoize it yourself.
 
 </performance>
 
@@ -298,58 +264,32 @@ Define messages outside components with `defineMessages` rather than passing inl
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Missing `IntlProvider` wrapper** - All useIntl and FormattedMessage calls fail without context
-- **Missing `other` category in plural/select** - Runtime error: "other" is REQUIRED in ICU syntax
-- **Hardcoded locale strings** - Use named constants from config for type safety
-- **Using FormattedMessage for attributes** - Returns ReactNode, not string; breaks placeholder, aria-label, title
+- A `plural` or `select` with no `other` branch — ICU requires it and formatting throws
+- Any `useIntl` or `FormattedMessage` outside `IntlProvider` — there is no context to read
+- `FormattedMessage` in an attribute — it is a `ReactNode`, so `placeholder`, `aria-label` and
+  `title` receive an object
+- `injectIntl` — removed in v10; `useIntl` replaces it
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Missing `defaultLocale` on IntlProvider** - No fallback for missing translations
-- **No `onError` handler** - Console noise for every missing translation
-- **Missing description in defineMessages** - Translators lack context for accurate translation
+- `formatMessage` returns `string` normally, but `string | ReactNode[]` as soon as a value is a rich
+  text tag function
+- Rich text tag functions receive `chunks` as an array, not a single element
+- `formatNumber` with `style: "percent"` expects a fraction — `0.25` renders as 25%
+- `formatRelativeTime` is relative to now: negative is past, positive is future
+- ICU escaping runs on single quotes — `'` escapes the next special character and `''` produces a
+  literal apostrophe, so an unescaped apostrophe in an English message can swallow the rest of it
+- Without `defaultLocale`, a missing translation renders the raw message ID
+- Without `onError`, every missing translation writes to the console
+- Concatenating two translated strings assumes English word order, which most languages do not share
+- `{count}` on its own never pluralizes, and a plural branch without `#` renders no number at all
+- `onWarn` on `IntlProvider` is what quiets `defaultRichTextElements` warnings when messages are not
+  pre-compiled
 
-**Common Mistakes:**
-
-- Concatenating translated strings instead of single message with placeholders (word order varies by language)
-- Applying English grammar rules programmatically (possessives, plurals) instead of using ICU syntax
-- Using `{count}` instead of `{count, plural, ...}` for countable items
-- Missing `#` in plural branches (shows nothing instead of the count value)
-
-**Gotchas & Edge Cases:**
-
-- `FormattedMessage` returns `ReactNode`, not `string` - cannot use for HTML attributes
-- `formatMessage` returns `string` for plain values, but `string | ReactNode[]` when rich text tag functions are in values
-- Rich text tag functions receive `chunks` array, not single element
-- `formatNumber` with `style: "percent"` expects decimal (0.25 for 25%), not percentage
-- `formatRelativeTime` value is relative to NOW - negative for past, positive for future
-- ICU escaping: single quote `'` escapes special characters, double single quote `''` produces literal apostrophe
-- Browser Intl support varies - consider polyfills for older browsers
-- `injectIntl` HOC was removed in v10 - use `useIntl` hook instead
-- Use `onWarn` prop on IntlProvider to suppress or handle `defaultRichTextElements` warnings when messages are not pre-compiled
+Anti-patterns with the code that fixes them: [reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap the application root with `IntlProvider` and configure locale, messages, and defaultLocale)**
-
-**(You MUST include the `other` category in ALL plural and select ICU messages - omission causes runtime errors)**
-
-**(You MUST use named constants for locale codes - NO inline locale strings)**
-
-**(You MUST verify React version compatibility: v7.x supports React 16.6-19, v8+ requires React 19 only)**
-
-**Failure to follow these rules will cause runtime errors and broken internationalization.**
-
-</critical_reminders>

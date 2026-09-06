@@ -1,38 +1,7 @@
 # Leaflet Quick Reference
 
-## Decision Frameworks
-
-### Marker Strategy by Count
-
-| Count     | Strategy                                  | Notes                  |
-| --------- | ----------------------------------------- | ---------------------- |
-| < 100     | `L.marker` / `L.divIcon`                  | Standard DOM markers   |
-| 100 - 10K | `L.markerClusterGroup`                    | Clustering plugin      |
-| 10K - 50K | `L.markerClusterGroup` + `chunkedLoading` | Batch with `addLayers` |
-| 50K+      | Canvas plugin or vector tiles             | Beyond DOM/SVG limits  |
-
-### Layer Type Selection
-
-| Data                 | Layer            | Notes                            |
-| -------------------- | ---------------- | -------------------------------- |
-| Single point         | `L.marker`       | With icon/divIcon                |
-| Data viz point       | `L.circleMarker` | Renders on vector layer          |
-| Circle area          | `L.circle`       | Radius in meters                 |
-| Line                 | `L.polyline`     | Array of LatLng                  |
-| Area                 | `L.polygon`      | Closed array of LatLng           |
-| Mixed GeoJSON        | `L.geoJSON`      | Handles all types                |
-| Group (toggle)       | `L.layerGroup`   | Simple container                 |
-| Group (bounds/popup) | `L.featureGroup` | Has `getBounds()`, `bindPopup()` |
-
-### Icon Type Selection
-
-| Use Case                | Icon Type                        |
-| ----------------------- | -------------------------------- |
-| Default pin             | `L.marker()` (no icon option)    |
-| Custom image            | `L.icon({ iconUrl })`            |
-| Reusable image variants | `L.Icon.extend({ options })`     |
-| HTML/CSS content        | `L.divIcon({ html, className })` |
-| Data point (many)       | `L.circleMarker`                 |
+> API lookup and install checklist. See [SKILL.md](SKILL.md) for the decisions and the red flags,
+> [examples/](examples/) for code.
 
 ---
 

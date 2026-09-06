@@ -1,16 +1,16 @@
-# Apollo Client GraphQL - Pagination Patterns
+# Apollo Client — Pagination Examples
 
-> Advanced pagination examples. See [core.md](core.md) for basic patterns.
+> Cursor and offset pagination. See [core.md](core.md) for client setup and queries.
 
-**Prerequisites**: Understand Pattern 2 (useQuery) from core examples first.
+**Prerequisites**: Pattern 2 (queries) from core.
 
 ---
 
-## Infinite Scroll with fetchMore
+## Infinite scroll with fetchMore
 
 ```typescript
 // components/infinite-post-list.tsx
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql, NetworkStatus } from "@apollo/client";
 import { useCallback, useRef, useEffect } from "react";
 
 const GET_POSTS_CONNECTION = gql`
@@ -56,7 +56,8 @@ function InfinitePostList({ filter }: InfinitePostListProps) {
     }
   );
 
-  const isFetchingMore = networkStatus === 3;
+  // notifyOnNetworkStatusChange above is what makes this transition observable
+  const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
   const hasNextPage = data?.postsConnection?.pageInfo?.hasNextPage;
   const endCursor = data?.postsConnection?.pageInfo?.endCursor;
 
@@ -136,9 +137,12 @@ function InfinitePostList({ filter }: InfinitePostListProps) {
 export { InfinitePostList };
 ```
 
+The `fetchMore` call passes only `after` — the other variables carry over, so the filter stays put
+and the type policy's `keyArgs` keeps this filter's pages separate from another's.
+
 ---
 
-## Type Policy for Pagination Merging
+## Type policies for merging
 
 ```typescript
 // lib/apollo-cache.ts
@@ -201,4 +205,6 @@ const cache = new InMemoryCache({
 export { cache };
 ```
 
-**Why good:** relayStylePagination handles Relay-spec connections automatically, custom merge/read functions enable offset pagination, keyArgs ensures separate caches for different filters, IntersectionObserver provides smooth infinite scroll
+`relayStylePagination` covers a Relay-spec connection outright. Offset pagination has no helper: the
+`merge` writes incoming items at their offset into a sparse array, and the `read` returns `undefined`
+for a page it cannot fully serve, which is the signal that triggers the network request.

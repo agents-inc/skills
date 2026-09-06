@@ -10,7 +10,7 @@
 
 ---
 
-## Pattern 1: Basic Dynamic List
+## Pattern 10: Basic Dynamic List
 
 Use `mode="array"` on `form.Field` to enable array operations. Render nested fields with `form.Field` using bracket notation for array access.
 
@@ -139,7 +139,7 @@ export function TodoForm() {
 
 ---
 
-## Pattern 2: Reordering Array Items
+## Pattern 11: Reordering Array Items
 
 Use `swapValues` and `moveValue` for reordering.
 
@@ -191,7 +191,7 @@ Use `swapValues` and `moveValue` for reordering.
 
 ---
 
-## Pattern 3: Nested Array with Validation
+## Pattern 12: Nested Array with Validation
 
 Arrays of complex objects with per-item validation.
 

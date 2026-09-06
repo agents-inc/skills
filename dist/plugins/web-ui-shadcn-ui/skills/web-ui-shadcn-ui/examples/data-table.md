@@ -99,4 +99,11 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
 }
 ```
 
-**Why good:** Action menu keeps table clean, destructive action has visual warning, sortable headers are discoverable, sr-only text for accessibility
+**Why good:** the row actions collapse into one menu, so the column width does not grow with the
+number of actions and the destructive one is never adjacent to a stray click. `sr-only` names the
+glyph-only trigger, which is otherwise announced as "button". `TableHead` wrapping a ghost `Button`
+makes the sort control a real button — focusable and operable by keyboard — rather than a click
+handler on a `th`.
+
+This file covers the presentational table components. Sorting, filtering and pagination _logic_ is a
+separate concern from the markup these render.

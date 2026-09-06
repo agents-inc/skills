@@ -1,72 +1,77 @@
 ---
 name: web-testing-visual-regression
-description: Visual regression testing - screenshot baselines, determinism, diff review workflow, baseline custody, and CI wiring for catching unintended UI changes
+description: Visual regression testing — screenshot baselines, determinism, diff review, baseline custody and CI wiring. Load when adding, reviewing or debugging tests that compare a rendered subject against an approved image.
 ---
 
 # Visual Regression Testing
 
-> **Quick Guide:** A visual test asserts that a rendered subject still looks the way a human approved it. The assertion is trivial; everything hard is around it — making the render deterministic, scoping the subject tightly, generating baselines in the same environment that will diff them, and reviewing every diff before accepting a new baseline. A baseline accepted without looking at it turns the suite into a machine that asserts the bug.
+> **Quick Guide:** A visual test asserts that a subject still looks the way a human approved it. The comparison is trivial; everything hard surrounds it — making the render deterministic, scoping the capture to the subject, generating baselines in the environment that will diff them, and looking at every diff before accepting a new one. A baseline accepted without being looked at turns the suite into a machine that asserts the bug.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — comparison configuration, the baseline matrix, masking, subject scoping
+- [examples/determinism.md](examples/determinism.md) — the stabilizing stylesheet, fonts, frozen clocks, seeded randomness, fixture data, environment parity
+- [examples/catalog-driven.md](examples/catalog-driven.md) — a component-state catalog as the visual corpus, modes, interaction-produced states, change detection
+- [examples/ci.md](examples/ci.md) — pipeline wiring, diff artifacts, the baseline-refresh workflow, cost control
+- [reference.md](reference.md) — comparison-option semantics, update modes, the pre-commit checklist, troubleshooting table
+
+---
+
+## Which path applies
+
+The two families differ in where the baseline lives, who accepts a change, and who owns the render environment. Pick before writing anything; retrofitting is a migration rather than a flag.
+
+- **Baselines committed to the repository, compared by a harness you run** — review happens in code
+  review, and the render environment is yours to pin. Free per run, expensive in environment work.
+  [examples/core.md](examples/core.md) and [examples/determinism.md](examples/determinism.md).
+- **Snapshots uploaded to a change-detection service** — review happens in a hosted UI with a
+  recorded accept per change, and one controlled renderer removes dev-vs-CI drift. Billed per
+  snapshot, near-zero environment work. [examples/catalog-driven.md](examples/catalog-driven.md).
+
+Running both over the _same_ subjects is the one combination to avoid — two baselines, two review flows, two chances to accept the wrong one. Splitting them by subject (a state catalog in the service, a handful of critical full-page checks committed) is common and works.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing a visual test
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Look at the diff before accepting any baseline.** The approved image is the entire assertion, so accepting one unseen permanently encodes whatever was on screen, regression included, and the suite can never report it again.
 
-**(You MUST look at the diff before accepting any baseline — an unreviewed baseline permanently encodes whatever was on screen, including the regression)**
+**Make the render deterministic before capturing** — fonts loaded, motion stopped, clock frozen, randomness seeded, data fixed. A pixel that varies between runs is being asserted as though it were part of the design.
 
-**(You MUST make the render deterministic before capturing — fonts loaded, animations stopped, time frozen, data fixed — or the diff reports noise instead of regressions)**
+**Generate and compare baselines in the same environment.** Font rasterization and subpixel rendering differ between operating systems and container images, so a baseline made anywhere else shows a full-frame difference on every subject from the first run.
 
-**(You MUST generate and compare baselines in the same environment — same pinned container image, same browser build — never commit baselines rendered on a developer machine)**
+**Capture the subject, not the page around it.** An element or a clipped band fails only when it changes, which is what makes the failure name its own cause.
 
-**(You MUST scope the capture to the subject under test — an element or a clip — and reserve full-page captures for cases where the page itself is the subject)**
-
-**(You MUST mask dynamic regions rather than loosening the comparison threshold — a threshold wide enough to absorb a live timestamp is wide enough to absorb a broken layout)**
+**Mask a region that legitimately varies rather than widening the tolerance.** A tolerance wide enough to absorb a live timestamp is wide enough to absorb a collapsed column.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** visual regression, visual testing, screenshot testing, snapshot image, baseline image, toHaveScreenshot, pixel diff, maxDiffPixels, maxDiffPixelRatio, diffThreshold, Chromatic, TurboSnap, accept baseline, update snapshots, golden image, UI diff
+**Auto-detection:** visual regression, visual testing, screenshot testing, screenshot baseline, baseline image, golden image, pixel diff, image diff, expected/actual/diff, maxDiffPixels, maxDiffPixelRatio, diffThreshold, update snapshots, accept baseline, snapshot review, UI diff, stabilizing stylesheet
 
-**When to use:**
+**Applies to:**
 
-- Catching unintended visual changes in components, pages, or design-system primitives
-- Protecting a shared component library where one CSS change fans out across consumers
-- Verifying theme/viewport matrices (light and dark, mobile and desktop) render as designed
-- Guarding states that are hard to assert semantically — spacing, overflow, z-order, focus rings, truncation
-- Locking down a marketing or print-style page where the layout _is_ the requirement
+- Catching unintended visual change in components, pages and design-system primitives
+- Guarding a shared component library where one CSS change fans out across consumers
+- Covering theme and viewport matrices without duplicating a test per cell
+- Guarding what no assertion expresses — spacing, overflow, z-order, focus rings, truncation
+- Making a render deterministic enough to be worth comparing
+- Deciding what a diff means, and who is allowed to accept it
+- Wiring the visual job so its failures are actionable and its cost is bounded
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Asserting text content, ARIA structure, or behaviour — a text or role assertion fails with a readable message; a pixel diff makes a human squint at two images
-- Guarding a surface that legitimately changes every render (live feeds, ad slots, animated canvases) unless those regions are masked
-- Substituting for missing functional coverage — a screenshot proves the pixels moved, never that the feature works
-
-**Explicitly out of scope (owned by sibling skills):**
-
-- Writing stories, story args/decorators, and workshop setup — `web-tooling-storybook`
-- Functional end-to-end flows, locator strategy, and network interception mechanics — `web-testing-playwright-e2e`
-- Unit and component-level assertions — `web-testing-vitest`, `web-testing-react-testing-library`
-
-**Key patterns covered:**
-
-- Harness choice: self-hosted image comparison vs cloud change-detection service
-- Configuration-driven comparison — tolerances and the baseline matrix live in config, not in assertions
-- Determinism checklist — fonts, motion, time, randomness, data, scrollbars, environment
-- Story-driven coverage — a story catalog as the visual corpus, modes, interaction states
-- Baseline lifecycle — proposing, reviewing, and accepting a new approved image
-- CI wiring — when the visual job runs, what artifacts it emits, how cost stays bounded
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Config defaults, project matrix, masking, subject scoping
-- [examples/determinism.md](examples/determinism.md) - Fonts, motion, frozen clocks, seeded randomness, scrollbars, container parity
-- [examples/story-driven.md](examples/story-driven.md) - Story corpus, modes, interaction states, change detection
-- [examples/ci.md](examples/ci.md) - Visual job wiring, diff artifacts, baseline-update workflow, cost control
-- [reference.md](reference.md) - Option tables, harness comparison matrix, determinism checklist, CLI flags
+- Authoring the component-state catalog a visual corpus is built from — this skill decides which
+  states are worth capturing, not how a state is declared
+- Driving a browser to reach a state — navigation, locators, network interception; the capture
+  happens once the state is on screen
+- Asserting text, roles, values or behaviour — those fail with a sentence, where a pixel diff fails
+  with homework, so reach for them whenever they can express the requirement
+- Pipeline syntax, runners, caching and secrets — this skill states what the visual job must do,
+  and the provider decides how it is spelled
 
 ---
 
@@ -74,274 +79,173 @@ description: Visual regression testing - screenshot baselines, determinism, diff
 
 ## Philosophy
 
-Every other kind of test states its intent in code: `expect(total).toBe(42)` says what correct means. A visual test states its intent in a **file** — an approved image somebody looked at once. That single difference drives everything.
+Every other kind of test states its intent in code: `expect(total).toBe(42)` says what correct means. A visual test states its intent in a **file** — an approved image somebody looked at once. Three consequences follow.
 
-**Three consequences follow:**
+**The baseline is a review artifact, not a build artifact.** It records the judgement of a human who decided the UI was right. Regenerating it without looking destroys the only thing the test knows.
 
-1. **The baseline is a review artifact, not a build artifact.** It is the recorded judgement of a human who decided the UI was right. Regenerating it without looking destroys the only thing the test knows.
-2. **Nondeterminism is not flake, it is a false requirement.** A pixel that varies between runs is being asserted as if it were part of the design. Either pin it or mask it — never widen the tolerance until it stops complaining.
-3. **The diff is the output.** A visual suite that fails without producing a viewable expected/actual/diff triplet is unactionable, and unactionable suites get disabled within two sprints.
+**Nondeterminism is a false requirement, not flake.** A pixel that varies between runs is being asserted as part of the design. Pin it or mask it; never widen the tolerance until it stops complaining.
 
-**What visual tests are good at:** whole-appearance properties that no reasonable assertion expresses — a shadow that vanished, a 3px shift that broke alignment, a font that failed to load, a dark-theme token that resolved to white-on-white, a container that stopped clipping overflow.
+**The diff is the output.** A suite that fails without producing a viewable expected/actual/diff triplet is unactionable, and unactionable suites get disabled.
 
-**What they are bad at:** anything you could name. If you can write `toBeVisible()`, `toHaveText()`, or an accessibility-tree assertion, write that instead. Those fail with a sentence; a pixel diff fails with homework.
+**What visual tests are good at** is whole-appearance properties no reasonable assertion expresses — a shadow that vanished, a 3px shift that broke alignment, a font that failed to load, a dark-theme token that resolved to white-on-white, a container that stopped clipping overflow.
 
-**The economic model matters more than the API.** Self-hosted comparison is free per run and expensive per human hour — baselines live in the repository, review happens in code review, and every environment mismatch is your problem. Cloud change detection inverts that: pay per snapshot, get parallel capture, hosted review UI, and a shared, environment-controlled renderer. Choose deliberately; retrofitting is a migration, not a flag.
+**What they are bad at is anything you could name.** If `toBeVisible()`, a text assertion or an accessibility-tree assertion would express it, write that instead.
 
 </philosophy>
 
 ---
 
-<decision_framework>
-
-## Choosing a Harness
-
-Two families exist. They differ in where the baseline lives, who accepts a change, and who owns the render environment.
-
-```
-Do you already maintain a browsing test suite and a container image for CI?
-├─ NO  → Do you have a story catalog covering component states?
-│        ├─ YES → Cloud change-detection service (story-driven)
-│        └─ NO  → Build the state coverage first; a harness cannot invent subjects
-└─ YES → Is baseline review expected to happen in code review?
-         ├─ YES → Self-hosted image comparison (baselines committed to the repo)
-         └─ NO  → Is a hosted review UI with per-change accept/deny required
-                  by designers or non-engineers?
-                  ├─ YES → Cloud change-detection service
-                  └─ NO  → Self-hosted image comparison
-```
-
-| Dimension            | Self-hosted comparison (`toHaveScreenshot`)                        | Cloud change detection (Chromatic)                                    |
-| -------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Baseline custody     | PNG/WebP files committed to the repo, versioned with the code      | Stored per branch in the service; merge resolves to the base branch   |
-| Who accepts a change | A code reviewer approving the PR containing the new images         | A named human clicking accept in the review UI; recorded per change   |
-| Review surface       | Whatever your report renders + the image diff in the PR            | Hosted side-by-side/onion-skin diff, comment threads, designer access |
-| Render environment   | Yours — you pin the image and eat every mismatch                   | Theirs — one controlled renderer, no dev-vs-CI drift                  |
-| Cost shape           | Free per snapshot; CI minutes + engineer hours on environment work | Billed per snapshot; near-zero environment maintenance                |
-| Parallelism          | Bounded by your CI workers and shards                              | Fanned out cloud-side; wall-clock roughly independent of corpus size  |
-| Repo impact          | Images inflate clone size; every matrix cell multiplies files      | No images in the repo                                                 |
-| Matrix cost          | One baseline file per project × subject; you maintain all of them  | One snapshot per mode × subject; billed, but not maintained by you    |
-| Best fit             | App-level pages, teams already running browser tests, no budget    | Design systems, large state catalogs, cross-functional review         |
-
-**Hybrid is legitimate and common:** cloud change detection over the component/state catalog (where breadth and designer review matter) and a handful of self-hosted full-page checks for critical app routes. What is _not_ legitimate is two harnesses covering the same subjects — you get two baselines, two review flows, and two chances to accept the wrong one.
-
-</decision_framework>
-
----
-
 <patterns>
 
-## Core Patterns
+> **The snippets below are portable shapes, not runnable code.** `matchScreenshot(subject, name, options)` stands for your harness's screenshot assertion, and `freezeClockAt`, `goto`, `byTestId`, `byRole` and the bare `page` stand for its clock, navigation and locator controls. Platform APIs such as `document.fonts.ready` are named as themselves. The option names are the ones the common pixel comparators share; confirm every spelling against your harness's own documentation. [examples/determinism.md](examples/determinism.md) works the same patterns through fuller call shapes, which are closer to what you will actually type.
+
+## Core patterns
 
 ### Pattern 1: Configuration-Driven Comparison
 
-Tolerances, path layout, and the baseline matrix belong in configuration. Per-assertion options are for what genuinely varies by subject — the mask list, the clip box.
-
-#### Defaults live in config
+Tolerances, path layout and the baseline matrix belong in configuration. Per-assertion options are for what genuinely varies by subject — the mask list, the clip box.
 
 ```typescript
-// playwright.config.ts
-const PIXEL_THRESHOLD = 0.2; // per-pixel YIQ distance, 0-1; library default
+// visual.config.ts
+const PIXEL_THRESHOLD = 0.2; // per-pixel colour distance, 0-1
 const MAX_DIFF_PIXEL_RATIO = 0.01; // share of the image allowed to differ
 
-export default defineConfig({
-  expect: {
-    toHaveScreenshot: {
-      threshold: PIXEL_THRESHOLD,
-      maxDiffPixelRatio: MAX_DIFF_PIXEL_RATIO,
-      stylePath: "./visual/stabilize.css",
-    },
+export default {
+  screenshots: {
+    threshold: PIXEL_THRESHOLD,
+    maxDiffPixelRatio: MAX_DIFF_PIXEL_RATIO,
+    stylePath: "./visual/stabilize.css", // injected into every capture
   },
-});
+};
 ```
 
-**Why good:** one place to tune sensitivity, no drifting per-file magic numbers, `stylePath` applies stabilizing CSS to every capture without touching a test
+The two knobs answer different questions and are not interchangeable. `threshold` decides whether a _single pixel_ counts as different, which is what anti-aliasing needs. `maxDiffPixels` / `maxDiffPixelRatio` decide how many differing pixels are tolerated, and nothing needs those above about 1% except a subject that should have been masked.
 
-**Why the two knobs are not interchangeable:** `threshold` decides whether a _single pixel_ counts as different; `maxDiffPixels`/`maxDiffPixelRatio` decide how many differing pixels are tolerated. Anti-aliasing needs the first; nothing needs the second set above ~1% except a subject you should have masked.
+Full code: [examples/core.md](examples/core.md)
 
-#### The matrix comes from projects, not duplicated tests
+### Pattern 2: The Matrix Comes From Configuration
+
+One test, N approved images. The configuration cell's name enters the baseline path, so each cell is approved independently.
 
 ```typescript
-// One test, four baselines - never four copy-pasted tests
 projects: [
+  { name: "desktop-light", use: { viewport: DESKTOP, colorScheme: "light" } },
+  { name: "desktop-dark", use: { viewport: DESKTOP, colorScheme: "dark" } },
+  { name: "mobile-light", use: { viewport: MOBILE, colorScheme: "light" } },
   {
-    name: "desktop-light",
-    use: { ...devices["Desktop Chrome"], colorScheme: "light" },
+    name: "second-browser",
+    use: { browser: "firefox" },
+    ignoreSnapshots: true,
   },
-  {
-    name: "desktop-dark",
-    use: { ...devices["Desktop Chrome"], colorScheme: "dark" },
-  },
-  {
-    name: "mobile-light",
-    use: { viewport: MOBILE_VIEWPORT, colorScheme: "light" },
-  },
-  { name: "firefox", use: devices["Desktop Firefox"], ignoreSnapshots: true },
 ];
 ```
 
-**Why good:** the project name enters the baseline filename, so each cell gets its own approved image; `ignoreSnapshots: true` keeps a browser in the functional run without a second baseline set to maintain
+Duplicating a test per theme means every subject is written twice and the one nobody remembers to add silently stops covering anything. `ignoreSnapshots` keeps a browser in the functional run without a second baseline set to maintain.
 
-**Why bad (the alternative):** duplicating a test per theme means the day the subject changes you update N tests, and the day one is forgotten it silently stops covering anything.
+Full code: [examples/core.md](examples/core.md)
 
-#### Mask what moves; do not widen the threshold
+### Pattern 3: Determinism Before Assertion
+
+Six sources of nondeterminism account for nearly every flaky visual test, and each has a fix cheaper than the flake.
+
+| Source               | Symptom in the diff                             | Fix                                                              |
+| -------------------- | ----------------------------------------------- | ---------------------------------------------------------------- |
+| Web fonts            | Whole text blocks shift; fallback metrics       | Self-host and preload, then await `document.fonts.ready`         |
+| Animation/transition | Random intermediate frames                      | Disable CSS motion at capture; stop JS-driven motion too         |
+| Time                 | "2 minutes ago", clocks, date-stamped rows      | Freeze the clock before navigating — freeze, do not fast-forward |
+| Randomness           | Shuffled lists, random ids, placeholder avatars | Seed the generator before any application script runs            |
+| Data                 | Row order and counts vary per run               | Serve fixed fixtures with stable ordering and identifiers        |
+| Scrollbars / DPR     | ~15px width shift, blurry text at 2×            | Hide scrollbars in the stabilizing stylesheet; pin scale         |
 
 ```typescript
-await expect(page).toHaveScreenshot("dashboard.png", {
-  mask: [
-    page.getByTestId("last-updated"),
-    page.getByTestId("live-visitor-count"),
-  ],
-  maskColor: "#000000", // per-call only - not accepted in the config-level expect block
+await freezeClockAt(new Date("2026-01-15T12:00:00Z")); // before navigation
+await goto(DASHBOARD_URL);
+await page.evaluate(() => document.fonts.ready); // a real signal, not a guessed delay
+await matchScreenshot(summaryRegion, "summary.png");
+```
+
+**The seventh source is the machine.** Baselines generated on a laptop and diffed in CI produce a permanent full-frame difference on every subject, which trains the team to regenerate blindly, which destroys the suite.
+
+Full code: [examples/determinism.md](examples/determinism.md)
+
+### Pattern 4: Scope the Capture to the Subject
+
+| Subject                                   | Capture                        |
+| ----------------------------------------- | ------------------------------ |
+| A component or one of its states          | Element capture                |
+| A band or region spanning components      | Page capture with `clip`       |
+| Whole-page composition (landing, invoice) | Page capture with `fullPage`   |
+| Anything above the fold                   | Page capture, default viewport |
+
+```typescript
+await matchScreenshot(
+  page.getByRole("region", { name: /pro plan/i }),
+  "pricing-card-pro.png",
+);
+await matchScreenshot(page, "header-band.png", {
+  clip: { x: 0, y: 0, width: 1280, height: 96 },
 });
 ```
 
-**Why good:** the volatile region is replaced by a flat block, so the rest of the frame stays under strict comparison
+A full-page capture used to prove a button changed fails on every unrelated header edit — and fails every _other_ full-page baseline at the same time, so the reviewer sees dozens of red subjects, no signal, and the fastest way out is a blanket regenerate.
 
-**Why bad:** raising `maxDiffPixelRatio` until the timestamp stops failing also buys enough slack to hide a collapsed column.
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/core.md](examples/core.md) for the full config, the mobile/dark matrix, WebP baselines, and `pathTemplate` layout.
-
----
-
-### Pattern 2: Determinism Before Assertion
-
-Six sources of nondeterminism account for nearly every flaky visual test. Each has a fix that is cheaper than the flake.
-
-| Source               | Symptom in the diff                             | Fix                                                             |
-| -------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
-| Web fonts            | Whole blocks of text shift; fallback metrics    | Self-host and preload, then await `document.fonts.ready`        |
-| Animation/transition | Random intermediate frames                      | Assertion default disables CSS animation; kill JS motion too    |
-| Time                 | "2 minutes ago", clocks, date-stamped rows      | Freeze the clock to a fixed instant before navigating           |
-| Randomness           | Shuffled lists, random ids, placeholder avatars | Seed the generator via an init script                           |
-| Data                 | Row order and counts vary per run               | Serve fixed fixtures with stable ordering and fixed identifiers |
-| Scrollbars / DPR     | 15px width shift, blurry text at 2×             | Hide scrollbars in stabilizing CSS; pin `scale` and viewport    |
+### Pattern 5: Mask What Moves
 
 ```typescript
-const FIXED_NOW = new Date("2026-01-15T12:00:00Z");
-
-await page.clock.setFixedTime(FIXED_NOW); // freeze - do not fast-forward, that resumes motion
-await page.goto(DASHBOARD_URL);
-await page.evaluate(() => document.fonts.ready); // resolves only once every face is usable
-await expect(page.getByRole("region", { name: /summary/i })).toHaveScreenshot(
-  "summary.png",
-);
+await matchScreenshot(page, "dashboard.png", {
+  mask: [byTestId("last-synced-at"), byTestId("live-visitor-count")],
+  maskColor: "#000000", // defaults are often magenta, which some UIs legitimately contain
+});
 ```
 
-**Why good:** the frame is a pure function of the code under test — rerunning it a hundred times produces one image
+The mask list doubles as documentation of exactly which parts of the frame are not covered. Raising `maxDiffPixelRatio` until the timestamp stops failing buys enough slack to hide a missing sidebar, and says nothing about where the slack went.
 
-**Why bad (the alternative):** `waitForTimeout(1000)` before the capture is a bet that the slowest machine in the fleet finishes in under a second, and it is a bet you lose on the day a reviewer is watching.
+Where a volatile region has no stable handle to mask, hide it in the stabilizing stylesheet instead — that needs only a selector.
 
-**The seventh source is the machine itself.** Font rasterization and subpixel rendering differ between macOS, Windows, and Linux, and between container images. Baselines generated on a laptop and diffed against CI produce a permanent full-frame difference on every subject — which trains the team to regenerate blindly, which destroys the suite. Generate baselines inside the same pinned image CI uses.
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/determinism.md](examples/determinism.md) for the stabilizing stylesheet, seeded-random init script, font preloading, and the containerized baseline-generation command.
+### Pattern 6: Baseline Lifecycle
 
----
-
-### Pattern 3: Story-Driven Coverage
-
-A story catalog is a ready-made visual corpus: every meaningful state already has an addressable, isolated, prop-controlled render. Visual coverage then becomes a question of state enumeration rather than test authoring.
-
-#### One story per meaningful state
-
-The unit of visual coverage is a state, not a component. `Button` needs one subject; `Button` in loading, disabled, destructive, icon-only, and long-label states needs five. States that differ only by a prop the eye cannot see do not need their own subject.
-
-#### Interaction-produced states are capturable
-
-A cloud change-detection service waits for the whole interaction script attached to a story to finish before capturing, so open menus, expanded rows, and post-submit validation states become subjects without hand-written fixtures. Interaction failures fail the build rather than producing a snapshot.
-
-#### Modes multiply subjects deliberately
-
-```typescript
-export const allModes = {
-  "light desktop": { theme: "light", viewport: "large" },
-  "dark mobile": { theme: "dark", viewport: "small" },
-} as const;
-
-// Applied at project, component, or story level - levels stack, they do not override
-parameters: { chromatic: { modes: { "dark mobile": allModes["dark mobile"] } } }
-```
-
-**Why good:** the theme/viewport matrix is declared once and reused, and each mode keeps an independent baseline
-
-**Why bad:** applying every mode at project level multiplies the entire corpus — snapshots are billed per mode per subject, and a 400-story catalog at four modes is 1,600 snapshots per build.
-
-**Change detection, not pixel policing:** the service groups differing snapshots into a reviewable change set per build, tracks accept/deny per snapshot, and carries approvals forward so an accepted change stops reappearing on later builds of the same branch.
-
-See [examples/story-driven.md](examples/story-driven.md) for state enumeration, mode definitions, per-subject tolerance parameters, and opting subjects out.
-
----
-
-### Pattern 4: Baseline Lifecycle
-
-The lifecycle has exactly three legitimate events: **create** (a new subject appears), **accept** (an intended change is reviewed and approved), and **retire** (the subject is deleted, and its images go with it). Anything else is drift.
-
-#### Never regenerate blind
+Three legitimate events — **create** (a new subject appears), **accept** (an intended change is reviewed and approved), **retire** (the subject is deleted and its images go with it). Anything else is drift.
 
 ```bash
-# WRONG - "the visual tests are failing" reflex
-npx playwright test --update-snapshots
+# WRONG - the "visual tests are failing" reflex
+npm run test:visual -- --update-all
 
 # RIGHT - look first
-npx playwright test --project=desktop-light   # emits expected/actual/diff per failure
-npx playwright show-report                    # inspect every diff
-npx playwright test --update-snapshots=changed  # only after each one is understood
+npm run test:visual                  # emits expected/actual/diff per failure
+npm run test:visual:report           # inspect every diff
+npm run test:visual -- --update-changed   # only after each one is understood
 ```
 
-**Why bad:** a wholesale regenerate rewrites every baseline, including ones that were matching. From that commit forward, the suite asserts the current appearance — bugs included — and it cannot tell you it stopped working.
+Updating only _mismatched_ baselines is not the same as updating everything: the blanket mode rewrites matching baselines too, silently resetting subjects nobody inspected.
 
-**Why `changed` over `all`:** `changed` rewrites only mismatched images and creates missing ones; `all` rewrites everything it executes, including matching baselines, quietly resetting subjects you never inspected.
+**The update travels with the change.** New images belong in the same pull request as the code that changed the appearance. A separate "update baselines" commit is unreviewable — nobody can tell an intended redesign from a regression once the two are in different diffs.
 
-#### The update travels with the change
+**Ownership is explicit.** The author who changed the UI _proposes_ baselines and says in the description what should have changed; someone else _accepts_. Author self-acceptance removes the only human judgement in the loop.
 
-New or updated images belong in the **same pull request** as the code that changed the appearance, with the diff visible to the reviewer. A "update baselines" commit landed separately is unreviewable: nobody can tell an intended redesign from a regression once the two are in different diffs.
+Full code: [examples/ci.md](examples/ci.md)
 
-#### Ownership is explicit
+### Pattern 7: CI Wiring and Cost Control
 
-- The author who changed the UI **proposes** baselines and states in the PR description what should have changed.
-- A second person **accepts** — by approving the PR (self-hosted) or by accepting in the review UI (cloud). Author self-acceptance defeats the whole mechanism.
-- Auto-accept belongs on a trunk/release branch at most, never on pull requests, and never as a way to clear a red build.
-
-See [examples/ci.md](examples/ci.md) for the human-triggered baseline-refresh workflow that opens a PR instead of pushing to the branch.
-
----
-
-### Pattern 5: CI Wiring and Cost Control
-
-#### When the job runs
-
-Visual checks run on pull requests against the merge base and on every trunk build (trunk builds are what keep baselines valid through merges). They do **not** run on documentation-only or config-only changes, and they never run with `--update-snapshots` in an automated job.
-
-#### Failure output must be actionable
+Visual checks run on pull requests and on every trunk build — trunk builds are what keep baselines valid through merges. They skip documentation-only and config-only changes, and they never run in update mode in an automated job.
 
 ```yaml
+# Pipeline definition; the syntax varies by provider, the shape does not
 - name: Visual tests
-  run: npx playwright test --project=desktop-light --project=desktop-dark
-- name: Upload diffs
-  if: ${{ !cancelled() }} # failure is exactly when the artifacts matter
-  uses: actions/upload-artifact@v4
-  with:
-    name: visual-diffs
-    path: |
-      playwright-report/
-      test-results/
+  run: npm run test:visual
+- name: Publish diffs
+  if: always-except-success-only # must also fire on timeout and cancellation
+  # upload the report and results directories as a build artifact
 ```
 
-**Why good:** the reviewer downloads one artifact containing expected/actual/diff for every failure and decides in seconds
+A job whose only output is "1 failed" forces a local reproduction of a container-specific render, so the reviewer regenerates instead — which is the failure this whole skill exists to prevent.
 
-**Why bad:** `if: failure()` alone skips artifacts on cancellation and timeout, and a job whose only output is "1 failed" forces a local reproduction of a container-specific render.
+**Treat the matrix as a budget.** Every new cell multiplies the whole corpus: its capture time, its review surface, and its bill. Add one when a real class of bug lives there, and delete one that has never caught anything.
 
-#### Bound the cost on purpose
-
-- **Self-hosted:** restrict snapshot projects (`ignoreSnapshots: true` elsewhere), shard the visual project separately from the functional suite, and prefer element captures — smaller images compare faster and diff more clearly.
-- **Cloud:** enable change-based targeting (`--only-changed`), which uses git history plus the dependency graph to capture only subjects affected by the diff and copies the rest forward at a fraction of the snapshot cost.
-- **Both:** treat the matrix as a budget. Every new mode multiplies the whole corpus; add one only when a real bug class lives in that cell.
-
-#### Exit-code policy is a decision, not a default
-
-Failing the job on detected change forces review before merge. Passing the job on change (`--exit-zero-on-changes`) keeps the pipeline green while changes wait in the review UI — acceptable **only** with a required status check that blocks merge on unaccepted changes. Without that check it is an off switch with extra steps.
-
-See [examples/ci.md](examples/ci.md) for the full workflow, container-parity job, and targeted-run configuration.
+Full code: [examples/ci.md](examples/ci.md)
 
 </patterns>
 
@@ -349,68 +253,30 @@ See [examples/ci.md](examples/ci.md) for the full workflow, container-parity job
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Running a blanket baseline update to clear a red build — the suite now asserts whatever was on screen, including the regression, and it will never report it again
-- Capturing while the page is still settling (in-flight requests, entrance animations, unloaded fonts) — produces intermittent diffs that get "fixed" by regenerating, which is how blind regeneration becomes a habit
-- Committing baselines rendered on a developer machine — font rasterization differs from the CI container, so every subject shows a full-frame diff, the suite is declared broken, and it gets disabled
-- Loosening tolerance until the noise stops — a `maxDiffPixelRatio` wide enough to absorb a live counter is wide enough to absorb a missing sidebar
-- Full-page captures for single-component subjects — an unrelated header change fails every page baseline at once, and the real component regression is invisible inside the churn
-- The author accepting their own baselines — the review step that gives the baseline its meaning never happens
-
-**Medium Priority Issues:**
-
-- No `expected/actual/diff` artifact on failure — reviewers cannot judge, so they regenerate
-- Visual assertions mixed into functional test files — one flaky image blocks feedback on unrelated behaviour
-- Matrix growth without justification — each mode multiplies the corpus, its maintenance, and (in cloud harnesses) the bill
-- Masking so much of the frame that the remaining pixels prove nothing — at that point delete the test
-- Trunk never runs the visual job — branch baselines have nothing valid to merge into
-
-**Common Mistakes:**
-
-- Using a screenshot to assert text or presence — use a text/role assertion; it fails with a sentence instead of an image
-- Setting `animations: "disabled"` on every call when the screenshot assertion already defaults to disabled
+- A blanket baseline update run to clear a red build — from that commit the suite asserts whatever was on screen, including the regression, and will never report it again
+- Committing baselines rendered on a developer machine — every subject shows a full-frame diff against CI, the suite is declared broken, and it gets disabled
+- Capturing while the page is still settling — in-flight requests, entrance animations, unloaded fonts — which produces intermittent diffs that get "fixed" by regenerating
+- An automated job that runs in update mode and commits the result — green by construction, asserting nothing
 - Naming baselines after test order (`step-3.png`) — reordering silently reassigns approved images to different subjects
-- Treating an image diff as "flaky" without identifying which of fonts/motion/time/randomness/data/scrollbars caused it
-- Storing baselines outside the repo for a self-hosted harness — the approved image must move with the code that produced it
+- Renaming a configuration cell — its name is part of the baseline path, so every image under it is orphaned and the next run happily creates fresh "baselines"
 
-**Gotchas & Edge Cases:**
+**Surprising behaviour:**
 
-- `mask` and `maskColor` are **per-call only**; the config-level `expect.toHaveScreenshot` block accepts `animations`, `caret`, `maxDiffPixels`, `maxDiffPixelRatio`, `scale`, `stylePath`, `threshold`, and `pathTemplate` — nothing else
-- The screenshot assertion defaults to `animations: "disabled"`, `caret: "hide"`, `scale: "css"`, `threshold: 0.2` — most per-call option noise is restating defaults
-- Masked regions are filled with `#FF00FF` by default; if the UI legitimately contains that colour the mask is invisible in the diff — set `maskColor` explicitly
-- `clip` and `fullPage` exist only on the page-level assertion; the element-level assertion has neither — capture the element directly instead
-- The assertion self-stabilizes by re-capturing until two consecutive frames match, then diffing the last one — that removes render jitter, not application nondeterminism
-- `updateSnapshots` defaults to `'missing'`; `'all'` rewrites matching baselines too, and `'none'` makes a missing baseline a hard failure (useful in CI)
-- The project name is part of the baseline path — renaming a project orphans every image under it and the next run happily creates fresh "baselines"
-- Cloud modes are keyed by **name**: changing a mode's viewport under the same name keeps comparing against the old baseline, while renaming a mode starts a brand-new one
-- Cloud animation handling pauses CSS animations at the **last** frame by default (`pauseAnimationAtEnd: true`) — pre-2024 guidance describing first-frame capture is stale
-- The cloud default diff sensitivity (`diffThreshold`, default `0.063`) is a different scale and a different algorithm from the self-hosted `threshold` (`0.2`) — do not port numbers between harnesses
-- Change-based targeting depends on a lockfile in sync with the manifest and on intact git history; rebases, squashes, and force pushes fall back to full rebuilds
-- `.webp` baselines cut repository growth substantially versus PNG when the corpus is large
+- Comparators self-stabilize by re-capturing until two consecutive frames match, then diffing the last — that removes render jitter, not application nondeterminism
+- The screenshot assertion usually disables CSS animation and hides the caret already, so most per-call option noise is restating defaults
+- Masked regions are filled with a default colour a UI can legitimately contain, which makes the mask invisible in the diff
+- `clip` and `fullPage` exist on the page-level capture only; for an element, capture the element rather than computing its box
+- Tolerance numbers do not port between harnesses — different algorithms on different scales, so a value copied across means nothing
+- Cloud modes are keyed by **name**: changing a mode's viewport under the same name keeps comparing against the old baseline, while renaming one starts a fresh baseline with no history
+- Modes and matrix cells **stack** across project, component and subject level rather than overriding, so a catalog-wide default multiplies everything beneath it
+- Change-based targeting depends on intact git history and a lockfile in sync with the manifest; rebases, squashes and force pushes fall back to full rebuilds
+- Loosening tolerance until the noise stops trades a named uncovered region for an unnamed one
+- Masking so much of a frame that the remaining pixels prove nothing — at that point delete the test
+- Visual assertions mixed into functional test files mean one flaky image blocks feedback on unrelated behaviour
+- WebP baselines cut repository growth substantially against PNG once the corpus is large
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST look at the diff before accepting any baseline — an unreviewed baseline permanently encodes whatever was on screen, including the regression)**
-
-**(You MUST make the render deterministic before capturing — fonts loaded, animations stopped, time frozen, data fixed — or the diff reports noise instead of regressions)**
-
-**(You MUST generate and compare baselines in the same environment — same pinned container image, same browser build — never commit baselines rendered on a developer machine)**
-
-**(You MUST scope the capture to the subject under test — an element or a clip — and reserve full-page captures for cases where the page itself is the subject)**
-
-**(You MUST mask dynamic regions rather than loosening the comparison threshold — a threshold wide enough to absorb a live timestamp is wide enough to absorb a broken layout)**
-
-**Failure to follow these rules will produce a suite that asserts the current bugs, fails at random, and gets deleted by the next person who owns it.**
-
-</critical_reminders>

@@ -1,6 +1,7 @@
-# Nuxt - Middleware Examples
+# Nuxt — Route Middleware
 
-> Route middleware for authentication, authorization, and navigation guards. See [SKILL.md](../SKILL.md) for core concepts.
+> Authentication, authorization and navigation guards. The middleware-type table is in
+> [SKILL.md](../SKILL.md) and the return-value decision tree in [reference.md](../reference.md).
 
 ---
 
@@ -36,9 +37,10 @@ definePageMeta({
 </template>
 ```
 
-**Why good:** Middleware reusable across pages, encodes redirect URL for post-login navigation, definePageMeta attaches middleware
+**Why good:** The guard runs before the route commits, so the protected page never renders — and
+encoding `to.fullPath` means the user lands back where they were aiming after logging in.
 
-### Bad Example - Auth Check in Component
+### Bad Example — the check inside the component
 
 ```vue
 <!-- WRONG - Auth logic scattered in components -->
@@ -54,13 +56,14 @@ onMounted(() => {
 </script>
 ```
 
-**Why bad:** Runs after initial render causing content flash, must repeat in every protected page, doesn't prevent server-side access
+**Why bad:** `onMounted` fires after the page has rendered, so the protected content flashes on screen
+before the redirect — and it never runs at all during SSR, so the markup was already sent.
 
 ---
 
 ## Role-Based Authorization
 
-### Good Example - Admin Middleware
+### Good Example — an admin guard
 
 ```typescript
 // middleware/admin.ts
@@ -93,13 +96,15 @@ definePageMeta({
 </template>
 ```
 
-**Why good:** abortNavigation prevents unauthorized access, middleware array runs in order, auth check before role check
+**Why good:** The array runs in order, so `auth` establishes that there is a user before `admin` reads
+their role. `abortNavigation()` leaves the user where they were rather than redirecting them
+somewhere that would also refuse them.
 
 ---
 
 ## Global Middleware
 
-### Good Example - Analytics Tracking
+### Good Example — analytics
 
 ```typescript
 // middleware/analytics.global.ts
@@ -118,9 +123,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
 });
 ```
 
-**Why good:** .global suffix auto-runs on all routes, import.meta.client for client-only code, tracks referrer for navigation flow
+**Why good:** Global middleware runs during SSR too, so the `import.meta.client` guard is what stops
+the tracker firing once per render on the server as well as once in the browser.
 
-### Good Example - Global Auth Check
+### Good Example — a global auth check
 
 ```typescript
 // middleware/01.auth-check.global.ts
@@ -140,13 +146,15 @@ export default defineNuxtRouteMiddleware((to, from) => {
 });
 ```
 
-**Why good:** Numeric prefix (01.) controls global middleware order, fetchUser on server for SSR, conditional skip if already loaded
+**Why good:** Global middleware otherwise runs in alphabetical order, which is not an order anyone
+chose — the `01.` prefix makes the session load first. The early return means the fetch happens once
+per session rather than once per navigation.
 
 ---
 
 ## Inline Middleware
 
-### Good Example - Page-Specific Logic
+### Good Example — logic for one page
 
 ```vue
 <!-- pages/posts/[id]/edit.vue -->
@@ -181,13 +189,14 @@ const post = useState("currentPost");
 </template>
 ```
 
-**Why good:** Inline middleware for one-off logic, combines with named middleware, useState shares data with page
+**Why good:** The ownership check needs the post, and the page needs it too — fetching it in the
+guard and stashing it in `useState` means it is fetched once rather than twice.
 
 ---
 
 ## Conditional Redirects
 
-### Good Example - Redirect If Logged In
+### Good Example — keeping signed-in users off the login page
 
 ```typescript
 // middleware/guest.ts
@@ -215,13 +224,14 @@ definePageMeta({
 </script>
 ```
 
-**Why good:** Prevents authenticated users from accessing login/register, respects redirect query param
+**Why good:** It is the mirror of `auth`, and it honours the same `redirect` query param that `auth`
+set — so a user who logs in mid-journey continues where they left off.
 
 ---
 
 ## Middleware with External Data
 
-### Good Example - Feature Flag Check
+### Good Example — a feature flag
 
 ```typescript
 // middleware/feature-flag.ts
@@ -253,13 +263,14 @@ definePageMeta({
 </script>
 ```
 
-**Why good:** Async middleware waits for data, custom meta properties passed to middleware, graceful fallback for disabled features
+**Why good:** Middleware may be async, and navigation waits for it. The flag name lives in the page's
+own `definePageMeta`, so one middleware file serves every flagged page.
 
 ---
 
-## Middleware Patterns
+## Parameterised Middleware
 
-### Good Example - Middleware Factory
+### Good Example — a factory
 
 ```typescript
 // middleware/require-permission.ts
@@ -281,7 +292,8 @@ export function requirePermission(permission: string) {
 }
 ```
 
-**Note:** Nuxt middleware files export a single default, so use inline for parameterized:
+A file in `middleware/` exports one default and takes no arguments, so a parameterised guard has to
+be inline:
 
 ```vue
 <script setup lang="ts">
@@ -302,9 +314,9 @@ definePageMeta({
 
 ---
 
-## Server vs Client Middleware
+## Environment-Aware Middleware
 
-### Good Example - Environment-Aware Middleware
+### Good Example — maintenance mode
 
 ```typescript
 // middleware/maintenance.global.ts
@@ -329,22 +341,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
 });
 ```
 
-**Why good:** Runtime config for environment-specific behavior, skips infinite redirect to maintenance page, admin bypass
+**Why good:** The guard exempts `/maintenance` itself, which is what stops the redirect looping — and
+the admin bypass means whoever has to fix the outage can still reach the app.
 
 ---
 
-## Quick Reference
-
-| Middleware Type | File Pattern                            | Behavior                             |
-| --------------- | --------------------------------------- | ------------------------------------ |
-| Named           | `middleware/auth.ts`                    | Explicit opt-in via `definePageMeta` |
-| Global          | `middleware/analytics.global.ts`        | Runs on every navigation             |
-| Inline          | Function in `definePageMeta.middleware` | Page-specific logic                  |
-
-| Function                                | Purpose                                  |
-| --------------------------------------- | ---------------------------------------- |
-| `navigateTo('/path')`                   | Redirect to path                         |
-| `abortNavigation()`                     | Cancel navigation (stay on current page) |
-| `definePageMeta({ middleware: [...] })` | Attach middleware to page                |
-| `import.meta.client`                    | Check if running on client               |
-| `import.meta.server`                    | Check if running on server               |
+_The middleware-type table is in [SKILL.md](../SKILL.md); the return-value decision tree and the
+middleware checklist are in [reference.md](../reference.md)._

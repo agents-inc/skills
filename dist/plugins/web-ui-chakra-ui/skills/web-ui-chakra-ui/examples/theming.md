@@ -354,7 +354,7 @@ This generates `components/ui/color-mode.tsx` with:
 ### Theme Toggle
 
 ```tsx
-import { useColorMode } from "@/components/ui/color-mode";
+import { useColorMode } from "./components/ui/color-mode";
 import { IconButton } from "@chakra-ui/react";
 
 export function ThemeToggle() {

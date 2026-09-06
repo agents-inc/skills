@@ -1,10 +1,10 @@
-# React Three Fiber Quick Reference
+# React Three Fiber Reference
 
-> Decision frameworks, Canvas props, hook signatures, ecosystem packages, and anti-patterns. See [SKILL.md](SKILL.md) for concepts and [examples/](examples/) for full code examples.
+> Canvas props, hook signatures, the event type, ecosystem packages, JSX mapping, collider types. See [SKILL.md](SKILL.md) for decisions and red flags, and [examples/](examples/) for code.
 
 ---
 
-## Canvas Props Reference
+## Canvas props
 
 | Prop              | Type                                                         | Default                                                  | Purpose                  |
 | ----------------- | ------------------------------------------------------------ | -------------------------------------------------------- | ------------------------ |
@@ -23,7 +23,7 @@
 
 ---
 
-## Hook Signatures
+## Hook signatures
 
 ### useFrame
 
@@ -79,7 +79,7 @@ const { nodes, materials } = useGraph(object: THREE.Object3D): {
 
 ---
 
-## Event Object Type
+## Event object type
 
 ```typescript
 interface ThreeEvent<T extends Event> extends T {
@@ -102,7 +102,7 @@ interface ThreeEvent<T extends Event> extends T {
 
 ---
 
-## Ecosystem Packages
+## Ecosystem packages
 
 | Package                       | Import                                                                                                                                   | Purpose                  |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
@@ -113,7 +113,7 @@ interface ThreeEvent<T extends Event> extends T {
 
 ---
 
-## Common Post-Processing Effects
+## Post-processing effects
 
 ```tsx
 import {
@@ -140,28 +140,11 @@ import { BlendFunction } from "postprocessing";
 </EffectComposer>;
 ```
 
-**Performance note:** EffectComposer merges compatible effects into a single render pass automatically. Adding effects has less overhead than using separate passes.
+**Performance note:** EffectComposer merges compatible effects into one render pass, so a chain of effects costs far less than the same effects as separate passes.
 
 ---
 
-## Anti-Pattern Checklist
-
-| Anti-Pattern                                               | Fix                                                       |
-| ---------------------------------------------------------- | --------------------------------------------------------- |
-| `setState` inside `useFrame`                               | Mutate refs directly                                      |
-| `new THREE.Vector3()` inside `useFrame`                    | `useMemo(() => new THREE.Vector3(), [])`                  |
-| Missing `<Suspense>` around `useLoader`/`useGLTF`          | Wrap in `<Suspense fallback={...}>`                       |
-| Individual meshes for repeated objects                     | `<instancedMesh>` or drei `<Instances>`                   |
-| Missing `stopPropagation()` on click events                | Always call `e.stopPropagation()`                         |
-| `frameloop="always"` for static scenes                     | `frameloop="demand"` + `invalidate()`                     |
-| Unbounded `dpr` on HiDPI displays                          | `dpr={[1, 2]}` to clamp                                   |
-| Using `useThree()` without selector                        | `useThree((s) => s.camera)` to avoid all-state re-renders |
-| Declarative `<boxGeometry>` for repeated identical objects | Share via `useMemo(() => new THREE.BoxGeometry(...), [])` |
-| `<Physics>` without `<Suspense>`                           | Rapier loads WASM async -- wrap in Suspense               |
-
----
-
-## Three.js to JSX Mapping
+## Three.js to JSX mapping
 
 Every Three.js class maps to a camelCase JSX element:
 
@@ -184,7 +167,7 @@ Every Three.js class maps to a camelCase JSX element:
 
 ---
 
-## Collider Types (Rapier)
+## Collider types (Rapier)
 
 | Type        | Shape            | Performance | Use When                |
 | ----------- | ---------------- | ----------- | ----------------------- |

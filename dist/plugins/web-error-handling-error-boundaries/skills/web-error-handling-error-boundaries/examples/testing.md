@@ -1,388 +1,114 @@
-# Error Boundaries - Testing Examples
+# Error Boundaries — Making a Boundary Testable
 
-> Extended testing examples for error boundaries. See [core.md](core.md) for core patterns.
+> The fixtures and affordances a boundary needs before any test can exercise it. See [core.md](core.md) for the boundary itself.
 
-**Prerequisites**: Understand the basic ErrorBoundary component and react-error-boundary library usage from core examples first.
+Assertions, queries and the runner's mocking API belong to whatever testing tools the project uses.
+What is specific to boundaries is below: how to make one throw on demand, why the console needs
+handling, and what a reset test has to change between renders.
 
 ---
 
-## Pattern 5: Testing Error Boundary Behavior
+## A component that throws on a prop
 
-### Good Example - Comprehensive Boundary Tests
+A boundary needs something to catch, and `throw` cannot appear in JSX. The fixture is a component
+whose render throws when a prop says to, so one test file can drive both the success and the failure
+path.
 
 ```typescript
-// src/components/error-boundary/error-boundary.test.tsx
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ErrorBoundary } from "./error-boundary";
-
-// Component that throws on demand
-function ThrowingComponent({ shouldThrow }: { shouldThrow: boolean }) {
-  if (shouldThrow) {
-    throw new Error("Test error");
-  }
+export function ThrowingComponent({ shouldThrow }: { shouldThrow: boolean }) {
+  if (shouldThrow) throw new Error("Test error");
   return <div>Content rendered successfully</div>;
 }
+```
 
-describe("ErrorBoundary", () => {
-  // Suppress console.error during tests
-  const originalError = console.error;
-  beforeAll(() => {
-    console.error = vi.fn();
-  });
-  afterAll(() => {
-    console.error = originalError;
-  });
+**Why good:** the throw happens during render, which is the only phase a boundary sees; a component
+that throws from an effect or a handler tests nothing about the boundary.
 
-  it("renders children when no error occurs", () => {
-    render(
-      <ErrorBoundary>
-        <ThrowingComponent shouldThrow={false} />
-      </ErrorBoundary>
-    );
+For a boundary reached through `showBoundary()`, the fixture throws from the async path instead and
+the assertion has to wait, because the boundary re-renders a microtask after the promise settles.
 
-    expect(screen.getByText("Content rendered successfully")).toBeInTheDocument();
-  });
+---
 
-  it("renders fallback UI when error occurs", () => {
-    render(
-      <ErrorBoundary fallback={<div>Error fallback</div>}>
-        <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
-    );
+## React logs every caught error
 
-    expect(screen.getByText("Error fallback")).toBeInTheDocument();
-    expect(screen.queryByText("Content rendered successfully")).not.toBeInTheDocument();
-  });
+React writes caught errors to `console.error` even when a boundary handled them, so a suite covering
+boundaries produces a wall of expected stack traces. Silence it for the duration and restore it
+afterwards, so an unexpected error elsewhere is still visible.
 
-  it("calls onError when error is caught", () => {
-    const handleError = vi.fn();
+```typescript
+const originalConsoleError = console.error;
 
-    render(
-      <ErrorBoundary onError={handleError} fallback={<div>Error</div>}>
-        <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
-    );
+beforeAll(() => {
+  console.error = () => {};
+});
 
-    expect(handleError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        componentStack: expect.any(String),
-      })
-    );
-  });
-
-  it("resets error state when reset is called", async () => {
-    const user = userEvent.setup();
-    let shouldThrow = true;
-
-    const { rerender } = render(
-      <ErrorBoundary
-        fallbackRender={({ resetErrorBoundary }) => (
-          <div>
-            <span>Error occurred</span>
-            <button onClick={resetErrorBoundary}>Reset</button>
-          </div>
-        )}
-      >
-        <ThrowingComponent shouldThrow={shouldThrow} />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText("Error occurred")).toBeInTheDocument();
-
-    // Fix the error condition
-    shouldThrow = false;
-
-    // Click reset button
-    await user.click(screen.getByRole("button", { name: "Reset" }));
-
-    // Re-render with fixed component
-    rerender(
-      <ErrorBoundary
-        fallbackRender={({ resetErrorBoundary }) => (
-          <div>
-            <span>Error occurred</span>
-            <button onClick={resetErrorBoundary}>Reset</button>
-          </div>
-        )}
-      >
-        <ThrowingComponent shouldThrow={shouldThrow} />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText("Content rendered successfully")).toBeInTheDocument();
-  });
+afterAll(() => {
+  console.error = originalConsoleError;
 });
 ```
 
-**Why good:** Tests all key behaviors - normal render, error fallback, callback, reset, suppresses console.error to keep test output clean
+**Why good:** restoring in `afterAll` keeps the silence scoped to the file — a global replacement
+hides the next suite's real failures.
+
+React 19 consolidates what it logs into a single message per error rather than several, so a test
+counting `console.error` calls behaves differently across major versions. Assert on the rendered
+fallback instead.
 
 ---
 
-### Good Example - Testing useErrorBoundary Hook
+## Resetting needs the condition to change
+
+Pressing the reset control re-renders the children. If the thing that threw still throws, the
+boundary catches again immediately and the test sees no change at all — which reads as "reset is
+broken" when reset worked perfectly.
 
 ```typescript
-// src/features/data-loader/data-loader.test.tsx
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ErrorBoundary } from "react-error-boundary";
-import { DataLoaderContent } from "./data-loader";
+let shouldThrow = true;
 
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
-describe("DataLoaderContent with error boundary", () => {
-  const originalError = console.error;
-  beforeAll(() => {
-    console.error = vi.fn();
-  });
-  afterAll(() => {
-    console.error = originalError;
-  });
-
-  beforeEach(() => {
-    mockFetch.mockReset();
-  });
-
-  it("shows error in boundary when fetch fails", async () => {
-    const user = userEvent.setup();
-    mockFetch.mockRejectedValueOnce(new Error("Network error"));
-
-    render(
-      <ErrorBoundary
-        fallbackRender={({ error }) => (
-          <div role="alert">Error: {error.message}</div>
-        )}
-      >
-        <DataLoaderContent />
-      </ErrorBoundary>
-    );
-
-    await user.click(screen.getByRole("button", { name: /load data/i }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("Network error");
-    });
-  });
-
-  it("recovers when retry succeeds", async () => {
-    const user = userEvent.setup();
-    mockFetch
-      .mockRejectedValueOnce(new Error("Network error"))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve([{ id: "1", name: "Item 1" }]),
-      });
-
-    render(
-      <ErrorBoundary
-        fallbackRender={({ error, resetErrorBoundary }) => (
-          <div role="alert">
-            <span>Error: {error.message}</span>
-            <button onClick={resetErrorBoundary}>Retry</button>
-          </div>
-        )}
-      >
-        <DataLoaderContent />
-      </ErrorBoundary>
-    );
-
-    // Trigger error
-    await user.click(screen.getByRole("button", { name: /load data/i }));
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toBeInTheDocument();
-    });
-
-    // Reset and retry
-    await user.click(screen.getByRole("button", { name: /retry/i }));
-    await user.click(screen.getByRole("button", { name: /load data/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Item 1")).toBeInTheDocument();
-    });
-  });
-});
+// 1. render <Boundary><ThrowingComponent shouldThrow={shouldThrow} /></Boundary>
+//    → the fallback appears
+// 2. shouldThrow = false — flip the condition BEFORE resetting
+// 3. click the reset control
+// 4. re-render the same tree, so the child element carries the new condition
+// 5. assert the children are back
 ```
 
-**Why good:** Tests async error propagation via useErrorBoundary hook, tests recovery flow, proper mock setup and cleanup
+**Why good:** it separates the two failures a reset test can have — the reset never fired, or it
+fired and the subtree threw again — which otherwise look identical.
+
+Step 4 is the one that is easy to miss, and leaving it out makes a working reset look broken.
+Resetting clears the boundary's error state and renders `children` again — but `children` is the same
+element object the boundary was handed, still carrying `shouldThrow={true}`. Flipping the variable
+changes nothing until a re-render builds a new element from it.
 
 ---
 
-### Good Example - Testing resetKeys Behavior
+## `resetKeys` is exercised by re-rendering
+
+A `resetKeys` test needs no interaction. Render with a key value that makes the child throw, then
+re-render with a different one; the boundary clears itself between the two.
 
 ```typescript
-// src/features/user-profile/user-profile.test.tsx
-import { render, screen } from "@testing-library/react";
-import { ErrorBoundary } from "react-error-boundary";
-
-function ProfileContent({ userId }: { userId: string }) {
-  if (userId === "invalid") {
-    throw new Error("Invalid user");
-  }
-  return <div>Profile for {userId}</div>;
-}
-
-describe("ErrorBoundary resetKeys", () => {
-  const originalError = console.error;
-  beforeAll(() => {
-    console.error = vi.fn();
-  });
-  afterAll(() => {
-    console.error = originalError;
-  });
-
-  it("auto-resets when resetKeys change", () => {
-    const { rerender } = render(
-      <ErrorBoundary
-        resetKeys={["invalid"]}
-        fallbackRender={() => <div>Error fallback</div>}
-      >
-        <ProfileContent userId="invalid" />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText("Error fallback")).toBeInTheDocument();
-
-    // Change to valid user - boundary should reset due to resetKeys change
-    rerender(
-      <ErrorBoundary
-        resetKeys={["valid-user"]}
-        fallbackRender={() => <div>Error fallback</div>}
-      >
-        <ProfileContent userId="valid-user" />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText("Profile for valid-user")).toBeInTheDocument();
-  });
-});
+// first render:  resetKeys={["invalid"]}  with a child that throws for "invalid"
+// second render: resetKeys={["valid"]}    with the same child
+// the children render, with nothing clicked
 ```
 
-**Why good:** Tests automatic reset behavior when route params change, useful for navigation-triggered resets
+**Why good:** it pins the automatic path rather than the manual one, and the two are separate
+behaviours — a boundary can have a working reset button and broken `resetKeys`.
+
+Give the array primitives. A fresh object or array literal on each render is a new reference every
+time, so the shallow compare fires the reset continuously and the test passes for the wrong reason.
 
 ---
 
-## Pattern 6: Test Utilities for Error Boundaries
+## What is worth asserting
 
-### Good Example - Reusable Test Helpers
+- Children render when nothing throws — the boundary is transparent in the ordinary case.
+- The fallback replaces them when something does, and the children are gone rather than merely hidden.
+- `onError` received the error and an `errorInfo` carrying a component stack.
+- Reset restores the children, once the throwing condition is gone.
+- A `resetKeys` change resets without any interaction.
 
-```typescript
-// src/test-utils/error-boundary-helpers.ts
-import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
-import { ErrorBoundary } from "react-error-boundary";
-
-/**
- * Render a component wrapped in an error boundary for testing
- */
-export function renderWithErrorBoundary(
-  ui: ReactNode,
-  options?: {
-    onError?: (error: Error) => void;
-    fallbackText?: string;
-  }
-) {
-  const { onError, fallbackText = "Error occurred" } = options ?? {};
-
-  return render(
-    <ErrorBoundary
-      onError={onError}
-      fallbackRender={({ error, resetErrorBoundary }) => (
-        <div role="alert" data-testid="error-boundary-fallback">
-          <span>{fallbackText}</span>
-          <span data-testid="error-message">{error.message}</span>
-          <button onClick={resetErrorBoundary}>Reset</button>
-        </div>
-      )}
-    >
-      {ui}
-    </ErrorBoundary>
-  );
-}
-
-/**
- * Assert that an error boundary caught an error
- */
-export function expectErrorBoundaryCaught(expectedMessage?: string) {
-  expect(screen.getByTestId("error-boundary-fallback")).toBeInTheDocument();
-  if (expectedMessage) {
-    expect(screen.getByTestId("error-message")).toHaveTextContent(expectedMessage);
-  }
-}
-
-/**
- * Assert that content rendered without error
- */
-export function expectNoError() {
-  expect(screen.queryByTestId("error-boundary-fallback")).not.toBeInTheDocument();
-}
-```
-
-**Why good:** Reusable helpers reduce test boilerplate, consistent error boundary testing patterns across codebase
-
----
-
-### Good Example - Using Test Helpers
-
-```typescript
-// src/features/chart/chart.test.tsx
-import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import {
-  renderWithErrorBoundary,
-  expectErrorBoundaryCaught,
-  expectNoError,
-} from "@/test-utils/error-boundary-helpers";
-import { Chart } from "./chart";
-
-describe("Chart", () => {
-  const originalError = console.error;
-  beforeAll(() => {
-    console.error = vi.fn();
-  });
-  afterAll(() => {
-    console.error = originalError;
-  });
-
-  it("renders chart with valid data", () => {
-    renderWithErrorBoundary(<Chart data={[{ x: 1, y: 2 }]} />);
-
-    expectNoError();
-    expect(screen.getByRole("img", { name: /chart/i })).toBeInTheDocument();
-  });
-
-  it("catches error with invalid data", () => {
-    const onError = vi.fn();
-    // @ts-expect-error Testing invalid data
-    renderWithErrorBoundary(<Chart data={null} />, { onError });
-
-    expectErrorBoundaryCaught("Cannot read properties of null");
-    expect(onError).toHaveBeenCalled();
-  });
-
-  it("recovers after reset", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderWithErrorBoundary(<Chart data={[]} />);
-
-    // Initially throws with empty data
-    expectErrorBoundaryCaught();
-
-    // Click reset
-    await user.click(screen.getByRole("button", { name: /reset/i }));
-
-    // Re-render with valid data
-    rerender(
-      <ErrorBoundary fallbackRender={() => <div>Error</div>}>
-        <Chart data={[{ x: 1, y: 2 }]} />
-      </ErrorBoundary>
-    );
-
-    expectNoError();
-  });
-});
-```
-
-**Why good:** Clean, readable tests using helpers, consistent assertion patterns
-
----
+Queries that find the fallback by its `role="alert"` also check the accessibility contract the
+fallback owes, so prefer them over a test id.

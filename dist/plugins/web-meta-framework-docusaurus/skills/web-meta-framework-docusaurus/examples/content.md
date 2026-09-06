@@ -199,8 +199,6 @@ function Clock() {
 ```
 ````
 
-````
-
 **Requires:** `@docusaurus/theme-live-codeblock` plugin.
 
 ---
@@ -213,7 +211,7 @@ Files in `static/` are served at the site root. Reference them with absolute pat
 
 ```mdx
 ![Logo](/img/logo.png)
-````
+```
 
 ### Co-located Assets (Recommended)
 

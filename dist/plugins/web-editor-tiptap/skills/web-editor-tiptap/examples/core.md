@@ -1,6 +1,8 @@
 # TipTap - Core Examples
 
-> Editor setup, configuration, toolbar integration, content serialization, and state observation. See [custom-extensions.md](custom-extensions.md) for custom nodes/marks, [menus.md](menus.md) for bubble/floating menus.
+> Editor setup, toolbars, serialization and persistence, state observation. See
+> [SKILL.md](../SKILL.md) for the decisions, [custom-extensions.md](custom-extensions.md) for nodes
+> and marks, [menus.md](menus.md) for bubble and floating menus.
 
 ---
 
@@ -51,7 +53,9 @@ export function RichEditor({ content, onUpdate, editable = true }: RichEditorPro
 }
 ```
 
-**Why good:** guards against null editor, `immediatelyRender: false` for SSR safety, `editorProps.attributes` adds CSS classes without wrapper divs, `onUpdate` debounces via TipTap's internal batching
+**Why good:** the null guard sits above every use of `editor`, and `editorProps.attributes` puts
+classes on the editable element itself rather than on a wrapper that styling then has to reach
+through
 
 ### Bad Example
 
@@ -76,7 +80,9 @@ export function BadEditor() {
 }
 ```
 
-**Why bad:** missing `immediatelyRender: false` causes hydration mismatch in SSR frameworks, no null guard on `editor` causes TypeError on first render, no `.chain().focus()` on toolbar button loses cursor position
+**Why bad:** the missing `immediatelyRender: false` produces a hydration mismatch under SSR, the
+absent null guard throws on the first render, and `editor.commands.toggleBold()` without
+`.chain().focus()` applies against wherever the cursor drifted to
 
 ---
 
@@ -136,7 +142,9 @@ export function Toolbar({ editor }: ToolbarProps) {
 }
 ```
 
-**Why good:** `.chain().focus()` keeps cursor in editor after clicking button, `.can()` disables impossible commands, `isActive()` reflects current formatting state, `aria-pressed` for accessibility
+**Why good:** `.can()` drives the disabled state from the same command that the click runs, so the
+two cannot disagree; `isActive()` reads the formatting at the cursor rather than tracking it
+separately
 
 ### Bad Example
 
@@ -151,7 +159,9 @@ export function BadToolbar({ editor }: { editor: Editor }) {
 }
 ```
 
-**Why bad:** `editor.commands.*` directly -- no `.focus()` so cursor leaves editor, no `aria-pressed` or disabled state, buttons always appear clickable even when command would fail
+**Why bad:** the click moves focus to the button and `editor.commands.*` applies with no `.focus()`
+to bring it back; nothing reflects active or unavailable state, so both buttons look identical
+whatever the editor is doing
 
 ---
 
@@ -201,26 +211,12 @@ function loadContent(): string | undefined {
 }
 ```
 
-**Why good:** debounced saving prevents excessive writes, JSON preserves full document structure, SSR-safe window check, cleanup on unmount
+**Why good:** `onUpdate` fires per transaction, so the debounce is what turns a keystroke rate into a
+save rate; the unmount effect clears the pending timer, and the `window` check keeps `loadContent`
+usable during a server render
 
-### API Persistence
-
-```typescript
-const SAVE_DEBOUNCE_MS = 2000;
-
-async function saveToApi(documentId: string, content: Record<string, unknown>) {
-  await fetch(`/api/documents/${documentId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
-  });
-}
-
-// In useEditor config:
-onUpdate: ({ editor }) => {
-  debouncedSave(documentId, editor.getJSON());
-};
-```
+Persisting to an API is the same shape with the write swapped: `onUpdate` hands you the editor,
+`getJSON()` is the payload, and the debounce is what keeps the request rate off the keystroke rate.
 
 ---
 
@@ -262,7 +258,8 @@ export function EditorWithState() {
 }
 ```
 
-**Why good:** `useEditorState` with selector only triggers re-renders when selected values change -- avoids full re-render on every keystroke
+**Why good:** without a selector the component re-renders on every transaction; `useEditorState`
+narrows that to the handful of values the UI actually shows
 
 ---
 
@@ -300,7 +297,8 @@ function DeepToolbar() {
 }
 ```
 
-**Why good:** avoids threading `editor` prop through many levels, `useMemo` prevents unnecessary context re-renders
+**Why good:** the provider value is memoized, so context consumers re-render when the editor is
+created rather than on every parent render
 
 ---
 
@@ -334,4 +332,6 @@ const editor = useEditor({
 });
 ```
 
-**Why good:** named constants for limits, demonstrates disabling/configuring StarterKit extensions, comment explains v3 Link behavior to prevent duplicate extension errors
+**Why good:** shows both halves of StarterKit configuration — `false` removes an extension from the
+schema, an options object configures the one already there — and Link is left to StarterKit, since
+adding it beside StarterKit v3 is a duplicate-extension error

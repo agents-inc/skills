@@ -56,7 +56,7 @@ const [open, setOpen] = useState(false);
 </Dialog.Root>;
 ```
 
-**Why bad:** the state is written and read by nothing else, so it only adds a render of the parent tree on every open and close, plus a new way for the dialog to get stuck if a future edit forgets to call `setOpen`
+**Why bad:** nothing else reads that state, so it buys a parent re-render on every open and close plus a new way for the dialog to get stuck if an edit ever drops the `setOpen`
 
 ---
 
@@ -113,7 +113,7 @@ export function OnboardingDialog() {
 <Select.Root value={filter} onValueChange={setFilter} />
 ```
 
-**Why good:** treating `defaultValue` as the initial value and nothing more avoids the class of bug where an async fetch resolves and the UI silently ignores the new default — changing `defaultValue` after mount warns in development and has no effect
+**Why good:** `defaultValue` is read once at mount, so an async fetch resolving later is silently ignored — changing it afterwards warns in development and does nothing
 
 ---
 
@@ -125,6 +125,7 @@ Every change handler receives `eventDetails` as its second argument:
 interface BaseUIChangeEventDetails {
   reason: string;
   event: Event;
+  trigger: Element | undefined;
   cancel: () => void;
   allowPropagation: () => void;
   isCanceled: boolean;
@@ -149,7 +150,7 @@ import { Tooltip } from "@base-ui/react/tooltip";
 </Tooltip.Root>;
 ```
 
-**Why good:** `cancel()` prevents the component's internal state from updating, so conditional behaviour needs no lifted state at all — this is the whole point of the API
+**Why good:** `cancel()` prevents the component's internal state from updating, so conditional behaviour needs no lifted state at all
 
 ### Good Example - Guarding a Dialog With Unsaved Work
 
@@ -193,7 +194,7 @@ export function EditorDialog({ isDirty }: { isDirty: boolean }) {
 />
 ```
 
-**Why bad:** the handler's return value is ignored — on an uncontrolled component the internal state has already been asked to update, so the tooltip opens anyway and the guard appears to work only in whichever mode you happened to test
+**Why bad:** the return value is ignored, so an uncontrolled tooltip opens anyway and the guard only appears to work in whichever mode you happened to test
 
 ### Bad Example - Treating isCanceled as the Cancel Switch
 

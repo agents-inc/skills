@@ -1,356 +1,118 @@
-# tRPC Type-Safe API - Reference
+# tRPC — Reference
 
-> Decision frameworks, anti-patterns, error codes, and v11 migration. See [SKILL.md](SKILL.md) for core concepts.
-
----
-
-<decision_framework>
-
-## Decision Framework
-
-### When to Use tRPC vs Alternatives
-
-```
-Need API for TypeScript monorepo?
-├─ Is client TypeScript? (browser, Node, React Native)
-│   ├─ YES → Is API public (third-party consumers)?
-│   │   ├─ YES → Use OpenAPI/REST (need docs & polyglot support)
-│   │   └─ NO → Use tRPC
-│   └─ NO → Use OpenAPI/REST (non-TS clients)
-├─ Need GraphQL features? (partial queries, subscriptions at scale)
-│   └─ YES → Use GraphQL
-└─ Need HTTP caching at CDN?
-    └─ YES → Use REST (tRPC uses POST by default)
-```
-
-### Procedure Type Selection
-
-```
-What operation are you implementing?
-├─ Reading data (GET semantics)?
-│   └─ Use .query()
-├─ Writing/modifying data (POST/PUT/DELETE semantics)?
-│   └─ Use .mutation()
-└─ Real-time updates?
-    └─ Use .subscription() with async generators
-```
-
-### Authentication Strategy
-
-```
-Need authentication?
-├─ Session-based (cookies)?
-│   └─ Extract session in createContext, use protectedProcedure
-├─ Token-based (JWT in header)?
-│   └─ Validate token in createContext, use protectedProcedure
-├─ API key?
-│   └─ Validate in middleware, throw UNAUTHORIZED on failure
-└─ Public endpoints?
-    └─ Use publicProcedure
-```
-
-### Error Handling Strategy
-
-```
-What type of error?
-├─ Validation failure (bad input)?
-│   └─ Let Zod throw -- tRPC formats automatically
-├─ Resource not found?
-│   └─ throw new TRPCError({ code: "NOT_FOUND" })
-├─ Permission denied?
-│   └─ throw new TRPCError({ code: "FORBIDDEN" })
-├─ Not authenticated?
-│   └─ throw new TRPCError({ code: "UNAUTHORIZED" })
-├─ Rate limited?
-│   └─ throw new TRPCError({ code: "TOO_MANY_REQUESTS" })
-└─ Unknown server error?
-    └─ throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", cause: originalError })
-```
-
-### Cache Invalidation Strategy
-
-```
-After mutation, what to invalidate?
-├─ Single item changed?
-│   └─ utils.router.procedure.invalidate({ id })
-├─ List may have changed (create/delete)?
-│   └─ utils.router.list.invalidate()
-├─ Multiple related queries?
-│   └─ utils.router.invalidate() // Invalidates all procedures in router
-└─ Need immediate UI update?
-    └─ Use optimistic update with onMutate
-```
-
-### React Integration Selection (v11)
-
-```
-Starting new project?
-├─ YES → Use @trpc/tanstack-react-query (recommended)
-│        createTRPCContext, useTRPC, queryOptions(), mutationOptions()
-└─ NO → Already using @trpc/react-query?
-    ├─ YES → Classic integration still works in v11
-    │        trpc.x.useQuery(), trpc.x.useMutation()
-    └─ Gradually migrate to new integration when convenient
-```
-
-</decision_framework>
+> Error codes, batching and invalidation lookup, and the v10 → v11 map. See [SKILL.md](SKILL.md) for
+> the decisions and the red flags, and [examples/](examples/) for full code.
 
 ---
 
-<anti_patterns>
+## Error codes
 
-## Anti-Patterns
+| Code                    | HTTP | For                                       |
+| ----------------------- | ---- | ----------------------------------------- |
+| `BAD_REQUEST`           | 400  | Invalid input the validator did not catch |
+| `UNAUTHORIZED`          | 401  | Not authenticated                         |
+| `FORBIDDEN`             | 403  | Authenticated, not permitted              |
+| `NOT_FOUND`             | 404  | No such resource                          |
+| `METHOD_NOT_SUPPORTED`  | 405  | Wrong HTTP method                         |
+| `TIMEOUT`               | 408  | Request timed out                         |
+| `CONFLICT`              | 409  | Duplicate or conflicting state            |
+| `PRECONDITION_FAILED`   | 412  | A precondition was not met                |
+| `PAYLOAD_TOO_LARGE`     | 413  | Body too large                            |
+| `UNPROCESSABLE_CONTENT` | 422  | Semantically invalid                      |
+| `TOO_MANY_REQUESTS`     | 429  | Rate limited                              |
+| `CLIENT_CLOSED_REQUEST` | 499  | Client disconnected                       |
+| `INTERNAL_SERVER_ERROR` | 500  | Unexpected failure                        |
+| `NOT_IMPLEMENTED`       | 501  | Not built yet                             |
+| `BAD_GATEWAY`           | 502  | Upstream failed                           |
+| `SERVICE_UNAVAILABLE`   | 503  | Temporarily down                          |
+| `GATEWAY_TIMEOUT`       | 504  | Upstream timed out                        |
 
-### Missing AppRouter Type Export
-
-```typescript
-// BAD: Type not exported -- clients have no type inference
-const appRouter = router({ user: userRouter });
-
-// GOOD: Export type for client-side inference
-export const appRouter = router({ user: userRouter });
-export type AppRouter = typeof appRouter;
-```
-
-### Raw Error Objects Instead of TRPCError
-
-```typescript
-// BAD: Raw error has no code or HTTP mapping
-throw new Error("User not found");
-
-// GOOD: TRPCError maps to HTTP 404
-throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-```
-
-### No Input Validation
-
-```typescript
-// BAD: input is unknown, no validation
-publicProcedure.mutation(async ({ input }) => {
-  return ctx.db.user.create({ data: input as any });
-});
-
-// GOOD: Validated and typed input
-publicProcedure
-  .input(z.object({ email: z.string().email() }))
-  .mutation(async ({ input }) => {
-    return ctx.db.user.create({ data: input });
-  });
-```
-
-### Duplicated Auth Checks
-
-```typescript
-// BAD: Repeated in every procedure
-create: publicProcedure.mutation(({ ctx }) => {
-  if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-}),
-
-// GOOD: Use protectedProcedure with middleware
-create: protectedProcedure.mutation(({ ctx }) => {
-  // ctx.user guaranteed non-null by middleware
-}),
-```
-
-### Manual Type Definitions
-
-```typescript
-// BAD: Manual type will drift from backend
-interface User {
-  id: string;
-  name: string;
-}
-
-// GOOD: Use inferred types
-import type { RouterOutputs } from "./api";
-type User = RouterOutputs["user"]["getById"];
-```
-
-### Optimistic Updates Without Rollback
-
-```typescript
-// BAD: No snapshot, no rollback
-onMutate: async () => {
-  queryClient.setQueryData(trpc.todo.list.queryKey(), (old: any) => [...(old ?? []), newTodo]);
-};
-
-// GOOD: Full optimistic pattern
-onMutate: async () => {
-  await queryClient.cancelQueries({ queryKey: trpc.todo.list.queryKey() });
-  const previous = queryClient.getQueryData(trpc.todo.list.queryKey());
-  queryClient.setQueryData(trpc.todo.list.queryKey(), (old: any) => [...(old ?? []), newTodo]);
-  return { previous };
-},
-onError: (err, vars, ctx) => {
-  if (ctx?.previous) queryClient.setQueryData(trpc.todo.list.queryKey(), ctx.previous);
-},
-```
-
-### v11 Transformer in Wrong Location
-
-```typescript
-// BAD: v11 error -- transformer at client level
-createTRPCClient({ transformer: superjson, links: [...] });
-
-// GOOD: transformer inside the link
-httpBatchLink({ url: "/api/trpc", transformer: superjson });
-```
-
-### Using observable() for Subscriptions (v10 Pattern)
-
-```typescript
-// BAD: v10 observable pattern (deprecated in v11)
-import { observable } from "@trpc/server/observable";
-.subscription(({ ctx }) => {
-  return observable((emit) => { emit.next(data); });
-});
-
-// GOOD: v11 async generator pattern
-.subscription(async function* ({ ctx, signal }) {
-  for await (const data of eventStream({ signal })) {
-    yield data;
-  }
-});
-```
-
-</anti_patterns>
+A validation failure needs no throw — the validator's own error is caught and formatted by
+`errorFormatter`.
 
 ---
 
-## Error Code Reference
+## Batching
 
-| tRPC Code               | HTTP Status | When to Use                           |
-| ----------------------- | ----------- | ------------------------------------- |
-| `BAD_REQUEST`           | 400         | Invalid input (beyond Zod validation) |
-| `UNAUTHORIZED`          | 401         | Not authenticated                     |
-| `FORBIDDEN`             | 403         | Authenticated but not permitted       |
-| `NOT_FOUND`             | 404         | Resource doesn't exist                |
-| `METHOD_NOT_SUPPORTED`  | 405         | Wrong HTTP method                     |
-| `TIMEOUT`               | 408         | Request timed out                     |
-| `CONFLICT`              | 409         | Resource conflict (e.g., duplicate)   |
-| `PRECONDITION_FAILED`   | 412         | Precondition not met                  |
-| `PAYLOAD_TOO_LARGE`     | 413         | Request body too large                |
-| `UNPROCESSABLE_CONTENT` | 422         | Semantic validation failure           |
-| `TOO_MANY_REQUESTS`     | 429         | Rate limited                          |
-| `CLIENT_CLOSED_REQUEST` | 499         | Client disconnected                   |
-| `INTERNAL_SERVER_ERROR` | 500         | Unexpected server error               |
-| `NOT_IMPLEMENTED`       | 501         | Feature not implemented               |
-| `BAD_GATEWAY`           | 502         | Upstream service error                |
-| `SERVICE_UNAVAILABLE`   | 503         | Service temporarily unavailable       |
-| `GATEWAY_TIMEOUT`       | 504         | Upstream timeout                      |
-
----
-
-## Performance Optimization
-
-### Request Batching
-
-`httpBatchLink` automatically combines multiple requests made in the same render cycle:
+`httpBatchLink` combines the calls made in one render pass into a single request:
 
 ```typescript
-// These 3 calls become 1 HTTP request
+// three calls, one round trip
 const user = useQuery(trpc.user.getById.queryOptions({ id: "1" }));
 const posts = useQuery(trpc.post.list.queryOptions());
 const comments = useQuery(trpc.comment.recent.queryOptions());
 ```
 
-### Prefetching
+## Invalidation
+
+| After a mutation that           | Invalidate                                               |
+| ------------------------------- | -------------------------------------------------------- |
+| Changed one item                | `trpc.user.getById.queryKey({ id })`                     |
+| Added to or removed from a list | `trpc.post.list.queryKey()`                              |
+| Touched several procedures      | One `invalidateQueries` per key, or the router-level key |
+
+Keys are hierarchical, so a key without its input arguments matches every variant of that procedure.
+An `invalidateQueries()` with no key at all refetches the entire cache, including queries the
+mutation cannot have affected.
+
+## Prefetching
 
 ```typescript
-// Prefetch on hover for instant navigation
-function UserLink({ userId }: { userId: string }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  return (
-    <a
-      href={`/user/${userId}`}
-      onMouseEnter={() => {
-        queryClient.prefetchQuery(trpc.user.getById.queryOptions({ id: userId }));
-      }}
-    >
-      View Profile
-    </a>
-  );
-}
+onMouseEnter={() => queryClient.prefetchQuery(trpc.user.getById.queryOptions({ id: userId }))}
 ```
 
-### Selective Invalidation
-
-```typescript
-const queryClient = useQueryClient();
-const trpc = useTRPC();
-
-// DON'T: Invalidate everything
-queryClient.invalidateQueries(); // Refetches ALL queries
-
-// DO: Invalidate specific queries
-queryClient.invalidateQueries({
-  queryKey: trpc.user.getById.queryKey({ id: userId }),
-});
-queryClient.invalidateQueries({ queryKey: trpc.post.list.queryKey() });
-```
+The same options object serves the hook and the prefetch, so the two cannot key differently.
 
 ---
 
-## tRPC v11 Migration Notes
+<migration_notice>
 
-### Breaking Changes from v10
+## v10 → v11
 
-1. **Transformer Location Changed** (CRITICAL):
+**Transformer moved into the link.**
 
-   ```typescript
-   // v10 (no longer works in v11)
-   createTRPCClient({ transformer: superjson, links: [...] });
+```typescript
+// v10
+createTRPCClient({ transformer: superjson, links: [...] });
+// v11
+httpBatchLink({ url: "/api/trpc", transformer: superjson });
+```
 
-   // v11 (correct -- transformer INSIDE the link)
-   httpBatchLink({ url: "/api/trpc", transformer: superjson });
-   ```
+**Middleware reads raw input through a function.**
 
-2. **React Query v5 Required**: `@tanstack/react-query@^5`
-   - Replace `isLoading` with `isPending`
+```typescript
+const input = opts.rawInput; // v10
+const input = await opts.getRawInput(); // v11
+```
 
-3. **`rawInput` renamed to `getRawInput()`** in middleware:
+**Subscriptions are async generators.**
 
-   ```typescript
-   // v10
-   const input = opts.rawInput;
-   // v11
-   const input = await opts.getRawInput();
-   ```
+```typescript
+.subscription(async function* ({ signal }) {
+  for await (const data of stream({ signal })) {
+    yield tracked(data.id, data);
+  }
+});
+```
 
-4. **`createTRPCProxyClient` renamed to `createTRPCClient`**
+**Renamed:** `createTRPCProxyClient` → `createTRPCClient`.
 
-5. **Subscriptions**: Async generators replace `observable()` pattern
+**Removed:** `.interop()`, `inferHandlerInput<T>`, `ProcedureArgs<T>`.
 
-   ```typescript
-   // v11: async generator with signal
-   .subscription(async function* ({ signal }) {
-     for await (const data of stream({ signal })) {
-       yield tracked(data.id, data);
-     }
-   });
-   ```
+**Requires:** TypeScript 5.7.2+, Node 18+, and a query client on v5 — where `isLoading` became
+`isPending`.
 
-6. **Removed**: `.interop()` mode, `inferHandlerInput<T>`, `ProcedureArgs<T>`
+**Added:** `@trpc/tanstack-react-query` with the options factories; `File`, `Blob` and
+`Uint8Array` accepted in inputs; `httpBatchStreamLink` for streamed responses;
+`httpSubscriptionLink` for server-sent events; `tracked()` for resumable subscriptions; and
+`createTRPCOptionsProxy` for prefetching from server components.
 
-7. **Requirements**: TypeScript >= 5.7.2, Node.js 18+
-
-### New v11 Features
-
-- **`@trpc/tanstack-react-query`**: New TanStack-native integration with `queryOptions`/`mutationOptions`
-- **FormData/File Support**: Native support for `File`, `Blob`, `Uint8Array` uploads
-- **`httpBatchStreamLink`**: Streaming responses for large datasets
-- **Server-Sent Events**: `httpSubscriptionLink` for SSE subscriptions
-- **`tracked()` helper**: Automatic reconnection with event ID resumption
-- **React Server Components**: Prefetch helpers with `createTRPCOptionsProxy`
-
-### Installation for v11
+### Installing v11
 
 ```bash
-# New TanStack-native integration (recommended)
 npm install @trpc/server@^11 @trpc/client@^11 @trpc/tanstack-react-query @tanstack/react-query@^5
-
-# Classic integration (still supported)
-npm install @trpc/server@^11 @trpc/client@^11 @trpc/react-query@^11 @tanstack/react-query@^5
 ```
+
+Replace `@trpc/tanstack-react-query` with `@trpc/react-query@^11` for the classic integration.
+
+</migration_notice>

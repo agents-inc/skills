@@ -62,7 +62,7 @@ describe("Counter Store", () => {
 });
 ```
 
-**Why good:** Uses `setActivePinia` with fresh Pinia per test, tests both state and getters, named constants for test values
+**Why good:** `setActivePinia` is what lets `useCounterStore()` resolve with no component mounted, and a fresh Pinia in `beforeEach` means no case inherits the state another left behind. Getters are asserted alongside state, since a getter reading a stale `state` is the failure this catches.
 
 ---
 
@@ -135,4 +135,20 @@ describe("Counter Component", () => {
 });
 ```
 
-**Why good:** Uses `createTestingPinia` for component tests, shows initialState, stubActions, and custom mocking patterns
+**Why good:** `createTestingPinia` activates itself, so no `setActivePinia` is needed and `useCounterStore()` inside the test returns the same store the component got. `initialState` is keyed by store id and merged over the declared state, so a test names only the fields the case is about.
+
+### What createTestingPinia changes
+
+**Actions are replaced by spies and do not run.** This is the default and the source of most surprises: the button is clicked, the spy records it, and the state never moves. Three ways forward, depending on what the test is about:
+
+- Asserting the component asked for something — keep the default and assert on the spy.
+- Asserting what the component shows afterwards — `stubActions: false` runs the real action. The spies are still in place, so a call count is still assertable; running and spying are not exclusive.
+- Needing a specific outcome — assign an implementation, as the third test above does.
+
+**Name the spy factory where the runner is not detected.** `@pinia/testing` wraps actions using the test runner's own spy function, which it discovers from the environment. Where that discovery does not happen, pass it explicitly — the symptom otherwise is an action that will not accept a call assertion:
+
+```typescript
+createTestingPinia({ createSpy: vi.fn });
+```
+
+**Getters ignore `initialState`.** It seeds state only, and a getter derives from that state — so a getter is steered by setting the state it reads. Forcing a value directly works on an Options store's getter but not on a Setup store's, where the getter is a read-only `computed`.

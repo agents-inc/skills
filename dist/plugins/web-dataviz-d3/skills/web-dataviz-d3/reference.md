@@ -1,12 +1,12 @@
-# D3.js Quick Reference
+# D3.js Reference
 
-> Decision frameworks, module reference, and anti-patterns for D3.js v7 development. See [SKILL.md](SKILL.md) for core concepts and red flags, and [examples/](examples/) for code examples.
+> Lookup tables for D3 v7. See [SKILL.md](SKILL.md) for decisions and red flags, and [examples/](examples/) for code.
 
 ---
 
-## D3 Module Reference
+## Modules
 
-D3 v7 is fully modular. Install only what you need:
+Install only what you import:
 
 | Module               | Purpose                        | Key Exports                                                                                    |
 | -------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
@@ -30,9 +30,9 @@ D3 v7 is fully modular. Install only what you need:
 
 ---
 
-## Scale Selection Guide
+## Scale by data type
 
-| Data Type             | Scale             | Use Case                     |
+| Data                  | Scale             | Use case                     |
 | --------------------- | ----------------- | ---------------------------- |
 | Continuous numbers    | `scaleLinear`     | Revenue, temperature, counts |
 | Dates/times           | `scaleTime`       | Time series x-axis           |
@@ -45,7 +45,7 @@ D3 v7 is fully modular. Install only what you need:
 
 ---
 
-## Shape Generator Quick Reference
+## Shape generators
 
 | Generator | Input               | Output            | Key Accessors                                                      |
 | --------- | ------------------- | ----------------- | ------------------------------------------------------------------ |
@@ -57,18 +57,37 @@ D3 v7 is fully modular. Install only what you need:
 
 ---
 
-## Common Patterns Checklist
+## Geographic projections
 
-- [ ] Margin convention applied (`MARGIN` object, `innerWidth`/`innerHeight`)
-- [ ] `viewBox` on SVG for responsive scaling
-- [ ] Scales derived from data with `max()`/`extent()`
-- [ ] `.nice()` on continuous scales for clean tick values
-- [ ] Key function in `.data(array, keyFn)` when identity matters
-- [ ] `d3-transition` imported (side effect) before calling `.transition()`
-- [ ] Force simulation stopped on unmount (`.stop()`)
-- [ ] Zoom transform applied to inner `<g>`, not SVG root
-- [ ] TypeScript generics on selections, scales, and events
+| Projection         | Character                                     |
+| ------------------ | --------------------------------------------- |
+| `geoMercator`      | Web maps; conformal, preserves local shape    |
+| `geoNaturalEarth1` | World maps; compromise between shape and area |
+| `geoEqualEarth`    | World maps; equal-area                        |
+| `geoAlbersUsa`     | US maps with Alaska and Hawaii insets         |
+| `geoOrthographic`  | Globe view                                    |
 
 ---
 
-> **Anti-patterns and gotchas:** See [SKILL.md RED FLAGS section](SKILL.md) for the complete list.
+## Easing functions
+
+| Easing           | Motion                                         |
+| ---------------- | ---------------------------------------------- |
+| `easeLinear`     | Constant speed; reads as mechanical            |
+| `easeCubicOut`   | Fast start, slow end — the data-update default |
+| `easeCubicInOut` | Slow, fast, slow                               |
+| `easeExpOut`     | Very fast deceleration; snappy                 |
+| `easeElasticOut` | Springy overshoot                              |
+| `easeBounceOut`  | Bounce at the end                              |
+
+---
+
+## TypeScript type names
+
+| Concept   | Type                                                    |
+| --------- | ------------------------------------------------------- |
+| Selection | `Selection<Element, Datum, ParentElement, ParentDatum>` |
+| Scales    | `ScaleLinear`, `ScaleBand`, `ScaleTime`, `ScaleOrdinal` |
+| Pie datum | `PieArcDatum<T>`                                        |
+| Force     | `SimulationNodeDatum`, `SimulationLinkDatum<T>`         |
+| Events    | `D3ZoomEvent`, `D3BrushEvent`, `D3DragEvent`            |

@@ -60,35 +60,7 @@ export default defineConfig({
     ],
 
     sidebar: {
-      "/guide/": [
-        {
-          text: "Getting Started",
-          items: [
-            { text: "Introduction", link: "/guide/" },
-            { text: "Installation", link: "/guide/installation" },
-            { text: "Configuration", link: "/guide/configuration" },
-          ],
-        },
-        {
-          text: "Advanced",
-          collapsed: true,
-          items: [
-            { text: "Data Loaders", link: "/guide/data-loaders" },
-            { text: "Custom Theme", link: "/guide/custom-theme" },
-            { text: "Deployment", link: "/guide/deployment" },
-          ],
-        },
-      ],
-      "/api/": [
-        {
-          text: "API Reference",
-          items: [
-            { text: "Config", link: "/api/config" },
-            { text: "Runtime", link: "/api/runtime" },
-            { text: "Node API", link: "/api/node" },
-          ],
-        },
-      ],
+      /* see Multi-Sidebar below */
     },
 
     socialLinks: [{ icon: "github", link: "https://github.com/org/repo" }],
@@ -610,7 +582,7 @@ layout: home
 
 hero:
   name: "Project Name"
-  text: "A VitePress-powered docs site"
+  text: "Documentation for Project Name"
   tagline: Fast, flexible documentation
   image:
     src: /logo-large.svg
@@ -626,7 +598,7 @@ hero:
 features:
   - icon: "\u26A1"
     title: Fast
-    details: Built on Vite — instant dev server and lightning builds.
+    details: Instant dev server and near-instant production builds.
   - icon: "\u270F\uFE0F"
     title: Markdown-First
     details: Write content in Markdown with Vue component support.
@@ -750,14 +722,16 @@ export default {
 ```
 
 ```markdown
-## <!-- packages/[pkg].md -->
-
-## title: "Package: {{ $params.pkg }}"
+---
+title: "Package: {{ $params.pkg }}"
+---
 
 # {{ $params.pkg }}
 
 This page was generated dynamically.
 ```
+
+The template file is `packages/[pkg].md`, beside the `packages/[pkg].paths.ts` above.
 
 **Key details:**
 

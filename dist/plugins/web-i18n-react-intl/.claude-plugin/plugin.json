@@ -1,8 +1,8 @@
 {
   "name": "web-i18n-react-intl",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
-  "description": "ICU message format internationalization",
+  "description": "ICU message format internationalization for React — FormattedMessage, useIntl, defineMessages, and the FormatJS extraction workflow. Load when a project imports react-intl.",
   "author": {
     "name": "@vince"
   },

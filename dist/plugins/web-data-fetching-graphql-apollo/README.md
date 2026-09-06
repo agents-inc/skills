@@ -1,6 +1,6 @@
 # web-data-fetching-graphql-apollo
 
-Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions
+Apollo Client GraphQL patterns — normalized cache and type policies, queries, mutations with optimistic updates, pagination, fragments, subscriptions, and Suspense hooks
 
 ## Installation
 

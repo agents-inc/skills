@@ -1,79 +1,10 @@
 # NgRx SignalStore - Reference
 
-Decision frameworks, red flags, and anti-patterns for NgRx SignalStore state management.
+> The feature lookup, anti-pattern code, TypeScript recipes and migration steps. The decision trees and the red flags are in [SKILL.md](SKILL.md).
 
 ---
 
-## Decision Framework
-
-### When to Use SignalStore vs Alternatives
-
-```
-What kind of state do I have?
-
-Is it server data (from API)?
-├─ YES → Use HTTP service + cache in SignalStore with rxMethod
-│        (SignalStore provides caching, HTTP service fetches)
-└─ NO → Is it shared across components?
-    ├─ YES → SignalStore
-    │   └─ Is it entity collection?
-    │       ├─ YES → withEntities
-    │       └─ NO → withState
-    └─ NO → Angular signal in component (ref/computed)
-```
-
-### signalStore vs Traditional NgRx
-
-```
-Should I use SignalStore or traditional NgRx?
-
-Is this a new Angular 17+ project?
-├─ YES → SignalStore (recommended for new projects)
-└─ NO → Is the existing NgRx codebase large?
-    ├─ YES → Consider gradual migration
-    │   - New features: SignalStore
-    │   - Existing features: Keep NgRx, migrate incrementally
-    └─ NO → Migrate to SignalStore
-```
-
-### withState vs withEntities
-
-```
-How should I model this state?
-
-Is it a collection of items with unique IDs?
-├─ YES → withEntities
-│   - Provides normalized { ids, entityMap } structure
-│   - Built-in CRUD updaters
-│   - Efficient O(1) lookups by ID
-└─ NO → withState
-    - Simple object or primitive values
-    - Custom structure
-    - Nested data
-```
-
-### rxMethod vs async/await in Methods
-
-```
-How should I handle async operations?
-
-Do I need RxJS operators (debounce, switchMap, retry)?
-├─ YES → rxMethod
-│   - Cancellation support
-│   - Complex operator chains
-│   - Reactive input (signal/observable)
-└─ NO → Do I need to react to signal changes?
-    ├─ YES → signalMethod (v19+)
-    │   - No RxJS dependency
-    │   - Signal reactivity
-    │   - Manual race condition handling
-    └─ NO → async/await in withMethods
-        - Simple fetch operations
-        - Sequential calls
-        - Try/catch error handling
-```
-
-### Quick Reference Table
+## Feature lookup
 
 | Use Case              | Solution               | Why                                  |
 | --------------------- | ---------------------- | ------------------------------------ |
@@ -88,44 +19,6 @@ Do I need RxJS operators (debounce, switchMap, retry)?
 | Non-reactive props    | `withProps()`          | Mutable objects, observables (v19+)  |
 | Context-aware feature | `withFeature()`        | Feature needing store methods (v20+) |
 | Derived linked state  | `withLinkedState()`    | Auto-computed reactive state (v20+)  |
-
----
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- **Mutating state directly instead of using patchState** - breaks reactivity and causes unpredictable behavior
-- **Using arrays instead of withEntities for collections** - misses normalized state benefits, O(n) lookups
-- **Not wrapping async RxJS flows in rxMethod** - loses cancellation and proper cleanup
-- **Default exports in store files** - violates Angular conventions, breaks tree-shaking
-- **Accessing store state outside of computed/template** - may not trigger updates
-
-**Medium Priority Issues:**
-
-- Not using `withDevtools()` for debugging in development
-- Missing error handling in rxMethod pipelines
-- Deeply nested state (flatten with multiple state slices)
-- Not using `entityConfig()` for custom entity IDs (v18+)
-- Magic numbers instead of named constants
-
-**Common Mistakes:**
-
-- Forgetting feature ordering (withState must come first)
-- Not returning state/computed/methods from signalStoreFeature
-- Using `resource()` API in stores without understanding its lifecycle implications
-- Circular dependencies between stores
-- Mutating entity objects instead of using updateEntity
-
-**Gotchas & Edge Cases:**
-
-- `withHooks.onInit()` runs during store instantiation - be careful with side effects in tests
-- `patchState` with entity updaters requires collection option when using named collections
-- `rxMethod` auto-unsubscribes on destroy - don't manually unsubscribe
-- Protected state (v18+) prevents external `patchState` calls by default
-- Feature execution order matters - later features can access earlier ones
-- **v19+ Deep Freeze**: State values are recursively frozen with `Object.freeze` in development mode - use `withProps()` for mutable objects like FormGroup
-- `signalMethod` does not handle race conditions - use `rxMethod` with `switchMap` for cancellable requests
 
 ---
 
@@ -348,27 +241,9 @@ export class FlightComponent {
 
 ## Migration Guide
 
-### From Traditional NgRx to SignalStore
-
-| NgRx Concept            | SignalStore Equivalent    |
-| ----------------------- | ------------------------- |
-| `createAction()`        | Method in `withMethods()` |
-| `createReducer()`       | `patchState()` in methods |
-| `createSelector()`      | `withComputed()`          |
-| `createEffect()`        | `rxMethod()`              |
-| `createEntityAdapter()` | `withEntities()`          |
-| `provideMockStore()`    | `unprotected()` + TestBed |
-
-### Step-by-Step Migration
-
-1. **Create SignalStore alongside existing NgRx**
-2. **Migrate one feature at a time**
-3. **Use rxMethod for effects that need RxJS**
-4. **Replace selectors with withComputed**
-5. **Replace entity adapter with withEntities**
-6. **Remove NgRx feature when fully migrated**
-
-For detailed migration examples, see [examples/migration.md](examples/migration.md).
+The concept-for-concept table and the ordered migration steps are in
+[examples/migration.md](examples/migration.md), alongside the worked before-and-after code for each
+one.
 
 ---
 
@@ -378,4 +253,4 @@ Redux DevTools integration via `@angular-architects/ngrx-toolkit` provides state
 
 Note: DevTools don't activate until you open the browser extension and select the "NgRx Signal Store" tab.
 
-See [examples/features.md](../examples/features.md) Pattern 5 for full implementation.
+See [examples/features.md](examples/features.md) Pattern 5 for full implementation.

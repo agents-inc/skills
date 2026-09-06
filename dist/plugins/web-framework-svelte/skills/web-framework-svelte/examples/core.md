@@ -38,7 +38,7 @@
 </div>
 ```
 
-**Why good:** Named constants for limits, guard against exceeding max, explicit reactive declaration with `$state`
+**Why good:** `count += 1` is the reactive operation — `$state` makes a plain assignment enough, with no setter to call — and `disabled={count >= MAX_COUNT}` re-evaluates on its own.
 
 ### Good Example — Deep Reactive Objects
 
@@ -109,7 +109,7 @@
 <p>{name} is {age} years old</p>
 ```
 
-**Why bad:** Destructuring `$state` objects captures values at destruction time, mutations to destructured variables don't affect the original reactive object, UI shows stale data
+**Why bad:** `name` and `age` are plain locals holding whatever the proxy held at that moment. `age += 1` increments the local, `user.age` never changes, and nothing warns.
 
 ### Good Example — Fix: Access Properties Directly
 
@@ -160,7 +160,7 @@
 {/if}
 ```
 
-**Why good:** `$state.raw` avoids wrapping every product object in a Proxy, better performance for read-only data, reassignment triggers reactivity
+**Why good:** `$state.raw` skips wrapping every product in a proxy, which is the whole cost on a list that is only ever replaced.
 
 ### Bad Example — Mutating $state.raw
 
@@ -174,7 +174,7 @@
 </script>
 ```
 
-**Why bad:** `$state.raw` does not create deep proxies, property mutations are not tracked, only full reassignment triggers updates
+**Why bad:** there is no proxy to notice the write. `items = [...]` would update; `items[0].name = 'C'` cannot.
 
 ---
 

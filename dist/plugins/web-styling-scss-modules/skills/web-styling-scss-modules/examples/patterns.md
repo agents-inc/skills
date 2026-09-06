@@ -1,23 +1,20 @@
-# SCSS Modules Architectural Patterns
+# SCSS Modules - Structure and Reuse
 
-> SCSS Module structure, data-attributes, mixins, global styles, and icon patterns. See [SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for foundational patterns.
+> Module file structure, data-attribute state, mixins, global style organisation, and icon sizing. See [SKILL.md](../SKILL.md) for decision guidance and [core.md](core.md) for the layer setup.
 
 ---
 
-## Pattern 5: SCSS Module Structure with Cascade Layers
+## Module File Structure
 
-### Structure Pattern
+One base class, then variant classes, then size classes — all inside the layer.
 
 ```scss
 // Good Example
 // button.module.scss
-
 @layer components {
-  // BASE CLASS
   .button {
-    // Component-specific variables (if needed)
+    // Component-scoped, because the variants below reassign them
     --button-accent-bg: transparent;
-    --button-focus-ring-width: 3px;
     --button-border-width: 1px;
 
     display: inline-flex;
@@ -25,10 +22,8 @@
     justify-content: center;
     white-space: nowrap;
 
-    // Use design tokens directly
-    border-radius: var(--space-3);
+    border-radius: var(--radius-sm);
     font-size: var(--font-size-body);
-    font-weight: 500;
     color: var(--color-text-default);
 
     &:disabled {
@@ -45,10 +40,9 @@
     }
   }
 
-  // VARIANT CLASSES
   .default {
-    background-color: var(--color-background-dark);
-    color: var(--color-text-light);
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
 
     &:hover {
       background-color: var(--color-primary-hover);
@@ -69,96 +63,84 @@
 
     &:hover {
       background-color: var(--color-background-muted);
-      color: var(--color-text-default);
     }
   }
 
   .outline {
-    border: var(--button-border-width-hover) solid transparent;
-    box-shadow: 0 0 0 var(--button-border-width) var(--color-border-default);
+    --button-border-width: 2px;
+
+    border: var(--button-border-width) solid var(--color-border-default);
     background-color: var(--color-background-base);
 
-    &[data-state="open"],
-    &:hover {
+    &:hover,
+    &[data-state="open"] {
       background-color: var(--button-accent-bg);
-      box-shadow: none;
-      border: var(--button-border-width-hover) solid var(--color-border-darkish);
-      font-weight: bold;
+      --button-accent-bg: var(--color-background-muted);
     }
   }
 
-  // SIZE CLASSES
-  .sizeDefault {
-    height: var(--space-18);
-    padding: var(--space-6) var(--space-6);
+  .sizeSm {
+    padding: var(--space-sm) var(--space-md);
   }
 
-  .sizeSm {
-    height: var(--space-14);
-    padding: var(--space-1) var(--space-6);
+  .sizeDefault {
+    padding: var(--space-md) var(--space-lg);
   }
 
   .sizeLg {
-    height: var(--space-20);
-    padding: var(--space-6) var(--space-10);
+    padding: var(--space-lg) var(--space-xlg);
   }
 
   .sizeIcon {
-    width: var(--space-18);
-    height: var(--space-18);
+    padding: var(--space-md);
+    aspect-ratio: 1;
   }
 }
 ```
 
-**Why good:** Layer wrapper ensures predictable precedence, semantic tokens enable theming, data-attributes handle state cleanly, component variables only when needed for variant logic, consistent structure across all components
+**Why good:** one structure repeated across every component means a reader knows where to look; the disabled and focus rules live on the base so no variant can forget them; and the size classes vary only padding, so any size composes with any variant.
 
 ```scss
 // Bad Example
-
-// BAD: No layer wrapper
+// BAD: no layer wrapper, so precedence depends on bundler ordering
 .button {
   display: inline-flex;
 }
 
-// BAD: Redeclaring design tokens unnecessarily
+// BAD: a second name for a value that already has one
 .card {
-  --card-border-width: 1px; // Used only once
-  --card-border-radius: 0.5rem; // Already have --radius-sm!
-
-  border: var(--card-border-width) solid var(--color-surface-subtle);
+  --card-border-radius: 0.5rem; // there is already a --radius-sm
   border-radius: var(--card-border-radius);
 }
 
-// BAD: Non-semantic class names
+// BAD: names describing the current appearance rather than the role
 .blueButton {
-  background: var(--color-primary); // What if primary isn't blue?
+  background: var(--color-primary);
 }
 
 .bigText {
-  font-size: var(--text-size-heading); // Purpose unclear
+  font-size: var(--font-size-heading);
 }
 ```
 
-**Why bad:** Missing layer wrapper creates loading order dependency, redeclaring tokens wastes variables, non-semantic names become inaccurate when design changes (blueButton stops making sense if color changes to green)
+**Why bad:** the missing wrapper reintroduces load-order dependence, the duplicate property stops tracking the design system, and the appearance-based names become wrong the moment the design changes — with every usage site to update.
 
 ---
 
-## Pattern 8: Data-Attributes for State Styling
-
-### Implementation
+## Data-Attributes for State
 
 ```scss
 // Good Example
-
 .dropdown {
   &[data-open="true"] {
     display: block;
   }
 
   &[data-state="error"] {
-    border-color: var(--color-error);
+    border-color: var(--color-destructive);
   }
 
+  // States combine without a class per combination
   &[data-size="large"][data-variant="primary"] {
     padding: var(--space-xlg);
   }
@@ -173,21 +155,12 @@
     border-color: var(--color-destructive);
   }
 }
-
-.form:has(.inputError) {
-  border-color: var(--color-error);
-}
-
-.formGroup:has(input:focus) {
-  background: var(--color-surface-subtle);
-}
 ```
 
-**Why good:** Data-attributes separate state from styling concerns, easier to debug in DevTools, works with :has() for parent-child relationships, no className concatenation in JSX
+**Why good:** every state of the component is in the component's stylesheet, the combinations fall out of selector syntax rather than needing a name each, and the DOM inspector shows what the component believes its state to be.
 
 ```scss
 // Bad Example
-
 .dropdownOpen {
   display: block;
 }
@@ -197,33 +170,21 @@
 }
 ```
 
-```typescript
-// BAD: Conditional className in JSX
-<Dropdown className={isOpen ? styles.dropdownOpen : styles.dropdownClosed} />
-```
-
-**Why bad:** Requires separate classes for every state variation, className concatenation adds complexity, harder to combine multiple states, more JavaScript logic for what should be CSS
+**Why bad:** two states need two exported classes and something outside the stylesheet to choose between them; four states across two dimensions need eight, and the combinations have to be enumerated by hand.
 
 ---
 
-## Pattern 9: SCSS Mixins for Reusable Patterns
-
-### Standard Mixins
-
-**Location:** `packages/ui/src/styles/mixins.scss`
+## Mixins for Repeated Declaration Blocks
 
 ```scss
-// Good Example
-
-// Focus ring styling
+// styles/_mixins.scss
 @mixin focus-ring {
   &:focus-visible {
-    outline: 2px solid hsl(var(--color-ring));
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 }
 
-// Disabled state
 @mixin disabled-state {
   &:disabled {
     pointer-events: none;
@@ -232,19 +193,12 @@
   }
 }
 
-// Smooth transitions
-@mixin transition-colors {
-  transition: var(--transition-colors);
-}
-
-// Truncate text
 @mixin truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-// Visually hidden (for screen readers)
 @mixin sr-only {
   position: absolute;
   width: 1px;
@@ -252,137 +206,107 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border-width: 0;
 }
 ```
 
-### Usage
-
 ```scss
-.button {
-  @include focus-ring;
-  @include disabled-state;
-  @include transition-colors;
-}
+// Usage
+@use "../../styles/mixins" as m;
 
-.long-text {
-  @include truncate;
+@layer components {
+  .button {
+    @include m.focus-ring;
+    @include m.disabled-state;
+  }
 }
 ```
 
-**Why good:** Mixins ensure consistency for accessibility patterns (focus, sr-only), reduce duplication across components, easier to maintain and update centrally
+**Why good:** the accessibility blocks are the ones where a partial copy is a real defect — a focus ring missing its offset, an `sr-only` missing its clip — so centralising them removes the chance of writing seven-eighths of one.
+
+**Extract at the third user, not the first.** A mixin with one call site is a block of declarations plus a hop.
 
 ---
 
-## Pattern 10: Global Styles Organization
+## Global Styles Organisation
 
-### File Structure
-
-**Location:** `packages/ui/src/styles/`
+Everything genuinely global sits outside the modules, in one directory with a fixed load order.
 
 ```
-packages/ui/src/styles/
-  design-tokens.scss   # All design tokens (colors, spacing, typography)
-  mixins.scss          # Reusable SCSS mixins
-  global.scss          # Global base styles with import order
-  reset.scss           # CSS reset
-  layers.scss          # Layer declarations
-  utility-classes.scss # Minimal utility classes
+styles/
+  layers.scss          # layer declarations - loaded first
+  reset.scss           # inside @layer reset
+  design-tokens.scss   # unlayered custom properties
+  mixins.scss          # Sass members, emits nothing on its own
+  utility-classes.scss # the few classes worth having globally
 ```
-
-### Import Order
 
 ```scss
-// packages/ui/src/styles/global.scss
-// NOTE: @use rules must come before any other rules (except @forward/@charset)
-@use "layers"; // Declare layers FIRST
-@use "reset"; // Uses @layer reset
-@use "design-tokens"; // Unlayered (highest priority)
-@use "utility-classes"; // Unlayered (highest priority)
+// styles/global.scss
+// @use rules come before any other rule, except @forward and @charset
+@use "layers"; // declares the order the rest depend on
+@use "reset"; // writes into @layer reset
+@use "design-tokens"; // unlayered custom properties
+@use "utility-classes";
 ```
 
-**Why @use:** Modern Sass module system (see [modules.md](modules.md)). `@import` is deprecated and will be removed in Dart Sass 3.0.0.
-
-### Minimal Utility Classes
+**Why this order:** the layer declaration has to be evaluated before anything that writes into a layer, and the token declarations have to precede nothing in particular — a custom property is resolved where it is _used_, not where it is declared.
 
 ```scss
-// Good Example - utility-classes.scss
+// styles/utility-classes.scss
+@use "mixins" as m;
 
-// Screen reader only
 .sr-only {
-  @include sr-only;
+  @include m.sr-only;
 }
 
-// Focus ring
-.focus-ring {
-  @include focus-ring;
-}
-
-// Truncate text
 .truncate {
-  @include truncate;
+  @include m.truncate;
 }
 ```
 
-**Why good:** Minimal set (not comprehensive like Tailwind), extracted from mixins for consistency, used sparingly in components
+**Why good:** a mixin serves Sass and a class serves markup, so the handful of blocks needed in both places are written once and exposed twice — rather than a class and a mixin drifting apart.
 
 ---
 
-## Pattern 11: Icon Styling
-
-### Key Principles
-
-- **Consistent sizing:** Icons use design tokens
-- **Color inheritance:** Icons use `currentColor` to inherit parent text color
-
-### Implementation
+## Icon Sizing and Colour
 
 ```scss
 // Good Example
-
 .icon {
-  width: var(--text-size-icon); // 16px
-  height: var(--text-size-icon);
-}
-
-// Icons automatically inherit currentColor
-.successButton {
-  color: var(--color-text-default); // Icon inherits this
-
-  &:hover {
-    color: var(--color-accent); // Icon color changes on hover
-  }
-}
-
-.errorButton {
-  color: var(--color-text-muted); // Different icon color
+  width: var(--font-size-icon);
+  height: var(--font-size-icon);
+  // No colour declaration: an icon drawn with currentColor follows its parent
 }
 
 .button {
-  color: var(--color-text-default); // Icon inherits this color
+  color: var(--color-text-default);
+
+  &:hover {
+    color: var(--color-accent); // the icon follows
+  }
 }
 ```
 
-**Why good:** Using `currentColor` keeps icon colors in sync with text without duplication, design tokens ensure consistent sizing, fewer CSS rules needed
+**Why good:** one colour declaration covers the label and the icon, so they cannot disagree, and a hover state needs one line rather than two that must be kept in step.
 
 ```scss
 // Bad Example
-
 .icon {
-  // BAD: Hardcoded size
+  // BAD: a fixed size that no type-scale change reaches
   width: 16px;
   height: 16px;
 
-  // BAD: Explicit color instead of inheritance
+  // BAD: an explicit colour, which now has to be restated for every state
+  // of every parent that contains an icon
   color: var(--color-text-default);
 }
 
 .button .icon {
-  // BAD: Duplicating parent color
   color: var(--color-primary);
 }
 ```
 
-**Why bad:** Hardcoded sizes break consistency, explicit icon colors create duplication and get out of sync with parent text color
+**Why bad:** the explicit colour breaks inheritance, so every parent state needs a matching icon rule — and the pair goes out of sync the first time only one of them is updated.

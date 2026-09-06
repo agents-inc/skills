@@ -84,13 +84,19 @@ const OPTIONS = [
 />
 ```
 
-**Why good:** ScrollUpButton and ScrollDownButton handle long lists, ItemIndicator shows selected state, position="popper" enables flexible positioning, disabled state supported per item
+**Why good:** `Viewport` is required — items placed directly in `Content` do not scroll, and the
+scroll buttons have nothing to drive. `position="popper"` anchors the list beside the trigger and
+flips it on collision, where the default aligns the selected item over the trigger instead.
+`ItemText` is what `Value` echoes back, so wrapping the label in it is what makes the closed trigger
+show a selection.
 
 ---
 
-## Pattern 2: Select with CSP Nonce (v1.4.3+)
+## Pattern 2: Select with CSP Nonce
 
-For sites with Content Security Policy, use the `nonce` prop for inline styles.
+Select positions itself with inline styles. Under a Content Security Policy without
+`'unsafe-inline'`, those are blocked and the list renders unpositioned — pass the request's nonce so
+they survive.
 
 ```typescript
 import { Select } from "radix-ui";
@@ -123,13 +129,12 @@ export function SelectWithCSP({ nonce, options }: SelectWithCSPProps) {
 }
 ```
 
-**When to use:** Sites with strict Content Security Policy that blocks inline styles without nonce
-
 ---
 
 ## Pattern 3: Progress with Indeterminate State
 
-Progress supports `value={undefined}` for indeterminate/loading states.
+`value={undefined}` is the documented way to say "working, duration unknown" — distinct from
+`value={0}`, which claims zero percent of a known total.
 
 ```typescript
 import { Progress } from "radix-ui";
@@ -197,4 +202,7 @@ export function ProgressBar({ value, label }: ProgressBarProps) {
 }
 ```
 
-**Why good:** Named constant for max value, `value={undefined}` signals indeterminate state, data-state attribute enables CSS animation for loading state, aria-label for accessibility
+**Why good:** `Root` sets `role="progressbar"` and the `aria-valuenow`/`aria-valuemax` pair from
+`value` and `max`, and omits `aria-valuenow` entirely when `value` is undefined — which is how a
+screen reader learns the operation is indeterminate. The `data-state` attribute lets one stylesheet
+cover both the determinate translate and the indeterminate sweep.

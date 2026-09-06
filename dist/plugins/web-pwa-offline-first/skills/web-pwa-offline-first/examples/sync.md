@@ -1,16 +1,18 @@
-# Synchronization Patterns
+# Offline-First — Synchronization Examples
 
-> Conflict resolution and synchronization patterns for offline-first applications. See [SKILL.md](../SKILL.md) for concepts.
+> Reconciling a local record with a server that moved on. Decisions are in
+> [SKILL.md](../SKILL.md); the queue that drives all of this is in [core.md](core.md).
 
 ---
 
-## Pattern 18: Last-Write-Wins (LWW) Resolution
+## Pattern 17: Last-write-wins
 
-The simplest conflict resolution strategy where the most recent change wins.
+The cheapest strategy. Prefer server timestamps where both sides have one, and require the local
+side to be newer by more than the clock-drift tolerance before it wins — otherwise a fast client
+clock silently takes every tie.
 
 ```typescript
 // sync/last-write-wins.ts
-
 interface SyncableEntity {
   id: string;
   _lastModified: number;
@@ -26,23 +28,15 @@ interface ConflictResult<T> {
   loser: T;
 }
 
-// Named constants
 const CLOCK_DRIFT_TOLERANCE_MS = 5000;
 
-/**
- * Resolves conflict using Last-Write-Wins strategy.
- * Server timestamp takes precedence if available, falls back to client timestamps.
- */
 function resolveWithLWW<T extends SyncableEntity>(
   local: T,
   server: T,
 ): ConflictResult<T> {
-  // Prefer server timestamps for comparison (more reliable)
   const localTime = local._serverTimestamp ?? local._lastModified;
   const serverTime = server._serverTimestamp ?? server._lastModified;
 
-  // Account for minor clock drift - if within tolerance, server wins
-  const timeDiff = Math.abs(localTime - serverTime);
   const localIsNewer = localTime > serverTime + CLOCK_DRIFT_TOLERANCE_MS;
 
   if (localIsNewer) {
@@ -72,17 +66,16 @@ export { resolveWithLWW };
 export type { ConflictResult };
 ```
 
-**Why good:** Simple and predictable, handles clock drift, preserves version info from both sides
-
 ---
 
-## Pattern 19: Field-Level Merge
+## Pattern 18: Field-level merge
 
-Merge non-conflicting field changes, only conflict on same-field edits.
+Compare each side against the last common state rather than against each other. A field only one
+side touched is not a conflict, which is what makes this worth the extra bookkeeping: two people
+editing different fields of one record both keep their work.
 
 ```typescript
 // sync/field-merge.ts
-
 interface FieldChange {
   field: string;
   localValue: unknown;
@@ -97,7 +90,6 @@ interface MergeResult<T> {
   conflicts: FieldChange[];
 }
 
-// Fields that should never be merged (sync metadata)
 const SYNC_METADATA_FIELDS = [
   "_syncStatus",
   "_lastModified",
@@ -108,14 +100,10 @@ const SYNC_METADATA_FIELDS = [
   "id",
 ] as const;
 
-/**
- * Performs field-level merge, identifying conflicts only where
- * both local and server changed the same field.
- */
 function mergeFields<T extends Record<string, unknown>>(
-  base: T, // Last known common state
-  local: T, // Local changes
-  server: T, // Server changes
+  base: T, // last known common state
+  local: T,
+  server: T,
   localTimestamp: number,
   serverTimestamp: number,
 ): MergeResult<T> {
@@ -126,7 +114,6 @@ function mergeFields<T extends Record<string, unknown>>(
   const allFields = new Set([...Object.keys(local), ...Object.keys(server)]);
 
   for (const field of allFields) {
-    // Skip sync metadata
     if (
       SYNC_METADATA_FIELDS.includes(
         field as (typeof SYNC_METADATA_FIELDS)[number],
@@ -141,45 +128,28 @@ function mergeFields<T extends Record<string, unknown>>(
 
     const localChanged = !deepEqual(baseValue, localValue);
     const serverChanged = !deepEqual(baseValue, serverValue);
+    const change = {
+      field,
+      localValue,
+      serverValue,
+      localTimestamp,
+      serverTimestamp,
+    };
 
-    if (!localChanged && !serverChanged) {
-      // No changes
-      continue;
-    }
+    if (!localChanged && !serverChanged) continue;
 
     if (localChanged && !serverChanged) {
-      // Only local changed - use local
       (merged as Record<string, unknown>)[field] = localValue;
-      autoResolved.push({
-        field,
-        localValue,
-        serverValue,
-        localTimestamp,
-        serverTimestamp,
-      });
+      autoResolved.push(change);
     } else if (!localChanged && serverChanged) {
-      // Only server changed - use server
       (merged as Record<string, unknown>)[field] = serverValue;
-      autoResolved.push({
-        field,
-        localValue,
-        serverValue,
-        localTimestamp,
-        serverTimestamp,
-      });
+      autoResolved.push(change);
     } else if (deepEqual(localValue, serverValue)) {
-      // Both changed to same value - no conflict
+      // both moved to the same value — agreement, not conflict
       (merged as Record<string, unknown>)[field] = localValue;
     } else {
-      // True conflict - both changed to different values
-      conflicts.push({
-        field,
-        localValue,
-        serverValue,
-        localTimestamp,
-        serverTimestamp,
-      });
-      // Default to server for merged result, but flag as conflict
+      conflicts.push(change);
+      // server wins provisionally; the conflict list is what gets surfaced
       (merged as Record<string, unknown>)[field] = serverValue;
     }
   }
@@ -187,7 +157,6 @@ function mergeFields<T extends Record<string, unknown>>(
   return { merged, autoResolved, conflicts };
 }
 
-// Simple deep equality check
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (typeof a !== typeof b) return false;
@@ -197,9 +166,8 @@ function deepEqual(a: unknown, b: unknown): boolean {
   const aObj = a as Record<string, unknown>;
   const bObj = b as Record<string, unknown>;
   const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
 
-  if (aKeys.length !== bKeys.length) return false;
+  if (aKeys.length !== Object.keys(bObj).length) return false;
 
   return aKeys.every((key) => deepEqual(aObj[key], bObj[key]));
 }
@@ -208,18 +176,20 @@ export { mergeFields };
 export type { FieldChange, MergeResult };
 ```
 
-**Why good:** Only conflicts where both sides changed the same field, preserves non-conflicting changes from both sides, returns structured conflict info for UI
+This needs the base state stored alongside the record. Without it, every difference looks like a
+conflict.
 
 ---
 
-## Pattern 20: Conflict Resolution UI
+## Pattern 19: Conflict resolution UI
 
-Present conflicts to users and allow manual resolution.
+Per-field choice, with a timestamp on each option so the user has something to decide on. Submit
+stays disabled until every conflict is answered.
 
 ```tsx
 // components/conflict-resolver.tsx
 import { useState, type ReactNode } from "react";
-import type { FieldChange, MergeResult } from "../sync/field-merge";
+import type { FieldChange } from "../sync/field-merge";
 
 interface ConflictResolverProps<T> {
   entityName: string;
@@ -258,7 +228,6 @@ function ConflictResolver<T extends Record<string, unknown>>({
 
     setIsSubmitting(true);
     try {
-      // Build resolved entity
       const resolved = { ...serverEntity };
       for (const [field, choice] of resolutions) {
         if (choice === "local") {
@@ -379,31 +348,24 @@ export { ConflictResolver };
 export type { ConflictResolverProps };
 ```
 
-**Why good:** Accessible with proper ARIA, per-field resolution, disabled submit until all resolved, custom field rendering support
-
 ---
 
-## Pattern 21: Version Vector for Causality
+## Pattern 20: Version vectors
 
-Track concurrent modifications using version vectors instead of timestamps.
+A counter per client, incremented on every local write. Comparing two vectors answers a question
+timestamps cannot: whether one edit happened _after_ the other, or whether they happened without
+knowledge of each other.
 
 ```typescript
 // sync/version-vector.ts
-
-/**
- * A version vector tracks the "logical clock" of each node/client
- * that has modified an entity. Enables detecting true concurrent
- * modifications vs sequential updates.
- */
 type VersionVector = Record<string, number>;
 
 interface VersionedEntity {
   id: string;
   _versionVector: VersionVector;
-  _nodeId: string; // This client's node ID
+  _nodeId: string;
 }
 
-// Get or create persistent node ID for this client
 function getNodeId(): string {
   const STORAGE_KEY = "offline-first-node-id";
   let nodeId = localStorage.getItem(STORAGE_KEY);
@@ -418,19 +380,11 @@ function getNodeId(): string {
 
 const NODE_ID = getNodeId();
 
-/**
- * Increment the local node's version in the vector
- */
 function incrementVersion(vector: VersionVector): VersionVector {
-  return {
-    ...vector,
-    [NODE_ID]: (vector[NODE_ID] ?? 0) + 1,
-  };
+  return { ...vector, [NODE_ID]: (vector[NODE_ID] ?? 0) + 1 };
 }
 
-/**
- * Merge two version vectors, taking max of each node's version
- */
+/** Merge takes the highest counter each node has reached. */
 function mergeVectors(a: VersionVector, b: VersionVector): VersionVector {
   const merged: VersionVector = { ...a };
 
@@ -443,13 +397,6 @@ function mergeVectors(a: VersionVector, b: VersionVector): VersionVector {
 
 type CompareResult = "before" | "after" | "concurrent" | "equal";
 
-/**
- * Compare two version vectors to determine causality:
- * - 'before': a happened before b
- * - 'after': a happened after b
- * - 'concurrent': a and b are concurrent (conflict)
- * - 'equal': a and b are identical
- */
 function compareVectors(a: VersionVector, b: VersionVector): CompareResult {
   let aBeforeB = true;
   let bBeforeA = true;
@@ -460,37 +407,22 @@ function compareVectors(a: VersionVector, b: VersionVector): CompareResult {
     const aVersion = a[node] ?? 0;
     const bVersion = b[node] ?? 0;
 
-    if (aVersion > bVersion) {
-      bBeforeA = false;
-    }
-    if (bVersion > aVersion) {
-      aBeforeB = false;
-    }
+    if (aVersion > bVersion) bBeforeA = false;
+    if (bVersion > aVersion) aBeforeB = false;
   }
 
-  if (aBeforeB && bBeforeA) {
-    return "equal";
-  }
-  if (aBeforeB) {
-    return "before";
-  }
-  if (bBeforeA) {
-    return "after";
-  }
+  // neither side has a counter the other lacks: the vectors are identical
+  if (aBeforeB && bBeforeA) return "equal";
+  if (aBeforeB) return "before";
+  if (bBeforeA) return "after";
+  // neither dominates: each side has a counter the other has not seen
   return "concurrent";
 }
 
-/**
- * Check if entity needs sync based on version comparison
- */
 function needsSync(
   local: VersionedEntity,
   server: VersionedEntity,
-): {
-  needsUpload: boolean;
-  needsDownload: boolean;
-  hasConflict: boolean;
-} {
+): { needsUpload: boolean; needsDownload: boolean; hasConflict: boolean } {
   const comparison = compareVectors(
     local._versionVector,
     server._versionVector,
@@ -514,21 +446,22 @@ export {
 export type { VersionVector, VersionedEntity, CompareResult };
 ```
 
-**Why good:** Detects true concurrent edits vs sequential updates, no clock synchronization needed, deterministic conflict detection, persistent node ID
+The vector grows with the number of clients that have ever written the record, so prune entries for
+retired nodes if that number is unbounded.
 
 ---
 
-## Pattern 22: Delta Sync Protocol
+## Pattern 21: Delta sync
 
-Sync only changed items since last sync using server-provided cursors.
+Ask for what changed since last time. The cursor is persisted, so a reload does not re-download the
+collection.
 
 ```typescript
 // sync/delta-sync.ts
-
 interface SyncCursor {
   collection: string;
   lastSyncTimestamp: number;
-  lastServerId?: string; // For pagination
+  lastServerId?: string;
 }
 
 interface DeltaSyncResult<T> {
@@ -538,7 +471,6 @@ interface DeltaSyncResult<T> {
   serverTimestamp: number;
 }
 
-// Named constants
 const DEFAULT_BATCH_SIZE = 100;
 const CURSOR_STORAGE_KEY = "sync-cursors";
 
@@ -563,17 +495,14 @@ class DeltaSyncManager {
   }
 
   private saveCursors(): void {
-    const obj = Object.fromEntries(this.cursors);
-    localStorage.setItem(CURSOR_STORAGE_KEY, JSON.stringify(obj));
+    localStorage.setItem(
+      CURSOR_STORAGE_KEY,
+      JSON.stringify(Object.fromEntries(this.cursors)),
+    );
   }
 
   getCursor(collection: string): SyncCursor {
-    return (
-      this.cursors.get(collection) ?? {
-        collection,
-        lastSyncTimestamp: 0,
-      }
-    );
+    return this.cursors.get(collection) ?? { collection, lastSyncTimestamp: 0 };
   }
 
   updateCursor(cursor: SyncCursor): void {
@@ -593,18 +522,15 @@ class DeltaSyncManager {
     const allItems: T[] = [];
     let cursor = this.getCursor(collection);
 
-    // Fetch all pages
     while (true) {
       const result = await fetcher(cursor, batchSize);
       allItems.push(...result.items);
 
-      // Update cursor
+      // save after every page, so an interrupted sync resumes mid-collection
       this.updateCursor(result.nextCursor);
       cursor = result.nextCursor;
 
-      if (!result.hasMore) {
-        break;
-      }
+      if (!result.hasMore) break;
     }
 
     return allItems;
@@ -616,7 +542,6 @@ class DeltaSyncManager {
   }
 }
 
-// Example API fetcher implementation
 async function fetchTodosDelta(
   cursor: SyncCursor,
   batchSize: number,
@@ -628,10 +553,7 @@ async function fetchTodosDelta(
   });
 
   const response = await fetch(`/api/todos/sync?${params}`);
-
-  if (!response.ok) {
-    throw new Error(`Sync failed: ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`Sync failed: ${response.status}`);
 
   const data = await response.json();
 
@@ -642,10 +564,7 @@ async function fetchTodosDelta(
     nextCursor: {
       collection: "todos",
       lastSyncTimestamp: data.serverTimestamp,
-      lastServerId:
-        data.items.length > 0
-          ? data.items[data.items.length - 1].id
-          : cursor.lastServerId,
+      lastServerId: data.items.at(-1)?.id ?? cursor.lastServerId,
     },
   };
 }
@@ -654,87 +573,56 @@ export { DeltaSyncManager, fetchTodosDelta };
 export type { SyncCursor, DeltaSyncResult };
 ```
 
-**Why good:** Only fetches changes since last sync (efficient), paginated for large datasets, cursor persistence survives app restarts
+The timestamp comes from the server, never from the client — a client clock ahead of the server's
+would skip records written in the gap.
 
 ---
 
-## Pattern 23: Background Sync with Service Worker
+## Pattern 22: Background sync
 
-Queue sync operations for reliable background execution.
-
-**IMPORTANT: Browser Support Limitation**
-The Background Sync API is **experimental** and only supported in Chrome/Edge (Chromium-based browsers). Firefox and Safari do NOT support this API. Always implement a fallback using the `online` event listener.
-
-**Status:** Experimental - HTTPS required, Service Worker dependent, specification still under development.
+Background Sync lets the browser retry a queued sync after the tab is closed. It is Chromium-only,
+so the `online` listener is the mechanism everywhere else and this is the enhancement on top.
 
 ```typescript
 // service-worker/sync-handler.ts
-// This code runs in the service worker context
-
-interface SyncTag {
-  tag: string;
-  collection: string;
-}
-
 const SYNC_TAG_PREFIX = "sync-";
 
-// Register for background sync
 async function registerBackgroundSync(collection: string): Promise<void> {
-  if (!("sync" in self.registration)) {
-    console.warn("Background sync not supported");
-    return;
-  }
-
-  const tag = `${SYNC_TAG_PREFIX}${collection}`;
+  if (!("sync" in self.registration)) return;
 
   try {
-    await self.registration.sync.register(tag);
+    await self.registration.sync.register(`${SYNC_TAG_PREFIX}${collection}`);
   } catch {
-    // Background sync registration failed - fallback will handle sync
+    // registration refused — the online listener still covers this
   }
 }
 
-// Handle sync event in service worker
 self.addEventListener("sync", (event: SyncEvent) => {
   if (!event.tag.startsWith(SYNC_TAG_PREFIX)) return;
 
   const collection = event.tag.slice(SYNC_TAG_PREFIX.length);
 
-  event.waitUntil(
-    processSyncQueue(collection).catch((error) => {
-      console.error(`Background sync failed for ${collection}:`, error);
-      // Return rejected promise to retry
-      throw error;
-    }),
-  );
+  // a rejected promise tells the browser to retry with its own backoff
+  event.waitUntil(processSyncQueue(collection));
 });
 
 async function processSyncQueue(collection: string): Promise<void> {
-  // Open IndexedDB from service worker
   const db = await openDatabase();
-
-  // Get pending operations for this collection
   const operations = await db.getAll("syncQueue");
-  const collectionOps = operations.filter((op) => op.collection === collection);
 
-  // Process each operation
-  for (const op of collectionOps) {
+  for (const op of operations.filter((o) => o.collection === collection)) {
     try {
       await executeOperation(op);
       await db.delete("syncQueue", op.id);
     } catch (error) {
-      // Update retry count
       await db.put("syncQueue", {
         ...op,
         retryCount: op.retryCount + 1,
         lastError: error instanceof Error ? error.message : "Unknown",
       });
 
-      // Re-throw to signal failure to sync manager
-      if (op.retryCount >= 4) {
-        // Max retries exceeded - leave in queue for manual handling
-        continue;
-      }
+      // exhausted operations stay queued for manual handling
+      if (op.retryCount >= 4) continue;
       throw error;
     }
   }
@@ -754,21 +642,16 @@ async function executeOperation(op: QueuedOperation): Promise<void> {
     body: JSON.stringify(op.data),
   });
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
 }
 
-// Export for TypeScript (self.registration.sync types)
 declare global {
   interface ServiceWorkerRegistration {
     readonly sync: SyncManager;
   }
-
   interface SyncManager {
     register(tag: string): Promise<void>;
   }
-
   interface SyncEvent extends ExtendableEvent {
     readonly tag: string;
   }
@@ -777,29 +660,22 @@ declare global {
 export { registerBackgroundSync };
 ```
 
-### Client-Side Registration
+The fallback, which every browser runs:
 
 ```typescript
 // client/register-sync.ts
-
 async function requestSyncWhenOnline(collection: string): Promise<void> {
-  if (!navigator.onLine) {
-    // Will sync when online via background sync or fallback
-    return;
-  }
+  if (!navigator.onLine) return;
 
-  // If online, trigger immediate sync
   const registration = await navigator.serviceWorker.ready;
 
   if ("sync" in registration) {
     await registration.sync.register(`sync-${collection}`);
   } else {
-    // Fallback: sync immediately without service worker
     await syncCollection(collection);
   }
 }
 
-// Fallback for browsers without Background Sync API (Firefox, Safari)
 function setupSyncFallback(syncFn: () => Promise<void>): void {
   window.addEventListener("online", async () => {
     try {
@@ -813,22 +689,15 @@ function setupSyncFallback(syncFn: () => Promise<void>): void {
 export { requestSyncWhenOnline, setupSyncFallback };
 ```
 
-**Why good:** Sync continues even if app is closed (Chrome/Edge only), browser retries automatically on failure, queue persisted in IndexedDB, graceful fallback for unsupported browsers
-
-**Browser Support:**
-
-- Chrome/Edge: Full Background Sync support
-- Firefox/Safari: Must use `online` event fallback
-
 ---
 
-## Pattern 24: Pull-Push Sync Strategy
+## Pattern 23: Pull-push
 
-Full bidirectional sync with server as source of truth for conflicts.
+Pull before pushing. Applying server changes first means a conflict is detected before the local
+version overwrites it, rather than after.
 
 ```typescript
 // sync/pull-push-sync.ts
-
 interface SyncResult {
   uploaded: number;
   downloaded: number;
@@ -836,7 +705,6 @@ interface SyncResult {
   errors: string[];
 }
 
-// Named constants
 const SYNC_BATCH_SIZE = 50;
 
 class PullPushSync<T extends SyncableEntity> {
@@ -855,17 +723,11 @@ class PullPushSync<T extends SyncableEntity> {
     };
 
     try {
-      // Step 1: Pull - fetch server changes first
       const serverChanges = await this.pull();
       result.downloaded = serverChanges.length;
 
-      // Step 2: Merge - apply server changes, detect conflicts
-      const conflicts = await this.merge(serverChanges);
-      result.conflicts = conflicts.length;
-
-      // Step 3: Push - upload local changes
-      const uploaded = await this.push();
-      result.uploaded = uploaded;
+      result.conflicts = (await this.merge(serverChanges)).length;
+      result.uploaded = await this.push();
     } catch (error) {
       result.errors.push(
         error instanceof Error ? error.message : "Unknown error",
@@ -876,16 +738,12 @@ class PullPushSync<T extends SyncableEntity> {
   }
 
   private async pull(): Promise<T[]> {
-    // Get last sync timestamp
     const lastSync = await this.getLastSyncTimestamp();
 
     const response = await fetch(
       `${this.apiEndpoint}/changes?since=${lastSync}`,
     );
-
-    if (!response.ok) {
-      throw new Error(`Pull failed: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`Pull failed: ${response.status}`);
 
     const data = await response.json();
     return data.items as T[];
@@ -897,45 +755,25 @@ class PullPushSync<T extends SyncableEntity> {
     for (const serverItem of serverItems) {
       const localItem = await this.localDb.get(serverItem.id);
 
-      if (!localItem) {
-        // New item from server
-        await this.localDb.put({
-          ...serverItem,
-          _syncStatus: "synced",
-        });
+      // no local copy, or no local edits: the server's copy is simply newer
+      if (!localItem || localItem._syncStatus === "synced") {
+        await this.localDb.put({ ...serverItem, _syncStatus: "synced" });
         continue;
       }
 
-      if (localItem._syncStatus === "synced") {
-        // No local changes - just update
-        await this.localDb.put({
-          ...serverItem,
-          _syncStatus: "synced",
-        });
-        continue;
-      }
+      // local edits exist; a moved server version means both sides changed
+      if (serverItem._serverVersion === localItem._serverVersion) continue;
 
-      // Local has changes - check for conflict
-      if (serverItem._serverVersion !== localItem._serverVersion) {
-        // True conflict - both changed
-        const resolved = await this.conflictResolver.resolve(
-          localItem,
-          serverItem,
-        );
+      const resolved = await this.conflictResolver.resolve(
+        localItem,
+        serverItem,
+      );
 
-        if (resolved) {
-          await this.localDb.put(resolved);
-        } else {
-          // Mark as conflicted for manual resolution
-          await this.localDb.put({
-            ...localItem,
-            _syncStatus: "conflicted",
-          });
-          conflicts.push(localItem);
-        }
+      if (resolved) {
+        await this.localDb.put(resolved);
       } else {
-        // Server version matches - local changes are newer
-        // Keep local, will push in next step
+        await this.localDb.put({ ...localItem, _syncStatus: "conflicted" });
+        conflicts.push(localItem);
       }
     }
 
@@ -946,7 +784,6 @@ class PullPushSync<T extends SyncableEntity> {
     const pendingItems = await this.localDb.getByStatus("pending");
     let uploaded = 0;
 
-    // Batch uploads
     for (let i = 0; i < pendingItems.length; i += SYNC_BATCH_SIZE) {
       const batch = pendingItems.slice(i, i + SYNC_BATCH_SIZE);
 
@@ -956,18 +793,12 @@ class PullPushSync<T extends SyncableEntity> {
         body: JSON.stringify({ items: batch }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Push failed: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Push failed: ${response.status}`);
 
       const result = await response.json();
 
-      // Update local items with server versions
       for (const item of result.items) {
-        await this.localDb.put({
-          ...item,
-          _syncStatus: "synced",
-        });
+        await this.localDb.put({ ...item, _syncStatus: "synced" });
         uploaded++;
       }
     }
@@ -976,8 +807,7 @@ class PullPushSync<T extends SyncableEntity> {
   }
 
   private async getLastSyncTimestamp(): Promise<number> {
-    const key = `lastSync:${this.apiEndpoint}`;
-    const stored = localStorage.getItem(key);
+    const stored = localStorage.getItem(`lastSync:${this.apiEndpoint}`);
     return stored ? parseInt(stored, 10) : 0;
   }
 }
@@ -986,17 +816,15 @@ export { PullPushSync };
 export type { SyncResult };
 ```
 
-**Why good:** Full bidirectional sync, batched uploads for efficiency, clear conflict handling, preserves both versions for manual resolution
-
 ---
 
-## Pattern 25: Sync Status Indicators
+## Pattern 24: Sync status indicators
 
-Visual feedback for sync state at both entity and app levels.
+Two levels: a per-record marker and an app-wide summary. Both are `role="status"` so a change is
+announced rather than only drawn.
 
 ```tsx
 // components/sync-status-indicator.tsx
-
 type EntitySyncStatus = "synced" | "pending" | "conflicted" | "error";
 
 interface EntitySyncIndicatorProps {
@@ -1037,14 +865,10 @@ function EntitySyncIndicator({
       }
     >
       <span aria-hidden="true">{icons[status]}</span>
-      {status === "pending" && (
-        <span className="sr-only">Saving changes...</span>
-      )}
     </span>
   );
 }
 
-// App-level sync indicator
 interface AppSyncStatusProps {
   isOnline: boolean;
   pendingCount: number;
@@ -1060,12 +884,14 @@ function AppSyncStatus({
   onForceSync,
   isSyncing = false,
 }: AppSyncStatusProps) {
+  const canSyncNow = isOnline && pendingCount > 0 && !isSyncing && onForceSync;
+
   return (
-    <div role="status" aria-live="polite" data-testid="app-sync-status">
+    <div role="status" aria-live="polite">
       {!isOnline ? (
         <span data-status="offline">
           <span aria-hidden="true">●</span>
-          Offline - changes saved locally
+          Offline — changes saved locally
         </span>
       ) : pendingCount > 0 ? (
         <span data-status="syncing">
@@ -1084,7 +910,7 @@ function AppSyncStatus({
         </span>
       )}
 
-      {isOnline && pendingCount > 0 && !isSyncing && onForceSync && (
+      {canSyncNow && (
         <button type="button" onClick={onForceSync} aria-label="Sync now">
           Sync now
         </button>
@@ -1102,21 +928,19 @@ const HOURS_PER_DAY = 24;
 function formatRelativeTime(timestamp: number): string {
   const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
   const diff = timestamp - Date.now();
-  const diffMinutes = Math.round(diff / MS_PER_MINUTE);
-  const diffHours = Math.round(diff / MS_PER_HOUR);
-  const diffDays = Math.round(diff / MS_PER_DAY);
 
-  if (Math.abs(diffMinutes) < MINUTES_PER_HOUR) {
-    return rtf.format(diffMinutes, "minute");
+  if (Math.abs(diff / MS_PER_MINUTE) < MINUTES_PER_HOUR) {
+    return rtf.format(Math.round(diff / MS_PER_MINUTE), "minute");
   }
-  if (Math.abs(diffHours) < HOURS_PER_DAY) {
-    return rtf.format(diffHours, "hour");
+  if (Math.abs(diff / MS_PER_HOUR) < HOURS_PER_DAY) {
+    return rtf.format(Math.round(diff / MS_PER_HOUR), "hour");
   }
-  return rtf.format(diffDays, "day");
+  return rtf.format(Math.round(diff / MS_PER_DAY), "day");
 }
 
 export { EntitySyncIndicator, AppSyncStatus };
 export type { EntitySyncStatus, EntitySyncIndicatorProps, AppSyncStatusProps };
 ```
 
-**Why good:** Semantic data attributes for styling, accessible labels, relative time formatting, force sync option for users
+Wording matters more than the icons: "saved locally" tells the user their work is safe, where
+"offline" only tells them something is wrong.

@@ -1,49 +1,39 @@
 # React-Intl Reference
 
-> Decision frameworks, ICU syntax reference, and API tables. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision trees, ICU syntax tables, API tables, anti-pattern code and checklists. Red flags and
+> pattern guidance live in [SKILL.md](SKILL.md); runnable code lives in [examples/](examples/).
 
 ---
 
 ## Decision Framework
 
-### When to Use FormattedMessage vs useIntl
+### FormattedMessage vs useIntl
 
 ```
-Are you rendering in JSX?
-├─ YES → Is it text content in an element?
-│   ├─ YES → Use FormattedMessage
-│   └─ NO → Is it for an attribute (placeholder, aria-label, title)?
-│       ├─ YES → Use useIntl.formatMessage()
-│       └─ NO → Is it for a third-party component prop?
-│           ├─ YES → Use useIntl.formatMessage()
-│           └─ NO → FormattedMessage
-└─ NO → Is it for programmatic use (document.title, analytics)?
-    ├─ YES → Use useIntl.formatMessage()
-    └─ NO → Not applicable
+Text rendered inside a JSX element → FormattedMessage
+A string is needed                 → useIntl().formatMessage()
+  — an attribute: placeholder, aria-label, title
+  — a third-party component's prop
+  — programmatic use: document.title, an analytics payload
 ```
 
-### When to Use defineMessages
+### Which defineMessages form
 
 ```
-Are you defining multiple related messages?
-├─ YES → Use defineMessages()
-└─ NO → Is the message inline in JSX?
-    ├─ YES → Inline in FormattedMessage is fine
-    └─ NO → Use defineMessage() for single message
+Several related messages     → defineMessages()
+One message, outside JSX     → defineMessage()
+One message, inline in JSX   → id and defaultMessage props on FormattedMessage
 ```
 
-### When to Use ICU Pluralization
+### Which ICU construct
 
 ```
-Does the message include a count?
-├─ YES → Is it a cardinal number (1, 2, 3...)?
-│   ├─ YES → Use {count, plural, ...}
-│   └─ NO → Is it an ordinal (1st, 2nd, 3rd...)?
-│       ├─ YES → Use {count, selectordinal, ...}
-│       └─ NO → Use simple interpolation {count}
-└─ NO → Does the message vary by enum value?
-    ├─ YES → Use {value, select, ...}
-    └─ NO → Use simple interpolation or static text
+Message includes a count?
+├─ YES → Cardinal (1, 2, 3) → {count, plural, ...}
+│        Ordinal (1st, 2nd)  → {count, selectordinal, ...}
+│        Neither             → plain {count}
+└─ NO  → Varies by enum value → {value, select, ...}
+         Otherwise            → plain interpolation
 ```
 
 ### When to Compile Messages to AST
@@ -166,29 +156,34 @@ Hello, {name}!
 
 ### useIntl Methods
 
-| Method                              | Returns                                       | Use Case                 |
-| ----------------------------------- | --------------------------------------------- | ------------------------ |
-| `formatMessage(descriptor, values)` | string (or ReactNode[] with rich text values) | Attributes, programmatic |
-| `formatDate(value, options)`        | string                                        | Date formatting          |
-| `formatTime(value, options)`        | string                                        | Time formatting          |
-| `formatNumber(value, options)`      | string                                        | Number/currency          |
-| `formatRelativeTime(value, unit)`   | string                                        | Relative time            |
-| `formatList(values, options)`       | string                                        | List formatting          |
-| `formatDisplayName(code, options)`  | string                                        | Language/region names    |
+| Method                              | Use case                        |
+| ----------------------------------- | ------------------------------- |
+| `formatMessage(descriptor, values)` | Attributes and programmatic use |
+| `formatDate(value, options)`        | Dates                           |
+| `formatTime(value, options)`        | Times                           |
+| `formatNumber(value, options)`      | Numbers and currency            |
+| `formatRelativeTime(value, unit)`   | Relative time                   |
+| `formatList(values, options)`       | Lists                           |
+| `formatDisplayName(code, options)`  | Language and region names       |
+
+Every one returns `string`, except `formatMessage`, which returns `ReactNode[]` as soon as any value
+is a rich text tag function.
 
 ### Formatting Components
 
-| Component                | Output    | Use Case                     |
-| ------------------------ | --------- | ---------------------------- |
-| `FormattedMessage`       | ReactNode | Translated text in JSX       |
-| `FormattedDate`          | ReactNode | Locale-aware dates           |
-| `FormattedTime`          | ReactNode | Locale-aware times           |
-| `FormattedDateTimeRange` | ReactNode | Date/time ranges "Jan 15-20" |
-| `FormattedNumber`        | ReactNode | Numbers/currency             |
-| `FormattedRelativeTime`  | ReactNode | "5 minutes ago"              |
-| `FormattedList`          | ReactNode | "A, B, and C"                |
-| `FormattedDisplayName`   | ReactNode | Language/region names        |
-| `FormattedPlural`        | ReactNode | Plural category selection    |
+| Component                | Renders                      |
+| ------------------------ | ---------------------------- |
+| `FormattedMessage`       | Translated text in JSX       |
+| `FormattedDate`          | Locale-aware dates           |
+| `FormattedTime`          | Locale-aware times           |
+| `FormattedDateTimeRange` | Date/time ranges "Jan 15-20" |
+| `FormattedNumber`        | Numbers and currency         |
+| `FormattedRelativeTime`  | "5 minutes ago"              |
+| `FormattedList`          | "A, B, and C"                |
+| `FormattedDisplayName`   | Language and region names    |
+| `FormattedPlural`        | Plural category selection    |
+
+Every one returns a `ReactNode`, so none of them can go in an attribute.
 
 ---
 

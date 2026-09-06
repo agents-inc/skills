@@ -1,8 +1,8 @@
 # Angular Standalone Examples
 
-> Complete code examples for Angular 17+ standalone component patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Complete code for Angular 17+ standalone component patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
-**Advanced patterns:** See other files in this folder for @defer, DI configuration, model(), and RxJS interop.
+**Advanced patterns:** [defer.md](defer.md), [dependency-injection.md](dependency-injection.md), [model.md](model.md), [angular-19-features.md](angular-19-features.md), [rxjs.md](rxjs.md).
 
 ---
 
@@ -89,7 +89,9 @@ export class ProductCardComponent {
 }
 ```
 
-**Why good:** standalone: true with explicit imports, signal-based inputs/outputs, computed for derived values, named constants for business logic, @if control flow for conditionals, proper TypeScript types
+**Why good:** explicit `imports`, signal inputs and outputs, `computed` for derived values, named constants rather than magic numbers, `@if` needing no import.
+
+**On the flag:** `standalone: true` is written out here because these examples also target 17–18, where it is required. From 19 it is the default and writing it is redundant.
 
 ### Bad Example - Legacy patterns
 
@@ -117,7 +119,7 @@ export class ProductCardComponent {
 }
 ```
 
-**Why bad:** missing standalone: true requires NgModule, @Input/@Output are legacy patterns without signal reactivity, \*ngIf requires CommonModule import, magic number 0.9 in template, non-null assertion hides potential errors
+**Why bad:** on 17–18 the missing `standalone: true` forces an NgModule declaration, `@Input`/`@Output` carry no signal reactivity, `*ngIf` needs `CommonModule`, `0.9` is a magic number, and `!` hides a missing input.
 
 ---
 
@@ -274,18 +276,18 @@ export class ShoppingCartComponent {
     return this.items().reduce((sum, i) => sum + i.price, 0);
   }
 
-  // BAD: Effect with side effects that modify signals
+  // BAD: Effect maintaining derived state
   constructor() {
     effect(() => {
       if (this.items().length > 10) {
-        this.items.set(this.items().slice(0, 10)); // Signal write in effect!
+        this.items.set(this.items().slice(0, 10)); // Reads items, writes items
       }
     });
   }
 }
 ```
 
-**Why bad:** mutating signal value directly doesn't trigger reactivity, method instead of computed() loses memoization, writing to signals inside effect() causes infinite loops or errors
+**Why bad:** mutating in place leaves the reference identical, so `Object.is` reports no change and nothing re-renders; a method loses `computed()`'s memoisation and recomputes on every template read; and the effect reads `items` and writes it back, so it re-triggers itself. Angular 19 removed `allowSignalWrites` and now permits that write, which is what makes it compile quietly — derived state belongs in `computed()`, or `linkedSignal()` where it must also be writable.
 
 ---
 

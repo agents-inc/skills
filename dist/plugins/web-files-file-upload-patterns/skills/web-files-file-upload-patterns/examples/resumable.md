@@ -1,12 +1,15 @@
-# Resumable Upload Examples
+# File Upload — Resumable Examples
 
-> Chunked uploads, resumable uploads with persistence. Reference from [SKILL.md](../SKILL.md).
+> Splitting a file so a failure costs one slice rather than the whole transfer. Decisions are in
+> [SKILL.md](../SKILL.md); the presigned equivalent is in
+> [presigned-upload.md](presigned-upload.md).
 
 ---
 
-## Pattern 1: Chunked Uploader
+## Pattern 21: Chunked uploader
 
-### Basic Chunked Upload Manager
+Three server calls — initialise, send each chunk, finalise — with a concurrency limit and per-chunk
+retry. `Content-Range` tells the server where each chunk belongs, so they may arrive in any order.
 
 ```typescript
 // chunked-upload.ts
@@ -15,6 +18,8 @@ interface ChunkUploadOptions {
   maxConcurrentChunks?: number;
   retryAttempts?: number;
   retryDelayMs?: number;
+  // indexes an earlier run already landed; these are skipped, which is the resume
+  completedChunkIndexes?: number[];
   onProgress?: (progress: ChunkProgress) => void;
   onChunkComplete?: (chunkIndex: number) => void;
 }
@@ -33,7 +38,7 @@ interface ChunkUploadResult {
   error?: string;
 }
 
-const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
 const DEFAULT_MAX_CONCURRENT = 3;
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY_MS = 1000;
@@ -61,8 +66,17 @@ export class ChunkedUploader {
       return { success: false, error: "Failed to initialize upload" };
     }
 
-    const completedChunks = new Set<number>();
-    let uploadedBytes = 0;
+    const sizeOfChunk = (index: number) =>
+      Math.min((index + 1) * this.chunkSize, file.size) -
+      index * this.chunkSize;
+
+    // a resume starts with these already done, so progress must start there too
+    const alreadyDone = new Set(this.options.completedChunkIndexes ?? []);
+    const completedChunks = new Set<number>(alreadyDone);
+    let uploadedBytes = [...alreadyDone].reduce(
+      (total, index) => total + sizeOfChunk(index),
+      0,
+    );
 
     const uploadChunk = async (chunkIndex: number): Promise<boolean> => {
       const start = chunkIndex * this.chunkSize;
@@ -84,34 +98,40 @@ export class ChunkedUploader {
             },
           );
 
-          if (response.ok) {
-            completedChunks.add(chunkIndex);
-            uploadedBytes += chunk.size;
-
-            this.options.onProgress?.({
-              uploadedBytes,
-              totalBytes: file.size,
-              percentage: Math.round((uploadedBytes / file.size) * 100),
-              chunksCompleted: completedChunks.size,
-              totalChunks,
-            });
-
-            this.options.onChunkComplete?.(chunkIndex);
-            return true;
+          // a 5xx is as retryable as a dropped connection, and worth the same backoff
+          if (!response.ok) {
+            await this.delay(this.retryDelay * Math.pow(2, attempt));
+            continue;
           }
+
+          completedChunks.add(chunkIndex);
+          uploadedBytes += chunk.size;
+
+          this.options.onProgress?.({
+            uploadedBytes,
+            totalBytes: file.size,
+            percentage: Math.round((uploadedBytes / file.size) * 100),
+            chunksCompleted: completedChunks.size,
+            totalChunks,
+          });
+
+          this.options.onChunkComplete?.(chunkIndex);
+          return true;
         } catch (error) {
-          if (error instanceof Error && error.name === "AbortError") {
+          // an abort is deliberate; never retry through one
+          if (error instanceof Error && error.name === "AbortError")
             throw error;
-          }
-          // Exponential backoff
           await this.delay(this.retryDelay * Math.pow(2, attempt));
         }
       }
       return false;
     };
 
-    // Upload chunks with concurrency limit
-    const chunkIndexes = Array.from({ length: totalChunks }, (_, i) => i);
+    const chunkIndexes = Array.from(
+      { length: totalChunks },
+      (_, i) => i,
+    ).filter((index) => !alreadyDone.has(index));
+
     const results = await this.processWithConcurrency(
       chunkIndexes,
       uploadChunk,
@@ -144,8 +164,7 @@ export class ChunkedUploader {
           totalChunks: Math.ceil(file.size / this.chunkSize),
         }),
       });
-      const data = await response.json();
-      return data.uploadId;
+      return (await response.json()).uploadId;
     } catch {
       return null;
     }
@@ -159,8 +178,7 @@ export class ChunkedUploader {
       const response = await fetch(`${uploadUrl}/${uploadId}/complete`, {
         method: "POST",
       });
-      const data = await response.json();
-      return { success: true, fileId: data.fileId };
+      return { success: true, fileId: (await response.json()).fileId };
     } catch {
       return { success: false, error: "Failed to finalize upload" };
     }
@@ -196,17 +214,22 @@ export class ChunkedUploader {
 }
 ```
 
-**Why good:** Uploads in parallel with concurrency limit, retries failed chunks with exponential backoff, tracks progress by chunk, supports abort
-
 ---
 
-## Pattern 2: Resumable Upload with localStorage
+## Pattern 22: Resuming across a reload
 
-### Persist Progress for Resume
+The key is `name-size-lastModified`, which identifies the same file across sessions without reading
+it. Validating all three on load is what stops a differently-named file of the same size resuming
+into someone else's upload.
+
+The chunk size is stored alongside the completed indexes because it is what gives them meaning: an
+index is an offset only in terms of the size that produced it, so resuming with a different chunk
+size would skip the wrong bytes.
 
 ```typescript
 // use-resumable-upload.ts
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useState } from "react";
+import { ChunkedUploader } from "./chunked-upload";
 
 interface ResumableUploadState {
   status: "idle" | "uploading" | "paused" | "complete" | "error";
@@ -227,23 +250,24 @@ interface StoredUploadState {
 }
 
 const STORAGE_KEY_PREFIX = "resumable-upload-";
-const STORAGE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const STORAGE_EXPIRY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
+
+const IDLE: ResumableUploadState = {
+  status: "idle",
+  progress: 0,
+  uploadedBytes: 0,
+  totalBytes: 0,
+};
+
+function getStorageKey(file: File): string {
+  return `${STORAGE_KEY_PREFIX}${file.name}-${file.size}-${file.lastModified}`;
+}
 
 export function useResumableUpload(uploadUrl: string) {
-  const [state, setState] = useState<ResumableUploadState>({
-    status: "idle",
-    progress: 0,
-    uploadedBytes: 0,
-    totalBytes: 0,
-  });
-
+  const [state, setState] = useState<ResumableUploadState>(IDLE);
   const uploaderRef = useRef<ChunkedUploader | null>(null);
   const currentFileRef = useRef<File | null>(null);
-
-  const getStorageKey = (file: File): string => {
-    // Create unique key based on file properties
-    return `${STORAGE_KEY_PREFIX}${file.name}-${file.size}-${file.lastModified}`;
-  };
 
   const saveProgress = useCallback(
     (
@@ -252,7 +276,7 @@ export function useResumableUpload(uploadUrl: string) {
       completedChunks: number[],
       chunkSize: number,
     ) => {
-      const state: StoredUploadState = {
+      const stored: StoredUploadState = {
         uploadId,
         fileName: file.name,
         fileSize: file.size,
@@ -262,9 +286,9 @@ export function useResumableUpload(uploadUrl: string) {
         createdAt: Date.now(),
       };
       try {
-        localStorage.setItem(getStorageKey(file), JSON.stringify(state));
+        localStorage.setItem(getStorageKey(file), JSON.stringify(stored));
       } catch {
-        // localStorage might be full or unavailable
+        // storage full or blocked — the upload still works, it just cannot resume
       }
     },
     [],
@@ -272,66 +296,55 @@ export function useResumableUpload(uploadUrl: string) {
 
   const loadProgress = useCallback((file: File): StoredUploadState | null => {
     try {
-      const stored = localStorage.getItem(getStorageKey(file));
-      if (!stored) return null;
+      const raw = localStorage.getItem(getStorageKey(file));
+      if (!raw) return null;
 
-      const state: StoredUploadState = JSON.parse(stored);
+      const stored: StoredUploadState = JSON.parse(raw);
 
-      // Validate stored state matches current file and isn't expired
-      if (
-        state.fileName === file.name &&
-        state.fileSize === file.size &&
-        state.lastModified === file.lastModified &&
-        Date.now() - state.createdAt < STORAGE_EXPIRY_MS
-      ) {
-        return state;
-      }
+      const matchesFile =
+        stored.fileName === file.name &&
+        stored.fileSize === file.size &&
+        stored.lastModified === file.lastModified;
+      const fresh = Date.now() - stored.createdAt < STORAGE_EXPIRY_MS;
 
-      // Invalid or expired - clean up
+      if (matchesFile && fresh) return stored;
+
+      // stale or mismatched: the server has probably discarded its side too
       localStorage.removeItem(getStorageKey(file));
     } catch {
-      // Invalid JSON or other error
+      // unparseable entry — treat as absent
     }
     return null;
   }, []);
 
   const clearProgress = useCallback((file: File) => {
-    try {
-      localStorage.removeItem(getStorageKey(file));
-    } catch {
-      // Ignore
-    }
+    localStorage.removeItem(getStorageKey(file));
   }, []);
 
   const upload = useCallback(
     async (file: File) => {
       currentFileRef.current = file;
-      const storedState = loadProgress(file);
-      const completedChunks: number[] = storedState?.completedChunks ?? [];
+      const stored = loadProgress(file);
+      const completedChunks = stored?.completedChunks ?? [];
+      const chunkSize = stored?.chunkSize ?? DEFAULT_CHUNK_SIZE;
 
-      setState({
-        status: "uploading",
-        progress: 0,
-        uploadedBytes: 0,
-        totalBytes: file.size,
-      });
-
-      const chunkSize = storedState?.chunkSize ?? 5 * 1024 * 1024;
+      setState({ ...IDLE, status: "uploading", totalBytes: file.size });
 
       uploaderRef.current = new ChunkedUploader({
         chunkSizeBytes: chunkSize,
-        onProgress: (progress) => {
+        // without this the uploader restarts from chunk 0 and the stored progress does nothing
+        completedChunkIndexes: [...completedChunks],
+        onProgress: (progress) =>
           setState((prev) => ({
             ...prev,
             progress: progress.percentage,
             uploadedBytes: progress.uploadedBytes,
-          }));
-        },
+          })),
         onChunkComplete: (chunkIndex) => {
           completedChunks.push(chunkIndex);
           saveProgress(
             file,
-            storedState?.uploadId ?? "",
+            stored?.uploadId ?? "",
             completedChunks,
             chunkSize,
           );
@@ -343,11 +356,7 @@ export function useResumableUpload(uploadUrl: string) {
 
         if (result.success) {
           clearProgress(file);
-          setState((prev) => ({
-            ...prev,
-            status: "complete",
-            progress: 100,
-          }));
+          setState((prev) => ({ ...prev, status: "complete", progress: 100 }));
         } else {
           setState((prev) => ({
             ...prev,
@@ -358,6 +367,7 @@ export function useResumableUpload(uploadUrl: string) {
 
         return result;
       } catch (err) {
+        // an abort is a pause: the stored progress stays, ready to resume
         if (err instanceof Error && err.name === "AbortError") {
           setState((prev) => ({ ...prev, status: "paused" }));
         } else {
@@ -379,52 +389,36 @@ export function useResumableUpload(uploadUrl: string) {
   }, []);
 
   const resume = useCallback(() => {
-    if (currentFileRef.current) {
-      upload(currentFileRef.current);
-    }
+    if (currentFileRef.current) upload(currentFileRef.current);
   }, [upload]);
 
   const cancel = useCallback(() => {
     uploaderRef.current?.abort();
-    if (currentFileRef.current) {
-      clearProgress(currentFileRef.current);
-    }
+    if (currentFileRef.current) clearProgress(currentFileRef.current);
     currentFileRef.current = null;
-    setState({
-      status: "idle",
-      progress: 0,
-      uploadedBytes: 0,
-      totalBytes: 0,
-    });
+    setState(IDLE);
   }, [clearProgress]);
 
-  // Check for resumable upload on mount
   const checkResumable = useCallback(
-    (file: File): boolean => {
-      const stored = loadProgress(file);
-      return stored !== null && stored.completedChunks.length > 0;
-    },
+    (file: File): boolean =>
+      (loadProgress(file)?.completedChunks.length ?? 0) > 0,
     [loadProgress],
   );
 
-  return {
-    state,
-    upload,
-    pause,
-    resume,
-    cancel,
-    checkResumable,
-  };
+  return { state, upload, pause, resume, cancel, checkResumable };
 }
 ```
 
-**Why good:** Persists progress to localStorage for browser refresh recovery, validates stored state matches file, expires old progress, supports pause/resume/cancel
+Call `checkResumable` before starting, and ask the user — silently resuming a half-finished upload
+they have forgotten about is worse than restarting one.
 
 ---
 
-## Pattern 3: TUS Protocol Client (Simplified)
+## Pattern 23: tus client
 
-### TUS-like Resumable Upload
+tus is an open resumable-upload protocol, so a client and a server written against it interoperate
+without a shared implementation. Three verbs: `POST` creates the upload and returns its URL, `HEAD`
+reports how many bytes the server already holds, `PATCH` appends from that offset.
 
 ```typescript
 // tus-upload.ts
@@ -443,6 +437,7 @@ interface TusUploadOptions {
 
 const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
 const DEFAULT_RETRY_DELAYS = [0, 1000, 3000, 5000];
+const TUS_VERSION = "1.0.0";
 
 export class TusUpload {
   private endpoint: string;
@@ -465,22 +460,17 @@ export class TusUpload {
     this.abortController = new AbortController();
 
     try {
-      // Step 1: Create upload (TUS POST)
       await this.createUpload();
-
-      // Step 2: Check current offset (TUS HEAD)
+      // the offset may be non-zero already, which is what makes this resumable
       await this.checkOffset();
 
-      // Step 3: Upload chunks (TUS PATCH)
       while (this.offset < this.file.size) {
         await this.uploadChunk();
       }
 
       this.options.onSuccess?.();
     } catch (error) {
-      if (error instanceof Error) {
-        this.options.onError?.(error);
-      }
+      if (error instanceof Error) this.options.onError?.(error);
     }
   }
 
@@ -492,7 +482,7 @@ export class TusUpload {
     const response = await fetch(this.endpoint, {
       method: "POST",
       headers: {
-        "Tus-Resumable": "1.0.0",
+        "Tus-Resumable": TUS_VERSION,
         "Upload-Length": String(this.file.size),
         "Upload-Metadata": this.encodeMetadata({
           filename: this.file.name,
@@ -502,14 +492,10 @@ export class TusUpload {
       signal: this.abortController?.signal,
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to create upload");
-    }
+    if (!response.ok) throw new Error("Failed to create upload");
 
     this.uploadUrl = response.headers.get("Location");
-    if (!this.uploadUrl) {
-      throw new Error("No upload URL returned");
-    }
+    if (!this.uploadUrl) throw new Error("No upload URL returned");
   }
 
   private async checkOffset(): Promise<void> {
@@ -517,18 +503,14 @@ export class TusUpload {
 
     const response = await fetch(this.uploadUrl, {
       method: "HEAD",
-      headers: {
-        "Tus-Resumable": "1.0.0",
-      },
+      headers: { "Tus-Resumable": TUS_VERSION },
       signal: this.abortController?.signal,
     });
 
-    if (response.ok) {
-      const offsetHeader = response.headers.get("Upload-Offset");
-      if (offsetHeader) {
-        this.offset = parseInt(offsetHeader, 10);
-      }
-    }
+    if (!response.ok) return;
+
+    const offsetHeader = response.headers.get("Upload-Offset");
+    if (offsetHeader) this.offset = parseInt(offsetHeader, 10);
   }
 
   private async uploadChunk(): Promise<void> {
@@ -540,15 +522,13 @@ export class TusUpload {
     let lastError: Error | null = null;
 
     for (const delay of this.retryDelays) {
-      if (delay > 0) {
-        await this.delay(delay);
-      }
+      if (delay > 0) await this.delay(delay);
 
       try {
         const response = await fetch(this.uploadUrl, {
           method: "PATCH",
           headers: {
-            "Tus-Resumable": "1.0.0",
+            "Tus-Resumable": TUS_VERSION,
             "Upload-Offset": String(this.offset),
             "Content-Type": "application/offset+octet-stream",
           },
@@ -557,12 +537,9 @@ export class TusUpload {
         });
 
         if (response.ok) {
+          // trust the server's offset over the local arithmetic
           const newOffset = response.headers.get("Upload-Offset");
-          if (newOffset) {
-            this.offset = parseInt(newOffset, 10);
-          } else {
-            this.offset = end;
-          }
+          this.offset = newOffset ? parseInt(newOffset, 10) : end;
 
           this.options.onProgress?.(
             Math.round((this.offset / this.file.size) * 100),
@@ -575,9 +552,7 @@ export class TusUpload {
 
         lastError = new Error(`Upload failed: ${response.status}`);
       } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
-          throw error;
-        }
+        if (error instanceof Error && error.name === "AbortError") throw error;
         lastError = error instanceof Error ? error : new Error("Upload failed");
       }
     }
@@ -585,6 +560,7 @@ export class TusUpload {
     throw lastError ?? new Error("Upload failed after retries");
   }
 
+  /** tus metadata is comma-separated `key base64(value)` pairs. */
   private encodeMetadata(metadata: Record<string, string>): string {
     return Object.entries(metadata)
       .map(([key, value]) => `${key} ${btoa(value)}`)
@@ -595,45 +571,24 @@ export class TusUpload {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
-
-// Usage
-const upload = new TusUpload(file, {
-  endpoint: "/api/upload/tus",
-  onProgress: (percentage) => console.log(`${percentage}%`),
-  onSuccess: () => console.log("Complete!"),
-  onError: (error) => console.error(error),
-});
-
-upload.start();
-// Later: upload.abort();
 ```
 
-**Why good:** Follows TUS protocol conventions, supports resume via HEAD check, retry with configurable delays, progress tracking, abort support
-
 ---
 
-## Pattern 4: Server-Side TUS Handler
+## Pattern 24: The tus server contract
 
-Your server needs these TUS protocol endpoints:
+| Method    | Path       | Purpose                   | Headers                                                          |
+| --------- | ---------- | ------------------------- | ---------------------------------------------------------------- |
+| `OPTIONS` | `/tus/*`   | Preflight and discovery   | `Tus-Version`, `Tus-Extension`, `Tus-Max-Size`                   |
+| `POST`    | `/tus`     | Create an upload          | `Upload-Length`, `Upload-Metadata`; returns `Location`           |
+| `HEAD`    | `/tus/:id` | Report the current offset | Returns `Upload-Offset`, `Upload-Length`                         |
+| `PATCH`   | `/tus/:id` | Append from the offset    | `Upload-Offset`, `Content-Type: application/offset+octet-stream` |
+| `DELETE`  | `/tus/:id` | Terminate and clean up    | —                                                                |
 
-| Method    | Path       | Purpose                    | Key Headers                                                      |
-| --------- | ---------- | -------------------------- | ---------------------------------------------------------------- |
-| `OPTIONS` | `/tus/*`   | CORS preflight + discovery | `Tus-Version`, `Tus-Extension`, `Tus-Max-Size`                   |
-| `POST`    | `/tus`     | Create upload              | `Upload-Length`, `Upload-Metadata`                               |
-| `HEAD`    | `/tus/:id` | Check upload offset        | Returns `Upload-Offset`, `Upload-Length`                         |
-| `PATCH`   | `/tus/:id` | Upload chunk               | `Upload-Offset`, `Content-Type: application/offset+octet-stream` |
-| `DELETE`  | `/tus/:id` | Cancel/terminate upload    | Cleanup partial files                                            |
+Every response carries `Tus-Resumable: 1.0.0`. A `PATCH` whose `Upload-Offset` does not match the
+server's must answer `409` rather than writing — that mismatch is the client and server disagreeing
+about what landed, and appending anyway corrupts the file. Store the length, offset and creation
+time per upload ID, and expire abandoned ones.
 
-**Key requirements:**
-
-- All responses include `Tus-Resumable: 1.0.0` header
-- PATCH must verify `Upload-Offset` matches server offset (return 409 on mismatch)
-- Store upload metadata (length, offset, creation time) per upload ID
-- Append chunks to file at the correct offset
-- Return updated `Upload-Offset` after each PATCH
-
-For production use, consider the [tus-node-server](https://github.com/tus/tus-node-server) package instead of implementing from scratch.
-
----
-
-_Extended examples: [core.md](core.md) | [validation.md](validation.md) | [progress.md](progress.md) | [preview.md](preview.md) | [s3-upload.md](s3-upload.md) | [accessibility.md](accessibility.md)_
+A conforming server implementation is more work than it looks; the protocol has published server
+libraries for most runtimes.

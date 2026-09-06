@@ -5,177 +5,200 @@ description: Cypress E2E testing patterns - test structure, data-cy selectors, c
 
 # Cypress E2E Testing Patterns
 
-> **Quick Guide:** Use Cypress for end-to-end tests that verify complete user workflows. Use data-cy attributes for resilient selectors, cy.intercept() with aliases for deterministic API mocking (never arbitrary cy.wait(ms)), and cy.session() to cache authentication. Each it() block must be independent. Cypress 15 is current stable; cy.origin() is mandatory for multi-origin tests.
+> **Quick Guide:** Cypress runs inside the browser alongside the application. Commands are enqueued
+> rather than executed, so nothing they produce can be read out of a `const` — use `.then()` or an
+> alias. Select with `data-cy` attributes, wait on `cy.intercept()` aliases rather than on
+> milliseconds, and cache authentication with `cy.session()`. Cypress 15 is current stable;
+> `cy.origin()` has been required for any cross-origin navigation since 14, and `Cypress.env()` is
+> deprecated in favour of `cy.env()` and `Cypress.expose()`.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — user flows, structure, selectors, assertions, aliases,
+  `cy.session()`, keys and focus
+- [examples/intercept.md](examples/intercept.md) — stubbing, error states, request verification,
+  response modification, sequencing
+- [examples/custom-commands.md](examples/custom-commands.md) — command types, TypeScript
+  declarations, `cy.task()`, `cy.origin()`
+- [examples/fixtures-data.md](examples/fixtures-data.md) — fixture files, factories, shared
+  constants
+- [examples/component-testing.md](examples/component-testing.md) — `cy.mount()`, spies on props,
+  intercepts in component specs
+- [examples/accessibility.md](examples/accessibility.md) — wiring an accessibility audit into a run
+- [examples/ci.md](examples/ci.md) — the CI config decisions and the official action's options
+- [reference.md](reference.md) — selector and assertion tables, config and CLI lookup, Cypress
+  14/15 changes, troubleshooting
+
+---
+
+## Which path applies
+
+- **A user journey through the running app** — specs in `cypress/e2e`, entered with `cy.visit()`,
+  configured under the `e2e` key; follow [examples/core.md](examples/core.md).
+- **One component in isolation** — specs in `cypress/component`, entered with `cy.mount()`,
+  configured under the `component` key with a dev server; follow
+  [examples/component-testing.md](examples/component-testing.md).
+
+Both halves share the command API, the selectors and `cy.intercept()`; only the entry point and the
+config block differ.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Cypress code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Alias every intercept and wait on the alias** — `cy.intercept(...).as("getUsers")` then
+`cy.wait("@getUsers")`. The wait ends exactly when the response arrives, where a millisecond wait is
+either too short or wasted.
 
-**(You MUST use data-cy attributes as your primary selector strategy - they are isolated from CSS/JS changes)**
+**Select with a dedicated test attribute** — `[data-cy=submit-button]`. It is the one hook in the
+markup that styling changes and DOM restructuring do not move.
 
-**(You MUST use cy.intercept() with aliases and cy.wait("@alias") - NEVER use arbitrary cy.wait(ms) delays)**
+**Read a command's result through `.then()` or an alias.** Commands are queued and run after the
+enclosing function returns, so a `const` captures a chainer rather than a value.
 
-**(You MUST isolate tests - each it() block runs independently without depending on other tests)**
-
-**(You MUST use cy.origin() for any test that navigates across different origins - required since Cypress 14)**
+**Wrap cross-origin navigation in `cy.origin()`** — required since Cypress 14, because Chrome
+removed the `document.domain` setter Cypress previously used to reach another origin from the same
+agent cluster.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Cypress, cy.visit, cy.get, cy.intercept, cy.origin, cy.session, data-cy, describe, it, beforeEach, cy.fixture, cy.mount, cypress-axe, cy.env
+**Auto-detection:** Cypress, cypress.config, cy.visit, cy.get, cy.contains, cy.intercept, cy.wait,
+cy.origin, cy.session, cy.fixture, cy.task, cy.mount, cy.env, Cypress.Commands.add,
+Cypress.Commands.overwriteQuery, data-cy, .cy.ts specs
 
-**When to use:**
+**Applies to:**
 
-- Testing critical user-facing workflows (login, checkout, form submission)
-- Multi-step user journeys that span multiple pages
-- Cross-browser compatibility testing
-- Testing real integration with backend APIs
-- Component testing in isolation with cy.mount()
+- User journeys through the running application, including cross-origin steps
+- Selector strategy, assertions and Cypress's retry model
+- Stubbing, delaying and verifying network traffic with `cy.intercept()`
+- Custom commands, fixtures, `cy.session()` and `cy.task()`
+- Component specs mounted with `cy.mount()`, and the config both spec types share
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Testing pure utility functions (use unit tests)
-- API-only testing without UI (use direct API tests)
-- Testing implementation details (tests become brittle on refactoring)
-
-**Key patterns covered:**
-
-- Test structure and organization (describe, context, it)
-- Selector strategies with data-cy attributes
-- Custom commands with TypeScript support
-- Network mocking with cy.intercept()
-- Fixtures and test data management
-- Component testing with cy.mount()
-- Accessibility testing with cypress-axe
-- Multi-origin testing with cy.origin()
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - User flows, test structure, selectors, assertions, aliases, sessions
-- [examples/intercept.md](examples/intercept.md) - API mocking, error states, request verification, response modification
-- [examples/custom-commands.md](examples/custom-commands.md) - Custom commands, TypeScript types, child/dual commands
-- [examples/fixtures-data.md](examples/fixtures-data.md) - Fixtures, factories, test data constants
-- [examples/component-testing.md](examples/component-testing.md) - Component testing with cy.mount()
-- [examples/accessibility.md](examples/accessibility.md) - Accessibility testing with cypress-axe
-- [examples/ci-cd.md](examples/ci-cd.md) - GitHub Actions, Docker, parallel execution
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, Cypress 14/15 changes
+- Authoring the components under test — a component spec mounts what already exists
+- What makes an interface accessible — this skill wires an audit into the run and asserts on its
+  result; the standard being audited against is settled elsewhere
+- Pipeline authoring — this skill covers the runner's own CI-relevant settings, not how a workflow
+  is written
+- Unit-level checks on pure functions, which need no browser at all
 
 ---
 
 <philosophy>
 
-## Philosophy
+Cypress commands do not execute where they are written. Each one is appended to a queue that runs
+after the surrounding function returns, which explains nearly every surprise: why a `const` is
+useless, why `.then()` exists, and why an assertion "waits" without anyone asking it to.
 
-Cypress E2E tests verify that your application works correctly from the user's perspective. They run in the same run-loop as your application, providing reliable, fast feedback on user-visible behavior.
-
-**Core Principles:**
-
-1. **Test user-visible behavior** - Focus on what end users see and interact with, not implementation details
-2. **Use resilient selectors** - data-cy attributes are isolated from CSS/JS changes and won't break on refactoring
-3. **Isolate tests completely** - Each it() block must be independent; use beforeEach for common setup
-4. **Trust Cypress retry-ability** - Commands automatically retry; never use arbitrary cy.wait(ms)
-5. **Mock external dependencies** - Use cy.intercept() for third-party APIs to ensure reliability
-
-**When E2E tests provide the most value:**
-
-- Critical business workflows (authentication, payments, core features)
-- User journeys spanning multiple pages or components
-- Testing real backend integration with one "true" E2E test per feature
-- Cross-browser compatibility verification
-
-**When E2E tests may not be the best choice:**
-
-- Testing pure utility functions (unit tests are faster and more precise)
-- Testing every edge case (balance with unit tests; use mocks for edge cases)
-- Testing implementation details (tests become brittle and break on refactoring)
+Retry-ability follows from the same model. Cypress re-runs the **last query** in a chain until the
+attached assertion passes, so `cy.get(...).should(...)` is self-waiting while
+`cy.get(...).then(el => expect(el)...)` is not — the `.then()` body runs once, on whatever the query
+found the first time.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+**Which selector:**
+
+- You can add an attribute to the markup → `data-cy`, always the first choice.
+- The text itself is the thing under test → `cy.contains("Sign In")`, so a copy change fails the
+  test deliberately.
+- A form control with a stable `name` → `input[name="email"]`.
+- Nothing else available → a semantic selector such as `button[type="submit"]`; classes and ids are
+  the last resort because both move with styling.
+
+**Stub the request or let it through:**
+
+- Third-party API → stub it; its rate limits and downtime are not your test's subject.
+- Your own API, testing an error path or a specific payload → stub it with `cy.intercept()`.
+- Your own API, testing that the whole stack agrees → let it through, and keep one such test per
+  feature.
+
+**How to reach an authenticated state:**
+
+- Through the UI, once, cached → `cy.session()` with a `validate` callback; add
+  `cacheAcrossSpecs: true` to keep it between spec files.
+- Skipping the UI entirely → `cy.request()` to the login endpoint inside `cy.session()`, which is
+  faster and does not re-test the login form in every spec.
+- Needing server state as well → `cy.task()` to seed, called from `beforeEach`.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Test Structure and Organization
+### Pattern 1: Test structure
 
-Use `describe` to group related tests, `context` for different scenarios, and `it` for individual test cases. Named constants prevent magic strings. Each test starts fresh via `beforeEach`.
+`describe` groups the feature, `context` separates scenarios, `beforeEach` puts every test in the
+same starting state.
 
 ```typescript
-const LOGIN_URL = "/login";
-const DASHBOARD_URL = "/dashboard";
-const VALID_EMAIL = "user@example.com";
-
 describe("Login Flow", () => {
   beforeEach(() => {
-    cy.visit(LOGIN_URL);
+    cy.visit("/login");
   });
 
   context("with valid credentials", () => {
-    it("redirects to dashboard after successful login", () => {
-      cy.get("[data-cy=email-input]").type(VALID_EMAIL);
-      // ...
-      cy.url().should("include", DASHBOARD_URL);
+    it("redirects to the dashboard", () => {
+      cy.getBySel("email-input").type(VALID_EMAIL);
+      cy.getBySel("password-input").type(VALID_PASSWORD);
+      cy.getBySel("submit-button").click();
+      cy.url().should("include", "/dashboard");
     });
   });
 });
 ```
 
-**Why good:** Logical grouping with describe/context, beforeEach ensures isolation, named constants, data-cy selectors
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/core.md](examples/core.md) Pattern 1-2 for complete login flow and grouped test examples.
-
----
-
-### Pattern 2: Selector Strategies
-
-Use data-cy attributes for reliable element selection. They survive CSS refactoring and make test intent clear.
+### Pattern 2: Selectors
 
 ```typescript
-// BEST: data-cy attributes
 cy.get("[data-cy=submit-button]").click();
+cy.getBySel("submit-button").click(); // same thing, via a custom command
+cy.contains("button", "Submit").click(); // when the text is the subject
 
-// ACCEPTABLE: cy.contains() when text change should fail the test
-cy.contains("button", "Submit").click();
-
-// AVOID: CSS classes, IDs, DOM structure - all fragile
-cy.get(".btn-primary").click(); // Breaks on styling changes
-cy.get("div > button:nth-child(2)").click(); // Breaks on markup changes
+cy.getBySel("confirmation-modal").within(() => {
+  cy.getBySel("confirm-button").click(); // scoped, so a duplicate id elsewhere cannot match
+});
 ```
 
-Use `cy.getBySel()` custom command to reduce boilerplate. See [examples/core.md](examples/core.md) Pattern 3 and [examples/custom-commands.md](examples/custom-commands.md) Pattern 1 for implementation.
+Full code: [examples/core.md](examples/core.md) — the command itself in
+[examples/custom-commands.md](examples/custom-commands.md)
 
----
-
-### Pattern 3: Network Mocking with cy.intercept()
-
-Mock API responses for deterministic, fast tests. Always alias intercepts and wait on the alias.
+### Pattern 3: Network stubbing with `cy.intercept()`
 
 ```typescript
-cy.intercept("GET", "/api/users", {
-  statusCode: 200,
-  body: MOCK_USER,
-}).as("getUser");
+cy.intercept("GET", "/api/users", { statusCode: 200, body: MOCK_USERS }).as(
+  "getUsers",
+);
 
-cy.visit("/profile");
-cy.wait("@getUser");
-cy.getBySel("user-name").should("contain", MOCK_USER.name);
+cy.visit("/users");
+cy.wait("@getUsers");
+cy.getBySel("user-row").should("have.length", 2);
+
+// The alias also carries the request, so the payload can be asserted on
+cy.wait("@createUser")
+  .its("request.body")
+  .should("deep.include", { name: "New User" });
 ```
 
-**Why good:** Tests are deterministic, alias + wait ensures request completed, no arbitrary delays
+Full code: [examples/intercept.md](examples/intercept.md)
 
-Test error states with status codes and `forceNetworkError: true`. See [examples/intercept.md](examples/intercept.md) for error state testing, request verification, response modification, and pagination patterns.
+### Pattern 4: Custom commands
 
----
-
-### Pattern 4: Custom Commands with TypeScript
-
-Wrap common flows (login, selectors) in custom commands with type declarations for IDE autocomplete.
+Wrap the flows every spec repeats, and declare their types so editors and `tsc` see them.
 
 ```typescript
 // cypress/support/commands.ts
@@ -185,46 +208,39 @@ Cypress.Commands.add("login", (email: string, password: string) => {
     cy.getBySel("email-input").type(email);
     cy.getBySel("password-input").type(password);
     cy.getBySel("submit-button").click();
-    cy.url().should("include", "/dashboard");
+    cy.url().should("include", "/dashboard"); // guards the cache: session is saved after this
   });
 });
 ```
 
-Type declarations go in `cypress/support/index.d.ts`. See [examples/custom-commands.md](examples/custom-commands.md) for selector commands, auth commands with `cacheAcrossSpecs`, form commands, child/dual commands, database task commands, and cy.origin() commands.
+Full code: [examples/custom-commands.md](examples/custom-commands.md)
 
----
+### Pattern 5: Fixtures and factories
 
-### Pattern 5: Fixtures and Test Data
-
-Use fixtures for reusable test data, factories for dynamic data.
+A fixture file for data that several specs share; a factory for data a single scenario shapes.
 
 ```typescript
-// Fixture: cy.intercept with fixture file
 cy.intercept("GET", "/api/products", { fixture: "products.json" }).as(
   "getProducts",
 );
 
-// Factory: dynamic data for specific scenarios
 const users = createUsers(5);
 cy.intercept("GET", "/api/users", { body: users }).as("getUsers");
 ```
 
-**Why good:** Separates test data from test logic, fixtures are reusable, factories generate scenario-specific data
+Full code: [examples/fixtures-data.md](examples/fixtures-data.md)
 
-See [examples/fixtures-data.md](examples/fixtures-data.md) for organized fixture directories, factory patterns, and centralized test constants.
+### Pattern 6: Cross-origin steps with `cy.origin()`
 
----
-
-### Pattern 6: Multi-Origin Testing with cy.origin()
-
-Cypress 14+ requires `cy.origin()` for any test that navigates across different origins (scheme + hostname + port). This is mandatory for OAuth, SSO, and cross-domain workflows.
+Anything on another scheme, host or port runs inside the callback, which is serialised into that
+origin — so it can only see values passed through `args`.
 
 ```typescript
 cy.visit("/login");
-cy.getBySel("oauth-button").click();
+cy.getBySel("sso-button").click();
 
 cy.origin(
-  "https://auth.provider.com",
+  IDENTITY_PROVIDER_URL,
   { args: { email, password } },
   ({ email, password }) => {
     cy.get("#email").type(email);
@@ -233,12 +249,43 @@ cy.origin(
   },
 );
 
-cy.url().should("include", "/dashboard"); // Back on original origin
+cy.url().should("include", "/dashboard"); // back on the original origin
 ```
 
-**Why required:** Chrome deprecated `document.domain`, which Cypress previously used for cross-origin testing.
+Full code: [examples/custom-commands.md](examples/custom-commands.md)
 
-See [examples/custom-commands.md](examples/custom-commands.md) Pattern 7 for reusable OAuth command with session caching.
+### Pattern 7: Component specs with `cy.mount()`
+
+The same command API against a mounted component instead of a visited page. `cy.spy().as()` records
+prop callbacks; `cy.intercept()` works exactly as it does in an E2E spec.
+
+```typescript
+const onSelect = cy.spy().as("onSelect");
+cy.mount(<ProductList products={MOCK_PRODUCTS} onSelect={onSelect} />);
+
+cy.getBySel("product-item").first().click();
+cy.get("@onSelect").should("have.been.calledWith", MOCK_PRODUCTS[0]);
+```
+
+Full code: [examples/component-testing.md](examples/component-testing.md)
+
+### Pattern 8: Work outside the browser with `cy.task()`
+
+`cy.task()` runs in the Node process, which is the only place a test can reach a database, the
+filesystem, or anything else the browser cannot.
+
+```typescript
+// cypress.config.ts — setupNodeEvents
+on("task", { "db:seed": (data) => seed(data), "db:reset": () => reset() });
+
+// in a spec
+beforeEach(() => {
+  cy.task("db:reset");
+  cy.task("db:seed", { users: [TEST_USER] });
+});
+```
+
+Full code: [examples/custom-commands.md](examples/custom-commands.md)
 
 </patterns>
 
@@ -246,59 +293,44 @@ See [examples/custom-commands.md](examples/custom-commands.md) Pattern 7 for reu
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `cy.wait(5000)` with arbitrary milliseconds - causes flaky or slow tests, use cy.intercept() aliases instead
-- Using CSS selectors like `.btn-primary` or `#submit-btn` - fragile and break on refactoring, use data-cy
-- Tests that depend on previous tests - coupled tests fail randomly, each it() must be independent
-- Storing values in `const` for later use - Cypress commands are async, use aliases with `.as()` instead
-- Not using `cy.origin()` for multi-origin tests - required since Cypress 14 due to Chrome's deprecation of document.domain
-- Using deprecated `Cypress.env()` - use `cy.env()` for secrets, `Cypress.expose()` for public values (deprecated in v15.10.0, removed in 16)
+- `const el = cy.get(...)` then using `el` later — the command has not run; alias it with `.as()`
+  and read it back with `cy.get("@alias")`.
+- `cy.fixture("users").as("users")` read as `this.users` from an arrow function — `this` is not the
+  test context there; use `function ()`.
+- Navigating to another origin without `cy.origin()` — refused since Cypress 14.
+- `delayMs` on `cy.intercept()` — removed in 14; the option is `delay`.
+- `cypress open-ct` / `run-ct` — removed in 14; use the `--component` flag.
+- The three-argument `cy.stub()` form — removed in 15; use `cy.stub(obj, "method").returns(value)`.
+- `Cypress.Commands.overwrite()` against a query such as `.get()` or `.contains()` — queries need
+  `Cypress.Commands.overwriteQuery()` since 14.
+- `.its("code")` on `cy.exec()` — renamed to `exitCode` in 15.
+- Starting a web server from inside a test with `cy.exec()` — the process never exits and the run
+  hangs; start it from the CI step or `webServer`-style tooling instead.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Not using beforeEach for common setup - leads to duplicated code and inconsistent state
-- Overusing cy.contains() for selectors - text changes may not warrant test failure, prefer data-cy
-- No network mocking for external APIs - third-party flakiness affects your tests
-- Running only in one browser - cross-browser issues go undetected
-- Using `Cypress.Commands.overwrite()` for queries - use `Cypress.Commands.overwriteQuery()` since Cypress 14
-
-**Common Mistakes:**
-
-- Hardcoded test data scattered throughout files - use fixtures and named constants
-- Testing implementation details instead of user behavior - tests break on refactoring
-- Using `after`/`afterEach` for cleanup - no guarantee it runs, put cleanup in beforeEach
-- Starting web server within tests with cy.exec() - server process never exits properly
-
-**Gotchas & Edge Cases:**
-
-- Cypress commands are chainable and async but don't return Promises - use `.then()` for values
-- Fixture files are cached and won't reflect file changes during test - use cy.readFile() for dynamic files
-- `cy.session()` caches login state but clears on spec file change - use `cacheAcrossSpecs: true` (Cypress 12.4+)
-- cy.intercept() routes are global to test - reset in beforeEach to prevent pollution
-- Parallel tests cannot share state - use fixtures and beforeEach for per-test setup
-- Chrome 137+ no longer supports `--load-extension` in branded Chrome - use Electron, Chrome for Testing, or Chromium for extensions
+- `cy.wait(5000)` passes today and fails on a slower machine — wait on an intercept alias instead.
+- Every `it()` starts from a reset browser: `testIsolation` clears cookies and both storages between
+  e2e tests, so a spec that signs in during its first test and assumes it in the second fails, and
+  fails differently when run alone. Put the setup in `beforeEach`, and use `cy.session()` so
+  restoring it costs nothing.
+- Only the **last** query in a chain retries, so an assertion inside `.then()` runs once against a
+  stale element.
+- Fixture files are cached for the run; a file changed mid-run still serves the old content, so use
+  `cy.readFile()` where freshness matters.
+- `cy.session()` clears cached state when the spec file changes unless `cacheAcrossSpecs: true` is
+  set.
+- Cleanup in `after`/`afterEach` is skipped when a run is interrupted — clean in `beforeEach`, which
+  also leaves the final state on screen for debugging.
+- Intercept routes last for the whole test and later registrations shadow earlier ones — set them up
+  in `beforeEach` so no test inherits another's stub.
+- `Cypress.env()` is deprecated from 15.10 and removed in 16 — `cy.env()` (async, for secrets) and
+  `Cypress.expose()` (for public values) replace it.
+- Branded Chrome no longer accepts `--load-extension` from 137 — run extension tests in Electron,
+  Chrome for Testing or Chromium.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use data-cy attributes as your primary selector strategy - they are isolated from CSS/JS changes)**
-
-**(You MUST use cy.intercept() with aliases and cy.wait("@alias") - NEVER use arbitrary cy.wait(ms) delays)**
-
-**(You MUST isolate tests - each it() block runs independently without depending on other tests)**
-
-**(You MUST use cy.origin() for any test that navigates across different origins - required since Cypress 14)**
-
-**Failure to follow these rules will result in flaky tests, false positives, and maintenance nightmares.**
-
-</critical_reminders>

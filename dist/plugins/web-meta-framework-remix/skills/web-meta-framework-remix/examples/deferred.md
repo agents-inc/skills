@@ -1,6 +1,7 @@
-# Remix - Defer and Streaming Examples
+# Remix — Streaming
 
-> Patterns for streaming non-critical data with defer and Await.
+> Streaming non-critical data with `Suspense` and `Await`. On React Router v7, drop the `defer()`
+> wrapper and return the Promises directly — see [react-router-v7.md](react-router-v7.md).
 
 ---
 
@@ -92,44 +93,30 @@ export default function Dashboard() {
 }
 ```
 
-**Why good:** User data loads immediately (critical), analytics/notifications/orders stream in parallel, skeleton loading states, error handling per section, page is interactive before all data loads
+**Why good:** The page is interactive as soon as the user record resolves; the three slow queries race
+each other behind it rather than queueing. `errorElement` per section means a failing analytics
+service degrades one panel instead of taking the dashboard to the ErrorBoundary.
 
 ---
 
-## Key Concepts
-
-### When to Use Defer
-
-| Use Case            | Await? | Reason                             |
-| ------------------- | ------ | ---------------------------------- |
-| User authentication | No     | Critical for page rendering        |
-| Main content data   | No     | User expects to see it immediately |
-| Analytics widgets   | Yes    | Not essential for core UX          |
-| Notifications       | Yes    | Secondary information              |
-| Recommendations     | Yes    | Nice to have, not blocking         |
-
-### Defer Pattern Structure
+## The Shape
 
 ```typescript
-// Always await critical data
-const criticalData = await getCriticalData();
+const critical = await getCriticalData(); // resolved value — delays the first byte
+const nonCritical = getNonCriticalData(); // Promise — streams in behind it
 
-// Pass promises (not awaited) for non-critical data
-const nonCriticalPromise = getNonCriticalData();
-
-return defer({
-  critical: criticalData, // Resolved value
-  nonCritical: nonCriticalPromise, // Promise
-});
+return defer({ critical, nonCritical });
 ```
-
-### Await Component Props
 
 ```typescript
 <Await
-  resolve={promise}              // The promise to wait for
-  errorElement={<Error />}       // Shown if promise rejects
+  resolve={promise}          // what to wait for
+  errorElement={<Error />}   // what to render if it rejects
 >
   {(data) => <Component data={data} />}
 </Await>
 ```
+
+Await authentication state, the page title, the main content and anything a crawler reads. Stream
+analytics, notifications and recommendations. The test is whether the page is worth looking at
+without it.

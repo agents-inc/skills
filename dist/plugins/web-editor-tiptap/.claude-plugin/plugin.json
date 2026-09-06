@@ -1,8 +1,8 @@
 {
   "name": "web-editor-tiptap",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
-  "description": "Rich text editor framework with TipTap and ProseMirror",
+  "description": "Headless rich text editor framework built on ProseMirror. Use when building an editor with TipTap — setup, extensions, custom nodes and marks, menus, node views, serialization.",
   "author": {
     "name": "@vince"
   },

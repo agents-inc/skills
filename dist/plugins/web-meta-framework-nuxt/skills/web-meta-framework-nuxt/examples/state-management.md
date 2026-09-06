@@ -1,6 +1,7 @@
-# Nuxt - State Management Examples
+# Nuxt — Shared State
 
-> useState for SSR-safe shared state. See [SKILL.md](../SKILL.md) for core concepts.
+> `useState` composables, cookie persistence and server-initialised state. The `useState` checklist is
+> in [reference.md](../reference.md).
 
 ---
 
@@ -31,9 +32,10 @@ function decrement() {
 </template>
 ```
 
-**Why good:** Key ensures state sharing across components, initializer runs once, SSR-safe hydration
+**Why good:** The key is the identity — any component calling `useState("counter")` gets this same
+ref, with no provider to wire up and no import.
 
-### Bad Example - Non-Serializable State
+### Bad Example — a value that cannot be serialised
 
 ```typescript
 // WRONG - Functions not JSON-serializable
@@ -45,13 +47,15 @@ const state = useState("broken", () => ({
 }));
 ```
 
-**Why bad:** Functions cannot be serialized from server to client, causes hydration mismatch
+**Why bad:** The value is serialised into the HTML and revived in the browser, and a function does not
+survive that trip — so the client's state differs from the server's and hydration fails. Put the
+method on the composable rather than on the state.
 
 ---
 
 ## User State Composable
 
-### Good Example - Auth State
+### Good Example — auth state
 
 ```typescript
 // composables/use-user.ts
@@ -118,13 +122,15 @@ const { user, isLoggedIn, logout } = useUser();
 </template>
 ```
 
-**Why good:** Composable encapsulates state logic, useState key ensures singleton, readonly prevents external mutation, computed for derived state
+**Why good:** `readonly(user)` means the only way to change the user is `login` or `logout`, so every
+mutation goes through code that also talks to the server. `isLoggedIn` and `isAdmin` are derived
+rather than stored, so they cannot drift out of step with `user`.
 
 ---
 
 ## Shopping Cart State
 
-### Good Example - Complex State Object
+### Good Example — a larger state object
 
 ```typescript
 // composables/use-cart.ts
@@ -211,13 +217,15 @@ export function useCart() {
 }
 ```
 
-**Why good:** All values JSON-serializable (strings, numbers, arrays), computed for derived values, mutation methods encapsulated, readonly export prevents direct mutation
+**Why good:** Every field is a string, number or array, so the whole cart survives hydration. `total`
+and `itemCount` are computed from the items rather than maintained alongside them, which is what stops
+the badge and the basket disagreeing.
 
 ---
 
 ## UI State
 
-### Good Example - Theme and Sidebar State
+### Good Example — theme and sidebar
 
 ```typescript
 // composables/use-ui.ts
@@ -261,13 +269,14 @@ export function useUI() {
 }
 ```
 
-**Why good:** Simple UI state doesn't need external library, computed getters maintain reactivity, toggle functions for common operations
+**Why good:** Exporting `computed` getters rather than the raw state keeps the setters as the only way
+in, which is the same guarantee `readonly` gives on a single ref.
 
 ---
 
 ## Persisted State with Cookies
 
-### Good Example - Remember User Preferences
+### Good Example — preferences that survive a reload
 
 ```typescript
 // composables/use-preferences.ts
@@ -328,13 +337,15 @@ export function usePreferences() {
 }
 ```
 
-**Why good:** useCookie for persistence, useState for reactivity, watch syncs to cookie, SSR-safe (cookies work on server)
+**Why good:** The cookie is readable during SSR, so the first server render already knows the user's
+currency — which `localStorage` could not do. `useState` gives it reactivity, and the `watch` writes
+changes back.
 
 ---
 
 ## State with Server Data
 
-### Good Example - Server-Initialized State
+### Good Example — state seeded from the server
 
 ```typescript
 // composables/use-notifications.ts
@@ -391,57 +402,21 @@ export function useNotifications() {
 }
 ```
 
-**Why good:** isLoaded prevents duplicate fetches, optimistic UI updates after API call, computed for derived counts
+**Why good:** A second `useState` key records that the fetch has happened, so navigating back to a page
+does not re-request the list. The local update after each call keeps the badge correct without a
+refetch.
 
 ---
 
-## useState vs External State Libraries
+## What useState Is Not
 
-### When to Use useState
+`useState` is a keyed, SSR-serializable ref. It covers auth state, UI state, a cart, a toast queue —
+anything JSON can carry.
 
-```typescript
-// ✅ Good use cases for useState:
-// - User/auth state
-// - Simple UI state (sidebar, theme)
-// - Cart/checkout state
-// - Notification/toast state
-// - Any state that's JSON-serializable
-
-const simpleState = useState("simple", () => ({
-  items: [],
-  count: 0,
-  isOpen: false,
-}));
-```
-
-### When to Consider an External State Library
-
-```typescript
-// Consider a dedicated state management library when:
-// - Complex state with many actions and getters
-// - Need devtools integration for state inspection
-// - State persistence beyond cookies
-// - Multiple stores with cross-store dependencies
-// - Undo/redo functionality
-// - Large-scale applications with team conventions
-```
+What it deliberately does not provide: devtools inspection, time-travel or undo, persistence beyond
+what you wire up yourself, and any notion of one store depending on another.
 
 ---
 
-## Quick Reference
-
-| useState Pattern                    | Use When                        |
-| ----------------------------------- | ------------------------------- |
-| `useState('key', () => value)`      | Simple shared state             |
-| `useState<Type>('key', () => init)` | Typed state                     |
-| `composable with useState`          | Encapsulated state + actions    |
-| `useState + useCookie`              | Persisted preferences           |
-| `useState + watch`                  | Sync state with external source |
-
-| Critical Rule                          | Reason                    |
-| -------------------------------------- | ------------------------- |
-| Values must be JSON-serializable       | SSR hydration             |
-| Use unique keys                        | State sharing/isolation   |
-| Wrap mutations in composable functions | Encapsulation             |
-| Use computed for derived state         | Reactivity + performance  |
-| Use readonly() for exports             | Prevent external mutation |
+_The `useState` checklist and the "where state belongs" decision tree are in
+[reference.md](../reference.md)._

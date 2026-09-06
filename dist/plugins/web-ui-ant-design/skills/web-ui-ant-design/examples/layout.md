@@ -1,6 +1,6 @@
 # Ant Design -- Layout Examples
 
-> Application layout, responsive grid, Flex, and Space patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Application layout, responsive grid, and Flex patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Related examples:**
 
@@ -61,7 +61,7 @@ export { AppLayout };
 ## Grid System (24-Column)
 
 ```tsx
-import { Row, Col } from "antd";
+import { Card, Row, Col } from "antd";
 
 const GUTTER_RESPONSIVE = { xs: 8, sm: 16, md: 24, lg: 32 } as const;
 

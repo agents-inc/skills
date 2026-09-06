@@ -1,13 +1,12 @@
-# Advanced Recharts Patterns
+# Recharts — Advanced Examples
 
-> Related: [core.md](core.md) for basic charts, [SKILL.md](../SKILL.md) for decision frameworks.
+> ComposedChart, brushing, reference lines, chart sync, real-time updates, custom scatter shapes, radar. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for prop tables, [core.md](core.md) for the basic chart types.
 
 ---
 
 ## Pattern 1: ComposedChart with Mixed Types
 
 ```tsx
-import { useMemo } from "react";
 import {
   ComposedChart,
   Line,
@@ -36,12 +35,10 @@ interface SalesTrendChartProps {
 }
 
 export function SalesTrendChart({ data }: SalesTrendChartProps) {
-  const chartData = useMemo(() => data, [data]);
-
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
       <ComposedChart
-        data={chartData}
+        data={data}
         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -87,9 +84,9 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
 }
 ```
 
-**Why good:** Three chart types in one, dual Y-axes for different scales, area rendered first (behind bars), axis labels for context.
+**Why good:** three visual types share one x-axis while sales and trend keep separate y-scales, and the `label` props say what each axis measures — which two unlabelled axes on opposite sides cannot.
 
-**Key ordering:** Components render in JSX order. Place `Area` before `Bar` so bars render on top of the area fill.
+**Ordering is z-order.** SVG has no `z-index`, so `Area` written before `Bar` is what puts the bars on top of the fill. Swap them and the translucent area covers the bars.
 
 ---
 
@@ -140,9 +137,9 @@ export function TimeSeriesWithBrush({ data }: TimeSeriesWithBrushProps) {
 }
 ```
 
-**Why good:** `Brush` component adds a range selector below the chart for exploring large datasets. `startIndex`/`endIndex` control initial visible range.
+**Why good:** the brush windows a long series without filtering the data — `startIndex`/`endIndex` are positions in the array, so clamping `endIndex` against `data.length - 1` keeps a short series from opening on an empty window.
 
-**Gotcha:** `Brush` adds significant DOM elements. Avoid using it on dashboards with 5+ charts.
+**Gotcha:** the brush renders a second miniature copy of the series, so it roughly doubles the chart's DOM. That is heavy on a dashboard of several charts.
 
 ---
 
@@ -200,7 +197,7 @@ export function MetricsChart({ data }: MetricsChartProps) {
 }
 ```
 
-**Why good:** `ReferenceLine` marks thresholds, `ReferenceArea` highlights ranges, both add context without modifying data.
+**Why good:** both are annotations in chart coordinates rather than data — a target line drawn as an extra flat series would appear in the legend and the tooltip, which is not what a threshold is.
 
 ---
 
@@ -261,14 +258,14 @@ export function SyncedDashboard({ data }: SyncedDashboardProps) {
 }
 ```
 
-**Why good:** Same `syncId` synchronizes tooltip hover and brush selection across both charts. Hovering one chart highlights the same data point in the other.
+**Why good:** a shared `syncId` couples hover and brush state, so one cursor reads across both series — which is the point of stacking charts on a shared time axis. The id is global, so two unrelated dashboards must not reuse a value.
 
 ---
 
 ## Pattern 5: Real-Time Data Updates
 
 ```tsx
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -299,23 +296,17 @@ export function RealTimeChart() {
           time: new Date().toLocaleTimeString(),
           value: Math.random() * 100,
         };
-        // Keep only the last MAX_DATA_POINTS entries
-        const updated = [...prev, newPoint];
-        return updated.length > MAX_DATA_POINTS
-          ? updated.slice(-MAX_DATA_POINTS)
-          : updated;
+        // Fixed-size window: the chart's node count stays constant as time runs
+        return [...prev, newPoint].slice(-MAX_DATA_POINTS);
       });
     }, UPDATE_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Memoize to avoid unnecessary chart recalculations
-  const chartData = useMemo(() => data, [data]);
-
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={chartData} throttleDelay={THROTTLE_DELAY_MS}>
+      <LineChart data={data} throttleDelay={THROTTLE_DELAY_MS}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="time" />
         <YAxis domain={[0, 100]} />
@@ -333,18 +324,14 @@ export function RealTimeChart() {
 }
 ```
 
-**Why good:** `isAnimationActive={false}` prevents full chart redraw on each update, `throttleDelay` limits mouse event processing, data window capped at `MAX_DATA_POINTS`, `dot={false}` reduces SVG nodes, cleanup on unmount.
+**Why good:** four things keep a once-a-second chart cheap — the animation is off so the series is not re-tweened each tick, `dot={false}` drops one DOM node per point, the sliding window bounds the total, and `throttleDelay` caps how often hover recomputes. The interval is cleared on unmount.
 
 ```tsx
-// BAD: Animated real-time chart
-<Line
-  dataKey="value"
-  isAnimationActive={true} // BAD: full redraw every second
-  dot={true} // BAD: 50+ dot elements rebuilt every update
-/>
+// BAD
+<Line dataKey="value" isAnimationActive dot />
 ```
 
-**Why bad:** Animations cause a full chart redraw on every data update (once per second), dots add 50+ SVG elements that are recreated each time.
+**Why bad:** each update restarts a full animation that the next update interrupts a second later, so the line never settles; and 50 dot elements are torn down and rebuilt every tick.
 
 ---
 
@@ -400,7 +387,7 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
 }
 ```
 
-**Why good:** Custom `shape` prop for Scatter enables bubble chart style, `type="number"` on both axes for correlation plots, custom SVG shape.
+**Why good:** the custom `shape` turns a scatter into a bubble chart by encoding a third field in the radius — via `Math.sqrt`, so area rather than radius carries the value. Both axes need `type="number"`, since `XAxis` defaults to `"category"` and would space the points evenly instead of by value.
 
 ---
 
@@ -453,7 +440,7 @@ export function LabeledBarChart({ data }: LabeledBarChartProps) {
 }
 ```
 
-**Why good:** `LabelList` renders values directly on bars without hovering. `position="top"` places labels above bars. Formatting matches axis for consistency.
+**Why good:** the values are readable without hovering, which is what a printed or exported chart needs. `LabelList` is a child of the series it labels, so it inherits that series' data — and reusing the axis formatter keeps the two from disagreeing about notation.
 
 ---
 
@@ -514,4 +501,4 @@ export function SkillRadar({ data }: SkillRadarProps) {
 }
 ```
 
-**Why good:** Two overlapping radar series for comparison, `PolarAngleAxis` for dimension labels, `fillOpacity` to see both layers, `domain` for scale control.
+**Why good:** the radar's polar equivalents of the cartesian parts — `PolarGrid`, `PolarAngleAxis` for the dimension labels, `PolarRadiusAxis` for the scale. Two series overlap deliberately, and `fillOpacity` below 1 is what keeps the lower one visible.

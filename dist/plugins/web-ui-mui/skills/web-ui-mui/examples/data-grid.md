@@ -2,10 +2,7 @@
 
 > DataGrid from @mui/x-data-grid: columns, sorting, filtering, pagination, custom rendering. See [SKILL.md](../SKILL.md) for core patterns.
 
-**Related examples:**
-
-- [layout.md](layout.md) -- Grid, Container for page layout
-- [feedback.md](feedback.md) -- Dialog for row editing, Snackbar for notifications
+**Related examples:** [layout.md](layout.md), [feedback.md](feedback.md)
 
 ---
 

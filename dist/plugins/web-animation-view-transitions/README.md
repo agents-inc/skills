@@ -1,6 +1,6 @@
 # web-animation-view-transitions
 
-View Transitions API patterns - same-document transitions, cross-document MPA transitions, shared element animations, pseudo-element styling, accessibility
+View Transitions API patterns - same-document transitions, cross-document navigation, shared element animations, pseudo-element styling, transition types, reduced-motion handling
 
 ## Installation
 

@@ -1,24 +1,8 @@
-# SCSS Modules - Sass Module System Examples
+# SCSS Modules - The Sass Module System
 
-> Sass module system patterns using @use and @forward. See [SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for foundational patterns.
+> `@use`, `@forward`, built-in modules, and migrating off `@import`. See [SKILL.md](../SKILL.md) for decision guidance, [core.md](core.md) for the layer setup, and [reference.md](../reference.md) for the `@use`-versus-`@import` table and the migration commands.
 
----
-
-## Pattern 14: Sass Module System (@use and @forward)
-
-### Overview
-
-The Sass module system (`@use` and `@forward`) is the modern way to organize Sass code. `@import` is **deprecated as of Dart Sass 1.80.0** and will be **removed in Dart Sass 3.0.0**. All new SCSS code should use the module system.
-
-### Key Differences from @import
-
-| Feature            | @import (Deprecated)        | @use (Recommended)           |
-| ------------------ | --------------------------- | ---------------------------- |
-| Scope              | Global (pollutes namespace) | Namespaced (explicit)        |
-| Loading            | Loads multiple times        | Loads once per compilation   |
-| Private members    | Not supported               | `_` or `-` prefix = private  |
-| Configuration      | Implicit via global vars    | Explicit via `with` clause   |
-| Built-in functions | Global (`darken()`)         | Namespaced (`color.scale()`) |
+`@import` is **deprecated as of Dart Sass 1.80.0** and **removed in Dart Sass 3.0.0**.
 
 ---
 
@@ -196,39 +180,27 @@ Sass provides built-in modules for common operations. These replace global funct
 ```scss
 @use "sass:math";
 
-// Division (/ operator is deprecated for division)
+// Division. The / operator is deprecated for this.
 $half-width: math.div(100%, 2); // 50%
 $column: math.div(1, 12) * 100%; // 8.333...%
 
-// Math functions
+// Rounding, bounds, powers and roots all live here too
 $rounded: math.round(4.7); // 5
-$ceiling: math.ceil(4.1); // 5
-$floor: math.floor(4.9); // 4
-$absolute: math.abs(-10); // 10
 $minimum: math.min(1px, 2px, 3px); // 1px
-$maximum: math.max(1px, 2px, 3px); // 3px
-
-// Constants
-$pi: math.$pi; // 3.14159...
-$e: math.$e; // 2.71828...
-
-// Powers and roots
 $squared: math.pow(2, 3); // 8
-$root: math.sqrt(16); // 4
-
-// Percentages
 $percent: math.percentage(0.5); // 50%
-```
 
-**Why good:** Explicit math operations, no ambiguity with CSS `/` separator, access to constants
+// Constants are read-only
+$pi: math.$pi;
+```
 
 ```scss
-// Bad Example - Deprecated / operator
-$half: 100px / 2; // DEPRECATED - ambiguous with CSS separator
-$ratio: 16 / 9; // DEPRECATED
+// Bad Example - the deprecated operator
+$half: 100px / 2;
+$ratio: 16 / 9;
 ```
 
-**Why bad:** `/` is deprecated for division, ambiguous with CSS grid syntax (`1fr / 2fr`)
+**Why bad:** `/` already means "separator" in CSS (`grid-template: 1fr / 2fr`, `font: 16px/1.5`), so Sass cannot tell the two uses apart from syntax alone. `math.div()` says which one is meant. Inside `calc()`, `/` is still division and is unaffected.
 
 #### sass:color
 
@@ -237,48 +209,22 @@ $ratio: 16 / 9; // DEPRECATED
 
 $primary: #3b82f6;
 
-// Modern alternatives to deprecated functions
-// Instead of darken($color, 10%):
+// color.scale() replaces the whole family of global functions:
+// darken / lighten -> $lightness, saturate / desaturate -> $saturation,
+// transparentize / opacify -> $alpha
 $darker: color.scale($primary, $lightness: -20%);
-
-// Instead of lighten($color, 10%):
-$lighter: color.scale($primary, $lightness: 20%);
-
-// Instead of saturate($color, 10%):
-$saturated: color.scale($primary, $saturation: 20%);
-
-// Instead of desaturate($color, 10%):
-$desaturated: color.scale($primary, $saturation: -20%);
-
-// Instead of transparentize($color, 0.5):
 $transparent: color.scale($primary, $alpha: -50%);
 
-// Instead of opacify($color, 0.2):
-$opaque: color.scale($primary, $alpha: 20%);
+// The two adjusters differ, and the difference matters near the ends of a range
+$adjusted: color.adjust($primary, $lightness: -10%); // subtract 10 points
+$scaled: color.scale($primary, $lightness: -10%); // move 10% toward 0%
 
-// Get color channels
-$hue: color.hue($primary);
-$saturation: color.saturation($primary);
-$lightness: color.lightness($primary);
-$alpha: color.alpha($primary);
-
-// Adjust (fixed amount) vs Scale (relative)
-$adjusted: color.adjust($primary, $lightness: -10%); // Fixed: subtract 10%
-$scaled: color.scale($primary, $lightness: -10%); // Relative: 10% toward 0%
-
-// Mix colors
 $mixed: color.mix($primary, white, 50%);
-
-// Complement
-$complement: color.complement($primary);
-
-// Grayscale
-$gray: color.grayscale($primary);
 ```
 
-**Why good:** `color.scale()` is more intuitive (relative adjustments), explicit function names, works with modern color spaces
+**Why good:** `scale()` moves a channel a proportion of its remaining range, so it cannot overshoot and flatten to black or white the way a fixed subtraction can.
 
-**NOTE:** For runtime theming, prefer CSS color functions like `color-mix()` and relative color syntax. Use Sass color functions only for build-time calculations.
+**These are build-time only.** A colour that a runtime theme must be able to change belongs in a custom property, mixed with `color-mix()` or relative colour syntax — a Sass function has already resolved to a literal by the time the browser sees it.
 
 #### Other Built-in Modules
 
@@ -288,20 +234,9 @@ Sass provides `sass:string`, `sass:list`, `sass:map`, and `sass:selector` module
 
 ### Migration from @import
 
-#### Using the Sass Migrator
+`sass-migrator` does most of this mechanically — the commands are in [reference.md](../reference.md). What it cannot decide for you is the namespace each file should take, so read the diff for `as *` it introduced on a module that deserved a name.
 
-```bash
-# Install the migrator
-npm install -g sass-migrator
-
-# Migrate all files (updates @import to @use)
-sass-migrator module --migrate-deps your-entrypoint.scss
-
-# Migrate built-in functions only (keep @import for now)
-sass-migrator module --migrate-deps --built-in-only your-entrypoint.scss
-```
-
-#### Manual Migration Pattern
+#### What the Conversion Looks Like
 
 ```scss
 // Before (deprecated @import)
@@ -335,29 +270,29 @@ sass-migrator module --migrate-deps --built-in-only your-entrypoint.scss
 ### File Structure with Modules
 
 ```
-packages/ui/src/styles/
+styles/
   _index.scss           # Entry point with @forward
-  _design-tokens.scss   # Token definitions
+  _design-tokens.scss   # Token declarations
   _mixins.scss          # Reusable mixins
   _reset.scss           # CSS reset
   _layers.scss          # Layer declarations
 
 components/
   button/
-    _button.module.scss # Component styles
+    button.module.scss  # Component styles
 ```
 
 #### Entry Point Pattern
 
 ```scss
-// packages/ui/src/styles/_index.scss
+// styles/_index.scss
 @forward "layers";
 @forward "design-tokens";
 @forward "mixins";
 ```
 
 ```scss
-// packages/ui/src/components/button/button.module.scss
+// components/button/button.module.scss
 @use "../../styles" as s;
 
 @layer components {
@@ -368,28 +303,8 @@ components/
 }
 ```
 
+**Why good:** every module reaches the shared Sass through one path, so moving a partial is one edit in `_index.scss` rather than one per consumer, and the `_` prefix keeps the partials from being compiled as stylesheets of their own.
+
 ---
 
-### Silencing Deprecation Warnings
-
-During migration, you may need to silence warnings from dependencies:
-
-```bash
-# CLI flag
-sass --quiet-deps input.scss output.css
-
-# Or silence specific deprecation
-sass --silence-deprecation=import input.scss output.css
-```
-
-```javascript
-// JavaScript API (webpack, vite, etc.)
-{
-  sassOptions: {
-    quietDeps: true,
-    silenceDeprecations: ['import']
-  }
-}
-```
-
-**Note:** These are temporary measures. Plan to fully migrate before Dart Sass 3.0.0.
+> Warnings coming from a dependency you do not control can be quieted while your own tree is converted — see [reference.md](../reference.md) for the flags.

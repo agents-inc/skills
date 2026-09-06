@@ -1,6 +1,6 @@
 # web-framework-angular-standalone
 
-Angular 17-19 standalone components, signals, control flow, dependency injection patterns
+Angular 17–19 standalone components, signals, built-in control flow, inject() DI, the resource API. Load when writing or migrating Angular components.
 
 ## Installation
 

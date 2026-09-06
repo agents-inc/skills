@@ -1,6 +1,7 @@
 # Mantine v7 - Form Examples
 
-> Form management with @mantine/form — validation, nested fields, dynamic lists, and schema resolvers. See [core.md](core.md) for setup patterns.
+> `@mantine/form` — validation, nested fields, dynamic lists, schema resolvers. See
+> [core.md](core.md) for setup and [components.md](components.md) for the surrounding components.
 
 **Prerequisites**: `npm install @mantine/form`
 
@@ -70,7 +71,10 @@ export function LoginForm() {
 }
 ```
 
-**Why good:** `mode: "uncontrolled"` avoids re-renders on every keystroke, `form.key()` provides React key stability, `getInputProps` auto-binds value/onChange/error, `{ type: "checkbox" }` binds checked instead of value
+**Why good:** `mode: "uncontrolled"` keeps keystrokes out of React's render path, which is why
+`form.key()` goes with it — it gives React a key that survives values changing outside its
+knowledge. `getInputProps` binds value, change handler and error in one spread, and
+`{ type: "checkbox" }` switches it to `checked`.
 
 ---
 
@@ -102,7 +106,9 @@ const form = useForm({
 });
 ```
 
-**Why good:** Validator receives full form values for cross-field checks, conditional validation based on other field values, `validateInputOnBlur` provides UX-friendly timing
+**Why good:** the second argument is the whole values object, so one field's rule can read another's
+value — which is what makes "matches the password" and "required only for business accounts"
+expressible without lifting state. `validateInputOnBlur` moves the feedback off every keystroke.
 
 ---
 
@@ -146,7 +152,8 @@ form.setFieldValue("address.city", "New York");
 form.setFieldValue("address", { street: "123 Main St", city: "NYC", state: "NY", zip: "10001" });
 ```
 
-**Why good:** Dot notation works for both getInputProps and setFieldValue, validation mirrors the nested structure, entire objects can be set at once
+**Why good:** one dot-notation path works for `getInputProps`, `form.key()` and `setFieldValue`
+alike, and the `validate` object mirrors the shape of `initialValues` rather than flattening it.
 
 ---
 
@@ -220,44 +227,32 @@ export function TeamForm() {
 }
 ```
 
-**Why good:** `insertListItem` and `removeListItem` handle array mutations, validation applies to each list item individually, index-based dot notation for field access
+**Why good:** `insertListItem` / `removeListItem` reindex the paths and the errors together, which
+is the part that goes wrong when an array is spliced by hand. The `members` validator is written
+once and applies to every item.
 
 ---
 
-## Pattern 5: Zod Schema Validation
+## Pattern 5: Validating from a Schema
 
-```bash
-npm install zod mantine-form-zod-resolver
-```
+`validate` accepts either the object of per-field functions shown above **or** a single resolver
+function. A resolver takes the form values, runs them through a schema, and returns Mantine's error
+shape — an object keyed by field path. Mantine publishes one adapter per schema library under the
+`mantine-form-*-resolver` name; the schema itself is written however that library writes schemas,
+which is not this skill's concern.
 
 ```tsx
-// Zod v3
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
-// Zod v4: use zod4Resolver and import from "zod/v4"
-// import { zod4Resolver } from "mantine-form-zod-resolver";
-// import { z } from "zod/v4";
-
 import { useForm } from "@mantine/form";
 import { TextInput, NumberInput, Button, Box } from "@mantine/core";
+import { zodResolver } from "mantine-form-zod-resolver";
 
-const schema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  age: z.number().min(18, "Must be at least 18").max(120, "Invalid age"),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { schema, type FormValues } from "./form-schema";
 
 export function ValidatedForm() {
   const form = useForm<FormValues>({
     mode: "uncontrolled",
-    initialValues: {
-      name: "",
-      email: "",
-      age: 18,
-    },
-    validate: zodResolver(schema),
+    initialValues: { name: "", email: "", age: 18 },
+    validate: zodResolver(schema), // replaces the per-field validate object entirely
   });
 
   return (
@@ -287,6 +282,12 @@ export function ValidatedForm() {
 }
 ```
 
-**Why good:** Zod schema provides type inference and reusable validation, `zodResolver` adapts Zod errors to Mantine's error format, same `getInputProps` pattern works regardless of validation approach
+**Why good:** everything downstream is unchanged — `getInputProps`, `form.key()` and the error
+rendering behave identically whichever route produced the errors, so a form can move from inline
+functions to a schema without touching a single field.
 
-> **Zod v4:** Use `zod4Resolver` from `mantine-form-zod-resolver` v1.2.0+ and import `z` from `"zod/v4"`. Error message syntax changes from `{ message: '...' }` to `{ error: '...' }`.
+**Two things to check:** the resolver package tracks the schema library's **major** version and
+exports a differently-named function per major — `mantine-form-zod-resolver` ships both
+`zodResolver` and `zod4Resolver` — so a mismatched pair fails at the import; and
+`useForm<FormValues>` should be parameterised with the type the schema infers, or the values and the
+validation can drift apart with nothing to catch it.

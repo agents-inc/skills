@@ -90,6 +90,33 @@ const { posts } = Astro.props;
 
 **Why good:** Generates a page per unique tag, pre-filtered posts passed as props, type-safe tag from params
 
+### Bad Example - Unvalidated Remote Data
+
+```astro
+---
+export async function getStaticPaths() {
+  const res = await fetch("https://api.example.com/posts");
+  const posts = await res.json(); // could be an error body, or contain null ids
+  return posts.map((post) => ({ params: { id: post.id } }));
+}
+---
+```
+
+**Why bad:** A failed request or a null `id` surfaces as an opaque build error far from its cause. Check the response and the rows, and coerce ids to strings — Astro 6 rejects numeric params:
+
+```astro
+---
+export async function getStaticPaths() {
+  const res = await fetch("https://api.example.com/posts");
+  if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`);
+  const posts = await res.json();
+  return posts
+    .filter((post) => post.id != null)
+    .map((post) => ({ params: { id: String(post.id) }, props: { post } }));
+}
+---
+```
+
 ---
 
 ## Pattern 3: Rest Parameters

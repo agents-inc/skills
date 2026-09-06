@@ -1,6 +1,8 @@
 # Lexical - Serialization
 
-> JSON and HTML serialization, import/export, and headless editor usage. See [SKILL.md](../SKILL.md) for architecture decisions and [custom-nodes.md](custom-nodes.md) for node serialization methods.
+> JSON and HTML round trips, `exportDOM`/`importDOM`, headless editors and discrete updates. See
+> [SKILL.md](../SKILL.md) for the decisions, [core.md](core.md) for editor setup,
+> [custom-nodes.md](custom-nodes.md) for the node classes these methods live on.
 
 ---
 
@@ -30,7 +32,9 @@ function handleChange(editorState: EditorState) {
 }
 ```
 
-**Why good:** toJSON produces a complete serializable snapshot, parseEditorState validates and reconstructs, clone(null) prevents unwanted focus on restore
+**Why good:** `parseEditorState` reconstructs through the registered node classes, so a document
+written by a version with different nodes fails loudly here rather than half-rendering; `clone(null)`
+keeps the restore from stealing focus
 
 ### Good Example - Custom Node JSON Serialization
 
@@ -77,7 +81,8 @@ export class AlertNode extends ElementNode {
 }
 ```
 
-**Why good:** Spread type extends base serialized type cleanly, exportJSON includes all custom properties, importJSON uses factory + updateFromJSON pattern, backwards-compatible with optional properties
+**Why good:** `Spread` adds the node's own fields to the base serialized type, so a property added to
+the class and forgotten in `exportJSON` is a type error rather than silent data loss
 
 ---
 
@@ -110,7 +115,8 @@ function exportSelectionHtml(editor: LexicalEditor): string {
 }
 ```
 
-**Why good:** $generateHtmlFromNodes must be called inside read/update closure, null exports full editor, selection exports only highlighted content
+**Why good:** `$generateHtmlFromNodes` needs an open read/update closure like any `$` function;
+passing `null` exports the whole document, passing a selection exports only what is highlighted
 
 ### Good Example - Import HTML into Editor
 
@@ -143,7 +149,9 @@ function insertHtmlAtCursor(editor: LexicalEditor, htmlString: string): void {
 }
 ```
 
-**Why good:** DOMParser for safe HTML parsing, $generateNodesFromDOM converts DOM to Lexical nodes, separate functions for replace vs insert
+**Why good:** `$generateNodesFromDOM` maps DOM elements onto the registered nodes' `importDOM` rules,
+so anything with no rule is dropped rather than smuggled in. It performs no sanitization — untrusted
+HTML has to be cleaned before it reaches this call.
 
 ---
 
@@ -165,25 +173,15 @@ export class CalloutNode extends ElementNode {
     element.setAttribute("role", "note");
     return { element };
   }
-
-  // Post-process exported HTML
-  // exportDOM(editor: LexicalEditor): DOMExportOutput {
-  //   const element = document.createElement("div");
-  //   return {
-  //     element,
-  //     after: (generatedElement) => {
-  //       // Modify after children are appended
-  //       if (generatedElement) {
-  //         generatedElement.setAttribute("data-processed", "true");
-  //       }
-  //       return generatedElement;
-  //     },
-  //   };
-  // }
 }
 ```
 
-**Why good:** exportDOM returns the HTML element for serialization, data attributes preserved in output, `after` callback allows post-processing once children are rendered
+**Why good:** the data attributes written here are what `importDOM` matches on, so export and import
+round-trip.
+
+`exportDOM` can also return an `after(generatedElement)` callback beside `element`. It runs once the
+children have been appended, which is the only point at which the finished subtree can be
+post-processed.
 
 ---
 
@@ -228,7 +226,8 @@ function convertCalloutElement(
 }
 ```
 
-**Why good:** importDOM returns a map of DOM node names to conversion functions, only matches elements with the expected data attribute, priority controls which converter wins when multiple nodes match the same element
+**Why good:** returning `null` from the matcher declines the element and lets another node's converter
+take it; `priority` (0-4) decides between converters that all accept it
 
 ---
 
@@ -274,7 +273,8 @@ const editor = createEditor({
 });
 ```
 
-**Why good:** Overrides HTML serialization without subclassing nodes, useful for adjusting serialization per-editor instance
+**Why good:** changes how built-in nodes serialize without subclassing them, which is what you want
+when two editors in one app need different HTML from the same node types
 
 ---
 
@@ -341,7 +341,9 @@ export function extractPlainText(jsonString: string): string {
 }
 ```
 
-**Why good:** createHeadlessEditor works without a DOM (server-side), same node types must be registered as in the client editor, useful for search indexing, email rendering, and content transformation pipelines
+**Why good:** the headless editor needs the same node registration as the client, since a node the
+server does not know about cannot be parsed out of the saved JSON — keeping one exported node array
+shared by both is what stops the two drifting
 
 ---
 
@@ -374,4 +376,5 @@ if (editorElement) {
 const json = JSON.stringify(editor.getEditorState().toJSON());
 ```
 
-**Why good:** `discrete: true` forces synchronous DOM commit, safe to read DOM measurements immediately after, useful for auto-scroll, resize, and layout calculations
+**Why good:** without `discrete: true` the statement after the update reads the pre-update layout,
+which is the bug behind most auto-scroll and resize miscalculations

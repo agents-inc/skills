@@ -1,14 +1,11 @@
-# Playwright E2E Testing - Fixtures
+# Playwright E2E Testing — Fixtures
 
-> Advanced fixture patterns including composition and database seeding. See [core.md](core.md) for foundational patterns.
-
-**Prerequisites**: Understand Basic Page Objects and [Pattern 5: Authentication Fixture](core.md#pattern-5-authentication-fixture) from core examples first.
+> Composition, seeded data and storage state. See [core.md](core.md) for the basic fixture shape
+> ([Pattern 5](core.md#pattern-5-authentication-fixture)).
 
 ---
 
-## Pattern: Combined Fixtures
-
-### Fixture Composition
+## Composing several fixtures
 
 ```typescript
 // tests/e2e/fixtures/index.ts
@@ -17,13 +14,6 @@ import { LoginPage } from "../pages/login-page";
 import { DashboardPage } from "../pages/dashboard-page";
 import { CheckoutPage } from "../pages/checkout-page";
 
-type AllFixtures = {
-  loginPage: LoginPage;
-  dashboardPage: DashboardPage;
-  checkoutPage: CheckoutPage;
-  authenticatedUser: void;
-};
-
 const AUTH_COOKIE = {
   name: "session",
   value: "authenticated-user-token",
@@ -31,67 +21,57 @@ const AUTH_COOKIE = {
   path: "/",
 };
 
-export const test = base.extend<AllFixtures>({
-  loginPage: async ({ page }, use) => {
-    await use(new LoginPage(page));
-  },
+type Fixtures = {
+  loginPage: LoginPage;
+  dashboardPage: DashboardPage;
+  checkoutPage: CheckoutPage;
+  authenticatedUser: void;
+};
 
-  dashboardPage: async ({ page }, use) => {
-    await use(new DashboardPage(page));
-  },
-
-  checkoutPage: async ({ page }, use) => {
-    await use(new CheckoutPage(page));
-  },
+export const test = base.extend<Fixtures>({
+  loginPage: async ({ page }, use) => use(new LoginPage(page)),
+  dashboardPage: async ({ page }, use) => use(new DashboardPage(page)),
+  checkoutPage: async ({ page }, use) => use(new CheckoutPage(page)),
 
   authenticatedUser: [
     async ({ context }, use) => {
       await context.addCookies([AUTH_COOKIE]);
       await use();
     },
-    { auto: false }, // Opt-in, not automatic
+    { auto: false }, // opt in by naming it in the test's arguments
   ],
 });
 
 export { expect };
 ```
 
-### Using Combined Fixtures
-
 ```typescript
 // tests/e2e/checkout.spec.ts
 import { test, expect } from "./fixtures";
 
-test.describe("Checkout (requires auth)", () => {
-  // This test uses the authenticatedUser fixture
-  test("can proceed to checkout", async ({
-    page,
-    checkoutPage,
-    authenticatedUser,
-  }) => {
-    await checkoutPage.goto();
-    await expect(
-      page.getByRole("heading", { name: /checkout/i }),
-    ).toBeVisible();
-  });
+// Naming authenticatedUser is what activates it.
+test("can reach checkout when signed in", async ({
+  checkoutPage,
+  page,
+  authenticatedUser,
+}) => {
+  await checkoutPage.goto();
+  await expect(page.getByRole("heading", { name: /checkout/i })).toBeVisible();
 });
 
-test.describe("Public pages", () => {
-  // This test does NOT use authenticatedUser
-  test("can view products without login", async ({ page }) => {
-    await page.goto("/products");
-    await expect(
-      page.getByRole("heading", { name: /products/i }),
-    ).toBeVisible();
-  });
+test("products are public", async ({ page }) => {
+  await page.goto("/products");
+  await expect(page.getByRole("heading", { name: /products/i })).toBeVisible();
 });
 ```
 
-**Why good:** Fixtures encapsulate setup and teardown, auto fixtures run automatically when needed, opt-in fixtures give control per test, combined fixtures provide full toolkit
+**Why good:** a fixture is constructed only for the tests that name it, so the public-page test pays
+nothing for the authentication machinery. `auto: false` makes the opt-in visible in the test
+signature.
 
 ---
 
-## Pattern: Database Seeding Fixture
+## Seeding data through the API
 
 ```typescript
 // tests/e2e/fixtures/database.ts
@@ -109,18 +89,10 @@ export const test = base.extend<DatabaseFixtures>({
 
   seedDatabase: [
     async ({ request }, use) => {
-      // Setup: Seed test data via API
       await request.post("/api/test/seed", {
-        data: {
-          userId: TEST_USER_ID,
-          products: 5,
-          orders: 3,
-        },
+        data: { userId: TEST_USER_ID, products: 5, orders: 3 },
       });
-
       await use();
-
-      // Teardown: Clean up test data
       await request.delete(`/api/test/cleanup/${TEST_USER_ID}`);
     },
     { auto: true },
@@ -128,29 +100,21 @@ export const test = base.extend<DatabaseFixtures>({
 });
 ```
 
-**Why good:** Provides predictable test data state, automatic cleanup prevents test pollution, exposes testUserId for assertions
+**Why good:** the `request` fixture reaches the API without a browser, so setup costs a request
+rather than a page load, and the teardown half runs even when the test failed.
 
 ---
 
-## Pattern: IndexedDB Storage State (v1.51+)
-
-Save and restore IndexedDB contents for authentication tokens (useful for Firebase Auth, etc.).
+## Reusing authenticated storage state
 
 ```typescript
-// Save storage state including IndexedDB
-await context.storageState({
-  path: "auth.json",
-  indexedDB: true, // v1.51+ feature
-});
+// Save once — including IndexedDB, where the token does not live in a cookie (v1.51+)
+await context.storageState({ path: "auth.json", indexedDB: true });
 
-// Restore in another context
-const context = await browser.newContext({
-  storageState: "auth.json",
-});
+// Reuse in any later context
+const context = await browser.newContext({ storageState: "auth.json" });
 ```
 
-**Why good:** Handles modern auth systems that store tokens in IndexedDB, eliminates re-authentication between tests, works with Firebase and similar platforms
-
----
-
-_See [core.md](core.md) for foundational patterns: User Flows, Basic Page Objects, Network Mocking, and Configuration._
+**Why good:** signing in once and restoring the state is the difference between a suite that logs in
+per test and one that does not. The `indexedDB` option covers token storage that a cookie-only
+snapshot would miss.

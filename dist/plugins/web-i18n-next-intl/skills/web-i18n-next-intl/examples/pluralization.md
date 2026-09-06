@@ -43,11 +43,9 @@ function RankingPosition({ position }: { position: number }) {
 
 ### When to Use Ordinals
 
-- Ranking displays (1st place, 2nd place)
-- Date ordinals in some contexts (1st of January)
+- Rankings and leaderboards (1st place, 2nd place)
 - Sequential items (1st step, 2nd step)
-- Competition results
-- Leaderboards
+- Date ordinals, where the locale uses them (1st of January)
 
 ---
 

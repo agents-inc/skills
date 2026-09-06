@@ -1,6 +1,6 @@
 {
   "name": "web-tooling-component-library",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Packaging React components as a consumable library — style delivery contracts, sideEffects, cascade layers, \"use client\" preservation, peer dependency ranges, server-safe vs client entries",
   "author": {

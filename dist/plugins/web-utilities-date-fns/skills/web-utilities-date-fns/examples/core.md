@@ -1,198 +1,92 @@
 # date-fns Core Examples
 
-> Formatting, parsing, and manipulation patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Formatting, parsing, arithmetic, boundaries and preset ranges. See [SKILL.md](../SKILL.md) for the
+> decisions, [comparison.md](comparison.md) for intervals and validation, [i18n.md](i18n.md) for
+> locales, [relative.md](relative.md) for distances, [timezone.md](timezone.md) for zoned dates.
 
 ---
 
-## Formatting Dates
-
-### Good Example - Format with Named Constants
-
-```typescript
-import { format, parseISO } from "date-fns";
-
-// Format constants at module level
-const ISO_DATE_FORMAT = "yyyy-MM-dd";
-const ISO_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-const DISPLAY_DATE_FORMAT = "MMMM d, yyyy";
-const DISPLAY_DATETIME_FORMAT = "MMMM d, yyyy 'at' h:mm a";
-const SHORT_DATE_FORMAT = "MMM d";
-const TIME_FORMAT = "h:mm a";
-
-const date = new Date(2026, 0, 15, 14, 30, 0);
-
-// ISO formats for APIs and storage
-const isoDate = format(date, ISO_DATE_FORMAT); // "2026-01-15"
-const isoDateTime = format(date, ISO_DATETIME_FORMAT); // "2026-01-15T14:30:00Z"
-
-// Display formats for UI
-const displayDate = format(date, DISPLAY_DATE_FORMAT); // "January 15, 2026"
-const displayDateTime = format(date, DISPLAY_DATETIME_FORMAT); // "January 15, 2026 at 2:30 PM"
-const shortDate = format(date, SHORT_DATE_FORMAT); // "Jan 15"
-const time = format(date, TIME_FORMAT); // "2:30 PM"
-
-// Named export for reuse
-export {
-  ISO_DATE_FORMAT,
-  ISO_DATETIME_FORMAT,
-  DISPLAY_DATE_FORMAT,
-  DISPLAY_DATETIME_FORMAT,
-};
-```
-
-**Why good:** format constants are reusable across the app, centralized for easy updates, self-documenting
-
-### Bad Example - Magic Format Strings
+## Formatting
 
 ```typescript
 import { format } from "date-fns";
 
-// Magic strings scattered in code
-const date1 = format(someDate, "yyyy-MM-dd");
-const date2 = format(otherDate, "yyyy-MM-dd");
-const date3 = format(anotherDate, "YYYY-MM-DD"); // Wrong! Moment.js syntax
+const date = new Date(2026, 0, 15, 14, 30, 0);
+
+format(date, "yyyy-MM-dd"); // "2026-01-15"
+format(date, "MMM d"); // "Jan 15"
+format(date, "MMMM d, yyyy 'at' h:mm a"); // "January 15, 2026 at 2:30 PM"
+
+// Literal characters are single-quoted, including the ISO T and Z
+format(date, "yyyy-MM-dd'T'HH:mm:ss'Z'"); // "2026-01-15T14:30:00Z"
 ```
 
-**Why bad:** duplicated magic strings, inconsistent usage, easy to use wrong syntax
+That last one writes a literal `Z` regardless of the actual offset, so it is only honest for a date
+already known to be UTC. For a real offset use `xxx` (`+05:30`) or `date.toISOString()`.
 
 ---
 
-## Parsing Dates
+## Parsing
 
-### Good Example - Safe Parsing with Validation
+`parseISO` for machine input, `parse` for human input. Neither throws, so both are validated before
+use; the round-trip check additionally rejects dates that parsed but do not exist.
 
 ```typescript
 import { parseISO, parse, isValid, format } from "date-fns";
 
-const DATE_FORMAT = "yyyy-MM-dd";
-
-// Parse ISO strings (from APIs)
-function parseISODate(isoString: string): Date | null {
+function parseApiDate(isoString: string): Date | null {
   const parsed = parseISO(isoString);
   return isValid(parsed) ? parsed : null;
 }
 
-// Parse custom format (from user input)
-function parseDateString(
-  dateString: string,
-  formatString: string = DATE_FORMAT,
-): Date | null {
-  const parsed = parse(dateString, formatString, new Date());
-  return isValid(parsed) ? parsed : null;
+function parseUserDate(input: string, pattern: string): Date | null {
+  // Third argument supplies any field the pattern omits (year, month, time)
+  const parsed = parse(input, pattern, new Date());
+  if (!isValid(parsed)) return null;
+
+  // Round-trip rejects "2026-02-30", which parse happily rolls into March
+  return format(parsed, pattern) === input ? parsed : null;
 }
 
-// Strict parsing - verify round-trip to catch Feb 30, etc.
-function strictParseDateString(
-  dateString: string,
-  formatString: string = DATE_FORMAT,
-): Date | null {
-  const parsed = parse(dateString, formatString, new Date());
-
-  if (!isValid(parsed)) {
-    return null;
-  }
-
-  // Verify round-trip matches
-  if (format(parsed, formatString) !== dateString) {
-    return null;
-  }
-
-  return parsed;
-}
-
-// Usage
-const validDate = parseISODate("2026-01-15"); // Date object
-const invalidDate = parseISODate("not-a-date"); // null
-const userDate = parseDateString("01/15/2026", "MM/dd/yyyy"); // Date object
-const badDate = strictParseDateString("2026-02-30", DATE_FORMAT); // null (Feb 30 invalid)
+parseApiDate("not-a-date"); // null
+parseUserDate("2026-02-30", "yyyy-MM-dd"); // null
+parseUserDate("15/01/2026", "dd/MM/yyyy"); // Date
 ```
-
-**Why good:** validation prevents runtime errors, strict parsing catches invalid dates like Feb 30, clear null return for error handling
-
-### Bad Example - Unsafe Parsing
-
-```typescript
-// No validation - crashes on invalid input
-const date = parseISO(userInput);
-const formatted = format(date, "yyyy-MM-dd"); // Throws if date is invalid!
-
-// Using Date constructor - browser inconsistent
-const date2 = new Date(userInput); // May be Invalid Date or wrong date
-```
-
-**Why bad:** no validation leads to runtime errors, Date constructor behavior varies by browser
 
 ---
 
-## Date Arithmetic
+## Arithmetic
 
-### Good Example - Pure Functions with Constants
-
-```typescript
-import {
-  addDays,
-  addWeeks,
-  addMonths,
-  addYears,
-  subDays,
-  subMonths,
-  addHours,
-  addMinutes,
-  endOfMonth,
-} from "date-fns";
-
-// Business rule constants
-const TRIAL_PERIOD_DAYS = 14;
-const BILLING_CYCLE_MONTHS = 1;
-const EXPIRY_WARNING_DAYS = 7;
-const APPOINTMENT_DURATION_MINUTES = 30;
-
-const now = new Date();
-
-// Calculate business dates
-const trialEndDate = addDays(now, TRIAL_PERIOD_DAYS);
-const nextBillingDate = addMonths(now, BILLING_CYCLE_MONTHS);
-const expiryWarningDate = subDays(trialEndDate, EXPIRY_WARNING_DAYS);
-
-// Appointment scheduling
-function getAppointmentEnd(startTime: Date): Date {
-  return addMinutes(startTime, APPOINTMENT_DURATION_MINUTES);
-}
-
-// Chain operations (still returns new dates)
-function getQuarterEnd(date: Date): Date {
-  return endOfMonth(addMonths(date, 2));
-}
-
-// Original date is never modified
-console.log(now); // Unchanged
-```
-
-**Why good:** constants document business rules, pure functions prevent side effects, easy to test
-
-### Bad Example - Mutating Dates
+Every function returns a new `Date`. The trap is the native setter, which does not.
 
 ```typescript
-// Mutation causes side effects
-function getNextWeek(date: Date): Date {
-  date.setDate(date.getDate() + 7);
-  return date;
+import { addDays, addMonths, subDays, add } from "date-fns";
+
+// ✅ Pure — the caller's date survives
+function reminderFor(meeting: Date): Date {
+  return subDays(meeting, 1);
 }
 
-const meeting = new Date(2026, 0, 15);
-const reminder = getNextWeek(meeting);
+// ❌ Mutating — the caller's date is now the reminder date
+function badReminderFor(meeting: Date): Date {
+  meeting.setDate(meeting.getDate() - 1);
+  return meeting;
+}
 
-// BUG: meeting is now also changed!
-console.log(meeting); // Jan 22, not Jan 15!
+// `add` takes several units at once
+const later = add(start, { months: 1, days: 3, hours: 12 });
+
+// Day-of-month clamps to the target month's length
+addMonths(new Date(2026, 0, 31), 1); // Feb 28, not Mar 3
+addDays(new Date(2026, 0, 31), 31); // Mar 3
 ```
-
-**Why bad:** mutation changes original date, causes bugs when date is shared between components
 
 ---
 
-## Date Boundaries
+## Period Boundaries
 
-### Good Example - Consistent Range Generation
+`startOf*` / `endOf*` handle month lengths and leap years, and `endOf*` lands on `.999` so an
+inclusive range covers the whole final second.
 
 ```typescript
 import {
@@ -202,75 +96,39 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
-  startOfQuarter,
-  endOfQuarter,
-  startOfYear,
-  endOfYear,
 } from "date-fns";
-
-// Week start option (1 = Monday for ISO weeks)
-const WEEK_STARTS_ON_MONDAY = 1;
 
 interface DateRange {
   start: Date;
   end: Date;
 }
 
-// Day range for "today" queries
-function getDayRange(date: Date): DateRange {
-  return {
-    start: startOfDay(date),
-    end: endOfDay(date),
-  };
-}
+const dayRange = (date: Date): DateRange => ({
+  start: startOfDay(date),
+  end: endOfDay(date), // 23:59:59.999 — safe for `created_at <= ?`
+});
 
-// Week range (ISO week starting Monday)
-function getWeekRange(date: Date): DateRange {
-  return {
-    start: startOfWeek(date, { weekStartsOn: WEEK_STARTS_ON_MONDAY }),
-    end: endOfWeek(date, { weekStartsOn: WEEK_STARTS_ON_MONDAY }),
-  };
-}
+const monthRange = (date: Date): DateRange => ({
+  start: startOfMonth(date),
+  end: endOfMonth(date),
+});
 
-// Month range for monthly reports
-function getMonthRange(date: Date): DateRange {
-  return {
-    start: startOfMonth(date),
-    end: endOfMonth(date),
-  };
-}
-
-// Quarter range for quarterly analysis
-function getQuarterRange(date: Date): DateRange {
-  return {
-    start: startOfQuarter(date),
-    end: endOfQuarter(date),
-  };
-}
-
-// Year range
-function getYearRange(date: Date): DateRange {
-  return {
-    start: startOfYear(date),
-    end: endOfYear(date),
-  };
-}
-
-// Usage for database queries
-const today = new Date();
-const monthRange = getMonthRange(today);
-
-// Query: WHERE created_at >= ? AND created_at <= ?
-// params: [monthRange.start.toISOString(), monthRange.end.toISOString()]
+// ISO weeks start Monday; the default is Sunday
+const isoWeekRange = (date: Date): DateRange => ({
+  start: startOfWeek(date, { weekStartsOn: 1 }),
+  end: endOfWeek(date, { weekStartsOn: 1 }),
+});
 ```
 
-**Why good:** handles month lengths automatically, endOfDay includes full day, consistent for database queries
+The same shape gives quarter and year ranges through `startOfQuarter`/`endOfQuarter` and
+`startOfYear`/`endOfYear`.
 
 ---
 
-## Preset Date Ranges
+## Preset Ranges
 
-### Good Example - Common Dashboard Ranges
+The off-by-one in "last 7 days" is the reason to write this once: seven days inclusive of today is
+`subDays(today, 6)`.
 
 ```typescript
 import {
@@ -310,66 +168,38 @@ interface DateRange {
   end: Date;
 }
 
-const WEEK_STARTS_ON_MONDAY = 1;
-const DAYS_IN_WEEK = 7;
-const LAST_N_DAYS_7 = 6; // Today + 6 previous = 7 days
-const LAST_N_DAYS_30 = 29; // Today + 29 previous = 30 days
-
 function getPresetRange(
   preset: PresetRange,
   referenceDate: Date = new Date(),
 ): DateRange {
   const today = startOfDay(referenceDate);
+  const week = { weekStartsOn: 1 } as const;
 
   const presets: Record<PresetRange, DateRange> = {
-    today: {
-      start: startOfDay(today),
-      end: endOfDay(today),
-    },
+    today: { start: today, end: endOfDay(today) },
     yesterday: {
       start: startOfDay(subDays(today, 1)),
       end: endOfDay(subDays(today, 1)),
     },
-    last7days: {
-      start: startOfDay(subDays(today, LAST_N_DAYS_7)),
-      end: endOfDay(today),
-    },
-    last30days: {
-      start: startOfDay(subDays(today, LAST_N_DAYS_30)),
-      end: endOfDay(today),
-    },
-    thisWeek: {
-      start: startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON_MONDAY }),
-      end: endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON_MONDAY }),
-    },
+    // Inclusive of today, so 7 days is today plus 6
+    last7days: { start: subDays(today, 6), end: endOfDay(today) },
+    last30days: { start: subDays(today, 29), end: endOfDay(today) },
+    thisWeek: { start: startOfWeek(today, week), end: endOfWeek(today, week) },
     lastWeek: {
-      start: startOfWeek(subWeeks(today, 1), {
-        weekStartsOn: WEEK_STARTS_ON_MONDAY,
-      }),
-      end: endOfWeek(subWeeks(today, 1), {
-        weekStartsOn: WEEK_STARTS_ON_MONDAY,
-      }),
+      start: startOfWeek(subWeeks(today, 1), week),
+      end: endOfWeek(subWeeks(today, 1), week),
     },
-    thisMonth: {
-      start: startOfMonth(today),
-      end: endOfMonth(today),
-    },
+    thisMonth: { start: startOfMonth(today), end: endOfMonth(today) },
     lastMonth: {
       start: startOfMonth(subMonths(today, 1)),
       end: endOfMonth(subMonths(today, 1)),
     },
-    thisQuarter: {
-      start: startOfQuarter(today),
-      end: endOfQuarter(today),
-    },
+    thisQuarter: { start: startOfQuarter(today), end: endOfQuarter(today) },
     lastQuarter: {
       start: startOfQuarter(subQuarters(today, 1)),
       end: endOfQuarter(subQuarters(today, 1)),
     },
-    thisYear: {
-      start: startOfYear(today),
-      end: endOfYear(today),
-    },
+    thisYear: { start: startOfYear(today), end: endOfYear(today) },
     lastYear: {
       start: startOfYear(subYears(today, 1)),
       end: endOfYear(subYears(today, 1)),
@@ -378,10 +208,7 @@ function getPresetRange(
 
   return presets[preset];
 }
-
-// Usage
-const range = getPresetRange("last7days");
-// { start: Date(Jan 9, 00:00:00), end: Date(Jan 15, 23:59:59.999) }
 ```
 
-**Why good:** handles all edge cases (month lengths, week boundaries), constants document business logic, typed presets prevent typos
+A typed `PresetRange` union makes the lookup total, so adding a preset is a compile error until
+every branch exists.

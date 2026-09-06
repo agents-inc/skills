@@ -1,18 +1,17 @@
 # Radix UI - Core Examples
 
-> Essential patterns for Radix UI primitives: Dialog, asChild, and Slot.
+> Dialog, `asChild` and `Slot`. See [overlays.md](overlays.md) for AlertDialog and controlled state,
+> [animation.md](animation.md) for enter and exit animation.
 
 ---
 
 ## Pattern 1: Dialog with Accessibility
 
-### Good Example - Complete Dialog with Accessibility
+### Good Example - Complete Dialog
 
 ```typescript
-import { forwardRef, useState } from "react";
+import { forwardRef } from "react";
 import { Dialog, VisuallyHidden } from "radix-ui";
-
-const ANIMATION_DURATION_MS = 150;
 
 export type DialogProps = {
   trigger: React.ReactNode;
@@ -52,12 +51,13 @@ export const CustomDialog = forwardRef<HTMLDivElement, DialogProps>(
 CustomDialog.displayName = "CustomDialog";
 ```
 
-**Why good:** forwardRef enables ref forwarding, VisuallyHidden provides screen reader context when no visible description, named constant for animation duration, aria-label on close button for accessibility, compound component structure maintains Radix patterns
+**Why good:** `VisuallyHidden` keeps the `Description` in the accessibility tree when the design has
+no room for it; `aria-label` gives the glyph-only close button a name; the ref reaches `Content`, so
+a caller can measure or scroll it.
 
-### Bad Example - Missing Accessibility and Structure
+### Bad Example - A Dialog Rolled by Hand
 
 ```typescript
-// Missing accessibility labels and proper structure
 export const BadDialog = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
@@ -72,15 +72,17 @@ export const BadDialog = ({ isOpen, onClose, children }) => {
 };
 ```
 
-**Why bad:** no ARIA attributes for screen readers, no focus trapping (users can Tab outside modal), no keyboard support (Escape to close), click outside dismissal breaks accessibility patterns, no Title/Description for announcements, no Portal (can be clipped by parent overflow)
+**Why bad:** no `role="dialog"` or accessible name, so a screen reader announces nothing; focus stays
+in the page behind it and Tab walks straight out; Escape does nothing; and rendered in place, it is
+clipped by any ancestor with `overflow: hidden`.
 
 ---
 
 ## Pattern 2: asChild Pattern
 
-The `asChild` prop allows Radix components to merge their behavior onto your custom components instead of rendering their default element.
+`asChild` makes a part render its child instead of its own element, merging behaviour onto it.
 
-### Good Example - Tooltip on Link
+### Good Example - Tooltip on a Link
 
 ```typescript
 import { Tooltip } from "radix-ui";
@@ -108,63 +110,15 @@ export function LinkWithTooltip() {
 }
 ```
 
-**Why good:** asChild allows tooltip on anchor element instead of button, sideOffset prevents content overlap with trigger, Arrow provides visual connection, Provider sets consistent delay
+**Why good:** the trigger stays a real anchor — navigable, right-clickable, crawlable — while
+carrying the tooltip's hover and focus behaviour. `sideOffset` keeps the content clear of the
+trigger; `Provider` sets one delay for every tooltip beneath it.
 
-### Good Example - Dialog Trigger on Custom Button
-
-```typescript
-import { forwardRef } from "react";
-import { Dialog } from "radix-ui";
-
-// Custom button MUST use forwardRef and spread props
-type ButtonProps = React.ComponentProps<"button"> & {
-  variant?: "primary" | "secondary";
-};
-
-const CustomButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", className, children, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        data-variant={variant}
-        className={className}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  }
-);
-CustomButton.displayName = "CustomButton";
-
-export function DialogWithCustomTrigger() {
-  return (
-    <Dialog.Root>
-      <Dialog.Trigger asChild>
-        <CustomButton variant="primary">
-          Open Settings
-        </CustomButton>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content">
-          <Dialog.Title>Settings</Dialog.Title>
-          <Dialog.Description>Configure your preferences.</Dialog.Description>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-```
-
-**Why good:** CustomButton uses forwardRef so Radix can attach refs for focus management, props are spread so Radix can pass event handlers and ARIA attributes, variant prop enables styling while maintaining Radix behavior
-
-### Good Example - React 19+ asChild (No forwardRef Required)
+### Good Example - Custom Trigger, React 19
 
 ```typescript
 import { Dialog } from "radix-ui";
 
-// React 19+: ref is passed as a regular prop, no forwardRef wrapper needed
 type ButtonProps = React.ComponentProps<"button"> & {
   variant?: "primary" | "secondary";
   ref?: React.Ref<HTMLButtonElement>;
@@ -181,36 +135,56 @@ function CustomButton({ variant = "primary", className, ref, ...props }: ButtonP
   );
 }
 
-// Use with asChild - works without forwardRef in React 19+
 <Dialog.Trigger asChild>
-  <CustomButton variant="primary">Open Dialog</CustomButton>
+  <CustomButton variant="primary">Open Settings</CustomButton>
 </Dialog.Trigger>
 ```
 
-**Why good:** React 19 passes ref as a regular prop, no forwardRef wrapper needed, displayName not required, all props still spread correctly
+**Why good:** `ref` arrives as an ordinary prop and reaches the DOM node; the rest spread carries
+Radix's `onClick`, `aria-expanded` and `data-state` through; `variant` is consumed rather than
+forwarded, so it never lands on the element as an unknown attribute.
 
-### Bad Example - asChild Without forwardRef (React 18 and below)
+### Good Example - Custom Trigger, React 18 and Below
 
 ```typescript
-// This breaks Radix functionality in React 18 and below
+import { forwardRef } from "react";
+import { Dialog } from "radix-ui";
+
+const CustomButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = "primary", className, children, ...props }, ref) => (
+    <button ref={ref} data-variant={variant} className={className} {...props}>
+      {children}
+    </button>
+  )
+);
+CustomButton.displayName = "CustomButton";
+```
+
+**Why good:** the `forwardRef` wrapper is the only route a ref has to the element before React 19.
+
+### Bad Example - Neither Ref Nor Spread
+
+```typescript
 const BadButton = ({ children, onClick }) => {
   return <button onClick={onClick}>{children}</button>;
 };
 
 <Dialog.Trigger asChild>
-  <BadButton>Open</BadButton>  {/* Radix can't attach ref! */}
+  <BadButton>Open</BadButton>
 </Dialog.Trigger>
 ```
 
-**Why bad:** no forwardRef (React 18) or no ref prop (React 19) means Radix can't attach refs for positioning and focus management, props not spread means ARIA attributes and event handlers are lost, breaks accessibility and keyboard navigation
+**Why bad:** two failures at once. No ref, so Radix cannot focus or measure the trigger and focus
+never returns to it on close. No spread, so the merged `onClick` is dropped and the button does
+nothing at all — the component renders, looks correct, and is inert.
 
 ---
 
 ## Pattern 3: Slot Component
 
-The `Slot` component enables building your own components with `asChild` support.
+`Slot` is the merging machinery behind `asChild`, exposed so your own components can offer it.
 
-### Good Example - Building Button with asChild Support
+### Good Example - A Button with asChild Support
 
 ```typescript
 import { forwardRef } from "react";
@@ -238,25 +212,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-// Usage examples:
-
-// Renders as button
+// Renders a <button>
 <Button variant="outline">Click me</Button>
 
-// Renders as anchor with Button behavior
+// Renders the <a>, carrying the Button's props and data attributes
 <Button asChild variant="ghost">
   <a href="/page">Navigate</a>
 </Button>
 
-// Renders as framework link component
+// Same, with a router's own link component as the child
 <Button asChild>
-  <Link href="/dashboard">Dashboard</Link>
+  <RouterLink to="/dashboard">Dashboard</RouterLink>
 </Button>
 ```
 
-**Why good:** Slot merges props onto child when asChild is true, eliminates wrapper div nesting, preserves semantic HTML elements, works with any child component
+**Why good:** one component covers button, anchor and router link with no wrapper element and no
+duplicated prop plumbing. `data-variant` and `data-size` land on whichever element renders, so the
+styling hook survives the swap.
 
-### Good Example - Button with Icon Slots
+### Good Example - Fixed Decoration Around Slotted Content
 
 ```typescript
 import { forwardRef } from "react";
@@ -282,10 +256,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 IconButton.displayName = "IconButton";
 
-// Usage
 <IconButton leftIcon={<SearchIcon />} rightIcon={<ChevronIcon />}>
   Search
 </IconButton>
 ```
 
-**Why good:** Slottable marks where children should be placed when using asChild, allows fixed icon positions with flexible child content
+**Why good:** without `Slottable`, `Slot` treats the whole children array as the element to merge
+onto and throws, because there is more than one child. `Slottable` marks which child is the merge
+target and leaves the icons as ordinary siblings inside it.

@@ -73,8 +73,10 @@ function connectionReducer(
       }
       return state;
 
-    default:
-      return state;
+    default: {
+      const exhaustive: never = event;
+      return exhaustive;
+    }
   }
 }
 
@@ -105,4 +107,4 @@ function useConnectionState() {
 }
 ```
 
-**Why good:** Explicit state transitions, impossible states are impossible, type-safe events, clear state history for debugging, reducible and testable
+**Why good:** Each status carries only the data that status has — an attempt count exists on `reconnecting` and nowhere else, so there is no state to represent "reconnecting, attempt undefined". The `never` in the default branch makes a new event type a compile error, and a reducer is testable without a socket.

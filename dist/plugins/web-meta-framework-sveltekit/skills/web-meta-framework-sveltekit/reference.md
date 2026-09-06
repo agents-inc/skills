@@ -1,201 +1,98 @@
 # SvelteKit Reference
 
-> Decision frameworks, anti-patterns, and red flags for SvelteKit development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision trees, the load-function input matrix, the import surface, and the long tail of gotchas.
+> See [SKILL.md](SKILL.md) for the patterns and red flags, and [examples/](examples/) for code.
 
 ---
 
-## Decision Framework
+## Decision Trees
 
-### Server Load vs Universal Load
-
-```
-Does the load function need server-only resources?
-├─ YES → Does it access a database directly?
-│   ├─ YES → +page.server.ts (server load)
-│   └─ NO → Does it need private environment variables?
-│       ├─ YES → +page.server.ts (server load)
-│       └─ NO → Does it need cookies or request headers?
-│           ├─ YES → +page.server.ts (server load)
-│           └─ NO → +page.ts (universal load)
-└─ NO → Does it fetch from an external API?
-    ├─ YES → +page.ts (universal load — runs on client during navigation)
-    └─ NO → Does it need to return non-serializable data (classes, components)?
-        ├─ YES → +page.ts (universal load)
-        └─ NO → Either works — prefer server load for security
-```
-
-### Form Action vs API Route
+### Server load or universal load
 
 ```
-Is this handling a form submission / mutation?
-├─ YES → Does it need progressive enhancement (work without JS)?
-│   ├─ YES → Form action (+page.server.ts actions)
-│   └─ NO → Is it triggered by a form?
-│       ├─ YES → Form action (still best pattern)
-│       └─ NO → Is it a simple toggle/button click?
-│           ├─ YES → Form action with hidden inputs
-│           └─ NO → API route may be simpler
-└─ NO → Is this consumed by external clients?
-    ├─ YES → API route (+server.ts)
-    └─ NO → Is it data fetching?
-        ├─ YES → Load function (not form action or API route)
-        └─ NO → API route (+server.ts)
+Does the load need something only the server has?
+├─ A database, a private env var, cookies or request headers → +page.server.ts
+└─ NO → does it fetch from an external public API?
+    ├─ YES → +page.ts — it then re-runs in the browser on navigation, without a round trip
+    └─ NO → does it need to return something non-serialisable (a class, a component)?
+        ├─ YES → +page.ts, or a transport hook with +page.server.ts
+        └─ NO → either works; prefer the server load, since nothing leaks by default
 ```
 
-### Page Options: prerender vs ssr vs csr
+### Form action or API route
 
 ```
-Is the page content the same for every user?
-├─ YES → Does it change infrequently?
-│   ├─ YES → prerender = true (static HTML at build time)
-│   └─ NO → SSR (default — render fresh on each request)
-└─ NO → Is the page personalized?
-    ├─ YES → SSR (default — server renders per request)
-    └─ NO → Does the page use browser-only APIs?
-        ├─ YES → ssr = false (client-only rendering)
-        └─ NO → Default SSR is fine
-
-Does the page need interactivity?
-├─ YES → csr = true (default)
-└─ NO → Is it pure static content (docs, legal)?
-    ├─ YES → csr = false (zero JavaScript shipped)
-    └─ NO → csr = true (default)
+Is this a mutation the user triggers from a page?
+├─ YES → a form action — progressive enhancement, CSRF protection and revalidation come with it
+└─ NO → who is calling?
+    ├─ An external client, a webhook, a mobile app → +server.ts
+    └─ This app, for a read → a load function, not either of the above
 ```
 
-### Where to Put Auth Checks
+### prerender, ssr, csr
 
 ```
-Does every route in the app need auth?
-├─ YES → hooks.server.ts handle function
-└─ NO → Does a group of routes need auth?
-    ├─ YES → +layout.server.ts load in that group
-    └─ NO → Does a single page need auth?
-        ├─ YES → +page.server.ts load function
-        └─ NO → No auth needed
+Is the page identical for every visitor?
+├─ YES → does it change rarely?
+│   ├─ YES → prerender = true
+│   └─ NO  → the default SSR
+└─ NO → is it personalised?
+    ├─ YES → the default SSR
+    └─ NO  → does it need browser APIs before first paint?
+        ├─ YES → ssr = false
+        └─ NO  → the default SSR
+
+Does the page need any interactivity at all?
+├─ YES → csr stays true
+└─ NO  → csr = false ships no JavaScript
 ```
 
-### Data Invalidation Strategy
+### Where an auth check belongs
 
 ```
-When should the data refresh?
-├─ After a form submission → Automatic (SvelteKit invalidates after actions)
-├─ After a programmatic event → invalidate('app:custom-key')
-├─ When a URL dependency changes → Automatic (SvelteKit tracks url/params)
-├─ Everything should refresh → invalidateAll()
-└─ On a timer or external event → Custom invalidation with depends()
+How much of the app needs it?
+├─ Everything → hooks.server.ts handle
+├─ A group of routes → +layout.server.ts inside that group
+└─ One page → its own +page.server.ts load
 ```
 
-### Streaming Decision
+A check in a load protects reads. An action is a separate entry point and needs its own.
+
+### When data should refresh
 
 ```
-Does the load function fetch multiple data sources?
-├─ YES → Are some significantly slower than others?
-│   ├─ YES → Await fast data, stream slow data (return promises)
-│   └─ NO → Await all (parallel with Promise.all)
-└─ NO → Single data source?
-    ├─ YES → Await it (standard pattern)
-    └─ NO → Static page (no load function needed)
+What should trigger it?
+├─ A form submission → automatic; SvelteKit reruns the loads after an action
+├─ A URL or param change → automatic; SvelteKit tracks what the load read
+├─ A specific event in your code → invalidate('app:custom-key'), against a depends() call
+├─ Everything → invalidateAll()
+└─ A timer → invalidate on an interval, with cleanup
 ```
 
 ---
 
-## RED FLAGS
+## Load Function Inputs
 
-### High Priority Issues
-
-- **Using API routes for form submissions** — Use form actions for mutations; API routes are for external clients
-- **Throwing errors for validation** — Use `fail()` to return errors without clearing form state
-- **Catching `redirect()` in try/catch** — `redirect()` throws a special exception; don't catch it
-- **Missing auth checks in form actions** — Actions are public POST endpoints
-- **Using `+page.ts` for database access** — Universal loads run on client; use `+page.server.ts`
-- **Missing `use:enhance` on forms** — Forms reload the page without it
-- **Accessing `event.locals` without type declaration** — Define `App.Locals` in `app.d.ts`
-- **Exposing validation details in `handleValidationError`** — Validation failures are often security scans; return generic errors
-
-### Medium Priority Issues
-
-- **Not using `$types` for load function typing** — Lose automatic type inference
-- **Fetching data in components instead of load functions** — Creates waterfalls
-- **Using `goto()` instead of `<a>` links** — Lose prefetching and progressive enhancement
-- **Not handling error states in `{#await}` blocks** — Streamed data can fail
-- **Missing `+error.svelte` in route segments** — Errors bubble to root error page
-- **Using `event.url.searchParams` in hooks for routing** — Use `reroute` hook instead
-- **Calling `parent()` before independent fetches** — Creates waterfalls
-
-### Common Mistakes
-
-- **`redirect()` inside try/catch** — Redirect throws internally; wrap only the mutation in try/catch
-- **Using `page` from `$app/stores` instead of `$app/state`** — `$app/state` is the Svelte 5 pattern
-- **Forgetting `method="POST"` on forms** — Form actions only handle POST; GET hits the load function
-- **Not returning from `fail()`** — `fail()` doesn't throw; you must `return fail(...)`
-- **Using default action with named actions** — A page with named actions can't also have a default action
-- **Setting cookies without `path: '/'`** — Cookie may not be sent on subsequent requests
-- **Not passing `email` back in `fail()` response** — User loses their input on validation error
-
-### Gotchas & Edge Cases
-
-- **Load functions run in parallel** — All load functions for a route run concurrently by default
-- **Layout data merges, not replaces** — If layout and page return same key, page wins
-- **`redirect()` uses 303 for form actions** — Always use 303 (See Other) after POST to prevent resubmission
-- **`error()` renders `+error.svelte`, not the page** — The page component doesn't render at all
-- **Server load must return serializable data** — No classes, functions, or component instances (unless you define a `transport` hook)
-- **Universal load can return anything** — Classes, component constructors, non-serializable data
-- **`fetch` in load functions is special** — Auto-deduplicates, inherits cookies, works server-side
-- **Forms without `use:enhance` cause full-page reload** — This is intentional (progressive enhancement)
-- **`event.locals` is request-scoped** — Safe for per-request data (auth), not for global state
-- **Content negotiation** — `+page.server.ts` and `+server.ts` in the same directory: forms go to actions, API calls go to server routes
-- **SvelteKit uses `$app/state` in Svelte 5** — Replace `$app/stores` (`$page`, `$navigating`) with `$app/state` (`page`, `navigating`)
-- **`depends()` creates custom invalidation keys** — Use `app:` prefix for custom keys
-- **`init` hook runs once at server startup** — Use for database connections, env validation; errors here prevent the server from starting
-- **`reroute` runs before `handle`** — Rewrites URL before route matching; useful for i18n locale prefixes. Since 2.18+, it also receives `fetch` and can be async
-- **`transport` hook enables custom type serialization** — Classes returned from server loads survive the server-to-client boundary
-- **`handleValidationError` runs when remote function args fail schema validation** — Return `App.Error`; be careful not to expose validation details (security scans trigger this)
+| Property        | Server load | Universal load | What it is                         |
+| --------------- | :---------: | :------------: | ---------------------------------- |
+| `params`        |     Yes     |      Yes       | Route parameters                   |
+| `url`           |     Yes     |      Yes       | A `URL` instance                   |
+| `route`         |     Yes     |      Yes       | The matched route id               |
+| `fetch`         |     Yes     |      Yes       | SvelteKit's enhanced fetch         |
+| `depends`       |     Yes     |      Yes       | Register a custom invalidation key |
+| `parent`        |     Yes     |      Yes       | The parent load's data             |
+| `untrack`       |     Yes     |      Yes       | Read without creating a dependency |
+| `setHeaders`    |     Yes     |      Yes       | Set response headers               |
+| `data`          |     No      |      Yes       | The server load's output           |
+| `cookies`       |     Yes     |       No       | Read and write cookies             |
+| `locals`        |     Yes     |       No       | Whatever `handle` put there        |
+| `request`       |     Yes     |       No       | The raw `Request`                  |
+| `platform`      |     Yes     |       No       | Adapter-specific extras            |
+| `clientAddress` |     Yes     |       No       | The client IP                      |
 
 ---
 
-## Quick Reference
-
-### File Conventions Checklist
-
-- [ ] `+page.svelte` — Page UI (required for route to be accessible)
-- [ ] `+page.ts` — Universal load (server + client)
-- [ ] `+page.server.ts` — Server load + form actions
-- [ ] `+layout.svelte` — Shared layout (renders `{@render children()}`)
-- [ ] `+layout.ts` — Universal layout load
-- [ ] `+layout.server.ts` — Server layout load
-- [ ] `+error.svelte` — Error boundary
-- [ ] `+server.ts` — API route
-
-### Load Function Inputs
-
-| Property        | Server Load | Universal Load | Description            |
-| --------------- | :---------: | :------------: | ---------------------- |
-| `params`        |     Yes     |      Yes       | Route parameters       |
-| `url`           |     Yes     |      Yes       | URL instance           |
-| `route`         |     Yes     |      Yes       | Route info             |
-| `fetch`         |     Yes     |      Yes       | Enhanced fetch         |
-| `depends`       |     Yes     |      Yes       | Custom invalidation    |
-| `parent`        |     Yes     |      Yes       | Parent load data       |
-| `untrack`       |     Yes     |      Yes       | Exclude from tracking  |
-| `setHeaders`    |     Yes     |      Yes       | Set response headers   |
-| `data`          |     No      |      Yes       | Server load output     |
-| `cookies`       |     Yes     |       No       | Cookie access          |
-| `locals`        |     Yes     |       No       | Request-local data     |
-| `request`       |     Yes     |       No       | Raw Request object     |
-| `platform`      |     Yes     |       No       | Platform-specific data |
-| `clientAddress` |     Yes     |       No       | Client IP address      |
-
-### Form Action Response Checklist
-
-- [ ] Validate all input fields
-- [ ] Return field values in `fail()` (so form preserves input)
-- [ ] Use `fail(400, { ... })` for validation errors
-- [ ] Use `redirect(303, '/path')` for success redirects
-- [ ] Auth check before mutation
-- [ ] `redirect()` OUTSIDE try/catch
-- [ ] Mutation INSIDE try/catch
-
-### SvelteKit Imports
+## Import Surface
 
 ```typescript
 // Kit utilities
@@ -218,40 +115,121 @@ import {
 // Forms
 import { enhance, applyAction, deserialize } from "$app/forms";
 
-// State (Svelte 5 — replaces $app/stores)
+// State — the Svelte 5 form, replacing $app/stores
 import { page, navigating, updated } from "$app/state";
 
 // Environment
-import { env } from "$env/dynamic/private"; // Server only
-import { env } from "$env/dynamic/public"; // Both
-import { SECRET_KEY } from "$env/static/private"; // Server only, build-time
-import { PUBLIC_API_URL } from "$env/static/public"; // Both, build-time
+import { env } from "$env/dynamic/private"; // server only, runtime
+import { env } from "$env/dynamic/public"; // both, runtime
+import { SECRET_KEY } from "$env/static/private"; // server only, build time
+import { PUBLIC_API_URL } from "$env/static/public"; // both, build time
 
-// Auto-generated types (page/layout)
-import type { PageServerLoad, Actions } from "./$types";
-import type { PageLoad } from "./$types";
-import type { LayoutServerLoad } from "./$types";
-import type { RequestHandler } from "./$types";
-import type { PageProps, LayoutProps } from "./$types";
+// Generated types, per route
+import type {
+  PageServerLoad,
+  PageLoad,
+  LayoutServerLoad,
+  Actions,
+} from "./$types";
+import type { RequestHandler, PageProps, LayoutProps } from "./$types";
 
 // Hook types
-import type { Handle, HandleFetch, HandleServerError } from "@sveltejs/kit";
-import type { HandleClientError } from "@sveltejs/kit";
-import type { HandleValidationError } from "@sveltejs/kit";
-import type { ServerInit } from "@sveltejs/kit";
-import type { Reroute, Transport } from "@sveltejs/kit";
+import type {
+  Handle,
+  HandleFetch,
+  HandleServerError,
+  HandleClientError,
+} from "@sveltejs/kit";
+import type {
+  HandleValidationError,
+  ServerInit,
+  Reroute,
+  Transport,
+} from "@sveltejs/kit";
 ```
 
-### Page Options
+The `$env` split is a security boundary: anything under `static/private` or `dynamic/private` fails
+to build if a client-reachable module imports it.
+
+---
+
+## Page Options
 
 ```typescript
-// In +page.ts, +page.server.ts, +layout.ts, or +layout.server.ts
-export const prerender = true; // Static HTML at build time
-export const ssr = false; // Client-only rendering
-export const csr = false; // No JavaScript (static page)
-
-// Combined patterns
-export const prerender = true; // Pre-render
-export const ssr = true; // Required for prerender
-export const csr = false; // Pure static (no JS)
+// In +page.ts, +page.server.ts, +layout.ts or +layout.server.ts
+export const prerender = true; // static HTML at build time
+export const ssr = false; // client-only rendering
+export const csr = false; // no JavaScript shipped
 ```
+
+| Option      | Values                    | Effect                             |
+| ----------- | ------------------------- | ---------------------------------- |
+| `prerender` | `true`, `false`, `'auto'` | Generate static HTML at build time |
+| `ssr`       | `true`, `false`           | Render on the server               |
+| `csr`       | `true`, `false`           | Hydrate in the browser             |
+
+Set on a layout, they apply to every route beneath it. `prerender` needs `ssr` to stay true.
+
+---
+
+## Adapters
+
+The adapter is what turns the build into something a host can run, and it decides which page options
+are even available — `adapter-static` requires every route to prerender.
+
+| Adapter                                                   | Target                                  |
+| --------------------------------------------------------- | --------------------------------------- |
+| `adapter-auto`                                            | Detects the platform at build time      |
+| `adapter-node`                                            | A Node server you run yourself          |
+| `adapter-static`                                          | A fully prerendered site, no server     |
+| `adapter-vercel`, `adapter-netlify`, `adapter-cloudflare` | That platform's own runtime and adapter |
+
+`event.platform` carries whatever the adapter exposes, which is why its contents are
+adapter-specific rather than part of SvelteKit's own API.
+
+---
+
+## Further Gotchas
+
+The ones that change a decision are in [SKILL.md](SKILL.md); these are the long tail.
+
+- `handleValidationError` fires when a remote function's arguments fail their schema — return a
+  generic `App.Error`, since these are frequently security scans rather than users
+- `init` runs once at server startup, so a throw there stops the server from starting: the right
+  place to validate configuration
+- `reroute` runs before `handle` and rewrites the URL before route matching — useful for locale
+  prefixes. From 2.18 it also receives `fetch` and may be async
+- `transport` lets a class survive a server load's serialisation, encode and decode both
+- `goto()` in place of an `<a href>` loses link prefetching and leaves the navigation broken without
+  JavaScript — reach for it only when there is no element to click
+- `depends()` keys conventionally use an `app:` prefix, to distinguish them from URLs
+- A universal load may return anything, including class instances and component constructors; a
+  server load may not
+- `event.url.searchParams` in a hook is the wrong tool for routing decisions — `reroute` is the one
+  that runs before matching
+- `+page.server.ts` and `+server.ts` may coexist in one directory: form posts go to the actions, and
+  requests asking for JSON go to the server route
+- A page with named actions cannot also have a `default` action
+- Not handling the `{:catch}` branch of an `{#await}` leaves a streamed failure rendering nothing
+- A route segment with no `+error.svelte` bubbles its errors to the root error page
+
+---
+
+## Checklists
+
+### A form action
+
+- [ ] Auth checked before the mutation
+- [ ] Every field validated server-side
+- [ ] The submitted values returned inside `fail()`, so the form refills
+- [ ] `fail(400, { ... })` for validation, `error()` only for something the user cannot fix
+- [ ] `redirect(303, '/path')` on success — 303 rather than 302, so the browser switches to GET
+- [ ] The mutation inside a `try`, the redirect outside it
+
+### A `+server.ts` route
+
+- [ ] One export per verb, plus `fallback` for a 405 on the rest
+- [ ] `locals.user` checked on everything that writes
+- [ ] Pagination bounded — an uncapped `limit` is a denial-of-service
+- [ ] `json()` for JSON, a raw `Response` for anything else
+- [ ] The status code chosen deliberately: 201 with a body, 204 without one

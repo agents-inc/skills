@@ -1553,7 +1553,7 @@
       "name": "web-3d-react-three-fiber",
       "source": "./dist/plugins/web-3d-react-three-fiber",
       "description": "React Three Fiber (R3F) 3D rendering — Canvas, meshes, materials, lights, cameras, animations, events, physics, post-processing, performance",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1563,7 +1563,7 @@
       "name": "web-accessibility-web-accessibility",
       "source": "./dist/plugins/web-accessibility-web-accessibility",
       "description": "WCAG, ARIA, keyboard navigation",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1572,8 +1572,8 @@
     {
       "name": "web-animation-css-animations",
       "source": "./dist/plugins/web-animation-css-animations",
-      "description": "CSS Animation patterns - transitions, keyframes, scroll-driven animations, @property, GPU-accelerated properties, accessibility with prefers-reduced-motion",
-      "version": "3.0.0",
+      "description": "CSS animation patterns - transitions, keyframes, scroll-driven timelines, @property, compositor-friendly properties, prefers-reduced-motion",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1582,8 +1582,8 @@
     {
       "name": "web-animation-framer-motion",
       "source": "./dist/plugins/web-animation-framer-motion",
-      "description": "Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility",
-      "version": "4.0.0",
+      "description": "Motion (formerly Framer Motion) patterns - motion components, variants, AnimatePresence, gestures, layout animations, scroll-linked motion, reduced-motion handling",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1592,8 +1592,8 @@
     {
       "name": "web-animation-view-transitions",
       "source": "./dist/plugins/web-animation-view-transitions",
-      "description": "View Transitions API patterns - same-document transitions, cross-document MPA transitions, shared element animations, pseudo-element styling, accessibility",
-      "version": "4.0.0",
+      "description": "View Transitions API patterns - same-document transitions, cross-document navigation, shared element animations, pseudo-element styling, transition types, reduced-motion handling",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1602,8 +1602,8 @@
     {
       "name": "web-data-fetching-graphql-apollo",
       "source": "./dist/plugins/web-data-fetching-graphql-apollo",
-      "description": "Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions",
-      "version": "4.0.0",
+      "description": "Apollo Client GraphQL patterns — normalized cache and type policies, queries, mutations with optimistic updates, pagination, fragments, subscriptions, and Suspense hooks",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1612,8 +1612,8 @@
     {
       "name": "web-data-fetching-graphql-urql",
       "source": "./dist/plugins/web-data-fetching-graphql-urql",
-      "description": "URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions",
-      "version": "4.0.0",
+      "description": "URQL GraphQL client patterns — the exchange pipeline, document and normalized caching, queries, mutations, subscriptions, and authentication",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1622,8 +1622,8 @@
     {
       "name": "web-data-fetching-swr",
       "source": "./dist/plugins/web-data-fetching-swr",
-      "description": "SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll",
-      "version": "4.0.0",
+      "description": "SWR data fetching patterns — keys and fetchers, isLoading vs isValidating, revalidation strategy, useSWRMutation, useSWRInfinite, conditional fetching",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1632,8 +1632,8 @@
     {
       "name": "web-data-fetching-trpc",
       "source": "./dist/plugins/web-data-fetching-trpc",
-      "description": "tRPC type-safe API patterns, procedures, middleware, React Query integration",
-      "version": "4.0.0",
+      "description": "tRPC type-safe API patterns — routers and procedures, input validation, context and middleware, TRPCError, and the typed client bridge",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1643,7 +1643,7 @@
       "name": "web-dataviz-d3",
       "source": "./dist/plugins/web-dataviz-d3",
       "description": "D3.js data visualization — selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1653,7 +1653,7 @@
       "name": "web-dataviz-recharts",
       "source": "./dist/plugins/web-dataviz-recharts",
       "description": "Recharts composable chart components - LineChart, BarChart, AreaChart, PieChart, ComposedChart, responsive sizing, custom tooltips, animations",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1663,7 +1663,7 @@
       "name": "web-dnd-dnd-kit",
       "source": "./dist/plugins/web-dnd-dnd-kit",
       "description": "Drag and drop with @dnd-kit - draggable, droppable, sortable, collision detection, sensors, accessibility",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1672,8 +1672,8 @@
     {
       "name": "web-editor-lexical",
       "source": "./dist/plugins/web-editor-lexical",
-      "description": "Extensible text editor framework by Meta",
-      "version": "2.0.0",
+      "description": "Extensible text editor framework by Meta. Use when building a rich text editor on Lexical — editor setup, custom nodes, commands, transforms, and serialization.",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1682,8 +1682,8 @@
     {
       "name": "web-editor-tiptap",
       "source": "./dist/plugins/web-editor-tiptap",
-      "description": "Rich text editor framework with TipTap and ProseMirror",
-      "version": "2.0.0",
+      "description": "Headless rich text editor framework built on ProseMirror. Use when building an editor with TipTap — setup, extensions, custom nodes and marks, menus, node views, serialization.",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1693,7 +1693,7 @@
       "name": "web-error-handling-error-boundaries",
       "source": "./dist/plugins/web-error-handling-error-boundaries",
       "description": "Error boundary patterns, fallback UI, reset/retry, react-error-boundary library, React 19 createRoot error hooks",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1703,7 +1703,7 @@
       "name": "web-error-handling-result-types",
       "source": "./dist/plugins/web-error-handling-result-types",
       "description": "TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1712,8 +1712,8 @@
     {
       "name": "web-files-file-upload-patterns",
       "source": "./dist/plugins/web-files-file-upload-patterns",
-      "description": "File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)",
-      "version": "4.0.0",
+      "description": "File upload patterns - drag-drop dropzones, chunked and resumable uploads, presigned URL flows, file validation (MIME type, magic bytes), progress tracking, accessibility (ARIA)",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1723,7 +1723,7 @@
       "name": "web-files-image-handling",
       "source": "./dist/plugins/web-files-image-handling",
       "description": "Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1733,7 +1733,7 @@
       "name": "web-forms-react-hook-form",
       "source": "./dist/plugins/web-forms-react-hook-form",
       "description": "React Hook Form patterns - useForm, Controller, useFieldArray, validation resolver, performance optimization",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1743,7 +1743,7 @@
       "name": "web-forms-tanstack-form",
       "source": "./dist/plugins/web-forms-tanstack-form",
       "description": "TanStack Form patterns - useForm, form.Field, validators, arrays, linked fields, createFormHook, type safety",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1753,7 +1753,7 @@
       "name": "web-forms-vee-validate",
       "source": "./dist/plugins/web-forms-vee-validate",
       "description": "VeeValidate v4 patterns - useForm, useField, defineField, useFieldArray, schema validation with Composition API",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1763,7 +1763,7 @@
       "name": "web-forms-zod-validation",
       "source": "./dist/plugins/web-forms-zod-validation",
       "description": "Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1772,8 +1772,8 @@
     {
       "name": "web-framework-angular-standalone",
       "source": "./dist/plugins/web-framework-angular-standalone",
-      "description": "Angular 17-19 standalone components, signals, control flow, dependency injection patterns",
-      "version": "3.0.0",
+      "description": "Angular 17–19 standalone components, signals, built-in control flow, inject() DI, the resource API. Load when writing or migrating Angular components.",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1782,8 +1782,8 @@
     {
       "name": "web-framework-react",
       "source": "./dist/plugins/web-framework-react",
-      "description": "Component architecture, hooks, patterns",
-      "version": "4.0.0",
+      "description": "Component architecture, hooks and React 19 patterns. Load when building or refactoring React components, custom hooks, forms, or async UI.",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1792,8 +1792,8 @@
     {
       "name": "web-framework-solidjs",
       "source": "./dist/plugins/web-framework-solidjs",
-      "description": "SolidJS fine-grained reactivity patterns - signals, effects, memos, stores, createResource, control flow components, Suspense, SolidStart",
-      "version": "3.0.0",
+      "description": "SolidJS fine-grained reactivity — signals, effects, memos, stores, resources, control-flow components. Load when writing Solid components or reactive state.",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1802,8 +1802,8 @@
     {
       "name": "web-framework-svelte",
       "source": "./dist/plugins/web-framework-svelte",
-      "description": "Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API",
-      "version": "3.0.0",
+      "description": "Svelte 5 runes — $state, $derived, $effect, $props, $bindable, snippets, callback props, context. Load when writing Svelte 5 components or reactive modules.",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1812,8 +1812,8 @@
     {
       "name": "web-framework-vue-composition-api",
       "source": "./dist/plugins/web-framework-vue-composition-api",
-      "description": "Vue 3 Composition API patterns, reactivity primitives, composables, lifecycle hooks",
-      "version": "4.0.0",
+      "description": "Vue 3 Composition API — reactivity primitives, composables, lifecycle, the 3.4+ and 3.5+ macros. Load when writing Vue 3 components or composables.",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1822,8 +1822,8 @@
     {
       "name": "web-i18n-next-intl",
       "source": "./dist/plugins/web-i18n-next-intl",
-      "description": "Type-safe i18n for Next.js App Router",
-      "version": "4.0.0",
+      "description": "Type-safe i18n for the App Router — locale routing, message rendering, formatting and static generation. Load when a project imports next-intl.",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1832,8 +1832,8 @@
     {
       "name": "web-i18n-react-intl",
       "source": "./dist/plugins/web-i18n-react-intl",
-      "description": "ICU message format internationalization",
-      "version": "3.0.0",
+      "description": "ICU message format internationalization for React — FormattedMessage, useIntl, defineMessages, and the FormatJS extraction workflow. Load when a project imports react-intl.",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1842,8 +1842,8 @@
     {
       "name": "web-i18n-vue-i18n",
       "source": "./dist/plugins/web-i18n-vue-i18n",
-      "description": "Type-safe i18n for Vue 3 Composition API",
-      "version": "4.0.0",
+      "description": "Type-safe i18n for Vue 3 Composition API — useI18n, pipe-syntax plurals, i18n-t/d/n components, lazy-loaded locales. Load when a project imports vue-i18n.",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1852,8 +1852,8 @@
     {
       "name": "web-maps-leaflet",
       "source": "./dist/plugins/web-maps-leaflet",
-      "description": "Leaflet interactive maps - map setup, tile layers, markers, popups, GeoJSON, custom controls, plugins, clustering, events",
-      "version": "2.0.0",
+      "description": "Leaflet interactive maps. Use when building a 2D map with tile layers, markers, popups, GeoJSON, layer control, custom controls or marker clustering.",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1862,8 +1862,8 @@
     {
       "name": "web-maps-mapbox",
       "source": "./dist/plugins/web-maps-mapbox",
-      "description": "Mapbox GL JS interactive maps - map initialization, markers, popups, sources, layers, expressions, clustering, 3D terrain, geocoding, directions",
-      "version": "2.0.0",
+      "description": "Mapbox GL JS interactive vector maps. Use when building a map with sources and layers, expressions, clustering, 3D terrain, geocoding or directions.",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1873,7 +1873,7 @@
       "name": "web-meta-framework-astro",
       "source": "./dist/plugins/web-meta-framework-astro",
       "description": "Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1883,7 +1883,7 @@
       "name": "web-meta-framework-docusaurus",
       "source": "./dist/plugins/web-meta-framework-docusaurus",
       "description": "Docusaurus 3.x documentation framework — site configuration, docs/blog plugins, sidebars, versioning, MDX, swizzling, and deployment",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1893,7 +1893,7 @@
       "name": "web-meta-framework-nextjs",
       "source": "./dist/plugins/web-meta-framework-nextjs",
       "description": "Next.js App Router patterns (15-16) - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, Cache Components",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1903,7 +1903,7 @@
       "name": "web-meta-framework-nuxt",
       "source": "./dist/plugins/web-meta-framework-nuxt",
       "description": "Nuxt patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1913,7 +1913,7 @@
       "name": "web-meta-framework-qwik",
       "source": "./dist/plugins/web-meta-framework-qwik",
       "description": "Qwik resumable framework - zero hydration, $ lazy boundaries, signals, Qwik City file-based routing, routeLoader$, routeAction$, server$ RPC, serialization rules",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1923,7 +1923,7 @@
       "name": "web-meta-framework-remix",
       "source": "./dist/plugins/web-meta-framework-remix",
       "description": "File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1933,7 +1933,7 @@
       "name": "web-meta-framework-sveltekit",
       "source": "./dist/plugins/web-meta-framework-sveltekit",
       "description": "SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1943,7 +1943,7 @@
       "name": "web-meta-framework-vitepress",
       "source": "./dist/plugins/web-meta-framework-vitepress",
       "description": "VitePress 1.x — Vue-powered static site generator for documentation sites, built on Vite",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1953,7 +1953,7 @@
       "name": "web-mocks-msw",
       "source": "./dist/plugins/web-mocks-msw",
       "description": "MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1963,7 +1963,7 @@
       "name": "web-performance-web-performance",
       "source": "./dist/plugins/web-performance-web-performance",
       "description": "Bundle optimization, render performance, Core Web Vitals",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1973,7 +1973,7 @@
       "name": "web-pwa-offline-first",
       "source": "./dist/plugins/web-pwa-offline-first",
       "description": "Local-first architecture with sync queues",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1983,7 +1983,7 @@
       "name": "web-pwa-service-workers",
       "source": "./dist/plugins/web-pwa-service-workers",
       "description": "Service Worker lifecycle, caching strategies, offline patterns, update handling, precaching, runtime caching",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1993,7 +1993,7 @@
       "name": "web-realtime-socket-io",
       "source": "./dist/plugins/web-realtime-socket-io",
       "description": "Socket.IO v4.x client patterns, connection lifecycle, reconnection, authentication, rooms, namespaces, acknowledgments, binary data, TypeScript integration",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2003,7 +2003,7 @@
       "name": "web-realtime-sse",
       "source": "./dist/plugins/web-realtime-sse",
       "description": "Server-Sent Events for unidirectional server-to-client streaming, EventSource API, fetch streaming, reconnection patterns, message parsing",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2013,7 +2013,7 @@
       "name": "web-realtime-websockets",
       "source": "./dist/plugins/web-realtime-websockets",
       "description": "Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2023,7 +2023,7 @@
       "name": "web-routing-react-router",
       "source": "./dist/plugins/web-routing-react-router",
       "description": "Client-side routing with data APIs — loaders, actions, error boundaries, search params, nested layouts, and code splitting",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2033,7 +2033,7 @@
       "name": "web-routing-tanstack-router",
       "source": "./dist/plugins/web-routing-tanstack-router",
       "description": "Type-safe client-side routing for React with file-based routes, search params validation, loaders, and code splitting",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2042,8 +2042,8 @@
     {
       "name": "web-server-state-react-query",
       "source": "./dist/plugins/web-server-state-react-query",
-      "description": "React Query server state, hey-api OpenAPI codegen, type-safe data fetching",
-      "version": "3.0.0",
+      "description": "React Query server state — query keys and query options, caching policy, error handling, and typed clients generated from an API schema",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2053,7 +2053,7 @@
       "name": "web-state-jotai",
       "source": "./dist/plugins/web-state-jotai",
       "description": "Atomic state management with auto-dependency tracking",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2063,7 +2063,7 @@
       "name": "web-state-mobx",
       "source": "./dist/plugins/web-state-mobx",
       "description": "MobX observable state management patterns with mobx-react-lite. Use when implementing reactive client state with observables, computed values, actions, and the observer HOC.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2073,7 +2073,7 @@
       "name": "web-state-ngrx-signalstore",
       "source": "./dist/plugins/web-state-ngrx-signalstore",
       "description": "NgRx SignalStore patterns for Angular state management. Use when managing client state with Angular Signals, composing store features, handling entities, or integrating RxJS effects.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2083,7 +2083,7 @@
       "name": "web-state-pinia",
       "source": "./dist/plugins/web-state-pinia",
       "description": "Pinia stores, Vue 3 state patterns. Use when managing client state in Vue applications, choosing between Options/Setup stores, composing stores, or implementing persistence.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2093,7 +2093,7 @@
       "name": "web-state-redux-toolkit",
       "source": "./dist/plugins/web-state-redux-toolkit",
       "description": "Redux Toolkit patterns for complex client state. Use when managing enterprise-scale state, needing DevTools, entity normalization, or RTK Query for data fetching.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2103,7 +2103,7 @@
       "name": "web-state-zustand",
       "source": "./dist/plugins/web-state-zustand",
       "description": "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, or avoiding Context misuse.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2113,7 +2113,7 @@
       "name": "web-styling-cva",
       "source": "./dist/plugins/web-styling-cva",
       "description": "Class Variance Authority - type-safe component variant styling with cva(), compound variants, and VariantProps",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2123,7 +2123,7 @@
       "name": "web-styling-design-tokens",
       "source": "./dist/plugins/web-styling-design-tokens",
       "description": "Design token architecture - primitive/semantic/component tiers, naming grammar, CSS custom property delivery, and DTCG build pipelines",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2132,8 +2132,8 @@
     {
       "name": "web-styling-scss-modules",
       "source": "./dist/plugins/web-styling-scss-modules",
-      "description": "SCSS Modules, cva, design tokens",
-      "version": "3.0.0",
+      "description": "SCSS Modules - locally scoped component stylesheets, cascade layers, the Sass module system, mixins, and build-time versus runtime values",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2143,7 +2143,7 @@
       "name": "web-styling-tailwind",
       "source": "./dist/plugins/web-styling-tailwind",
       "description": "Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2153,7 +2153,7 @@
       "name": "web-styling-theming",
       "source": "./dist/plugins/web-styling-theming",
       "description": "Runtime theming - applying a theme system to a live app without flash",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2163,7 +2163,7 @@
       "name": "web-testing-cypress-e2e",
       "source": "./dist/plugins/web-testing-cypress-e2e",
       "description": "Cypress E2E testing patterns - test structure, data-cy selectors, cy.intercept() mocking, custom commands, fixtures, component testing, accessibility testing with cypress-axe, and CI/CD integration",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2173,7 +2173,7 @@
       "name": "web-testing-playwright-e2e",
       "source": "./dist/plugins/web-testing-playwright-e2e",
       "description": "Playwright E2E testing patterns - test structure, Page Object Model, locator strategies, assertions, network mocking, visual regression, parallel execution, fixtures, and configuration",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2182,8 +2182,8 @@
     {
       "name": "web-testing-react-testing-library",
       "source": "./dist/plugins/web-testing-react-testing-library",
-      "description": "React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing",
-      "version": "3.0.0",
+      "description": "React Testing Library — query hierarchy, userEvent, async utilities, renderHook, custom render with providers. Load when writing or reviewing tests that render React components or hooks.",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2192,8 +2192,8 @@
     {
       "name": "web-testing-visual-regression",
       "source": "./dist/plugins/web-testing-visual-regression",
-      "description": "Visual regression testing - screenshot baselines, determinism, diff review workflow, baseline custody, and CI wiring for catching unintended UI changes",
-      "version": "1.0.0",
+      "description": "Visual regression testing — screenshot baselines, determinism, diff review, baseline custody and CI wiring. Load when adding, reviewing or debugging tests that compare a rendered subject against an approved image.",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2203,7 +2203,7 @@
       "name": "web-testing-vitest",
       "source": "./dist/plugins/web-testing-vitest",
       "description": "Vitest test runner - configuration, assertions, mocking (vi.fn, vi.mock, vi.spyOn), fake timers, snapshot testing, coverage, workspace projects",
-      "version": "7.0.0",
+      "version": "8.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2212,8 +2212,8 @@
     {
       "name": "web-testing-vue-test-utils",
       "source": "./dist/plugins/web-testing-vue-test-utils",
-      "description": "Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking",
-      "version": "3.0.0",
+      "description": "Vue Test Utils — mount vs shallowMount, the wrapper API, awaiting DOM updates, flushPromises, testing composables, and the global mounting options. Load when writing or reviewing tests that mount Vue components.",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2223,7 +2223,7 @@
       "name": "web-tooling-component-library",
       "source": "./dist/plugins/web-tooling-component-library",
       "description": "Packaging React components as a consumable library — style delivery contracts, sideEffects, cascade layers, \"use client\" preservation, peer dependency ranges, server-safe vs client entries",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2233,7 +2233,7 @@
       "name": "web-tooling-storybook",
       "source": "./dist/plugins/web-tooling-storybook",
       "description": "Storybook patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2243,7 +2243,7 @@
       "name": "web-tooling-vite",
       "source": "./dist/plugins/web-tooling-vite",
       "description": "Vite config, path aliases, vendor chunk splitting, environment-specific builds, Rolldown codeSplitting, Sass modern API, build targets, module preload",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2253,7 +2253,7 @@
       "name": "web-ui-ant-design",
       "source": "./dist/plugins/web-ui-ant-design",
       "description": "Ant Design enterprise UI library for React",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2263,7 +2263,7 @@
       "name": "web-ui-base-ui",
       "source": "./dist/plugins/web-ui-base-ui",
       "description": "Unstyled accessible React component primitives",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2273,7 +2273,7 @@
       "name": "web-ui-chakra-ui",
       "source": "./dist/plugins/web-ui-chakra-ui",
       "description": "Accessible React component library with style props and theming",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2283,7 +2283,7 @@
       "name": "web-ui-headless-ui",
       "source": "./dist/plugins/web-ui-headless-ui",
       "description": "Unstyled accessible UI components by Tailwind Labs",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2293,7 +2293,7 @@
       "name": "web-ui-mantine",
       "source": "./dist/plugins/web-ui-mantine",
       "description": "Mantine v7 component library — theming, styling, hooks, forms, notifications",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2303,7 +2303,7 @@
       "name": "web-ui-mui",
       "source": "./dist/plugins/web-ui-mui",
       "description": "Material UI component library patterns for React",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2313,7 +2313,7 @@
       "name": "web-ui-radix-ui",
       "source": "./dist/plugins/web-ui-radix-ui",
       "description": "Unstyled accessible UI primitives",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2323,7 +2323,7 @@
       "name": "web-ui-shadcn-ui",
       "source": "./dist/plugins/web-ui-shadcn-ui",
       "description": "shadcn/ui component library patterns, CLI usage, theming, customization",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2333,7 +2333,7 @@
       "name": "web-ui-tanstack-table",
       "source": "./dist/plugins/web-ui-tanstack-table",
       "description": "TanStack Table v8 patterns - useReactTable, column definitions, sorting, filtering, pagination, row selection, virtual scrolling, server-side data",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2343,7 +2343,7 @@
       "name": "web-ui-vuetify",
       "source": "./dist/plugins/web-ui-vuetify",
       "description": "Material Design component library for Vue 3",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2353,7 +2353,7 @@
       "name": "web-utilities-date-fns",
       "source": "./dist/plugins/web-utilities-date-fns",
       "description": "date-fns patterns for TypeScript - formatting, parsing, manipulation, comparison, timezone handling, and internationalization",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2363,7 +2363,7 @@
       "name": "web-utilities-native-js",
       "source": "./dist/plugins/web-utilities-native-js",
       "description": "Modern native JavaScript (ES2022-ES2025) utility patterns that replace lodash",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2373,7 +2373,7 @@
       "name": "web-utilities-rxjs",
       "source": "./dist/plugins/web-utilities-rxjs",
       "description": "Reactive programming with RxJS - Observables, operators, Subjects, error handling, and memory leak prevention",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2383,7 +2383,7 @@
       "name": "web-utilities-vueuse",
       "source": "./dist/plugins/web-utilities-vueuse",
       "description": "VueUse composable utility collection for Vue 3 - browser, sensor, network, state, animation, and component utilities",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
       },

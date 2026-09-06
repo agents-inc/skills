@@ -1,6 +1,6 @@
 # web-testing-vue-test-utils
 
-Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking
+Vue Test Utils — mount vs shallowMount, the wrapper API, awaiting DOM updates, flushPromises, testing composables, and the global mounting options. Load when writing or reviewing tests that mount Vue components.
 
 ## Installation
 

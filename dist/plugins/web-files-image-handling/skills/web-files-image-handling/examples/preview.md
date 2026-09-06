@@ -1,151 +1,21 @@
-# Image Handling - Preview Examples
+# Image Handling — Preview Examples
 
-> Advanced preview generation patterns. See [core.md](core.md) for basic preview hook and component.
-
-**Prerequisites:** Understand Pattern 1-2 from [core.md](core.md) first.
-
----
-
-## Pattern 1: Drag-and-Drop Preview Zone
-
-### Visual Feedback During Drag
-
-Uses a drag counter to handle nested element enter/leave events correctly (the most common drag-and-drop bug).
-
-```typescript
-// drag-drop-preview.tsx
-import { useState, useCallback, useRef } from 'react';
-import type { DragEvent } from 'react';
-
-interface DragDropPreviewProps {
-  onFilesSelected: (files: File[]) => void;
-  accept?: string[];
-  maxFiles?: number;
-  className?: string;
-}
-
-const DEFAULT_ACCEPT = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const DEFAULT_MAX_FILES = 10;
-
-export function DragDropPreviewZone({
-  onFilesSelected,
-  accept = DEFAULT_ACCEPT,
-  maxFiles = DEFAULT_MAX_FILES,
-  className,
-}: DragDropPreviewProps) {
-  const [isDragActive, setIsDragActive] = useState(false);
-  const [dragError, setDragError] = useState<string | null>(null);
-  const dragCountRef = useRef(0);
-
-  const validateFiles = useCallback(
-    (files: File[]): { valid: File[]; errors: string[] } => {
-      const valid: File[] = [];
-      const errors: string[] = [];
-
-      files.forEach((file) => {
-        if (!accept.includes(file.type)) {
-          errors.push(`${file.name}: Invalid file type`);
-        } else if (valid.length >= maxFiles) {
-          errors.push(`${file.name}: Maximum ${maxFiles} files allowed`);
-        } else {
-          valid.push(file);
-        }
-      });
-
-      return { valid, errors };
-    },
-    [accept, maxFiles]
-  );
-
-  const handleDragEnter = useCallback((event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    dragCountRef.current++;
-    setIsDragActive(true);
-    setDragError(null);
-  }, []);
-
-  const handleDragLeave = useCallback((event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    dragCountRef.current--;
-    if (dragCountRef.current === 0) {
-      setIsDragActive(false);
-    }
-  }, []);
-
-  const handleDragOver = useCallback((event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (event: DragEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      dragCountRef.current = 0;
-      setIsDragActive(false);
-
-      const files = Array.from(event.dataTransfer.files);
-      const { valid, errors } = validateFiles(files);
-
-      if (errors.length > 0) {
-        setDragError(errors.join(', '));
-      }
-
-      if (valid.length > 0) {
-        onFilesSelected(valid);
-      }
-    },
-    [onFilesSelected, validateFiles]
-  );
-
-  return (
-    <div
-      className={className}
-      data-drag-active={isDragActive || undefined}
-      data-drag-error={!!dragError || undefined}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      role="button"
-      tabIndex={0}
-      aria-label="Drop zone for images"
-    >
-      {isDragActive ? (
-        <p>Drop images here...</p>
-      ) : (
-        <p>Drag and drop images here, or click to select</p>
-      )}
-
-      {dragError && (
-        <p role="alert" data-error>
-          {dragError}
-        </p>
-      )}
-    </div>
-  );
-}
-```
-
-**Why good:** Drag counter handles nested elements correctly, validates during drop, accessible with role and aria-label, style-agnostic via className and data-attributes
+> Presenting images once you hold them. Prerequisites are Patterns 1–2 in [core.md](core.md);
+> the processing they build on is in [canvas.md](canvas.md).
 
 ---
 
-## Pattern 2: Thumbnail Generation
+## Pattern 6: Thumbnail set
 
-### Create Multiple Sizes in Parallel
+Decode once and draw at every size, rather than re-decoding per size. Never upscale — enlarging a
+small source produces a bigger file that looks worse.
 
 ```typescript
 // thumbnail-generator.ts
 import { loadImage } from "./load-image";
 
-const THUMBNAIL_SIZES = {
-  small: 100,
-  medium: 200,
-  large: 400,
-} as const;
+const THUMBNAIL_SIZES = { small: 100, medium: 200, large: 400 } as const;
+const THUMBNAIL_QUALITY = 0.7;
 
 interface Thumbnail {
   blob: Blob;
@@ -160,8 +30,6 @@ interface ThumbnailSet {
   large: Thumbnail;
   original: { width: number; height: number };
 }
-
-const THUMBNAIL_QUALITY = 0.7;
 
 export async function generateThumbnailSet(file: File): Promise<ThumbnailSet> {
   const img = await loadImage(file);
@@ -185,32 +53,10 @@ async function createThumbnail(
   maxSize: number,
 ): Promise<Thumbnail> {
   const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+  const scale = Math.min(ratio, 1); // 1 means the source is already smaller
 
-  // Don't upscale
-  if (ratio >= 1) {
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas context unavailable"));
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("Thumbnail failed"))),
-        "image/jpeg",
-        THUMBNAIL_QUALITY,
-      );
-    });
-    return {
-      blob,
-      url: URL.createObjectURL(blob),
-      width: img.width,
-      height: img.height,
-    };
-  }
-
-  const width = Math.round(img.width * ratio);
-  const height = Math.round(img.height * ratio);
+  const width = Math.round(img.width * scale);
+  const height = Math.round(img.height * scale);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -234,7 +80,7 @@ async function createThumbnail(
   return { blob, url: URL.createObjectURL(blob), width, height };
 }
 
-/** Cleanup all thumbnail URLs */
+/** Every thumbnail holds an object URL; release the set when it goes out of use. */
 export function cleanupThumbnailSet(thumbnails: ThumbnailSet): void {
   URL.revokeObjectURL(thumbnails.small.url);
   URL.revokeObjectURL(thumbnails.medium.url);
@@ -242,17 +88,20 @@ export function cleanupThumbnailSet(thumbnails: ThumbnailSet): void {
 }
 ```
 
-**Why good:** Generates all sizes in parallel, doesn't upscale small images, provides cleanup function for all URLs
+Where the reduction to `small` is more than half — it usually is — route it through the step-down
+resize in [canvas.md](canvas.md) instead of drawing in one pass.
 
 ---
 
-## Pattern 3: Preview Gallery Grid
+## Pattern 7: Gallery grid
 
-### Multiple Images with Keyboard Navigation
+The listbox role gives arrow-key semantics for free, and `Delete`/`Backspace` removes without a
+pointer.
 
 ```typescript
 // preview-gallery.tsx
 import { useCallback } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 
 interface GalleryImage {
   id: string;
@@ -276,7 +125,7 @@ export function PreviewGallery({
   className,
 }: PreviewGalleryProps) {
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent, id: string) => {
+    (event: KeyboardEvent, id: string) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         onSelect?.(id);
@@ -289,6 +138,12 @@ export function PreviewGallery({
     [onSelect, onRemove]
   );
 
+  const handleRemoveClick = (event: MouseEvent, id: string) => {
+    // without this the click also selects the item being removed
+    event.stopPropagation();
+    onRemove?.(id);
+  };
+
   if (images.length === 0) {
     return (
       <div className={className} data-empty>
@@ -298,11 +153,7 @@ export function PreviewGallery({
   }
 
   return (
-    <div
-      className={className}
-      role="listbox"
-      aria-label="Image gallery"
-    >
+    <div className={className} role="listbox" aria-label="Image gallery">
       {images.map((image, index) => (
         <div
           key={image.id}
@@ -325,10 +176,7 @@ export function PreviewGallery({
           {onRemove && (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove(image.id);
-              }}
+              onClick={(e) => handleRemoveClick(e, image.id)}
               aria-label={`Remove ${image.file.name}`}
             >
               <span aria-hidden="true">x</span>
@@ -341,8 +189,5 @@ export function PreviewGallery({
 }
 ```
 
-**Why good:** ARIA listbox pattern for accessibility, keyboard Delete/Backspace support, stopPropagation on remove button prevents triggering select, lazy loading images
-
----
-
-_Extended examples: [core.md](core.md) | [canvas.md](canvas.md)_
+`loading="lazy"` matters more here than elsewhere: a grid of object URLs decodes every image at
+once otherwise, and each decode holds full-resolution pixels.
