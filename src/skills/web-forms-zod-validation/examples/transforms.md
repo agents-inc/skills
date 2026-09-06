@@ -11,13 +11,10 @@
 ```typescript
 import { z } from "zod";
 
-const DateStringSchema = z
-  .string()
-  .datetime()
-  .transform((str) => new Date(str));
+const DateStringSchema = z.iso.datetime().transform((str) => new Date(str));
 
 const EventSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   title: z.string().min(1),
   startDate: DateStringSchema,
   endDate: DateStringSchema,

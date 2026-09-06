@@ -53,9 +53,9 @@ Use `.brand<T>()` to create nominal types that prevent accidental mixing of stru
 ```typescript
 import { z } from "zod";
 
-const UserIdSchema = z.string().uuid().brand<"UserId">();
-const OrganizationIdSchema = z.string().uuid().brand<"OrganizationId">();
-const InvoiceIdSchema = z.string().uuid().brand<"InvoiceId">();
+const UserIdSchema = z.uuid().brand<"UserId">();
+const OrganizationIdSchema = z.uuid().brand<"OrganizationId">();
+const InvoiceIdSchema = z.uuid().brand<"InvoiceId">();
 
 type UserId = z.infer<typeof UserIdSchema>;
 type OrganizationId = z.infer<typeof OrganizationIdSchema>;
@@ -84,7 +84,7 @@ import { z } from "zod";
 const AppConfigSchema = z
   .object({
     api: z.object({
-      baseUrl: z.string().url(),
+      baseUrl: z.url(),
       timeout: z.number().positive(),
       retries: z.number().int().min(0).max(5),
     }),
@@ -123,7 +123,7 @@ interface Category {
 }
 
 const CategorySchema: z.ZodType<Category> = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1),
   get subcategories() {
     return z.array(CategorySchema).optional();
@@ -173,16 +173,16 @@ const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
 import { z } from "zod";
 
 // ISO 8601 date (YYYY-MM-DD)
-const DateOnlySchema = z.string().date();
+const DateOnlySchema = z.iso.date();
 
 // ISO 8601 time (HH:MM:SS or HH:MM:SS.sss)
-const TimeOnlySchema = z.string().time();
+const TimeOnlySchema = z.iso.time();
 
 // ISO 8601 datetime with timezone
-const DateTimeSchema = z.string().datetime();
+const DateTimeSchema = z.iso.datetime();
 
 // ISO 8601 duration (P[n]Y[n]M[n]DT[n]H[n]M[n]S)
-const DurationSchema = z.string().duration();
+const DurationSchema = z.iso.duration();
 
 const EventSchema = z.object({
   title: z.string().min(1),
@@ -199,4 +199,4 @@ const EventSchema = z.object({
 
 **Why good:** native ISO validators are more precise than regex, better error messages than custom patterns
 
-**Zod v4 note:** In v4, these moved to `z.iso.date()`, `z.iso.time()`, `z.iso.datetime()`, `z.iso.duration()` as top-level functions.
+**On v3:** these are method chains on `z.string()` — `z.string().date()`, `z.string().time()`, `z.string().datetime()`, `z.string().duration()`. The chains still parse on v4 but are deprecated in favour of the top-level forms above.

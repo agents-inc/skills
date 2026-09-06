@@ -6,67 +6,46 @@
 
 ## Decision Framework
 
-### When to Use defineField vs useField
+> `defineField` or `useField` is settled in [SKILL.md](SKILL.md) under the decision framework.
+
+### validationSchema or an inline validator function
 
 ```
-Are you building the form directly in your component?
-├─ YES → Are you using native HTML inputs?
-│   ├─ YES → Use defineField ✓
-│   └─ NO → Does component accept v-model?
-│       ├─ YES → Use defineField with v-model ✓
-│       └─ NO → Use useField with manual binding
-└─ NO → Are you building a reusable input component?
-    ├─ YES → Use useField ✓
-    └─ NO → Use defineField for application forms
+What does the rule need to see?
+├─ More than one field (password confirmation, date range) → validationSchema ✓
+├─ A value the input delivers as a string but the rule treats
+│  as a number or date                                      → validationSchema ✓
+├─ The same rule already stated elsewhere in the codebase    → validationSchema ✓
+├─ One field, one condition, used nowhere else               → inline function on useField
+└─ No schema library in the project                          → inline function on useField
 ```
 
-### When to Use Schema vs Inline Validation
+An inline validator is a function of one value returning a message or `true`. It cannot see a
+sibling field, which is the line between the two.
+
+### Validation timing
 
 ```
-What type of validation do you need?
-├─ Complex cross-field validation (password confirm)? → Schema with refine ✓
-├─ Type coercion (string to number)? → Schema with z.coerce ✓
-├─ Simple required/email/min checks? → Either works
-├─ Validation shared with backend? → Schema ✓
-├─ Single field validation? → Inline function
-└─ No validation library in project? → Inline function
+When should a field validate?
+├─ On blur (the default)                       → leave validateOnValueUpdate alone ✓
+├─ On submit only                              → validateOnValueUpdate: false, then validate()
+├─ On every keystroke                          → validateOnValueUpdate: true
+└─ On blur, then every keystroke once it fails → the eager pattern
 ```
 
-### Schema Library Selection
+The eager pattern is [examples/core.md](examples/core.md) Pattern 5: `handleBlur(evt, true)` on
+blur, and `handleChange(evt, !!errorMessage.value)` on input so re-validation starts only after the
+first failure.
+
+### Form-level or field-level
 
 ```
-Which schema library should you use?
-├─ Need TypeScript inference? → Zod ✓ (recommended)
-├─ Smallest bundle size critical? → Valibot
-├─ Already using Yup elsewhere? → Yup
-├─ Functional composition style? → Valibot
-└─ Most ecosystem support? → Zod
-```
-
-### Validation Timing Selection
-
-```
-When should validation trigger?
-├─ After user finishes field → validateOnBlur (default) ✓
-├─ Only on submit → validateOnValueUpdate: false + manual trigger
-├─ Every keystroke → validateOnValueUpdate: true (use sparingly)
-├─ After first error then every change → Eager validation pattern
-└─ Custom timing → Use validate() manually
-```
-
-### Form vs Field Level Validation
-
-```
-Where should validation logic live?
-├─ Validation depends on multiple fields?
-│   ├─ YES → Form-level schema with refine ✓
-│   └─ NO → Field-level is fine
-├─ Same validation used elsewhere?
-│   ├─ YES → Shared schema ✓
-│   └─ NO → Either works
-└─ Need array validation?
-    ├─ YES → Schema with z.array() ✓
-    └─ NO → Inline works
+Where does the rule belong?
+├─ It compares fields                  → form level, on validationSchema ✓
+├─ It validates an array's length or
+│  the shape of its items              → form level, on validationSchema ✓
+├─ It is reused across forms           → form level, as a shared schema ✓
+└─ It concerns one field in one form   → either; field level is less to wire
 ```
 
 ---

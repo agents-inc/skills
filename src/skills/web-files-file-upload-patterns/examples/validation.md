@@ -1,15 +1,21 @@
-# File Validation Examples
+# File Upload — Validation Examples
 
-> File validation patterns for MIME type, magic bytes, size, and image dimensions. Reference from [SKILL.md](../SKILL.md).
+> Checking a file before it moves. Decisions are in [SKILL.md](../SKILL.md); the ordering these
+> follow is in [reference.md](../reference.md).
+
+Everything here is user experience rather than security. The server repeats all of it.
 
 ---
 
-## Pattern 1: Comprehensive File Validator
+## Pattern 6: Rule-based validator
 
-### Validator Class with Multiple Rules
+Rules are built once from options and run in order, so cheap checks fail before expensive ones and
+the caller gets every reason at once.
 
 ```typescript
 // file-validator.ts
+import { detectFileType } from "./file-type-detection";
+
 interface ValidationRule {
   validate: (file: File) => Promise<boolean> | boolean;
   message: string;
@@ -48,7 +54,6 @@ export class FileValidator {
       customRules = [],
     } = options;
 
-    // Size validation
     if (maxSizeBytes !== undefined) {
       this.rules.push({
         validate: (file) => file.size <= maxSizeBytes,
@@ -63,22 +68,13 @@ export class FileValidator {
       });
     }
 
-    // MIME type validation
     if (allowedTypes?.length) {
       this.rules.push({
-        validate: (file) => {
-          return allowedTypes.some((type) => {
-            if (type.endsWith("/*")) {
-              return file.type.startsWith(type.replace("/*", "/"));
-            }
-            return file.type === type;
-          });
-        },
+        validate: (file) => matchesAnyType(file.type, allowedTypes),
         message: `File type must be one of: ${allowedTypes.join(", ")}`,
       });
     }
 
-    // Extension validation
     if (allowedExtensions?.length) {
       this.rules.push({
         validate: (file) => {
@@ -89,18 +85,19 @@ export class FileValidator {
       });
     }
 
-    // Content validation (magic bytes)
+    // the only rule that reads the file itself, so it goes last
     if (validateContent && allowedTypes?.length) {
       this.rules.push({
         validate: async (file) => {
-          const actualType = await detectFileType(file);
-          return actualType !== null && allowedTypes.includes(actualType);
+          const detected = await detectFileType(file);
+          return (
+            detected !== null && matchesAnyType(detected.mime, allowedTypes)
+          );
         },
         message: "File content does not match declared type",
       });
     }
 
-    // Custom rules
     this.rules.push(...customRules);
   }
 
@@ -108,37 +105,37 @@ export class FileValidator {
     const errors: string[] = [];
 
     for (const rule of this.rules) {
-      const isValid = await rule.validate(file);
-      if (!isValid) {
-        errors.push(rule.message);
-      }
+      if (!(await rule.validate(file))) errors.push(rule.message);
     }
 
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
+    return { valid: errors.length === 0, errors };
   }
 
   async validateMany(files: File[]): Promise<Map<File, ValidationResult>> {
     const results = new Map<File, ValidationResult>();
-
     for (const file of files) {
       results.set(file, await this.validate(file));
     }
-
     return results;
   }
 }
-```
 
-**Why good:** Composable validation rules, async support for content validation, validates multiple files with individual results, custom rules extensibility
+export function matchesAnyType(mime: string, allowed: string[]): boolean {
+  return allowed.some((type) =>
+    type.endsWith("/*")
+      ? mime.startsWith(type.replace("/*", "/"))
+      : mime === type,
+  );
+}
+```
 
 ---
 
-## Pattern 2: Magic Bytes Detection
+## Pattern 7: Magic-byte detection
 
-### File Type Detection by Content
+The signature identifies the container, which is not always the format. A ZIP signature covers
+`.zip` and every Office document, so a match there triggers a second look at the archive's entry
+names.
 
 ```typescript
 // file-type-detection.ts
@@ -149,9 +146,7 @@ interface FileSignature {
   offset?: number;
 }
 
-// Common file signatures (magic bytes)
 const FILE_SIGNATURES: FileSignature[] = [
-  // Images
   { mime: "image/jpeg", extension: "jpg", signature: [0xff, 0xd8, 0xff] },
   {
     mime: "image/png",
@@ -159,6 +154,7 @@ const FILE_SIGNATURES: FileSignature[] = [
     signature: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
   },
   { mime: "image/gif", extension: "gif", signature: [0x47, 0x49, 0x46, 0x38] },
+  // RIFF container — shared with WAV, so this alone is ambiguous
   {
     mime: "image/webp",
     extension: "webp",
@@ -175,15 +171,12 @@ const FILE_SIGNATURES: FileSignature[] = [
     extension: "ico",
     signature: [0x00, 0x00, 0x01, 0x00],
   },
-
-  // Documents
+  // "%PDF"
   {
     mime: "application/pdf",
     extension: "pdf",
     signature: [0x25, 0x50, 0x44, 0x46],
-  }, // %PDF
-
-  // Archives
+  },
   {
     mime: "application/zip",
     extension: "zip",
@@ -195,13 +188,8 @@ const FILE_SIGNATURES: FileSignature[] = [
     extension: "rar",
     signature: [0x52, 0x61, 0x72, 0x21],
   },
-
-  // Audio
   { mime: "audio/mpeg", extension: "mp3", signature: [0x49, 0x44, 0x33] },
-  { mime: "audio/wav", extension: "wav", signature: [0x52, 0x49, 0x46, 0x46] },
   { mime: "audio/ogg", extension: "ogg", signature: [0x4f, 0x67, 0x67, 0x53] },
-
-  // Video
   {
     mime: "video/webm",
     extension: "webm",
@@ -228,35 +216,33 @@ export async function detectFileType(
     const matches = sig.signature.every(
       (byte, index) => bytes[offset + index] === byte,
     );
+    if (!matches) continue;
 
-    if (matches) {
-      // Check for ZIP-based formats (Office docs)
-      if (sig.mime === "application/zip") {
-        const detailedType = await detectZipBasedFormat(file);
-        if (detailedType) return detailedType;
-      }
-
-      return {
-        mime: sig.mime,
-        extension: sig.extension,
-        confidence: sig.signature.length >= 4 ? "high" : "medium",
-      };
+    if (sig.mime === "application/zip") {
+      const detailedType = await detectZipBasedFormat(file);
+      if (detailedType) return detailedType;
     }
-  }
 
-  // Fallback to extension-based detection
-  const ext = file.name.split(".").pop()?.toLowerCase();
-  if (ext) {
     return {
-      mime: file.type || "application/octet-stream",
-      extension: ext,
-      confidence: "low",
+      mime: sig.mime,
+      extension: sig.extension,
+      // a short signature collides more easily, so say so
+      confidence: sig.signature.length >= 4 ? "high" : "medium",
     };
   }
 
-  return null;
+  // no signature matched: fall back to what the file claims, flagged as weak
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (!ext) return null;
+
+  return {
+    mime: file.type || "application/octet-stream",
+    extension: ext,
+    confidence: "low",
+  };
 }
 
+/** Office formats are ZIPs; their entry names appear early enough to read. */
 async function detectZipBasedFormat(
   file: File,
 ): Promise<DetectionResult | null> {
@@ -264,39 +250,41 @@ async function detectZipBasedFormat(
   const buffer = await file.slice(0, SAMPLE_SIZE).arrayBuffer();
   const text = new TextDecoder().decode(buffer);
 
-  if (text.includes("word/")) {
-    return {
+  const OFFICE_FORMATS = [
+    {
+      marker: "word/",
       mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       extension: "docx",
-      confidence: "high",
-    };
-  }
-  if (text.includes("xl/")) {
-    return {
+    },
+    {
+      marker: "xl/",
       mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       extension: "xlsx",
-      confidence: "high",
-    };
-  }
-  if (text.includes("ppt/")) {
-    return {
+    },
+    {
+      marker: "ppt/",
       mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       extension: "pptx",
-      confidence: "high",
-    };
+    },
+  ];
+
+  const found = OFFICE_FORMATS.find((f) => text.includes(f.marker));
+  if (found) {
+    return { mime: found.mime, extension: found.extension, confidence: "high" };
   }
 
   return { mime: "application/zip", extension: "zip", confidence: "high" };
 }
 ```
 
-**Why good:** Reads actual file bytes not metadata, detects Office documents within ZIP containers, provides confidence level, handles unknown files gracefully
+A `low` confidence result is the extension talking, which is exactly what magic bytes were meant to
+replace — treat it as unknown rather than as an answer.
 
 ---
 
-## Pattern 3: Image Dimension Validator
+## Pattern 8: Image dimensions
 
-### Validate Image Width, Height, and Aspect Ratio
+Loading the image is the expensive check, so the type and size checks run first and short-circuit.
 
 ```typescript
 // image-validator.ts
@@ -322,12 +310,11 @@ export async function validateImage(
   file: File,
   options: ImageValidationOptions = {},
 ): Promise<ImageValidationResult> {
-  const errors: string[] = [];
-
-  // Basic file validation
   if (!file.type.startsWith("image/")) {
     return { valid: false, errors: ["File is not an image"] };
   }
+
+  const errors: string[] = [];
 
   if (options.maxSizeBytes && file.size > options.maxSizeBytes) {
     errors.push(
@@ -335,50 +322,37 @@ export async function validateImage(
     );
   }
 
-  // Load image to get dimensions
   const dimensions = await getImageDimensions(file);
+  if (!dimensions) return { valid: false, errors: ["Failed to load image"] };
 
-  if (!dimensions) {
-    return { valid: false, errors: ["Failed to load image"] };
-  }
-
-  // Dimension validation
   if (options.maxWidth && dimensions.width > options.maxWidth) {
     errors.push(`Image width must not exceed ${options.maxWidth}px`);
   }
-
   if (options.maxHeight && dimensions.height > options.maxHeight) {
     errors.push(`Image height must not exceed ${options.maxHeight}px`);
   }
-
   if (options.minWidth && dimensions.width < options.minWidth) {
     errors.push(`Image width must be at least ${options.minWidth}px`);
   }
-
   if (options.minHeight && dimensions.height < options.minHeight) {
     errors.push(`Image height must be at least ${options.minHeight}px`);
   }
 
-  // Aspect ratio validation
   if (options.aspectRatio) {
-    const expectedRatio =
-      options.aspectRatio.width / options.aspectRatio.height;
-    const actualRatio = dimensions.width / dimensions.height;
+    const expected = options.aspectRatio.width / options.aspectRatio.height;
+    const actual = dimensions.width / dimensions.height;
+    // integer dimensions rarely divide to an exact ratio, so allow a tolerance
     const tolerance =
       options.aspectRatio.tolerance ?? DEFAULT_ASPECT_RATIO_TOLERANCE;
 
-    if (Math.abs(actualRatio - expectedRatio) > tolerance) {
+    if (Math.abs(actual - expected) > tolerance) {
       errors.push(
         `Image aspect ratio must be ${options.aspectRatio.width}:${options.aspectRatio.height}`,
       );
     }
   }
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    dimensions,
-  };
+  return { valid: errors.length === 0, errors, dimensions };
 }
 
 async function getImageDimensions(
@@ -403,17 +377,18 @@ async function getImageDimensions(
 }
 ```
 
-**Why good:** Validates file type before loading, cleans up object URL, returns dimensions for display, aspect ratio tolerance prevents false negatives from rounding
-
 ---
 
-## Pattern 4: Combined Validation Hook
+## Pattern 9: Validation hook
 
-### Use Validation in React Components
+Ordered fail-fast, cheapest first, with the file only read once every metadata check has passed.
 
 ```typescript
 // use-file-validation.ts
 import { useCallback, useState } from "react";
+import { matchesAnyType } from "./file-validator";
+import { detectFileType } from "./file-type-detection";
+import { validateImage } from "./image-validator";
 
 interface ValidationState {
   validating: boolean;
@@ -439,6 +414,8 @@ const INITIAL_STATE: ValidationState = {
   isValid: null,
 };
 
+const BYTES_PER_MB = 1024 * 1024;
+
 export function useFileValidation(options: UseFileValidationOptions = {}) {
   const [state, setState] = useState<ValidationState>(INITIAL_STATE);
 
@@ -448,46 +425,28 @@ export function useFileValidation(options: UseFileValidationOptions = {}) {
 
       const errors: string[] = [];
 
-      // Size validation
       if (options.maxSizeBytes && file.size > options.maxSizeBytes) {
-        const maxMB = options.maxSizeBytes / (1024 * 1024);
-        errors.push(`File must be smaller than ${maxMB}MB`);
+        errors.push(
+          `File must be smaller than ${options.maxSizeBytes / BYTES_PER_MB}MB`,
+        );
       }
 
-      // Type validation
-      if (options.allowedTypes?.length) {
-        const isAllowed = options.allowedTypes.some((type) => {
-          if (type.endsWith("/*")) {
-            return file.type.startsWith(type.replace("/*", "/"));
-          }
-          return file.type === type;
-        });
-
-        if (!isAllowed) {
-          errors.push(
-            `File type must be one of: ${options.allowedTypes.join(", ")}`,
-          );
-        }
+      if (
+        options.allowedTypes?.length &&
+        !matchesAnyType(file.type, options.allowedTypes)
+      ) {
+        errors.push(
+          `File type must be one of: ${options.allowedTypes.join(", ")}`,
+        );
       }
 
-      // Content validation (magic bytes)
       if (options.validateContent && options.allowedTypes?.length) {
         const detected = await detectFileType(file);
-        if (detected) {
-          const contentAllowed = options.allowedTypes.some((type) => {
-            if (type.endsWith("/*")) {
-              return detected.mime.startsWith(type.replace("/*", "/"));
-            }
-            return detected.mime === type;
-          });
-
-          if (!contentAllowed) {
-            errors.push("File content does not match declared type");
-          }
+        if (detected && !matchesAnyType(detected.mime, options.allowedTypes)) {
+          errors.push("File content does not match declared type");
         }
       }
 
-      // Image dimension validation
       if (options.imageOptions && file.type.startsWith("image/")) {
         const imageResult = await validateImage(file, options.imageOptions);
         errors.push(...imageResult.errors);
@@ -495,128 +454,16 @@ export function useFileValidation(options: UseFileValidationOptions = {}) {
 
       const isValid = errors.length === 0;
       setState({ validating: false, errors, isValid });
-
       return isValid;
     },
     [options],
   );
 
-  const reset = useCallback(() => {
-    setState(INITIAL_STATE);
-  }, []);
+  const reset = useCallback(() => setState(INITIAL_STATE), []);
 
-  return {
-    ...state,
-    validate,
-    reset,
-  };
+  return { ...state, validate, reset };
 }
 ```
 
-### Usage Example
-
-```typescript
-function ImageUploader() {
-  const { validating, errors, isValid, validate, reset } = useFileValidation({
-    maxSizeBytes: 5 * 1024 * 1024,
-    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-    validateContent: true,
-    imageOptions: {
-      minWidth: 200,
-      minHeight: 200,
-      maxWidth: 4000,
-      maxHeight: 4000,
-    },
-  });
-
-  const handleFileSelected = async (file: File) => {
-    const valid = await validate(file);
-    if (valid) {
-      // Proceed with upload
-    }
-  };
-
-  return (
-    <div>
-      <FileDropzone
-        onFilesSelected={(files) => handleFileSelected(files[0])}
-        accept={['image/jpeg', 'image/png', 'image/webp']}
-        disabled={validating}
-      />
-
-      {validating && <p>Validating...</p>}
-
-      {errors.length > 0 && (
-        <ul role="alert">
-          {errors.map((error, i) => (
-            <li key={i}>{error}</li>
-          ))}
-        </ul>
-      )}
-
-      {isValid && <p>File is valid!</p>}
-    </div>
-  );
-}
-```
-
-**Why good:** Encapsulates all validation logic, provides loading state, returns errors as array for display, reusable across components
-
----
-
-## Anti-Pattern Examples
-
-### What NOT to Do
-
-```typescript
-// ANTI-PATTERN: Extension only validation
-const isImage = (file: File) => /\.(jpg|png|gif)$/i.test(file.name);
-// Problem: malware.exe renamed to photo.jpg passes!
-
-// ANTI-PATTERN: MIME type only validation
-const isPDF = (file: File) => file.type === "application/pdf";
-// Problem: MIME type is user-controlled and can be spoofed!
-
-// ANTI-PATTERN: Client-only validation
-const handleUpload = async (file: File) => {
-  if (isValidImage(file)) {
-    await upload(file);
-  }
-};
-// Problem: Server MUST also validate - client can be bypassed!
-
-// ANTI-PATTERN: Reading entire file for validation
-const validateContent = async (file: File) => {
-  const content = await file.text(); // Reads entire file!
-  return content.startsWith("%PDF");
-};
-// Problem: 1GB file will freeze the browser!
-```
-
-### Correct Approaches
-
-```typescript
-// CORRECT: Multiple validation layers
-async function validateFile(file: File): Promise<boolean> {
-  // 1. Quick checks first (fail fast)
-  if (file.size > MAX_SIZE) return false;
-
-  // 2. Extension check (quick)
-  const ext = file.name.split(".").pop()?.toLowerCase();
-  if (!ALLOWED_EXTENSIONS.includes(ext ?? "")) return false;
-
-  // 3. MIME type check (quick)
-  if (!ALLOWED_TYPES.includes(file.type)) return false;
-
-  // 4. Magic bytes check (reads only first few bytes)
-  const detected = await detectFileType(file);
-  if (!detected || !ALLOWED_TYPES.includes(detected.mime)) return false;
-
-  // 5. Server will validate again!
-  return true;
-}
-```
-
----
-
-_Extended examples: [core.md](core.md) | [progress.md](progress.md) | [preview.md](preview.md) | [s3-upload.md](s3-upload.md) | [resumable.md](resumable.md) | [accessibility.md](accessibility.md)_
+`isValid` starts `null` rather than `false`, so "not yet checked" and "checked and failed" are
+distinguishable and the UI does not show an error before anything happened.

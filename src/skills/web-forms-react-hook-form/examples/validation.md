@@ -1,21 +1,28 @@
-# React Hook Form - Zod Validation
+# React Hook Form - Schema Validation
 
-> Resolver pattern for schema-based validation with Zod. See [core.md](core.md) for basic form patterns.
+> Wiring a validation schema into the form through `resolver`. See [core.md](core.md) for the basic
+> form and per-field `register` rules.
 
-**Prerequisites:** Understand Basic Forms from [core.md](core.md) first.
+**Prerequisites:** Pattern 1 from [core.md](core.md).
 
 ---
 
-## Pattern 3: Resolver with Zod
+## Pattern 3: Resolver
 
-### Good Example - Zod resolver integration
+The schema is authored in its own module and imported. This file shows only the wiring: `resolver`
+receives the schema, and the form drops its per-field `rules`.
+
+`@hookform/resolvers` publishes one adapter per schema library — import the one matching the schema
+in use. The form code below is identical whichever it is.
+
+### Good Example - Schema wired in, form unaware of the schema's rules
 
 ```typescript
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
-// Schema defined separately - import from your schemas directory
+// Authored separately — see whichever skill owns your schema library
 import { registrationSchema } from "./schemas/registration";
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -24,8 +31,7 @@ export function RegistrationForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-    watch,
+    formState: { errors, isSubmitting },
   } = useForm<RegistrationFormData>({
     resolver: zodResolver(registrationSchema),
     mode: "onBlur",
@@ -39,7 +45,7 @@ export function RegistrationForm() {
   });
 
   const onSubmit: SubmitHandler<RegistrationFormData> = async (data) => {
-    // data is validated by schema before reaching here
+    // data has already passed the schema
     await registerUser(data);
   };
 
@@ -89,40 +95,17 @@ export function RegistrationForm() {
 }
 ```
 
-**Why good:** zodResolver integrates schema validation seamlessly, z.infer generates types from schema automatically, all validation logic is in the schema (testable and reusable), cross-field validation (confirmPassword) handled by schema, error messages come from schema
+**Why good:** `register` calls carry no rules, so validation has exactly one home. The form type is
+derived from the schema, so adding a field to the schema surfaces as a type error here rather than
+as a silently unvalidated input. Cross-field rules — `confirmPassword` matching `password` — report
+against `errors.confirmPassword` because the schema names that path, which per-field `rules` cannot
+express.
 
-### Schema Example (defined separately from form code)
+### Two Things the Resolver Changes
 
-```typescript
-// schemas/registration.ts - Schema defined separately from form logic
-import { z } from "zod";
-
-const MIN_USERNAME_LENGTH = 3;
-const MAX_USERNAME_LENGTH = 20;
-const MIN_PASSWORD_LENGTH = 8;
-
-export const registrationSchema = z
-  .object({
-    username: z
-      .string()
-      .min(MIN_USERNAME_LENGTH, `At least ${MIN_USERNAME_LENGTH} characters`)
-      .max(MAX_USERNAME_LENGTH, `Max ${MAX_USERNAME_LENGTH} characters`)
-      .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
-    email: z.string().email("Invalid email address"),
-    password: z
-      .string()
-      .min(MIN_PASSWORD_LENGTH, `At least ${MIN_PASSWORD_LENGTH} characters`),
-    confirmPassword: z.string(),
-    acceptTerms: z.literal(true, {
-      errorMap: () => ({ message: "You must accept the terms" }),
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-```
-
-**Note:** Schema creation patterns are separate from form code. This example shows how to wire a schema to React Hook Form via resolver.
+- **Error messages come from the schema.** A `message` on a `register` rule is ignored once a
+  resolver is set.
+- **The error path must match the field name.** A cross-field rule reports wherever the schema
+  points it; pointed at a path no input registers, the message renders nowhere.
 
 ---

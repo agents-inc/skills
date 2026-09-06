@@ -43,7 +43,7 @@ Will invalid data crash the application?
 
 ```
 Is the validation a standard format?
-├─ YES → Use built-in: .email(), .url(), .uuid(), .datetime()
+├─ YES → Use built-in: z.email(), z.url(), z.uuid(), z.iso.datetime()
 └─ NO → Is it a simple regex pattern?
     ├─ YES → Use .regex() with descriptive message
     └─ NO → Does it require cross-field validation?
@@ -85,7 +85,7 @@ Schema and type can drift apart, leading to false confidence in validation.
 
 ```typescript
 // WRONG - Parallel definitions
-const UserSchema = z.object({ name: z.string(), email: z.string().email() });
+const UserSchema = z.object({ name: z.string(), email: z.email() });
 interface User {
   name: string;
   email: string;
@@ -95,7 +95,7 @@ interface User {
 // CORRECT - Type derived from schema
 const UserSchema = z.object({
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   role: z.string(),
 });
 type User = z.infer<typeof UserSchema>;
@@ -121,17 +121,20 @@ return { success: true, data: result.data };
 ### Validation Logic Outside Schema
 
 ```typescript
-// WRONG - Split validation
-const schema = z.object({ password: z.string().min(8) });
+const MIN_PASSWORD_LENGTH = 8;
+
+// WRONG - Split validation: the schema says the field is valid, a second
+// function disagrees, and only callers that know to call it find out
+const schema = z.object({ password: z.string().min(MIN_PASSWORD_LENGTH) });
 function additionalValidation(pwd: string): string[] {
   /* separate checks */
 }
 
-// CORRECT - All validation in schema
+// CORRECT - All validation in schema, so one parse is the whole verdict
 const schema = z.object({
   password: z
     .string()
-    .min(8)
+    .min(MIN_PASSWORD_LENGTH)
     .refine((pwd) => /[A-Z]/.test(pwd), { message: "Need uppercase" }),
 });
 ```
@@ -178,7 +181,7 @@ function processDateInput(dateStr: DateInput): DateOutput {
 - [ ] Types are derived from schemas with `z.infer`
 - [ ] Schemas with transforms use `z.input` and `z.output` where needed
 - [ ] Discriminated unions are used when objects share discriminator field
-- [ ] Named exports are used (no default exports)
+- [ ] `z.strictObject()` where an unexpected key should be rejected rather than dropped
 
 ### Performance
 
@@ -214,6 +217,7 @@ function processDateInput(dateStr: DateInput): DateOutput {
 | `.partial()`        | Make all fields optional          | `schema.partial()`                                        |
 | `.passthrough()`    | Allow extra fields                | `schema.passthrough()` (deprecated v4: `z.looseObject()`) |
 | `.strict()`         | Reject extra fields               | `schema.strict()` (deprecated v4: `z.strictObject()`)     |
+| `z.literal(v)`      | Accept exactly one value          | `z.literal(true)` for a box that must be ticked           |
 | `z.coerce`          | Convert type before validation    | `z.coerce.number()`                                       |
 | `z.lazy`            | Recursive schema reference        | `z.lazy(() => CategorySchema)`                            |
 | `z.infer`           | Extract output type               | `type T = z.infer<typeof schema>`                         |
@@ -222,12 +226,15 @@ function processDateInput(dateStr: DateInput): DateOutput {
 
 ### ISO String Validators
 
-| Method        | Purpose                       | Example                                             |
-| ------------- | ----------------------------- | --------------------------------------------------- |
-| `.date()`     | Validate ISO 8601 date string | `z.string().date()` -> `"2024-01-15"`               |
-| `.time()`     | Validate ISO 8601 time string | `z.string().time()` -> `"12:30:00"`                 |
-| `.datetime()` | Validate ISO 8601 datetime    | `z.string().datetime()` -> `"2024-01-15T12:30:00Z"` |
-| `.duration()` | Validate ISO 8601 duration    | `z.string().duration()` -> `"P3Y6M4DT12H30M5S"`     |
+| Method             | Purpose                       | Accepts                  |
+| ------------------ | ----------------------------- | ------------------------ |
+| `z.iso.date()`     | Validate ISO 8601 date string | `"2024-01-15"`           |
+| `z.iso.time()`     | Validate ISO 8601 time string | `"12:30:00"`             |
+| `z.iso.datetime()` | Validate ISO 8601 datetime    | `"2024-01-15T12:30:00Z"` |
+| `z.iso.duration()` | Validate ISO 8601 duration    | `"P3Y6M4DT12H30M5S"`     |
+
+The v3 method chains — `z.string().date()` and friends — still parse but are deprecated. The
+mapping is in the migration guide below.
 
 ---
 

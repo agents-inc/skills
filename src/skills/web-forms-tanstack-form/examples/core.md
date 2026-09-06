@@ -173,11 +173,9 @@ export function ContactForm() {
 
 ---
 
-## Pattern 2: TypeScript — Explicit Types vs Inference
+## Pattern 2: TypeScript — everything is inferred from defaultValues
 
-TanStack Form infers types from `defaultValues`. You can also provide an explicit generic for stricter control.
-
-### Inference from defaultValues (recommended)
+`defaultValues` is the only place the form's shape is declared. Field names, `field.state.value` and the `onSubmit` payload all come from it.
 
 ```tsx
 const form = useForm({
@@ -193,24 +191,17 @@ const form = useForm({
 });
 ```
 
-**When to use:** Most forms. Types flow automatically from defaults, and field names are autocompleted.
+### Where a default cannot represent the type on its own
 
-### Explicit generic (when defaults don't capture the full type)
+A union that starts as one variant, or a value that is only ever `null` until the user supplies it, needs the widening written into the default — a cast at the property, not a generic on the hook.
 
 ```tsx
-interface UserFormData {
-  name: string;
-  age: number;
-  role: "user" | "admin";
-  avatar: File | null;
-}
-
-const form = useForm<UserFormData>({
+const form = useForm({
   defaultValues: {
     name: "",
-    age: 0,
-    role: "user",
-    avatar: null,
+    role: "user" as "user" | "admin",
+    avatar: null as File | null,
+    tags: [] as string[],
   },
   onSubmit: async ({ value }) => {
     await saveUser(value);
@@ -218,7 +209,7 @@ const form = useForm<UserFormData>({
 });
 ```
 
-**When to use:** When `defaultValues` cannot fully represent the type (e.g., `File | null`, union types that start as one variant).
+**Do not reach for `useForm<UserFormData>()`.** `useForm` carries a generic parameter per validator slot, and TypeScript requires all or none — supplying only the form-data one is a compile error, and supplying the rest by hand defeats the point. The library's [philosophy page](https://tanstack.com/form/latest/docs/philosophy) states the rule directly: "You should never need to pass a generic or use an internal type when leveraging TanStack Form."
 
 ---
 

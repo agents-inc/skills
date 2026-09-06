@@ -1,27 +1,27 @@
-# File Upload Core Examples
+# File Upload — Core Examples
 
-> Core code examples for file upload patterns. Reference from [SKILL.md](../SKILL.md).
+> Selecting files and holding them in state. Decisions are in [SKILL.md](../SKILL.md).
 
 **Extended examples:**
 
-- [validation.md](validation.md) - MIME type, magic bytes, dimension validation
-- [progress.md](progress.md) - Progress tracking, speed, abort handling
-- [preview.md](preview.md) - Image preview, thumbnails, EXIF orientation
-- [s3-upload.md](s3-upload.md) - Presigned URLs, multipart uploads
-- [resumable.md](resumable.md) - Chunked uploads, TUS protocol
-- [accessibility.md](accessibility.md) - ARIA patterns, keyboard support
+- [validation.md](validation.md) — MIME type, magic bytes, dimensions
+- [progress.md](progress.md) — progress, speed, abort, concurrency
+- [preview.md](preview.md) — a thumbnail for a selected file
+- [presigned-upload.md](presigned-upload.md) — direct-to-storage uploads
+- [resumable.md](resumable.md) — chunked and resumable uploads
+- [accessibility.md](accessibility.md) — announcements and focus
 
 ---
 
-## Pattern 1: Simple File Input with Styling
+## Pattern 1: File input
 
-### Hidden Input with Custom Button
+A `<label htmlFor>` over a hidden input gives a fully styleable trigger with no ARIA and no key
+handling — the browser already treats a label as an activator for its input.
 
 ```typescript
 // simple-file-input.tsx
 import { useRef } from 'react';
 import type { ChangeEvent } from 'react';
-// Apply your styling solution via className prop
 
 interface SimpleFileInputProps {
   onFileSelected: (file: File) => void;
@@ -40,15 +40,13 @@ export function SimpleFileInput({
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      onFileSelected(file);
-    }
-    // Reset to allow re-selecting same file
+    if (file) onFileSelected(file);
+    // clearing the value is what allows the same file to be chosen again
     event.target.value = '';
   };
 
   return (
-    <div className="container">
+    <div>
       <input
         ref={inputRef}
         type="file"
@@ -58,7 +56,7 @@ export function SimpleFileInput({
         hidden
         id="file-input"
       />
-      <label htmlFor="file-input" className="button" data-disabled={disabled || undefined}>
+      <label htmlFor="file-input" data-disabled={disabled || undefined}>
         {label}
       </label>
     </div>
@@ -66,19 +64,17 @@ export function SimpleFileInput({
 }
 ```
 
-**Why good:** Input is hidden but accessible, label triggers file dialog, proper focus styles, disabled state handling, resets input for re-selection. Style using `data-disabled` attribute via your styling solution.
-
 ---
 
-## Pattern 2: Basic Dropzone
+## Pattern 2: Dropzone
 
-### Full Dropzone Implementation
+Drag is the enhancement; click and Enter/Space are the paths that always work. Every visual state is
+a data attribute, so any styling approach can hang off it.
 
 ```typescript
 // file-dropzone.tsx
-import { useState, useRef, useCallback } from 'react';
-import type { DragEvent, ChangeEvent, ReactNode } from 'react';
-// Apply your styling solution via className prop
+import { useCallback, useRef, useState } from 'react';
+import type { ChangeEvent, DragEvent, KeyboardEvent, ReactNode } from 'react';
 
 type DropzoneState = 'idle' | 'drag-over' | 'drag-reject';
 
@@ -107,8 +103,6 @@ export function FileDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
 
-  const acceptString = accept.join(',');
-
   const isValidType = useCallback(
     (file: File): boolean => {
       if (accept.length === 0) return true;
@@ -125,38 +119,37 @@ export function FileDropzone({
     [accept]
   );
 
+  const take = useCallback(
+    (files: File[]) => {
+      const valid = files.filter(isValidType);
+      return multiple ? valid.slice(0, maxFiles) : valid.slice(0, 1);
+    },
+    [isValidType, multiple, maxFiles]
+  );
+
+  // dragenter and dragleave fire for every nested element, so count them
   const handleDragEnter = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
       dragCounterRef.current++;
-
-      if (disabled) return;
-      setState('drag-over');
+      if (!disabled) setState('drag-over');
     },
     [disabled]
   );
 
-  const handleDragLeave = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      dragCounterRef.current--;
+  const handleDragLeave = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setState('idle');
+  }, []);
 
-      if (dragCounterRef.current === 0) {
-        setState('idle');
-      }
-    },
-    []
-  );
-
-  const handleDragOver = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-    },
-    []
-  );
+  // without preventDefault here, drop never fires at all
+  const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
 
   const handleDrop = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
@@ -167,43 +160,29 @@ export function FileDropzone({
 
       if (disabled) return;
 
-      const droppedFiles = Array.from(event.dataTransfer.files);
-      const validFiles = droppedFiles.filter(isValidType);
-      const filesToProcess = multiple
-        ? validFiles.slice(0, maxFiles)
-        : validFiles.slice(0, 1);
-
-      if (filesToProcess.length > 0) {
-        onFilesSelected(filesToProcess);
-      }
+      const files = take(Array.from(event.dataTransfer.files));
+      if (files.length > 0) onFilesSelected(files);
     },
-    [disabled, isValidType, multiple, maxFiles, onFilesSelected]
+    [disabled, take, onFilesSelected]
   );
 
   const handleInputChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files;
-      if (!files || files.length === 0) return;
-
-      const fileArray = Array.from(files);
-      const filesToProcess = multiple
-        ? fileArray.slice(0, maxFiles)
-        : fileArray.slice(0, 1);
-
-      onFilesSelected(filesToProcess);
+      if (files && files.length > 0) {
+        onFilesSelected(take(Array.from(files)));
+      }
       event.target.value = '';
     },
-    [multiple, maxFiles, onFilesSelected]
+    [take, onFilesSelected]
   );
 
   const openFileDialog = useCallback(() => {
-    if (!disabled) {
-      inputRef.current?.click();
-    }
+    if (!disabled) inputRef.current?.click();
   }, [disabled]);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
+    (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         openFileDialog();
@@ -211,6 +190,9 @@ export function FileDropzone({
     },
     [openFileDialog]
   );
+
+  const acceptDescription =
+    accept.length > 0 ? `Accepts ${accept.join(', ')}.` : '';
 
   return (
     <div
@@ -225,13 +207,13 @@ export function FileDropzone({
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={disabled ? -1 : 0}
-      aria-label={`File upload area. ${accept.length > 0 ? `Accepts ${accept.join(', ')}.` : ''} Click or drag files to upload.`}
+      aria-label={`File upload area. ${acceptDescription} Click or drag files to upload.`}
       aria-disabled={disabled}
     >
       <input
         ref={inputRef}
         type="file"
-        accept={acceptString}
+        accept={accept.join(',')}
         multiple={multiple}
         onChange={handleInputChange}
         disabled={disabled}
@@ -240,18 +222,9 @@ export function FileDropzone({
         tabIndex={-1}
       />
       {children ?? (
-        <div className="content">
-          <div className="icon" aria-hidden="true">
-            📁
-          </div>
-          <p className="text">
-            Drag and drop files here, or click to browse
-          </p>
-          {accept.length > 0 && (
-            <p className="hint">
-              Accepted: {accept.join(', ')}
-            </p>
-          )}
+        <div>
+          <p>Drag and drop files here, or click to browse</p>
+          {accept.length > 0 && <p>Accepted: {accept.join(', ')}</p>}
         </div>
       )}
     </div>
@@ -259,18 +232,157 @@ export function FileDropzone({
 }
 ```
 
-**Why good:** Tracks drag counter to handle nested elements, keyboard accessible with role="button", visual feedback for all states via `data-state` and `data-disabled` attributes, hidden input for screen readers, accepts any children for customization. Apply styles via your styling solution using the data attributes.
+The input is `aria-hidden` with `tabIndex={-1}`: the wrapper already announces itself as a button,
+so exposing both puts two controls in the tab order for one action.
 
 ---
 
-## Pattern 3: File List with Status
+## Pattern 3: File list state
 
-### File List Component
+Holds one entry per file with its own status, generates the IDs the UI keys on, and owns the object
+URLs so nothing else has to remember to revoke them.
+
+```typescript
+// use-file-list.ts
+import { useCallback, useEffect, useRef, useState } from "react";
+
+interface FileWithId {
+  id: string;
+  file: File;
+  preview?: string;
+  status: "pending" | "uploading" | "success" | "error";
+  progress: number;
+  error?: string;
+}
+
+interface UseFileListOptions {
+  maxFiles?: number;
+  maxSizeBytes?: number;
+  generatePreview?: boolean;
+}
+
+interface Rejection {
+  file: File;
+  reason: string;
+}
+
+const DEFAULT_MAX_FILES = 10;
+const DEFAULT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+export function useFileList(options: UseFileListOptions = {}) {
+  const {
+    maxFiles = DEFAULT_MAX_FILES,
+    maxSizeBytes = DEFAULT_MAX_SIZE_BYTES,
+    generatePreview = true,
+  } = options;
+
+  const [files, setFiles] = useState<FileWithId[]>([]);
+  const previewUrlsRef = useRef(new Set<string>());
+
+  const revoke = useCallback((url: string | undefined) => {
+    if (!url) return;
+    URL.revokeObjectURL(url);
+    previewUrlsRef.current.delete(url);
+  }, []);
+
+  // the ref, not the state, so unmount cleanup sees the current set
+  useEffect(
+    () => () => {
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      previewUrlsRef.current.clear();
+    },
+    [],
+  );
+
+  const addFiles = useCallback(
+    (incoming: File[]): { added: FileWithId[]; rejected: Rejection[] } => {
+      const added: FileWithId[] = [];
+      const rejected: Rejection[] = [];
+
+      for (const file of incoming) {
+        if (files.length + added.length >= maxFiles) {
+          rejected.push({ file, reason: `Maximum ${maxFiles} files` });
+          continue;
+        }
+        if (file.size > maxSizeBytes) {
+          const maxMB = maxSizeBytes / 1024 / 1024;
+          rejected.push({ file, reason: `Exceeds ${maxMB}MB` });
+          continue;
+        }
+
+        const preview =
+          generatePreview && file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : undefined;
+        if (preview) previewUrlsRef.current.add(preview);
+
+        added.push({
+          id: crypto.randomUUID(),
+          file,
+          preview,
+          status: "pending",
+          progress: 0,
+        });
+      }
+
+      if (added.length > 0) setFiles((current) => [...current, ...added]);
+
+      return { added, rejected };
+    },
+    [files.length, maxFiles, maxSizeBytes, generatePreview],
+  );
+
+  const updateFile = useCallback(
+    (id: string, changes: Partial<Omit<FileWithId, "id" | "file">>) => {
+      setFiles((current) =>
+        current.map((entry) =>
+          entry.id === id ? { ...entry, ...changes } : entry,
+        ),
+      );
+    },
+    [],
+  );
+
+  const removeFile = useCallback(
+    (id: string) => {
+      revoke(files.find((entry) => entry.id === id)?.preview);
+      setFiles((current) => current.filter((entry) => entry.id !== id));
+    },
+    [files, revoke],
+  );
+
+  const clearFiles = useCallback(() => {
+    files.forEach((entry) => revoke(entry.preview));
+    setFiles([]);
+  }, [files, revoke]);
+
+  return {
+    files,
+    addFiles,
+    updateFile,
+    removeFile,
+    clearFiles,
+    hasFiles: files.length > 0,
+    canAddMore: files.length < maxFiles,
+  };
+}
+
+export type { FileWithId, Rejection };
+```
+
+`addFiles` returns the rejections rather than throwing on them: a batch where two of five files are
+too large should still accept the other three and say why the two did not make it.
+
+---
+
+## Pattern 4: File list rendering
+
+Status drives what is shown, and each state carries its own ARIA role — `progressbar` while
+uploading, `alert` on failure.
 
 ```typescript
 // file-list.tsx
 import type { ReactNode } from 'react';
-// Apply your styling solution via className prop
 
 interface FileItem {
   id: string;
@@ -297,62 +409,46 @@ function formatFileSize(bytes: number): string {
 }
 
 export function FileList({ files, onRemove, renderActions }: FileListProps) {
-  if (files.length === 0) {
-    return null;
-  }
+  if (files.length === 0) return null;
 
   return (
-    <ul className="list" role="list" aria-label="Selected files">
+    <ul role="list" aria-label="Selected files">
       {files.map((file) => (
-        <li key={file.id} className="item" data-status={file.status}>
-          <div className="info">
-            <span className="name" title={file.name}>
-              {file.name}
-            </span>
-            <span className="size">{formatFileSize(file.size)}</span>
+        <li key={file.id} data-status={file.status}>
+          <div>
+            <span title={file.name}>{file.name}</span>
+            <span>{formatFileSize(file.size)}</span>
           </div>
 
           {file.status === 'uploading' && file.progress !== undefined && (
-            <div className="progress-container">
-              <div
-                className="progress-bar"
-                role="progressbar"
-                aria-valuenow={file.progress}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`Uploading ${file.name}`}
-              >
-                <div
-                  className="progress-fill"
-                  style={{ width: `${file.progress}%` }}
-                />
-              </div>
-              <span className="progress-text">{file.progress}%</span>
+            <div
+              role="progressbar"
+              aria-valuenow={file.progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Uploading ${file.name}`}
+            >
+              <div data-fill style={{ width: `${file.progress}%` }} />
             </div>
           )}
 
           {file.status === 'error' && file.error && (
-            <span className="error" role="alert">
-              {file.error}
-            </span>
+            <span role="alert">{file.error}</span>
           )}
 
           {file.status === 'success' && (
-            <span className="success" aria-label="Upload complete">
-              ✓
-            </span>
+            <span aria-label="Upload complete" aria-hidden="false">✓</span>
           )}
 
-          <div className="actions">
+          <div>
             {renderActions?.(file)}
             <button
               type="button"
-              className="remove-button"
               onClick={() => onRemove(file.id)}
               aria-label={`Remove ${file.name}`}
               disabled={file.status === 'uploading'}
             >
-              ×
+              <span aria-hidden="true">×</span>
             </button>
           </div>
         </li>
@@ -362,13 +458,12 @@ export function FileList({ files, onRemove, renderActions }: FileListProps) {
 }
 ```
 
-**Why good:** Shows status per file with appropriate ARIA, progress bar is accessible, error messages use role="alert", remove button disabled during upload, ellipsis for long filenames. Style items using `data-status` attribute via your styling solution.
-
 ---
 
-## Pattern 4: Combined Upload Component
+## Pattern 5: Assembled component
 
-### Full Upload Component Example
+Dropzone, list and upload wired together. Each file uploads independently, so one failure does not
+take the batch with it.
 
 ```typescript
 // file-upload.tsx
@@ -378,7 +473,7 @@ import { FileList } from './file-list';
 import { useFileList } from './use-file-list';
 
 interface FileUploadProps {
-  onUploadComplete: (urls: string[]) => void;
+  onUploadComplete: (names: string[]) => void;
   uploadUrl: string;
   accept?: string[];
   maxFiles?: number;
@@ -400,64 +495,59 @@ export function FileUpload({
   });
   const [rejected, setRejected] = useState<string[]>([]);
 
+  const uploadFile = useCallback(
+    (id: string, file: File) => {
+      updateFile(id, { status: 'uploading', progress: 0 });
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (!e.lengthComputable) return;
+        updateFile(id, { progress: Math.round((e.loaded / e.total) * 100) });
+      });
+
+      xhr.addEventListener('load', () => {
+        const ok = xhr.status >= 200 && xhr.status < 300;
+        updateFile(
+          id,
+          ok
+            ? { status: 'success', progress: 100 }
+            : { status: 'error', error: `Upload failed: ${xhr.status}` }
+        );
+      });
+
+      xhr.addEventListener('error', () => {
+        updateFile(id, { status: 'error', error: 'Upload failed' });
+      });
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      xhr.open('POST', uploadUrl);
+      xhr.send(formData);
+    },
+    [updateFile, uploadUrl]
+  );
+
   const handleFilesSelected = useCallback(
     (newFiles: File[]) => {
       const { added, rejected: rejectedFiles } = addFiles(newFiles);
       setRejected(rejectedFiles.map((r) => `${r.file.name}: ${r.reason}`));
-
-      // Start uploading added files
-      added.forEach((fileItem) => {
-        uploadFile(fileItem.id, fileItem.file);
-      });
+      added.forEach((entry) => uploadFile(entry.id, entry.file));
     },
-    [addFiles]
+    [addFiles, uploadFile]
   );
 
-  const uploadFile = async (id: string, file: File) => {
-    updateFile(id, { status: 'uploading', progress: 0 });
-
-    const xhr = new XMLHttpRequest();
-
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        const progress = Math.round((e.loaded / e.total) * 100);
-        updateFile(id, { progress });
-      }
-    });
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        updateFile(id, { status: 'success', progress: 100 });
-      } else {
-        updateFile(id, {
-          status: 'error',
-          error: `Upload failed: ${xhr.status}`,
-        });
-      }
-    });
-
-    xhr.addEventListener('error', () => {
-      updateFile(id, { status: 'error', error: 'Upload failed' });
-    });
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    xhr.open('POST', uploadUrl);
-    xhr.send(formData);
-  };
-
   const handleComplete = useCallback(() => {
-    const successfulUploads = files
-      .filter((f) => f.status === 'success')
-      .map((f) => f.file.name);
-    onUploadComplete(successfulUploads);
+    onUploadComplete(
+      files.filter((f) => f.status === 'success').map((f) => f.file.name)
+    );
     clearFiles();
   }, [files, onUploadComplete, clearFiles]);
 
-  const allComplete = files.length > 0 && files.every(
-    (f) => f.status === 'success' || f.status === 'error'
-  );
+  const allSettled =
+    files.length > 0 &&
+    files.every((f) => f.status === 'success' || f.status === 'error');
 
   return (
     <div>
@@ -473,16 +563,26 @@ export function FileUpload({
         <div role="alert">
           <p>Some files were rejected:</p>
           <ul>
-            {rejected.map((msg, i) => (
-              <li key={i}>{msg}</li>
+            {rejected.map((message) => (
+              <li key={message}>{message}</li>
             ))}
           </ul>
         </div>
       )}
 
-      <FileList files={files} onRemove={removeFile} />
+      <FileList
+        files={files.map((f) => ({
+          id: f.id,
+          name: f.file.name,
+          size: f.file.size,
+          status: f.status,
+          progress: f.progress,
+          error: f.error,
+        }))}
+        onRemove={removeFile}
+      />
 
-      {allComplete && (
+      {allSettled && (
         <button type="button" onClick={handleComplete}>
           Done
         </button>
@@ -492,8 +592,5 @@ export function FileUpload({
 }
 ```
 
-**Why good:** Combines dropzone with file list, shows rejected files with reasons, tracks upload progress per file, enables done button only when all complete
-
----
-
-_Extended examples: [validation.md](validation.md) | [progress.md](progress.md) | [preview.md](preview.md) | [s3-upload.md](s3-upload.md) | [resumable.md](resumable.md) | [accessibility.md](accessibility.md)_
+For more than a handful of files at once, cap concurrency — see the queue in
+[progress.md](progress.md).

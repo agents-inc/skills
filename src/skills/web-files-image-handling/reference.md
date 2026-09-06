@@ -1,368 +1,163 @@
 # Image Handling Reference
 
-> Decision frameworks, constants reference, and anti-patterns for image handling.
+> Selection guides, constants, API comparison and browser support. Concepts and red flags are in
+> [SKILL.md](SKILL.md); code is in [examples/](examples/).
 
 ---
 
-## Decision Framework
+## Selection guides
 
-### Preview Method Selection
-
-```
-Need to display image preview?
-├─ Need URL string only (for <img src>)?
-│   └─ YES → URL.createObjectURL() - fastest, most memory efficient
-└─ Need Base64 data URL?
-    └─ YES → FileReader.readAsDataURL() - slower, creates large string
-```
-
-### Resize Strategy Selection
+### Output format
 
 ```
-Need to resize image?
-├─ Reduction > 50% of original size?
-│   ├─ YES → Step-down scaling (2+ passes)
-│   └─ NO → Single-pass resize
-├─ Need specific file size target?
-│   └─ YES → Binary search quality targeting
-└─ Need thumbnails?
-    └─ YES → Generate smallest size first, or all in parallel
-```
-
-### Format Selection
-
-```
-Choosing output format?
-├─ Has transparency?
+Choosing an output format?
+├─ Needs transparency?
 │   ├─ YES → PNG (lossless) or WebP (lossy with alpha)
-│   └─ NO → Is photo content?
-│       ├─ YES → JPEG (best compression for photos)
-│       └─ NO → WebP (best overall) if supported, else JPEG
-├─ Need animation?
-│   └─ YES → GIF (limited colors) or WebP (better quality)
-└─ Need best quality?
-    └─ YES → PNG (lossless, large file)
+│   └─ NO  → Photographic content?
+│       ├─ YES → JPEG, or WebP for smaller files at the same quality
+│       └─ NO  → WebP; PNG where the result must be exact
+├─ Animated?
+│   └─ GIF (256 colours) or WebP (full colour, smaller)
+└─ Must survive re-editing?
+    └─ PNG — every lossy re-encode compounds
 ```
 
-### Processing Strategy
+### Resize strategy
 
 ```
-Need to process image?
-├─ Image > 5MB or processing multiple images?
-│   └─ YES → Consider Web Worker (prevents UI freeze)
-├─ User waiting for result?
-│   └─ YES → Show progress indicator
-└─ Processing in background?
-    └─ YES → Queue operations, process sequentially
+Resizing?
+├─ Reducing by more than half?          → Step down in 2+ passes
+├─ Aiming at a byte budget?             → Binary-search the quality parameter
+├─ Producing several sizes at once?     → Decode once, draw at each size in parallel
+└─ Anything else                        → One pass
+```
+
+### Where to run it
+
+```
+Processing cost?
+├─ One image under ~5MB                 → Main thread is fine
+├─ A batch, or anything large           → Web Worker with OffscreenCanvas
+└─ User is waiting either way           → Show progress; a frozen tab reads as a crash
 ```
 
 ---
 
-## Constants Reference
-
-### Browser Limits
+## Constants
 
 ```typescript
-// Canvas dimension limits vary by browser/device
 const CANVAS_LIMITS = {
-  MAX_CANVAS_AREA: 268435456, // 16384 x 16384 or equivalent
-  SAFE_MAX_DIMENSION: 4096, // Works on all modern browsers
-  MOBILE_SAFE_DIMENSION: 2048, // Conservative mobile limit
-  IOS_SAFARI_MAX: 4096, // iOS Safari specific
+  MAX_CANVAS_AREA: 268_435_456, // 16384 × 16384, or any equivalent product
+  SAFE_MAX_DIMENSION: 4096, // holds across modern browsers
+  MOBILE_SAFE_DIMENSION: 2048, // conservative for low-memory devices
 };
-```
 
-### Quality Defaults
-
-```typescript
 const QUALITY_DEFAULTS = {
-  JPEG_HIGH: 0.92, // Near-lossless
-  JPEG_GOOD: 0.85, // Good balance
-  JPEG_LOW: 0.7, // Smaller files
-  WEBP_HIGH: 0.9, // WebP is more efficient
+  JPEG_HIGH: 0.92,
+  JPEG_GOOD: 0.85,
+  JPEG_LOW: 0.7,
+  WEBP_HIGH: 0.9, // WebP holds quality lower down the scale than JPEG
   WEBP_GOOD: 0.82,
   WEBP_LOW: 0.65,
-  PNG: 1, // PNG is lossless - quality ignored
+  PNG: 1, // ignored
 };
-```
 
-### Size Thresholds
-
-```typescript
 const SIZE_THRESHOLDS = {
-  STEP_DOWN_THRESHOLD: 0.5, // Use step-down below 50% reduction
-  SKIP_RESIZE_TOLERANCE: 1.1, // Skip if within 10% of target
-  THUMBNAIL_SMALL: 100, // Small thumbnail
-  THUMBNAIL_MEDIUM: 200, // Medium thumbnail
-  THUMBNAIL_LARGE: 400, // Large thumbnail
-  PREVIEW_MAX: 1920, // Max preview dimension
+  STEP_DOWN_THRESHOLD: 0.5,
+  SKIP_RESIZE_TOLERANCE: 1.1, // already within 10% of target — leave it alone
+  THUMBNAIL_SMALL: 100,
+  THUMBNAIL_MEDIUM: 200,
+  THUMBNAIL_LARGE: 400,
+  PREVIEW_MAX: 1920,
 };
-```
 
-### File Size Limits
-
-```typescript
 const FILE_SIZE_LIMITS = {
-  RECOMMENDED_UPLOAD_MAX: 10 * 1024 * 1024, // 10MB
-  AVATAR_MAX: 2 * 1024 * 1024, // 2MB
-  THUMBNAIL_TARGET: 50 * 1024, // 50KB
-  PREVIEW_TARGET: 200 * 1024, // 200KB
+  RECOMMENDED_UPLOAD_MAX: 10 * 1024 * 1024,
+  AVATAR_MAX: 2 * 1024 * 1024,
+  THUMBNAIL_TARGET: 50 * 1024,
+  PREVIEW_TARGET: 200 * 1024,
 };
 ```
 
 ---
 
-## Method Comparison
+## Method comparison
 
-### Preview Methods
+### Getting pixels from a `File`
 
-| Method                       | Speed   | Memory | Output        | Use Case          |
-| ---------------------------- | ------- | ------ | ------------- | ----------------- |
-| `URL.createObjectURL(file)`  | Instant | Low    | URL string    | Display only      |
-| `FileReader.readAsDataURL()` | Slow    | High   | Base64 string | Need data in JS   |
-| `createImageBitmap(file)`    | Fast    | Medium | ImageBitmap   | Canvas operations |
+| Method                       | Speed   | Memory | Produces      | Use for                        |
+| ---------------------------- | ------- | ------ | ------------- | ------------------------------ |
+| `URL.createObjectURL(file)`  | Instant | Low    | A URL string  | Display; needs revoking        |
+| `createImageBitmap(file)`    | Fast    | Medium | `ImageBitmap` | Canvas work; needs `close()`   |
+| `FileReader.readAsDataURL()` | Slow    | High   | Base64 string | Only when a string is required |
 
-### Canvas Output Methods
+### Getting pixels out of a canvas
 
-| Method                    | Async | Output        | Quality Param | Use Case                   |
-| ------------------------- | ----- | ------------- | ------------- | -------------------------- |
-| `toBlob()`                | Yes   | Blob          | Yes           | Upload, further processing |
-| `toDataURL()`             | No    | Base64 string | Yes           | Inline in HTML/CSS         |
-| `transferToImageBitmap()` | No    | ImageBitmap   | No            | OffscreenCanvas            |
+| Method                    | Async | Produces      | Quality arg | Use for                    |
+| ------------------------- | ----- | ------------- | ----------- | -------------------------- |
+| `toBlob()`                | Yes   | `Blob`        | Yes         | Anything you send or store |
+| `toDataURL()`             | No    | Base64 string | Yes         | Small inline images        |
+| `convertToBlob()`         | Yes   | `Blob`        | Yes         | `OffscreenCanvas`          |
+| `transferToImageBitmap()` | No    | `ImageBitmap` | No          | Handing pixels to a worker |
 
-### Smoothing Quality
+### Smoothing quality
 
-| Setting                           | Performance | Quality    | Use Case         |
-| --------------------------------- | ----------- | ---------- | ---------------- |
-| `imageSmoothingEnabled: false`    | Fastest     | Pixelated  | Pixel art, icons |
-| `imageSmoothingQuality: 'low'`    | Fast        | Acceptable | Thumbnails       |
-| `imageSmoothingQuality: 'medium'` | Medium      | Good       | General use      |
-| `imageSmoothingQuality: 'high'`   | Slow        | Best       | Final output     |
-
----
-
-## EXIF Orientation Reference
-
-### Orientation Values
-
-| Value | Description              | Transform Needed         |
-| ----- | ------------------------ | ------------------------ |
-| 1     | Normal                   | None                     |
-| 2     | Horizontal flip          | Mirror X                 |
-| 3     | 180 rotate               | Rotate 180               |
-| 4     | Vertical flip            | Mirror Y                 |
-| 5     | 90 CW + horizontal flip  | Rotate 90 CW + Mirror X  |
-| 6     | 90 CW                    | Rotate 90 CW             |
-| 7     | 90 CCW + horizontal flip | Rotate 90 CCW + Mirror X |
-| 8     | 90 CCW                   | Rotate 90 CCW            |
-
-### Common Sources
-
-| Device/Source          | Typical Orientations |
-| ---------------------- | -------------------- |
-| iPhone portrait        | 6 (rotated 90 CW)    |
-| iPhone landscape left  | 3 (rotated 180)      |
-| iPhone landscape right | 1 (normal)           |
-| Android varies         | 1, 3, 6, 8           |
-| DSLR landscape         | 1 (normal)           |
-| DSLR portrait          | 6 or 8               |
-| Scanner                | 1 (normal)           |
+| Setting                           | Cost     | Result     | Use for            |
+| --------------------------------- | -------- | ---------- | ------------------ |
+| `imageSmoothingEnabled: false`    | Cheapest | Pixelated  | Pixel art, icons   |
+| `imageSmoothingQuality: 'low'`    | Cheap    | Acceptable | Thumbnails         |
+| `imageSmoothingQuality: 'medium'` | Medium   | Good       | Intermediate steps |
+| `imageSmoothingQuality: 'high'`   | Slowest  | Best       | Final output       |
 
 ---
 
-## Anti-Patterns
+## EXIF orientation
 
-### Memory Leaks
+| Value | Meaning                   | Transform                |
+| ----- | ------------------------- | ------------------------ |
+| 1     | Normal                    | None                     |
+| 2     | Horizontal flip           | Mirror X                 |
+| 3     | 180° rotation             | Rotate 180               |
+| 4     | Vertical flip             | Mirror Y                 |
+| 5     | 90° CW + horizontal flip  | Rotate 90 CW + Mirror X  |
+| 6     | 90° CW                    | Rotate 90 CW             |
+| 7     | 90° CCW + horizontal flip | Rotate 90 CCW + Mirror X |
+| 8     | 90° CCW                   | Rotate 90 CCW            |
 
-```typescript
-// BAD: Object URL never revoked
-function BadPreview({ file }: { file: File }) {
-  const url = URL.createObjectURL(file);
-  return <img src={url} />;
-  // Memory leak - URL accumulates on each render
-}
+Values 5–8 swap width and height, so the canvas has to be sized transposed before drawing.
 
-// GOOD: Cleanup in effect
-function GoodPreview({ file }: { file: File }) {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
-
-  return url ? <img src={url} /> : null;
-}
-```
-
-### Canvas Size Overflow
-
-```typescript
-// BAD: May exceed browser limits
-async function badResize(file: File) {
-  const img = await loadImage(file);
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width * 2; // Could be 10000+ pixels
-  canvas.height = img.height * 2;
-  // May crash or silently fail
-}
-
-// GOOD: Clamp to safe limits
-const MAX_DIMENSION = 4096;
-
-async function goodResize(file: File) {
-  const img = await loadImage(file);
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.min(img.width * 2, MAX_DIMENSION);
-  canvas.height = Math.min(img.height * 2, MAX_DIMENSION);
-}
-```
-
-### Single-Pass Large Reduction
-
-```typescript
-// BAD: Single pass loses quality
-async function badThumbnail(file: File) {
-  const img = await loadImage(file); // 4000x3000
-  const canvas = document.createElement("canvas");
-  canvas.width = 100; // 97.5% reduction in one pass!
-  canvas.height = 75;
-  ctx.drawImage(img, 0, 0, 100, 75);
-  // Result: blurry, aliased
-}
-
-// GOOD: Step-down scaling
-async function goodThumbnail(file: File) {
-  const img = await loadImage(file); // 4000x3000
-
-  // Step 1: 4000 -> 400
-  let canvas = createCanvas(400, 300);
-  canvas.ctx.drawImage(img, 0, 0, 400, 300);
-
-  // Step 2: 400 -> 100
-  const final = createCanvas(100, 75);
-  final.ctx.drawImage(canvas, 0, 0, 100, 75);
-  // Result: sharp, properly sampled
-}
-```
-
-### EXIF Orientation (Modern Browsers Auto-Handle)
-
-```typescript
-// Modern browsers (2020+): No manual handling needed for display!
-// image-orientation: from-image is the default CSS
-
-// GOOD: Modern browsers auto-rotate
-function modernDisplay(file: File) {
-  const url = URL.createObjectURL(file);
-  return <img src={url} />;  // Browser handles EXIF rotation automatically
-}
-
-// BAD: Double rotation in modern browsers
-async function doubleRotation(file: File) {
-  const normalized = await normalizeOrientation(file);  // Rotates once
-  const url = URL.createObjectURL(normalized);
-  return <img src={url} />;  // Browser rotates again = wrong!
-}
-
-// GOOD: Manual handling ONLY for output files or Node.js
-async function prepareForUpload(file: File) {
-  // Normalize orientation for server that doesn't handle EXIF
-  const normalized = await normalizeOrientation(file);
-  await uploadToServer(normalized);
-}
-
-// GOOD: Bypass auto-rotation when needed
-function rawOrientation(file: File) {
-  const url = URL.createObjectURL(file);
-  return (
-    <img
-      src={url}
-      style={{ imageOrientation: 'none' }}  // Show raw without auto-rotation
-    />
-  );
-}
-```
-
-### Main Thread Blocking
-
-```typescript
-// BAD: UI freezes during processing
-async function badProcess(files: File[]) {
-  for (const file of files) {
-    await resizeImage(file); // Blocks main thread
-  }
-}
-
-// GOOD: Yield to main thread
-async function goodProcess(files: File[]) {
-  for (const file of files) {
-    await resizeImage(file);
-    await new Promise((resolve) => setTimeout(resolve, 0)); // Yield
-  }
-}
-
-// BETTER: Use Web Worker for heavy processing
-// (See Web Worker patterns in advanced examples)
-```
-
-### DataURL for Large Images
-
-```typescript
-// BAD: Creates massive string in memory
-async function badLargePreview(file: File) {
-  const reader = new FileReader();
-  return new Promise((resolve) => {
-    reader.onload = () => resolve(reader.result);
-    reader.readAsDataURL(file); // 10MB file = 13MB+ string
-  });
-}
-
-// GOOD: Use object URL
-function goodLargePreview(file: File) {
-  return URL.createObjectURL(file); // Just a reference
-}
-```
+| Source                 | Typical values               |
+| ---------------------- | ---------------------------- |
+| Phone, portrait        | 6                            |
+| Phone, landscape       | 1 or 3                       |
+| Camera, portrait       | 6 or 8                       |
+| Camera, landscape      | 1                            |
+| Scanned or re-exported | 1 — EXIF is usually stripped |
 
 ---
 
-## Browser Compatibility
+## Browser support
 
-### Well Supported (All Modern Browsers)
+**Everywhere modern**
 
-- `URL.createObjectURL()` / `revokeObjectURL()`
-- `FileReader` API
-- Canvas `toBlob()` / `toDataURL()`
-- `canvas.getContext('2d')`
-- `image-orientation: from-image` (auto EXIF rotation) - Baseline since April 2020
+- `URL.createObjectURL()` / `revokeObjectURL()`, `FileReader`
+- Canvas 2D context, `toBlob()`, `toDataURL()`
+- `image-orientation: from-image` as the default — baseline since April 2020
+- WebP encoding via `toBlob()`, including Safari 14+
 
-### Good Support (Modern Browsers, Not IE)
+**Widely available, worth feature-detecting**
 
-- `createImageBitmap()` - Chrome 50+, Firefox 42+, Safari 15+
-- Canvas `filter` property - Chrome 52+, Firefox 49+, Safari 9.1+
-- `imageSmoothingQuality` - Chrome 54+, Firefox 51+, Safari 10+
-- Canvas auto-EXIF rotation - Chrome 81+, Firefox 78+, Safari 14+
+- `createImageBitmap()`, canvas `filter`, `imageSmoothingQuality`
+- `OffscreenCanvas` — baseline since March 2023
 
-### Baseline (2023+)
+**Not available**
 
-- `OffscreenCanvas` - Baseline since March 2023 (Chrome 69+, Firefox 105+, Safari 16.4+)
-- WebP encoding via `toBlob()` - All modern browsers including Safari 14+
-
-### Limited Support
-
-- AVIF encoding via `toBlob()` - Not standardized across browsers. Use third-party libraries (e.g., `@jsquash/avif`) for AVIF encoding from canvas data
-
-### Feature Detection
+- AVIF encoding from a canvas. Decoding works; encoding needs a WebAssembly encoder.
 
 ```typescript
-// Check createImageBitmap support
 const supportsImageBitmap = "createImageBitmap" in window;
-
-// Check OffscreenCanvas support
 const supportsOffscreenCanvas = "OffscreenCanvas" in window;
 
-// Check WebP encoding support (runtime check)
 async function supportsWebPEncoding(): Promise<boolean> {
   const canvas = document.createElement("canvas");
   canvas.width = 1;
@@ -371,28 +166,4 @@ async function supportsWebPEncoding(): Promise<boolean> {
 }
 ```
 
----
-
-## Performance Guidelines
-
-### Do
-
-- Use `URL.createObjectURL()` for previews (fastest, lowest memory)
-- Cleanup object URLs in useEffect return
-- Use `createImageBitmap()` when available (better for Canvas)
-- Use step-down scaling for large reductions (>50%)
-- Process images in Web Workers for large files or batches
-- Use `toBlob()` instead of `toDataURL()` for large images
-- Set `imageSmoothingQuality: 'high'` for final output
-- Cache format support detection results
-
-### Avoid
-
-- Creating object URLs in render function
-- Forgetting to revoke object URLs
-- Single-pass large reductions
-- Processing large images on main thread
-- Using `toDataURL()` for files >1MB
-- Canvas dimensions >4096px
-- Manual EXIF rotation in modern browsers (causes double-rotation)
-- Re-processing already-optimized images
+Cache the result of a runtime encoding check — it costs a canvas allocation each time.

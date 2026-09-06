@@ -1,70 +1,45 @@
 # VeeValidate - Schema Validation
 
-> Schema validation patterns with Zod, Yup, and Valibot. See [core.md](core.md) for basic form patterns.
+> Getting a schema into `validationSchema` and reading what comes back. See [core.md](core.md) for
+> the basic form and for inline validator functions.
 
-**Prerequisites:** Understand Basic Forms from [core.md](core.md) first.
+**Prerequisites:** Pattern 1 from [core.md](core.md).
 
 ---
 
-## Pattern 1: Zod Schema Validation
+## Pattern 6: Schema Through toTypedSchema
 
-### Good Example - Full typed schema integration
+The schema is authored in its own module. This file shows the adapter and what the form does with
+the result.
 
 ```vue
 <script setup lang="ts">
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { z } from "zod";
+// Authored separately — see whichever skill owns your schema library
+import { registrationSchema } from "./schemas/registration";
 
-const MIN_PASSWORD_LENGTH = 8;
-const MIN_USERNAME_LENGTH = 3;
-const MAX_USERNAME_LENGTH = 20;
-const MIN_AGE = 18;
+const schema = toTypedSchema(registrationSchema);
 
-// CRITICAL: Wrap schema with toTypedSchema
-const userSchema = toTypedSchema(
-  z
-    .object({
-      username: z
-        .string()
-        .min(MIN_USERNAME_LENGTH, `At least ${MIN_USERNAME_LENGTH} characters`)
-        .max(MAX_USERNAME_LENGTH, `Max ${MAX_USERNAME_LENGTH} characters`)
-        .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
-      email: z.string().email("Invalid email format"),
-      password: z
-        .string()
-        .min(MIN_PASSWORD_LENGTH, `At least ${MIN_PASSWORD_LENGTH} characters`)
-        .regex(/[A-Z]/, "Must contain uppercase letter")
-        .regex(/[0-9]/, "Must contain number"),
-      confirmPassword: z.string(),
-      age: z.coerce.number().min(MIN_AGE, `Must be ${MIN_AGE} or older`),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords do not match",
-      path: ["confirmPassword"],
-    }),
-);
-
-// CRITICAL: Initialize ALL fields used in refine
 const { handleSubmit, errors, defineField } = useForm({
-  validationSchema: userSchema,
+  validationSchema: schema,
   initialValues: {
     username: "",
     email: "",
     password: "",
-    confirmPassword: "", // Required for refine to work
-    age: 18,
+    confirmPassword: "", // needed for the cross-field rule to run at all
+    age: 18, // a starting value — the schema states the actual minimum
   },
 });
 
-const [username] = defineField("username");
-const [email] = defineField("email");
-const [password] = defineField("password");
-const [confirmPassword] = defineField("confirmPassword");
-const [age] = defineField("age");
+const [username, usernameAttrs] = defineField("username");
+const [email, emailAttrs] = defineField("email");
+const [password, passwordAttrs] = defineField("password");
+const [confirmPassword, confirmPasswordAttrs] = defineField("confirmPassword");
+const [age, ageAttrs] = defineField("age");
 
 const onSubmit = handleSubmit(async (values) => {
-  // values is fully typed from schema
+  // values is typed from the schema
   await registerUser(values);
 });
 </script>
@@ -73,33 +48,43 @@ const onSubmit = handleSubmit(async (values) => {
   <form @submit="onSubmit">
     <div>
       <label for="username">Username</label>
-      <input id="username" v-model="username" />
+      <input id="username" v-model="username" v-bind="usernameAttrs" />
       <span v-if="errors.username" role="alert">{{ errors.username }}</span>
     </div>
 
     <div>
       <label for="email">Email</label>
-      <input id="email" v-model="email" type="email" />
+      <input id="email" v-model="email" v-bind="emailAttrs" type="email" />
       <span v-if="errors.email" role="alert">{{ errors.email }}</span>
     </div>
 
     <div>
       <label for="password">Password</label>
-      <input id="password" v-model="password" type="password" />
+      <input
+        id="password"
+        v-model="password"
+        v-bind="passwordAttrs"
+        type="password"
+      />
       <span v-if="errors.password" role="alert">{{ errors.password }}</span>
     </div>
 
     <div>
       <label for="confirmPassword">Confirm Password</label>
-      <input id="confirmPassword" v-model="confirmPassword" type="password" />
-      <span v-if="errors.confirmPassword" role="alert">{{
-        errors.confirmPassword
-      }}</span>
+      <input
+        id="confirmPassword"
+        v-model="confirmPassword"
+        v-bind="confirmPasswordAttrs"
+        type="password"
+      />
+      <span v-if="errors.confirmPassword" role="alert">
+        {{ errors.confirmPassword }}
+      </span>
     </div>
 
     <div>
       <label for="age">Age</label>
-      <input id="age" v-model="age" type="number" />
+      <input id="age" v-model="age" v-bind="ageAttrs" type="number" />
       <span v-if="errors.age" role="alert">{{ errors.age }}</span>
     </div>
 
@@ -108,186 +93,54 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** toTypedSchema enables full TypeScript inference, z.coerce.number() handles string-to-number conversion from input, refine enables cross-field validation (password confirmation), path option targets specific field for cross-field errors, ALL refine-dependent fields initialized to avoid undefined issues
+**Why good:** the schema's messages arrive as `errors.<field>` with no mapping code, the cross-field
+message lands on `confirmPassword` because the schema points its error at that path, and `values` in
+the submit handler is typed from the schema rather than declared a second time.
 
-### Important: Zod refine/superRefine Gotcha
+### Two Things the Adapter Boundary Changes
 
-Zod's `refine` and `superRefine` do NOT execute when object keys are missing.
+**A cross-field rule needs every key it reads present in `initialValues`.** Zod is the case to
+watch: its object-level refinements are skipped rather than failed when a key they read is missing
+from the object handed to them, so a rule comparing `password` with `confirmPassword` lets a
+mismatched pair through as valid. Initialise every key whichever adapter you are on — the failure is
+silent either way.
 
 ```typescript
-// PROBLEMATIC: refine won't run if confirmPassword is undefined
-const schema = z
-  .object({
-    password: z.string(),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
-  });
-
-// SOLUTION: Always initialize all fields
+// PROBLEMATIC — the rule never executes
 const { defineField } = useForm({
-  validationSchema: toTypedSchema(schema),
-  initialValues: {
-    password: "",
-    confirmPassword: "", // CRITICAL: Must be initialized
-  },
+  validationSchema: toTypedSchema(passwordSchema),
+  initialValues: { password: "" }, // confirmPassword absent
+});
+
+// CORRECT — every key the rule compares is present
+const { defineField } = useForm({
+  validationSchema: toTypedSchema(passwordSchema),
+  initialValues: { password: "", confirmPassword: "" },
 });
 ```
 
----
-
-## Pattern 2: Yup Schema Validation
-
-```vue
-<script setup lang="ts">
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/yup";
-import * as yup from "yup";
-
-const MIN_PASSWORD_LENGTH = 8;
-
-const schema = toTypedSchema(
-  yup.object({
-    email: yup.string().required("Email is required").email("Invalid email"),
-    password: yup
-      .string()
-      .required("Password is required")
-      .min(MIN_PASSWORD_LENGTH, `Min ${MIN_PASSWORD_LENGTH} characters`),
-    role: yup.string().oneOf(["admin", "user"], "Invalid role").required(),
-  }),
-);
-
-const { handleSubmit, errors, defineField } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    email: "",
-    password: "",
-    role: "user",
-  },
-});
-
-const [email] = defineField("email");
-const [password] = defineField("password");
-const [role] = defineField("role");
-
-const onSubmit = handleSubmit(async (values) => {
-  await createUser(values);
-});
-</script>
-
-<template>
-  <form @submit="onSubmit">
-    <div>
-      <input v-model="email" type="email" placeholder="Email" />
-      <span v-if="errors.email" role="alert">{{ errors.email }}</span>
-    </div>
-
-    <div>
-      <input v-model="password" type="password" placeholder="Password" />
-      <span v-if="errors.password" role="alert">{{ errors.password }}</span>
-    </div>
-
-    <div>
-      <select v-model="role">
-        <option value="user">User</option>
-        <option value="admin">Admin</option>
-      </select>
-      <span v-if="errors.role" role="alert">{{ errors.role }}</span>
-    </div>
-
-    <button type="submit">Create</button>
-  </form>
-</template>
-```
-
-**Why good:** Yup's fluent API familiar to many developers, oneOf validates against allowed values, toTypedSchema from @vee-validate/yup provides type inference
+**A number input delivers a string.** `v-model` on `type="number"` yields a string unless it carries
+`.number`, so either the template uses `v-model.number` or the schema coerces. Pick one — doing both
+is harmless, doing neither fails a numeric rule against a value that looks correct on screen.
 
 ---
 
-## Pattern 3: Valibot Schema Validation (Bundle Optimized)
+## Pattern 7: Conditional Validation
 
-```vue
-<script setup lang="ts">
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/valibot";
-import * as v from "valibot";
+Two shapes, and which applies depends on whether the condition is part of the data or outside it.
 
-const MIN_AGE = 18;
+### Approach A: A schema that branches on a field's own value
 
-const schema = toTypedSchema(
-  v.object({
-    email: v.pipe(
-      v.string(),
-      v.nonEmpty("Email is required"),
-      v.email("Invalid email"),
-    ),
-    age: v.pipe(v.number(), v.minValue(MIN_AGE, `Must be ${MIN_AGE}+`)),
-  }),
-);
-
-const { handleSubmit, errors, defineField } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    email: "",
-    age: MIN_AGE,
-  },
-});
-
-const [email] = defineField("email");
-const [age] = defineField("age");
-
-const onSubmit = handleSubmit(async (values) => {
-  await submitForm(values);
-});
-</script>
-
-<template>
-  <form @submit="onSubmit">
-    <input v-model="email" type="email" />
-    <span v-if="errors.email" role="alert">{{ errors.email }}</span>
-
-    <input v-model.number="age" type="number" />
-    <span v-if="errors.age" role="alert">{{ errors.age }}</span>
-
-    <button type="submit">Submit</button>
-  </form>
-</template>
-```
-
-**Why good:** Valibot has smallest bundle size due to tree-shaking, pipe-based API is fully modular, same toTypedSchema pattern as other libraries
-
----
-
-## Pattern 4: Conditional Schema Validation
-
-Two approaches: Zod `discriminatedUnion` for static conditional rules, or `computed` schema for reactive rules that change with form state.
-
-### Approach A: Zod discriminatedUnion (preferred for static conditions)
+When a field in the form decides which rules apply, the schema can express that itself and stay
+static — no recomputation, and the submit handler's type narrows per branch.
 
 ```vue
 <script setup lang="ts">
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { z } from "zod";
+import { contactSchema } from "./schemas/contact";
 
-const MIN_PHONE_LENGTH = 10;
-
-// discriminatedUnion validates different shapes based on contactMethod
-const schema = toTypedSchema(
-  z.discriminatedUnion("contactMethod", [
-    z.object({
-      contactMethod: z.literal("email"),
-      email: z.string().email("Invalid email"),
-      phone: z.string().optional(),
-    }),
-    z.object({
-      contactMethod: z.literal("phone"),
-      email: z.string().optional(),
-      phone: z.string().min(MIN_PHONE_LENGTH, "Invalid phone number"),
-    }),
-  ]),
-);
+const schema = toTypedSchema(contactSchema);
 
 const { handleSubmit, errors, defineField } = useForm({
   validationSchema: schema,
@@ -299,8 +152,8 @@ const { handleSubmit, errors, defineField } = useForm({
 });
 
 const [contactMethod] = defineField("contactMethod");
-const [email] = defineField("email");
-const [phone] = defineField("phone");
+const [email, emailAttrs] = defineField("email");
+const [phone, phoneAttrs] = defineField("phone");
 
 const onSubmit = handleSubmit(async (data) => {
   await saveContact(data);
@@ -309,24 +162,30 @@ const onSubmit = handleSubmit(async (data) => {
 
 <template>
   <form @submit="onSubmit">
-    <div>
-      <label>
-        <input v-model="contactMethod" type="radio" value="email" />
-        Email
-      </label>
-      <label>
-        <input v-model="contactMethod" type="radio" value="phone" />
-        Phone
-      </label>
-    </div>
+    <label>
+      <input v-model="contactMethod" type="radio" value="email" /> Email
+    </label>
+    <label>
+      <input v-model="contactMethod" type="radio" value="phone" /> Phone
+    </label>
 
     <div v-if="contactMethod === 'email'">
-      <input v-model="email" type="email" placeholder="Email" />
+      <input
+        v-model="email"
+        v-bind="emailAttrs"
+        type="email"
+        placeholder="Email"
+      />
       <span v-if="errors.email" role="alert">{{ errors.email }}</span>
     </div>
 
     <div v-if="contactMethod === 'phone'">
-      <input v-model="phone" type="tel" placeholder="Phone" />
+      <input
+        v-model="phone"
+        v-bind="phoneAttrs"
+        type="tel"
+        placeholder="Phone"
+      />
       <span v-if="errors.phone" role="alert">{{ errors.phone }}</span>
     </div>
 
@@ -335,113 +194,61 @@ const onSubmit = handleSubmit(async (data) => {
 </template>
 ```
 
-**Why good:** discriminatedUnion provides full type narrowing per branch, schema is static (no computed overhead), VeeValidate validates the correct branch based on contactMethod value
+**Why good:** the schema never changes identity, so nothing re-validates on a branch switch beyond
+what the new rules require, and `contactMethod` is a form field so its value is submitted with the
+rest.
 
-### Approach B: Computed schema (for dynamic conditions)
+### Approach B: A computed schema, for a condition outside the form
 
-When the schema depends on runtime state that can't be expressed with discriminatedUnion, use a computed ref. Pass the computed directly (without `.value`) so VeeValidate tracks reactive updates.
+When the deciding state is not a form field — a permission, a route, a feature flag — the schema is
+computed from it and passed as the computed itself.
 
 ```vue
 <script setup lang="ts">
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { z } from "zod";
-import { ref, computed } from "vue";
+import { computed } from "vue";
+import { strictProfileSchema, basicProfileSchema } from "./schemas/profile";
 
-const MIN_PHONE_LENGTH = 10;
+const props = defineProps<{ requiresVerification: boolean }>();
 
-// Reactive ref drives schema changes
-const contactMethod = ref<"email" | "phone">("email");
-
+// Pass the computed itself — .value here would bind one snapshot forever
 const schema = computed(() =>
   toTypedSchema(
-    z.object({
-      email:
-        contactMethod.value === "email"
-          ? z.string().email("Invalid email")
-          : z.string().optional(),
-      phone:
-        contactMethod.value === "phone"
-          ? z.string().min(MIN_PHONE_LENGTH, "Invalid phone number")
-          : z.string().optional(),
-    }),
+    props.requiresVerification ? strictProfileSchema : basicProfileSchema,
   ),
 );
 
-// Pass computed ref directly — VeeValidate re-validates when schema changes
 const { handleSubmit, errors, defineField } = useForm({
   validationSchema: schema,
-  initialValues: { email: "", phone: "" },
-});
-
-const [email] = defineField("email");
-const [phone] = defineField("phone");
-
-const onSubmit = handleSubmit(async (data) => {
-  await saveContact(data);
+  initialValues: { email: "", taxId: "" },
 });
 </script>
-
-<template>
-  <form @submit="onSubmit">
-    <div>
-      <label>
-        <input v-model="contactMethod" type="radio" value="email" /> Email
-      </label>
-      <label>
-        <input v-model="contactMethod" type="radio" value="phone" /> Phone
-      </label>
-    </div>
-
-    <div v-if="contactMethod === 'email'">
-      <input v-model="email" type="email" placeholder="Email" />
-      <span v-if="errors.email" role="alert">{{ errors.email }}</span>
-    </div>
-
-    <div v-if="contactMethod === 'phone'">
-      <input v-model="phone" type="tel" placeholder="Phone" />
-      <span v-if="errors.phone" role="alert">{{ errors.phone }}</span>
-    </div>
-
-    <button type="submit">Save</button>
-  </form>
-</template>
 ```
 
-**Why good:** separate reactive ref avoids circular dependency with useForm, computed ref passed directly (not .value) lets VeeValidate track schema changes, re-validates only touched fields when schema updates
+**Why good:** the computed is passed unwrapped, so the form tracks it and re-validates the touched
+fields when the schema changes. Deriving it from a prop rather than from a form value keeps it out
+of a cycle with `useForm`'s own state.
 
 ---
 
-## Pattern 5: Multiple Errors Per Field
+## Pattern 8: Every Error for a Field
 
-Display all validation errors, not just the first.
+`errors` carries the first message per field. `errorBag` carries all of them, which is what a
+requirements checklist needs.
 
 ```vue
 <script setup lang="ts">
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { z } from "zod";
-
-const MIN_PASSWORD_LENGTH = 8;
-
-const schema = toTypedSchema(
-  z.object({
-    password: z
-      .string()
-      .min(MIN_PASSWORD_LENGTH, `At least ${MIN_PASSWORD_LENGTH} characters`)
-      .regex(/[A-Z]/, "Must contain uppercase")
-      .regex(/[a-z]/, "Must contain lowercase")
-      .regex(/[0-9]/, "Must contain number")
-      .regex(/[^A-Za-z0-9]/, "Must contain special character"),
-  }),
-);
+import { passwordSchema } from "./schemas/password";
 
 const { handleSubmit, errorBag, defineField } = useForm({
-  validationSchema: schema,
+  validationSchema: toTypedSchema(passwordSchema),
   initialValues: { password: "" },
 });
 
-const [password] = defineField("password");
+const [password, passwordAttrs] = defineField("password");
 
 const onSubmit = handleSubmit(async (values) => {
   await updatePassword(values);
@@ -450,41 +257,38 @@ const onSubmit = handleSubmit(async (values) => {
 
 <template>
   <form @submit="onSubmit">
-    <div>
-      <label for="password">Password</label>
-      <input id="password" v-model="password" type="password" />
+    <label for="password">Password</label>
+    <input
+      id="password"
+      v-model="password"
+      v-bind="passwordAttrs"
+      type="password"
+    />
 
-      <!-- Show ALL errors, not just first -->
-      <ul v-if="errorBag.password?.length" class="error-list" role="alert">
-        <li v-for="error in errorBag.password" :key="error">
-          {{ error }}
-        </li>
-      </ul>
-    </div>
+    <ul v-if="errorBag.password?.length" role="alert">
+      <li v-for="error in errorBag.password" :key="error">{{ error }}</li>
+    </ul>
 
     <button type="submit">Submit</button>
   </form>
 </template>
 ```
 
-**Why good:** errorBag contains ALL errors per field (not just first), useful for password requirements showing all unmet criteria, v-for displays complete validation feedback
+**Why good:** every unmet requirement is listed at once, so the user fixes them in one pass rather
+than discovering them one submit at a time.
 
 ---
 
-## Schema Validation Package Reference
+## Adapter Packages
 
-| Library | Package                 | Install                               |
-| ------- | ----------------------- | ------------------------------------- |
-| Zod     | `@vee-validate/zod`     | `npm i @vee-validate/zod zod`         |
-| Yup     | `@vee-validate/yup`     | `npm i @vee-validate/yup yup`         |
-| Valibot | `@vee-validate/valibot` | `npm i @vee-validate/valibot valibot` |
+One adapter per schema library, each exporting `toTypedSchema`. The form code above is identical
+whichever is installed. Install the adapter alongside the library it adapts — the adapter does not
+bring it.
 
-**Import pattern:**
-
-```typescript
-import { toTypedSchema } from "@vee-validate/zod";
-import { toTypedSchema } from "@vee-validate/yup";
-import { toTypedSchema } from "@vee-validate/valibot";
-```
+| Schema library | Adapter package         | Install                               |
+| -------------- | ----------------------- | ------------------------------------- |
+| Zod            | `@vee-validate/zod`     | `npm i @vee-validate/zod zod`         |
+| Yup            | `@vee-validate/yup`     | `npm i @vee-validate/yup yup`         |
+| Valibot        | `@vee-validate/valibot` | `npm i @vee-validate/valibot valibot` |
 
 ---

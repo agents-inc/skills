@@ -1,21 +1,19 @@
-# Image Handling - Core Examples
+# Image Handling — Core Examples
 
-> Core code examples for image handling patterns. See [SKILL.md](../SKILL.md) for decision guidance.
-
-**Extended examples:**
-
-- [canvas.md](canvas.md) - Canvas API manipulation, step-down scaling, cropping, filters
-- [preview.md](preview.md) - Drag-and-drop, thumbnails, gallery grid
+> Preview, dimensions and EXIF. Decisions are in [SKILL.md](../SKILL.md);
+> [canvas.md](canvas.md) has the processing pipeline and [preview.md](preview.md) the presentation
+> patterns.
 
 ---
 
-## Shared Utility: loadImage
+## Shared helper: `loadImage`
 
-Used by most patterns below. Creates an `HTMLImageElement` from a `File`, cleaning up the temporary object URL.
+Most patterns below start here. The temporary URL is revoked in both callbacks, so a decode failure
+leaks nothing.
 
 ```typescript
 // load-image.ts
-export function loadImage(file: File): Promise<HTMLImageElement> {
+export function loadImage(file: File | Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -37,13 +35,15 @@ export function loadImage(file: File): Promise<HTMLImageElement> {
 
 ---
 
-## Pattern 1: Image Preview Hook
+## Pattern 1: Preview hook
 
-### Complete Implementation
+The live URL is held in a ref as well as in state. Revoking is a side effect, so it belongs in the
+event handler and the effect cleanup — never inside a state updater, which React may call more than
+once.
 
 ```typescript
 // use-image-preview.ts
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
 interface ImagePreviewState {
@@ -62,75 +62,62 @@ const INITIAL_STATE: ImagePreviewState = {
 
 export function useImagePreview() {
   const [state, setState] = useState<ImagePreviewState>(INITIAL_STATE);
+  const urlRef = useRef<string | null>(null);
 
-  // Cleanup object URL on unmount or when previewUrl changes
-  useEffect(() => {
-    const currentUrl = state.previewUrl;
-    return () => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl);
-      }
-    };
-  }, [state.previewUrl]);
-
-  const setFile = useCallback((file: File | null) => {
-    // Revoke previous URL before creating new one
-    setState((prev) => {
-      if (prev.previewUrl) {
-        URL.revokeObjectURL(prev.previewUrl);
-      }
-      return prev;
-    });
-
-    if (!file) {
-      setState(INITIAL_STATE);
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setState({
-        ...INITIAL_STATE,
-        error: "Selected file is not an image",
-      });
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-
-    // Load image to get dimensions
-    const img = new Image();
-    img.onload = () => {
-      setState({
-        file,
-        previewUrl,
-        dimensions: { width: img.width, height: img.height },
-        error: null,
-      });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(previewUrl);
-      setState({
-        ...INITIAL_STATE,
-        error: "Failed to load image",
-      });
-    };
-    img.src = previewUrl;
+  const revokeCurrent = useCallback(() => {
+    if (!urlRef.current) return;
+    URL.revokeObjectURL(urlRef.current);
+    urlRef.current = null;
   }, []);
+
+  useEffect(() => revokeCurrent, [revokeCurrent]);
+
+  const setFile = useCallback(
+    (file: File | null) => {
+      revokeCurrent();
+
+      if (!file) {
+        setState(INITIAL_STATE);
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setState({ ...INITIAL_STATE, error: "Selected file is not an image" });
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      urlRef.current = previewUrl;
+
+      const img = new Image();
+      img.onload = () => {
+        // a newer selection may have replaced and revoked this URL mid-decode
+        if (urlRef.current !== previewUrl) return;
+        setState({
+          file,
+          previewUrl,
+          dimensions: { width: img.width, height: img.height },
+          error: null,
+        });
+      };
+      img.onerror = () => {
+        revokeCurrent();
+        setState({ ...INITIAL_STATE, error: "Failed to load image" });
+      };
+      img.src = previewUrl;
+    },
+    [revokeCurrent],
+  );
 
   const clear = useCallback(() => {
-    setState((prev) => {
-      if (prev.previewUrl) {
-        URL.revokeObjectURL(prev.previewUrl);
-      }
-      return INITIAL_STATE;
-    });
-  }, []);
+    revokeCurrent();
+    setState(INITIAL_STATE);
+  }, [revokeCurrent]);
 
   const handleInputChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0] ?? null;
-      setFile(file);
-      // Reset input to allow re-selecting same file
+      setFile(event.target.files?.[0] ?? null);
+      // clearing the value lets the same file be chosen again
       event.target.value = "";
     },
     [setFile],
@@ -146,17 +133,18 @@ export function useImagePreview() {
 }
 ```
 
-**Why good:** Tracks dimensions for layout, validates image type, handles load errors, resets input for re-selection, proper cleanup in multiple places
+Dimensions arrive asynchronously, so the state lands in one write after the decode rather than in
+two — the layout never sees a URL without its size.
 
 ---
 
-## Pattern 2: Image Preview Component
+## Pattern 2: Preview component
 
-### Complete Implementation
+Style-agnostic: a `className` passes through and every visual state is a data attribute.
 
 ```typescript
 // image-preview.tsx
-import type { ReactNode } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { useImagePreview } from './use-image-preview';
 
 interface ImagePreviewProps {
@@ -168,7 +156,7 @@ interface ImagePreviewProps {
   className?: string;
 }
 
-const DEFAULT_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const DEFAULT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const DEFAULT_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif';
 
 export function ImagePreview({
@@ -179,32 +167,22 @@ export function ImagePreview({
   children,
   className,
 }: ImagePreviewProps) {
-  const {
-    file,
-    previewUrl,
-    dimensions,
-    error,
-    setFile,
-    clear,
-    hasImage,
-  } = useImagePreview();
+  const { file, previewUrl, dimensions, error, setFile, clear, hasImage } =
+    useImagePreview();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
+    event.target.value = '';
+    if (!selectedFile) return;
 
-    if (selectedFile) {
-      if (selectedFile.size > maxSizeBytes) {
-        const maxMB = maxSizeBytes / 1024 / 1024;
-        alert(`File too large. Maximum size is ${maxMB}MB.`);
-        event.target.value = '';
-        return;
-      }
-
-      setFile(selectedFile);
-      onImageSelected?.(selectedFile);
+    if (selectedFile.size > maxSizeBytes) {
+      const maxMB = maxSizeBytes / 1024 / 1024;
+      alert(`File too large. Maximum size is ${maxMB}MB.`);
+      return;
     }
 
-    event.target.value = '';
+    setFile(selectedFile);
+    onImageSelected?.(selectedFile);
   };
 
   const handleClear = () => {
@@ -221,19 +199,11 @@ export function ImagePreview({
         aria-label="Select image"
       />
 
-      {error && (
-        <p role="alert" data-error>
-          {error}
-        </p>
-      )}
+      {error && <p role="alert" data-error>{error}</p>}
 
       {previewUrl && (
         <div data-preview-container>
-          <img
-            src={previewUrl}
-            alt="Preview of selected image"
-            data-preview-image
-          />
+          <img src={previewUrl} alt="Preview of selected image" data-preview-image />
 
           {dimensions && (
             <p data-dimensions>
@@ -247,11 +217,7 @@ export function ImagePreview({
             </p>
           )}
 
-          <button
-            type="button"
-            onClick={handleClear}
-            aria-label="Remove selected image"
-          >
+          <button type="button" onClick={handleClear} aria-label="Remove selected image">
             Remove
           </button>
         </div>
@@ -263,39 +229,32 @@ export function ImagePreview({
 }
 ```
 
-**Why good:** Size validation before processing, exposes callbacks for parent integration, displays file info and dimensions, accessible labels and alerts, style-agnostic via className and data-attributes
-
 ---
 
-## Pattern 3: Image Dimension Extraction and Validation
+## Pattern 3: Dimensions and validation
 
-### Without Loading Full Image
+`createImageBitmap` reads the header without laying anything out, which is the cheapest way to ask
+how big an image is. The `Image` fallback covers browsers that lack it and files it refuses.
 
 ```typescript
 // image-dimensions.ts
-
 interface ImageDimensions {
   width: number;
   height: number;
 }
 
-/**
- * Get image dimensions efficiently.
- * Uses createImageBitmap (avoids layout/decode) with Image element fallback.
- */
 export async function getImageDimensions(file: File): Promise<ImageDimensions> {
   if ("createImageBitmap" in window) {
     try {
       const bitmap = await createImageBitmap(file);
       const dimensions = { width: bitmap.width, height: bitmap.height };
-      bitmap.close(); // Free memory
+      bitmap.close(); // holds decoded pixels until closed
       return dimensions;
     } catch {
-      // Fall through to Image method
+      // fall through to the Image element
     }
   }
 
-  // Fallback: Image element
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -314,19 +273,18 @@ export async function getImageDimensions(file: File): Promise<ImageDimensions> {
   });
 }
 
-/**
- * Validate image dimensions against constraints
- */
+interface DimensionConstraints {
+  minWidth?: number;
+  maxWidth?: number;
+  minHeight?: number;
+  maxHeight?: number;
+  aspectRatio?: number;
+  aspectRatioTolerance?: number;
+}
+
 export async function validateImageDimensions(
   file: File,
-  constraints: {
-    minWidth?: number;
-    maxWidth?: number;
-    minHeight?: number;
-    maxHeight?: number;
-    aspectRatio?: number;
-    aspectRatioTolerance?: number;
-  },
+  constraints: DimensionConstraints,
 ): Promise<{ valid: boolean; dimensions: ImageDimensions; errors: string[] }> {
   const {
     minWidth = 0,
@@ -363,52 +321,47 @@ export async function validateImageDimensions(
 
   if (aspectRatio !== undefined) {
     const actualRatio = dimensions.width / dimensions.height;
-    const ratioDiff = Math.abs(actualRatio - aspectRatio);
-    if (ratioDiff > aspectRatioTolerance) {
+    // a tolerance is required: integer dimensions rarely divide to an exact ratio
+    if (Math.abs(actualRatio - aspectRatio) > aspectRatioTolerance) {
       errors.push(
         `Aspect ratio must be ${aspectRatio.toFixed(2)} (got ${actualRatio.toFixed(2)})`,
       );
     }
   }
 
-  return {
-    valid: errors.length === 0,
-    dimensions,
-    errors,
-  };
+  return { valid: errors.length === 0, dimensions, errors };
 }
 ```
 
-**Why good:** Uses createImageBitmap when available (more efficient, avoids layout), properly frees bitmap memory, comprehensive constraint validation with detailed error messages
+Returning every failure rather than the first lets the UI say what is wrong in one pass.
 
 ---
 
-## Pattern 4: EXIF Orientation Parsing
+## Pattern 4: EXIF orientation
 
-### Read and Normalize Orientation
+Orientation lives in the APP1 segment near the start of a JPEG, so 64KB is enough to find it without
+decoding anything.
+
+Use `normalizeOrientation` only on bytes leaving the browser. Applying it and then rendering the
+result gives you the rotation twice.
 
 ```typescript
 // exif-orientation.ts
+import { loadImage } from "./load-image";
+
 type Orientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 const EXIF_MARKER = 0xffe1;
 const ORIENTATION_TAG = 0x0112;
 const ORIENTATIONS_NEEDING_SWAP = [5, 6, 7, 8];
 const DEFAULT_QUALITY = 0.85;
+const HEADER_SIZE = 65_536;
 
-/**
- * Read EXIF orientation from JPEG header without loading full image.
- * Only reads first 64KB of file data.
- */
 export async function getExifOrientation(file: File): Promise<Orientation> {
-  const HEADER_SIZE = 65536;
   const buffer = await file.slice(0, HEADER_SIZE).arrayBuffer();
   const view = new DataView(buffer);
 
-  // Check for JPEG magic bytes
-  if (view.getUint16(0) !== 0xffd8) {
-    return 1; // Not JPEG, assume normal orientation
-  }
+  if (view.getUint16(0) !== 0xffd8) return 1; // not a JPEG
 
   let offset = 2;
   while (offset < view.byteLength) {
@@ -417,27 +370,24 @@ export async function getExifOrientation(file: File): Promise<Orientation> {
 
     if (marker === EXIF_MARKER) {
       const length = view.getUint16(offset);
-      const exifData = new DataView(buffer, offset + 2, length - 2);
-      return parseExifOrientation(exifData);
+      return parseExifOrientation(new DataView(buffer, offset + 2, length - 2));
     }
 
-    const segmentLength = view.getUint16(offset);
-    offset += segmentLength;
+    offset += view.getUint16(offset);
   }
 
-  return 1; // No EXIF found
+  return 1;
 }
 
 function parseExifOrientation(view: DataView): Orientation {
+  // TIFF headers declare their own byte order; 0x4949 is "II", little-endian
   const littleEndian = view.getUint16(6) === 0x4949;
   const ifdOffset = view.getUint32(10, littleEndian);
   const numEntries = view.getUint16(14 + ifdOffset, littleEndian);
 
   for (let i = 0; i < numEntries; i++) {
     const entryOffset = 16 + ifdOffset + i * 12;
-    const tag = view.getUint16(entryOffset, littleEndian);
-
-    if (tag === ORIENTATION_TAG) {
+    if (view.getUint16(entryOffset, littleEndian) === ORIENTATION_TAG) {
       return view.getUint16(entryOffset + 8, littleEndian) as Orientation;
     }
   }
@@ -445,22 +395,16 @@ function parseExifOrientation(view: DataView): Orientation {
   return 1;
 }
 
-/**
- * Normalize orientation by re-drawing with correct transform.
- * Use ONLY for upload processing - modern browsers auto-rotate for display.
- */
 export async function normalizeOrientation(file: File): Promise<Blob> {
   const orientation = await getExifOrientation(file);
-
-  if (orientation === 1) {
-    return file;
-  }
+  if (orientation === 1) return file;
 
   const img = await loadImage(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get context");
+  if (!ctx) throw new Error("Canvas context unavailable");
 
+  // 5-8 rotate by a quarter turn, so the output is the transpose
   const needsSwap = ORIENTATIONS_NEEDING_SWAP.includes(orientation);
   canvas.width = needsSwap ? img.height : img.width;
   canvas.height = needsSwap ? img.width : img.height;
@@ -486,42 +430,39 @@ function applyOrientationTransform(
   switch (orientation) {
     case 2:
       ctx.transform(-1, 0, 0, 1, width, 0);
-      break; // Flip horizontal
+      break; // flip X
     case 3:
       ctx.transform(-1, 0, 0, -1, width, height);
-      break; // Rotate 180
+      break; // 180
     case 4:
       ctx.transform(1, 0, 0, -1, 0, height);
-      break; // Flip vertical
+      break; // flip Y
     case 5:
       ctx.transform(0, 1, 1, 0, 0, 0);
-      break; // Rotate 90 CW + flip
+      break; // 90 CW + flip
     case 6:
       ctx.transform(0, 1, -1, 0, height, 0);
-      break; // Rotate 90 CW
+      break; // 90 CW
     case 7:
       ctx.transform(0, -1, -1, 0, height, width);
-      break; // Rotate 90 CCW + flip
+      break; // 90 CCW + flip
     case 8:
       ctx.transform(0, -1, 1, 0, 0, width);
-      break; // Rotate 90 CCW
+      break; // 90 CCW
   }
 }
-
-// Uses loadImage utility defined above
 ```
-
-**Why good:** Reads EXIF from first 64KB only (no full image decode), handles all 8 orientation values, clearly documents when manual handling is needed vs browser auto-rotation
 
 ---
 
-## Pattern 5: Multiple Image Gallery Hook
+## Pattern 5: Gallery state
 
-### With Validation and Reordering
+Per-file rejection reasons, asynchronous dimension loading, and one URL revoked per removal. The
+live URLs are mirrored into a ref so the unmount cleanup does not close over a stale list.
 
 ```typescript
 // use-image-gallery.ts
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface GalleryImage {
   id: string;
@@ -535,10 +476,7 @@ const DEFAULT_MAX_IMAGES = 10;
 const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export function useImageGallery(
-  options: {
-    maxImages?: number;
-    maxFileSizeBytes?: number;
-  } = {},
+  options: { maxImages?: number; maxFileSizeBytes?: number } = {},
 ) {
   const {
     maxImages = DEFAULT_MAX_IMAGES,
@@ -546,11 +484,23 @@ export function useImageGallery(
   } = options;
 
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const urlsRef = useRef(new Set<string>());
+
+  const revoke = useCallback((url: string) => {
+    URL.revokeObjectURL(url);
+    urlsRef.current.delete(url);
+  }, []);
+
+  useEffect(
+    () => () => {
+      urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      urlsRef.current.clear();
+    },
+    [],
+  );
 
   const addImages = useCallback(
-    (
-      files: File[],
-    ): { added: number; rejected: Array<{ name: string; reason: string }> } => {
+    (files: File[]) => {
       const rejected: Array<{ name: string; reason: string }> = [];
       const toAdd: GalleryImage[] = [];
 
@@ -574,6 +524,7 @@ export function useImageGallery(
 
         const id = crypto.randomUUID();
         const previewUrl = URL.createObjectURL(file);
+        urlsRef.current.add(previewUrl);
 
         toAdd.push({
           id,
@@ -583,7 +534,6 @@ export function useImageGallery(
           status: "loading",
         });
 
-        // Load dimensions asynchronously
         const img = new Image();
         img.onload = () => {
           setImages((current) =>
@@ -617,36 +567,28 @@ export function useImageGallery(
     [images.length, maxImages, maxFileSizeBytes],
   );
 
-  const removeImage = useCallback((id: string) => {
-    setImages((current) => {
-      const image = current.find((img) => img.id === id);
-      if (image) URL.revokeObjectURL(image.previewUrl);
-      return current.filter((img) => img.id !== id);
-    });
-  }, []);
+  const removeImage = useCallback(
+    (id: string) => {
+      const image = images.find((img) => img.id === id);
+      if (image) revoke(image.previewUrl);
+      setImages((current) => current.filter((img) => img.id !== id));
+    },
+    [images, revoke],
+  );
 
   const reorderImages = useCallback((fromIndex: number, toIndex: number) => {
     setImages((current) => {
       const result = [...current];
-      const [removed] = result.splice(fromIndex, 1);
-      result.splice(toIndex, 0, removed);
+      const [moved] = result.splice(fromIndex, 1);
+      result.splice(toIndex, 0, moved);
       return result;
     });
   }, []);
 
   const clearAll = useCallback(() => {
-    setImages((current) => {
-      current.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-      return [];
-    });
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    images.forEach((img) => revoke(img.previewUrl));
+    setImages([]);
+  }, [images, revoke]);
 
   return {
     images,
@@ -660,9 +602,3 @@ export function useImageGallery(
   };
 }
 ```
-
-**Why good:** Per-file validation with rejection reasons, async dimension loading, reorder support, individual and batch URL cleanup, unmount cleanup
-
----
-
-_Extended examples: [canvas.md](canvas.md) | [preview.md](preview.md)_

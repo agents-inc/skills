@@ -17,10 +17,7 @@ const MAX_AGE = 120;
 const MAX_BIO_LENGTH = 500;
 
 // Reusable email schema
-const EmailSchema = z
-  .string()
-  .email("Please enter a valid email address")
-  .toLowerCase();
+const EmailSchema = z.email("Please enter a valid email address").toLowerCase();
 
 // Reusable password schema with refinements
 const PasswordSchema = z
@@ -67,7 +64,7 @@ const UserSchema = z.object({
     .string()
     .max(MAX_BIO_LENGTH, `Bio cannot exceed ${MAX_BIO_LENGTH} characters`)
     .optional(),
-  website: z.string().url("Please enter a valid URL").optional(),
+  website: z.url("Please enter a valid URL").optional(),
   role: z.enum(["user", "admin", "moderator"]).default("user"),
 });
 
@@ -93,7 +90,7 @@ const MAX_MESSAGE_LENGTH = 1000;
 
 const ContactFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
   message: z
     .string()
     .min(
@@ -139,17 +136,17 @@ function validateContactForm(input: unknown): ValidationResult<ContactForm> {
 import { z } from "zod";
 
 const ApiUserSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string(),
-  email: z.string().email(),
-  createdAt: z.string().datetime(),
+  email: z.email(),
+  createdAt: z.iso.datetime(),
 });
 
 const ApiResponseSchema = z.object({
   data: ApiUserSchema,
   meta: z.object({
     requestId: z.string(),
-    timestamp: z.string().datetime(),
+    timestamp: z.iso.datetime(),
   }),
 });
 
@@ -218,9 +215,9 @@ import { z } from "zod";
 
 // Base entity schema (shared fields)
 const BaseEntitySchema = z.object({
-  id: z.string().uuid(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  id: z.uuid(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 // Article content schema
@@ -237,7 +234,7 @@ const ArticleContentSchema = z.object({
 const ArticleSchema = BaseEntitySchema.extend({
   ...ArticleContentSchema.shape,
   author: z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     name: z.string(),
   }),
 });
@@ -306,7 +303,7 @@ const PaymentMethodSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("paypal"),
-    paypalEmail: z.string().email(),
+    paypalEmail: z.email(),
   }),
 ]);
 
@@ -351,7 +348,7 @@ const AddressSchema = z.object({
 });
 
 const OrderItemSchema = z.object({
-  productId: z.string().uuid(),
+  productId: z.uuid(),
   name: z.string(),
   price: z.number().positive(),
   quantity: z
@@ -363,14 +360,14 @@ const OrderItemSchema = z.object({
 
 const OrderSchema = z
   .object({
-    id: z.string().uuid(),
-    customerId: z.string().uuid(),
+    id: z.uuid(),
+    customerId: z.uuid(),
     items: z.array(OrderItemSchema).min(1, "Order must have at least one item"),
     shippingAddress: AddressSchema,
     billingAddress: AddressSchema.optional(),
     useSameAddressForBilling: z.boolean().default(true),
     notes: z.string().max(MAX_NOTES_LENGTH).optional(),
-    createdAt: z.string().datetime(),
+    createdAt: z.iso.datetime(),
   })
   .refine(
     (order) => {
@@ -435,7 +432,7 @@ const UsernameSchema = z
 
 const RegistrationSchema = z.object({
   username: UsernameSchema,
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(MIN_PASSWORD_LENGTH),
 });
 

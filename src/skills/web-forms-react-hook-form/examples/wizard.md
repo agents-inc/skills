@@ -1,8 +1,9 @@
 # React Hook Form - Multi-Step Wizard
 
-> Wizard form pattern with step-by-step validation. See [core.md](core.md) for basic form patterns.
+> One form spanning several screens, validated a step at a time. See [core.md](core.md) for the
+> basic form.
 
-**Prerequisites:** Understand Basic Forms, Controller, and Resolver patterns from [core.md](core.md), [controlled-components.md](controlled-components.md), and [validation.md](validation.md) first.
+**Prerequisites:** Pattern 1 from [core.md](core.md) and Pattern 3 from [validation.md](validation.md).
 
 ---
 
@@ -190,6 +191,9 @@ function Step3() {
 }
 ```
 
-**Why good:** trigger() validates only specific fields for step-by-step validation, FormProvider enables nested step components to access form, form state persists across steps, named constants for TOTAL_STEPS and FIRST_STEP, getFieldsForStep centralizes field mapping
+**Why good:** `trigger(fields)` validates one step's fields and returns whether they passed, which
+is what gates the Next button — `isValid` would report on the whole form and never be true on step
+one. One `useForm` spans all three steps, so values survive navigating backwards, and
+`getFieldsForStep` keeps the step-to-field mapping in a single place.
 
 ---

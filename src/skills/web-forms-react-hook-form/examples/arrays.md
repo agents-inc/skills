@@ -1,8 +1,8 @@
-# React Hook Form - Dynamic Arrays
+# React Hook Form - Repeatable Rows
 
-> useFieldArray pattern for dynamic form fields. See [core.md](core.md) for basic form patterns.
+> `useFieldArray` for field groups the user adds and removes. See [core.md](core.md) for the basic form.
 
-**Prerequisites:** Understand Basic Forms, Controller, and Resolver patterns from [core.md](core.md), [controlled-components.md](controlled-components.md), and [validation.md](validation.md) first.
+**Prerequisites:** Pattern 1 from [core.md](core.md).
 
 ---
 
@@ -100,7 +100,7 @@ export function InvoiceForm() {
               (watchedLineItems[index]?.unitPrice || 0);
 
             return (
-              // CRITICAL: Use field.id as key, NEVER use index
+              // field.id, not index — the bad example below shows why
               <tr key={field.id}>
                 <td>
                   <input
@@ -181,7 +181,9 @@ export function InvoiceForm() {
 }
 ```
 
-**Why good:** field.id used as key ensures proper React reconciliation, rules.minLength on useFieldArray validates array length, errors.lineItems.root shows array-level errors, valueAsNumber converts strings to numbers, watch enables live total calculation, named constants for all numeric values
+**Why good:** `field.id` keeps each row matched to its own inputs across add and remove,
+`rules.minLength` on the hook validates the array itself and reports at `errors.lineItems.root`, and
+`valueAsNumber` means the total arithmetic runs on numbers rather than on strings.
 
 ### Bad Example - Using index as key
 
@@ -205,6 +207,7 @@ export function InvoiceForm() {
 }
 ```
 
-**Why bad:** using index as key causes React to incorrectly match elements when items are removed or reordered, form state gets corrupted because React reuses wrong DOM nodes, values shift to wrong rows when removing items from middle of list
+**Why bad:** React matches rows by key, so removing item 2 of 5 leaves keys `0..3` pointing at
+different data than before — every value below the removed row shifts up one input.
 
 ---

@@ -1,342 +1,101 @@
-# File Upload Patterns Reference
+# File Upload Reference
 
-> Decision frameworks, anti-patterns, and red flags for file upload implementations. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
-
----
-
-## Decision Framework
-
-### When to Use Which Upload Method
-
-```
-What is the file size?
-├─ < 5MB → Single request upload
-│   └─ Show: Spinner or progress bar
-└─ 5MB - 100MB → Single request with XHR progress
-    └─ Show: Progress bar with percentage
-└─ 100MB+ → Chunked upload
-    ├─ Need resumability?
-    │   ├─ YES → TUS protocol or custom with localStorage
-    │   └─ NO → Simple chunked upload
-    └─ Show: Progress bar + speed + ETA
-```
-
-### When to Use Which Validation
-
-```
-What is the security level?
-├─ Low (user avatars, comments)
-│   └─ Extension + MIME type + size limit
-├─ Medium (document uploads)
-│   └─ Extension + MIME type + magic bytes + size limit
-└─ High (code uploads, sensitive data)
-    └─ All above + deep server-side inspection + virus scan
-```
-
-### When to Use Direct Upload vs Server Proxy
-
-```
-Is the file going to cloud storage (S3/GCS/Azure)?
-├─ YES → Use presigned URLs for direct upload
-│   └─ Why: Avoid bandwidth costs, reduce server load
-└─ NO → Is the file small (< 10MB)?
-    ├─ YES → Server proxy is acceptable
-    └─ NO → Consider chunked upload with direct storage
-```
-
-### Choosing Progress Feedback
-
-```
-What is the expected upload duration?
-├─ < 2 seconds → Spinner only
-├─ 2-10 seconds → Progress bar
-├─ 10-60 seconds → Progress bar + percentage
-└─ > 60 seconds → Progress bar + percentage + speed + ETA + pause/cancel
-```
+> Selection guides, expiry and CORS notes, and a review checklist. Concepts and red flags are in
+> [SKILL.md](SKILL.md); code is in [examples/](examples/).
 
 ---
 
-## File Size Recommendations
+## Selection guides
 
-| File Size | Upload Method       | Chunk Size | Concurrency |
-| --------- | ------------------- | ---------- | ----------- |
-| < 5MB     | Single request      | N/A        | 1           |
-| 5-50MB    | Single request      | N/A        | 1           |
-| 50-100MB  | Chunked             | 5MB        | 3           |
-| 100MB-1GB | Chunked + resumable | 10MB       | 3-5         |
-| > 1GB     | Multipart S3        | 100MB      | 3-5         |
+### Upload method
+
+```
+How big is the file?
+├─ Under 5MB          → One request; a spinner is enough feedback
+├─ 5MB to 100MB       → One request via XHR, with a real progress bar
+└─ Over 100MB         → Chunked
+    ├─ Must survive a reload or a dropped connection?
+    │   ├─ YES → tus, or your own chunking with persisted progress
+    │   └─ NO  → Plain chunked upload
+    └─ Show progress, speed and remaining time
+```
+
+| Size      | Method             | Chunk size | Concurrency |
+| --------- | ------------------ | ---------- | ----------- |
+| < 5MB     | Single request     | —          | 1           |
+| 5–50MB    | Single request     | —          | 1           |
+| 50–100MB  | Chunked            | 5MB        | 3           |
+| 100MB–1GB | Chunked, resumable | 10MB       | 3–5         |
+| > 1GB     | Multipart          | 100MB      | 3–5         |
+
+### How much validation
+
+```
+What does a bad file cost here?
+├─ Little — an avatar, an attachment on a comment
+│   └─ Extension, MIME type, size
+├─ Something — a document others will open
+│   └─ The above plus magic bytes
+└─ A great deal — anything executed, or shared widely
+    └─ The above plus server-side inspection and a malware scan
+```
+
+### Direct or proxied
+
+```
+Is the destination object storage?
+├─ YES → Presigned URL, uploaded to directly
+│         (no request body through your application, no double bandwidth)
+└─ NO  → Under 10MB?
+    ├─ YES → Straight to your endpoint
+    └─ NO  → Chunk it, or put storage in front
+```
+
+### Progress feedback
+
+| Expected duration | Show                                              |
+| ----------------- | ------------------------------------------------- |
+| Under 2s          | A spinner                                         |
+| 2–10s             | A progress bar                                    |
+| 10–60s            | Progress bar with a percentage                    |
+| Over 60s          | Percentage, speed, remaining time, cancel, resume |
 
 ---
 
-## Presigned URL Expiration Guidelines
+## Presigned URL expiry
 
-| Use Case                   | Recommended Expiration       |
-| -------------------------- | ---------------------------- |
-| Upload URL                 | 15-60 minutes                |
-| Download (streaming video) | 1-4 hours                    |
-| Download (share link)      | 24 hours max                 |
-| Image preview              | 15 minutes with auto-refresh |
-| Background job             | Match job timeout            |
+| Use                  | Lifetime                        |
+| -------------------- | ------------------------------- |
+| Upload               | 15–60 minutes                   |
+| Streaming download   | 1–4 hours                       |
+| Shared download link | 24 hours at most                |
+| Image preview        | 15 minutes, refreshed on demand |
+| Background job       | The job's own timeout           |
 
-**Security Note:** Treat presigned URLs as bearer tokens. Anyone with the URL can perform the specified operation until it expires. Share only with intended recipients and prefer shorter expiration times when possible. AWS allows up to 7 days, but shorter is more secure.
-
----
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Trusting File Extension Only
-
-```typescript
-// ANTI-PATTERN: Extension can be spoofed
-const isValidImage = (file: File) => {
-  return file.name.match(/\.(jpg|png|gif)$/i);
-};
-// malware.exe renamed to photo.jpg passes this check!
-```
-
-**Why it's wrong:** Users can rename any file to have any extension. A malicious executable renamed to `.jpg` will pass this check.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Use magic bytes detection
-const isValidImage = async (file: File) => {
-  const buffer = await file.slice(0, 8).arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-
-  // Check for JPEG magic bytes
-  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
-    return true;
-  }
-  // Check for PNG magic bytes
-  if (bytes[0] === 0x89 && bytes[1] === 0x50) {
-    return true;
-  }
-  return false;
-};
-```
+A presigned URL is a bearer token: whoever holds it can perform that operation until it expires, so
+it is as sensitive as the thing it grants. Providers commonly permit lifetimes measured in days;
+that ceiling is not a recommendation.
 
 ---
 
-### Anti-Pattern 2: Not Cleaning Up Object URLs
+## Validation order
 
-```typescript
-// ANTI-PATTERN: Memory leak
-function ImagePreview({ file }: { file: File }) {
-  // New URL created on every render, never revoked!
-  const url = URL.createObjectURL(file);
-  return <img src={url} />;
-}
-```
+Cheapest first, so an obviously wrong file is rejected without reading anything:
 
-**Why it's wrong:** Each `createObjectURL` allocates memory. Without cleanup, memory grows unbounded, eventually crashing the browser.
+1. **Size** — a property already in memory
+2. **Extension** — a string comparison
+3. **MIME type** — what the browser reports, still just metadata
+4. **Magic bytes** — the first read of the file, and only 12 bytes of it
+5. **Server-side, all of the above again** — the only step that is a control
+6. **Deep inspection** — scanning or parsing, where the content warrants it
 
-**What to do instead:**
-
-```typescript
-// CORRECT: Cleanup on unmount
-function ImagePreview({ file }: { file: File }) {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [file]);
-
-  if (!url) return null;
-  return <img src={url} alt="Preview" />;
-}
-```
+Code: [examples/validation.md](examples/validation.md).
 
 ---
 
-### Anti-Pattern 3: Fake Progress Bars
+## CORS for direct-to-storage uploads
 
-```typescript
-// ANTI-PATTERN: Fake progress
-const [progress, setProgress] = useState(0);
-useEffect(() => {
-  const interval = setInterval(() => {
-    setProgress((p) => Math.min(90, p + 10)); // Fake!
-  }, 500);
-  return () => clearInterval(interval);
-}, []);
-```
-
-**Why it's wrong:** Deceives users about actual upload state. Bar stops at 90% and user has no idea what's happening.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Real progress with XHR
-const xhr = new XMLHttpRequest();
-xhr.upload.addEventListener("progress", (e) => {
-  if (e.lengthComputable) {
-    setProgress(Math.round((e.loaded / e.total) * 100));
-  }
-});
-```
-
-**Note:** The Fetch API currently lacks native upload progress support. While streams can be used, they measure bytes taken from your stream, not actual network transmission (see [Jake Archibald's analysis](https://jakearchibald.com/2025/fetch-streams-not-for-progress/)). A native fetch progress API is in development by Igalia. Until then, use XHR for upload progress.
-
----
-
-### Anti-Pattern 4: Exposing AWS Credentials
-
-```typescript
-// ANTI-PATTERN: Credentials in client code
-import { S3Client } from "@aws-sdk/client-s3";
-
-const s3Client = new S3Client({
-  credentials: {
-    accessKeyId: "AKIAXXXXXXXX", // NEVER IN CLIENT CODE!
-    secretAccessKey: "xxxxxxxxxxxx",
-  },
-});
-```
-
-**Why it's wrong:** Anyone can view client-side JavaScript and steal credentials to access your entire S3 bucket.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Request presigned URL from server
-const response = await fetch("/api/upload/presign", {
-  method: "POST",
-  body: JSON.stringify({ fileName, fileType, fileSize }),
-});
-const { uploadUrl } = await response.json();
-await fetch(uploadUrl, { method: "PUT", body: file });
-```
-
----
-
-### Anti-Pattern 5: No Keyboard Support
-
-```typescript
-// ANTI-PATTERN: Mouse-only dropzone
-<div
-  onDrop={handleDrop}
-  onDragOver={(e) => e.preventDefault()}
-  className="dropzone"
->
-  Drop files here
-</div>
-// Cannot be accessed with keyboard!
-```
-
-**Why it's wrong:** Keyboard-only users and screen reader users cannot interact with this component.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Full keyboard support
-<div
-  onDrop={handleDrop}
-  onDragOver={(e) => e.preventDefault()}
-  onClick={() => inputRef.current?.click()}
-  onKeyDown={(e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      inputRef.current?.click();
-    }
-  }}
-  role="button"
-  tabIndex={0}
-  aria-label="Upload files. Press Enter to browse."
->
-  <input ref={inputRef} type="file" hidden />
-  Drop files here or click to browse
-</div>
-```
-
----
-
-### Anti-Pattern 6: Proxying Large Files Through Server
-
-```typescript
-// ANTI-PATTERN: Server proxy for large files
-// Server receives file, then re-uploads to storage
-const file = await request.blob();
-await s3Client.send(new PutObjectCommand({ Body: file }));
-// Server becomes bottleneck, pays bandwidth twice
-```
-
-**Why it's wrong:** Server must buffer entire file, uses double bandwidth (client→server + server→storage), and becomes a bottleneck.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Server generates presigned URL, client uploads directly
-// Server endpoint:
-const url = await getSignedUrl(
-  s3Client,
-  new PutObjectCommand({ Bucket: BUCKET, Key: key }),
-  { expiresIn: 3600 },
-);
-// Return { uploadUrl: url, key } to client
-
-// Client uploads directly to storage using the presigned URL
-```
-
----
-
-### Anti-Pattern 7: No Upload Abort Capability
-
-```typescript
-// ANTI-PATTERN: Cannot cancel upload
-const upload = async (file: File) => {
-  await fetch("/upload", {
-    method: "POST",
-    body: file,
-  });
-  // No way to cancel this!
-};
-```
-
-**Why it's wrong:** If user navigates away or wants to cancel, the upload continues in background consuming resources.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: AbortController for cancellation
-const abortController = useRef<AbortController | null>(null);
-
-const upload = async (file: File) => {
-  abortController.current = new AbortController();
-
-  await fetch("/upload", {
-    method: "POST",
-    body: file,
-    signal: abortController.current.signal,
-  });
-};
-
-const cancel = () => {
-  abortController.current?.abort();
-};
-```
-
----
-
-## Validation Priority Order
-
-For security-critical uploads, validate in this order:
-
-1. **Size limit** (fastest check, reject oversized immediately)
-2. **Extension** (quick check, catch obvious mismatches)
-3. **MIME type** (browser-provided, better than extension)
-4. **Magic bytes** (read first 8-12 bytes, detect actual type)
-5. **Server-side re-validation** (never trust client)
-6. **Deep inspection** (for high-security: virus scan, content analysis)
-
----
-
-## CORS Configuration for S3 Direct Upload
+A browser upload to a different origin needs the bucket to permit it:
 
 ```json
 {
@@ -351,43 +110,27 @@ For security-critical uploads, validate in this order:
 }
 ```
 
-**Note:** `ExposeHeaders: ["ETag"]` is required for multipart uploads to complete successfully.
+`ExposeHeaders: ["ETag"]` is what makes a multipart upload possible at all — without it the browser
+hides the header, `getResponseHeader("ETag")` reads `null`, and the completion call has nothing to
+send. `AllowedOrigins` should name your origins rather than `*`, since the rule is what stops
+another site posting to your bucket with a leaked URL.
 
-**Cloudflare R2 Note:** R2 presigned URLs work similarly to S3 but do NOT support `POST` multipart form uploads via HTML forms. Use PUT with presigned URLs instead. R2 presigned URLs also cannot be used with custom domains - only the S3 API domain.
-
----
-
-## Accessibility Checklist
-
-| Requirement            | Implementation                                         |
-| ---------------------- | ------------------------------------------------------ |
-| Keyboard navigation    | `tabIndex={0}`, `role="button"`, Enter/Space handlers  |
-| Focus visible          | `:focus-visible` CSS styles                            |
-| Labels                 | `<label>` for inputs, `aria-label` for custom controls |
-| Error announcements    | `role="alert"` with `aria-live="polite"`               |
-| Progress announcements | `role="progressbar"` with `aria-valuenow`              |
-| Status updates         | `role="status"` with `aria-live="polite"`              |
-| Required indication    | Visual indicator + `aria-required="true"`              |
-| Disabled state         | Visual styling + `aria-disabled="true"`                |
-| File list              | `role="list"` with `role="listitem"` children          |
+Not every object store accepts browser POST form uploads; some support presigned PUT only, and some
+refuse presigned URLs on custom domains. Confirm both before designing a flow around them.
 
 ---
 
-## Quick Reference: Format Helpers
+## Review checklist
 
-See [examples/progress.md](examples/progress.md) Pattern 3 for full implementations of `formatBytes()`, `formatSpeed()`, and `formatRemainingTime()`.
+- [ ] The server validates everything the client validated
+- [ ] Type checks read magic bytes, not just the extension and MIME type
+- [ ] Every object URL has a matching revoke
+- [ ] The dropzone works from the keyboard, and the click path works on mobile
+- [ ] Selection, progress and failure are announced, not only drawn
+- [ ] Anything over two seconds shows real progress
+- [ ] Every upload can be cancelled
+- [ ] Presigned URLs are issued server-side, scoped to a key prefix, and short-lived
+- [ ] The file input's value is cleared after each selection
+- [ ] Incomplete multipart uploads expire on a lifecycle rule
 
----
-
-## Checklist
-
-- [ ] Files validated on BOTH client and server
-- [ ] Magic bytes used for type detection (not just extension/MIME)
-- [ ] Object URLs cleaned up on unmount/remove
-- [ ] Keyboard support for dropzone (Enter/Space activation)
-- [ ] ARIA labels and live regions for accessibility
-- [ ] Progress feedback for uploads > 2 seconds
-- [ ] Presigned URLs used for direct-to-S3 uploads
-- [ ] Abort capability for all uploads
-- [ ] Error states handled and communicated
-- [ ] File input reset after selection (allows re-selecting)
+Formatters for the progress figures: [examples/progress.md](examples/progress.md).

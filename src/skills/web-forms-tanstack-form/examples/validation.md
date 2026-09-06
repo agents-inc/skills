@@ -10,7 +10,7 @@
 
 ---
 
-## Pattern 1: Sync Field Validation
+## Pattern 5: Sync Field Validation
 
 Validators return a string (error message) or `undefined` (valid).
 
@@ -48,7 +48,7 @@ Validators return a string (error message) or `undefined` (valid).
 
 ---
 
-## Pattern 2: Async Field Validation
+## Pattern 6: Async Field Validation
 
 Use `onChangeAsync` or `onBlurAsync` for server-side checks. Combine with a sync validator — the async validator only runs if the sync one passes.
 
@@ -89,7 +89,7 @@ Use `onChangeAsync` or `onBlurAsync` for server-side checks. Combine with a sync
 
 ---
 
-## Pattern 3: Form-Level Validation with Server Errors
+## Pattern 7: Form-Level Validation with Server Errors
 
 Form-level `onSubmitAsync` can return errors for specific fields. This is ideal for server-side validation where multiple fields may be invalid.
 
@@ -130,7 +130,7 @@ const form = useForm({
 
 ---
 
-## Pattern 4: Linked Fields (Cross-Field Validation)
+## Pattern 8: Linked Fields (Cross-Field Validation)
 
 Use `onChangeListenTo` to re-run a field's validator when a related field changes.
 
@@ -227,18 +227,17 @@ export function PasswordForm() {
 
 ---
 
-## Pattern 5: Standard Schema Integration
+## Pattern 9: Standard Schema Integration
 
-TanStack Form accepts any Standard Schema-compatible library (Zod, Valibot, ArkType) directly in validators — no adapter/resolver package needed.
+A validator slot takes a schema object as readily as a function, for any validation library
+implementing the Standard Schema spec. No adapter package sits between them.
+
+The schemas below are authored elsewhere and imported — this file shows only what putting one in a
+validator slot does.
 
 ```tsx
-import { z } from "zod";
-
-const emailSchema = z.string().email("Invalid email address");
-const ageSchema = z
-  .number()
-  .min(13, "Must be at least 13")
-  .max(120, "Invalid age");
+// Authored separately — see whichever skill owns your schema library
+import { emailSchema, ageSchema } from "./schemas/profile";
 
 export function ProfileForm() {
   const form = useForm({
@@ -303,13 +302,17 @@ export function ProfileForm() {
 }
 ```
 
-**How it works:** TanStack Form detects the Standard Schema interface on the validator value and uses it directly. No `zodResolver` import. The schema's error messages are used as-is.
+**How it works:** a validator slot holding a schema object rather than a function is detected through
+the Standard Schema interface and run directly, and the schema's own messages become the field's
+errors. Nothing wraps or converts the schema, so the messages a reader sees in the schema are
+exactly the messages the field renders.
 
-**Mixing schemas and functions:** You can use a schema for one event and a function for another on the same field:
+**Mixing schemas and functions:** one event can take a schema and another a function, on the same
+field.
 
 ```tsx
 validators={{
-  onChange: z.string().min(1, "Required"),
+  onChange: requiredSchema,
   onBlurAsync: async ({ value }) => {
     const exists = await checkEmail(value);
     return exists ? "Email already registered" : undefined;

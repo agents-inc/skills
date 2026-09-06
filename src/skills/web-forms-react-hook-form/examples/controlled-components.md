@@ -1,8 +1,8 @@
-# React Hook Form - Controlled Components
+# React Hook Form - Components That Own Their Value
 
-> Controller pattern for integrating controlled components. See [core.md](core.md) for basic form patterns.
+> `Controller` for inputs that expose no usable ref. See [core.md](core.md) for the basic form.
 
-**Prerequisites:** Understand Basic Forms from [core.md](core.md) first.
+**Prerequisites:** Pattern 1 from [core.md](core.md).
 
 ---
 
@@ -135,7 +135,9 @@ export function EmployeeForm() {
 }
 ```
 
-**Why good:** Controller wraps controlled components preserving RHF optimization, fieldState.error provides field-specific error access, multi-select uses array values with proper onChange handling, constants for DEPARTMENTS and SKILLS are maintainable
+**Why good:** each `Controller` confines its re-render to one field, `fieldState.error` gives that
+field's error without reading the form-wide `errors` object, and the checkbox group shows the shape
+for an array-valued field — `field.onChange` receives the whole next array.
 
 ### Bad Example - Using register for controlled components
 
@@ -160,6 +162,8 @@ export function EmployeeForm() {
 }
 ```
 
-**Why bad:** register doesn't work with controlled components that don't expose ref, separate useState for skills is disconnected from form state, form data on submit won't include skills, validation won't run on skills field
+**Why bad:** `register` spreads a `ref` the custom select never forwards, so the field never
+registers. The separate `useState` compounds it — `skills` is absent from the submit payload and no
+validation ever runs against it.
 
 ---

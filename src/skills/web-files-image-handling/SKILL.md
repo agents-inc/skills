@@ -5,44 +5,75 @@ description: Client-side image handling - preview generation, Canvas API resizin
 
 # Image Handling Patterns
 
-> **Quick Guide:** Use `URL.createObjectURL()` for image previews (most efficient). Resize/compress with Canvas API before upload. Always cleanup object URLs with `URL.revokeObjectURL()` to prevent memory leaks. Handle EXIF orientation for mobile photos only when processing for upload (modern browsers auto-rotate for display). Use step-down scaling for quality preservation on large reductions.
+> **Quick Guide:** Two different jobs with two different tools. Displaying an image means
+> `URL.createObjectURL()` and revoking it afterwards — the browser already applies EXIF rotation, so
+> rotating manually rotates twice. Processing an image means Canvas: clamp to 4096px, scale in
+> multiple passes for reductions past 50%, fill white before writing JPEG, and prefer the async
+> `toBlob()` over `toDataURL()`.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — the shared `loadImage` helper, preview hook and component, dimension extraction and validation, EXIF parsing, gallery state
+- [examples/preview.md](examples/preview.md) — parallel thumbnail sets, gallery grid
+- [examples/canvas.md](examples/canvas.md) — the resize pipeline, target-size compression, cropping, watermarks, filters
+- [reference.md](reference.md) — format and strategy selection, constants, method comparison, EXIF values, browser support
+
+---
+
+## Which path applies
+
+The two paths disagree about EXIF, which is where most of the bugs are.
+
+- **Displaying to the user** — object URL straight into `<img>`, revoked when it is replaced or
+  unmounted. The browser rotates for you; do nothing about orientation. Start at
+  [examples/core.md](examples/core.md).
+- **Processing before sending elsewhere** — Canvas resize, compress, convert or crop. Nothing here
+  rotates for you, so normalise orientation explicitly and never display the result without
+  suppressing the browser's own rotation. Start at [examples/canvas.md](examples/canvas.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing image-handling code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Revoke every object URL — on unmount, and before creating the replacement.** Each
+`createObjectURL` pins its blob in memory until revoked, so a picker the user changes their mind in
+leaks a full image per attempt.
 
-**(You MUST cleanup object URLs with `URL.revokeObjectURL()` in useEffect cleanup or when replacing URLs)**
+**Decide which path you are on before touching orientation.** Browsers have defaulted to
+`image-orientation: from-image` since 2020, so normalising for display rotates the image twice;
+normalise only for bytes that leave the browser.
 
-**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling causes double rotation)**
+**Clamp canvas dimensions to 4096px.** Past that the canvas fails silently or takes the tab down,
+and the limit is lower again on mobile.
 
-**(You MUST use step-down scaling when reducing images by more than 50% - single-pass resize loses quality)**
-
-**(You MUST limit canvas dimensions to browser maximums (typically 4096px) - larger canvases crash browsers)**
+**Scale in multiple passes when reducing by more than half.** One-pass downsampling undersamples
+and produces a soft, aliased result; two intermediate steps keep it sharp.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** image preview, URL.createObjectURL, revokeObjectURL, canvas resize, image compression, EXIF orientation, toBlob, toDataURL, FileReader image, image thumbnail, client-side resize, image crop, canvas drawImage, createImageBitmap, image quality
+**Auto-detection:** URL.createObjectURL, URL.revokeObjectURL, createImageBitmap, OffscreenCanvas,
+canvas.toBlob, canvas.toDataURL, convertToBlob, ctx.drawImage, imageSmoothingQuality,
+image-orientation, EXIF orientation, 0x0112, FileReader.readAsDataURL, naturalWidth, image/webp,
+step-down scaling, thumbnail generation, client-side resize, image crop
 
-**When to use:**
+**Applies to:**
 
-- Creating image previews before upload
-- Resizing or compressing images client-side
-- Handling EXIF orientation from mobile photos
-- Converting between image formats (JPEG/PNG/WebP)
-- Generating thumbnails from user-selected images
-- Implementing image cropping interfaces
+- Showing a preview of an image the user has chosen
+- Resizing, compressing or converting an image in the browser
+- Reading and normalising EXIF orientation
+- Generating thumbnails, cropping, watermarking, applying filters
+- Validating dimensions and aspect ratio before doing anything else
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Server-side image processing (not client-side scope)
-- Image CDN/optimization services (infrastructure concern)
-- Complex image editing (consider dedicated libraries like Fabric.js or Konva)
+- Choosing files and transferring them — this skill starts from a `File` or `Blob` you already hold
+- Resizing or transcoding on a server, and URL-based transformation services
+- An interactive editing surface with layers, selections and undo, which wants a canvas library
+  rather than raw Canvas calls
 
 ---
 
@@ -50,23 +81,19 @@ description: Client-side image handling - preview generation, Canvas API resizin
 
 ## Philosophy
 
-Client-side image handling improves UX by providing instant previews and reducing upload sizes before they hit your server. The key insight is that **preview and processing have different optimal approaches** - `URL.createObjectURL()` for previews (fast, memory-efficient), Canvas API for processing (resize, compress, convert).
+Preview and processing pull in opposite directions, and conflating them is the source of most image
+bugs.
 
-**Core Principles:**
+A preview should cost nothing: `URL.createObjectURL()` hands `<img>` a reference to bytes that are
+already in memory, with no decode into JavaScript and no copy. The price is manual lifetime
+management — the reference outlives the component unless revoked.
 
-1. **Object URLs for preview** - No file reading, instant display, must cleanup
-2. **Canvas for processing** - Resize, compress, convert formats
-3. **Memory management is critical** - Leaked object URLs accumulate indefinitely
-4. **EXIF awareness** - Modern browsers auto-rotate for display; manual handling only for upload processing
-5. **Progressive quality** - Step-down scaling preserves sharpness on large reductions
+Processing is the opposite: the pixels have to be decoded into a canvas, transformed, and encoded
+back out. Everything expensive lives here, which is why the canvas work is worth doing once, at the
+size you actually need, rather than repeatedly at full resolution.
 
-**Preview Method Comparison:**
-
-| Method                       | Speed   | Memory             | Use Case             |
-| ---------------------------- | ------- | ------------------ | -------------------- |
-| `URL.createObjectURL()`      | Instant | Low (reference)    | Display previews     |
-| `FileReader.readAsDataURL()` | Slow    | High (full Base64) | Need data URL string |
-| Canvas `toDataURL()`         | Medium  | Medium             | After processing     |
+The browser's own EXIF handling sits across the seam. It rotates for display and not for canvas, so
+the same file has two orientations depending on which path read it.
 
 </philosophy>
 
@@ -74,133 +101,104 @@ Client-side image handling improves UX by providing instant previews and reducin
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Object URL Preview with Cleanup
+### Pattern 1: Object URL preview with cleanup
 
-Use `URL.createObjectURL()` for instant image previews. **Always cleanup** to prevent memory leaks. The critical pattern is revoking the previous URL before creating a new one, and revoking in the useEffect cleanup.
+Revoke the previous URL before creating the next one, and revoke on unmount. Creating a URL during
+render leaks one per render.
 
 ```typescript
-// The essential cleanup pattern
 useEffect(() => {
   const url = URL.createObjectURL(file);
   setPreviewUrl(url);
-  return () => URL.revokeObjectURL(url); // MUST cleanup
+  return () => URL.revokeObjectURL(url);
 }, [file]);
 ```
 
-**Why good:** Instant preview without reading file into memory, cleanup prevents memory leaks
+Full code: [examples/core.md](examples/core.md)
 
-```typescript
-// BAD: No cleanup - memory leak
-const [preview] = useState(() => URL.createObjectURL(file));
-// URL never revoked - memory accumulates indefinitely!
-```
+### Pattern 2: Canvas resize
 
-**Why bad:** Object URL never revoked, browser holds blob reference indefinitely, compounds with each file selection
-
-See [examples/core.md](examples/core.md) Pattern 1-2 for complete hook and component implementations.
-
----
-
-### Pattern 2: Canvas Resize with Quality Preservation
-
-Resize images using Canvas API. Key concerns: clamp dimensions to browser limits (4096px safe max), enable `imageSmoothingQuality: "high"`, fill white background for JPEG (transparency becomes black otherwise).
+Clamp to the browser limit, keep the aspect ratio, ask for high-quality smoothing, and fill white
+before drawing when the output is JPEG — JPEG has no alpha channel, so transparency encodes as
+black.
 
 ```typescript
 const MAX_CANVAS_DIMENSION = 4096;
 
-// Clamp to browser limits, maintain aspect ratio
 const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-const width = Math.round(img.width * Math.min(ratio, 1));
+const width = Math.round(img.width * Math.min(ratio, 1)); // never upscale
 const height = Math.round(img.height * Math.min(ratio, 1));
 
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = "high";
 if (mimeType === "image/jpeg") {
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height); // White bg for JPEG
+  ctx.fillRect(0, 0, width, height);
 }
 ctx.drawImage(img, 0, 0, width, height);
 ```
 
-See [examples/core.md](examples/core.md) Pattern 3 for dimension validation, [examples/canvas.md](examples/canvas.md) for complete resize pipeline.
+Full code: [examples/canvas.md](examples/canvas.md)
 
----
+### Pattern 3: Step-down scaling
 
-### Pattern 3: Step-Down Scaling
-
-For reductions >50%, scale in multiple passes to preserve sharpness. A 4000px to 100px single-pass resize produces blurry results; two intermediate steps maintain quality.
+`drawImage` samples a fixed neighbourhood, so a large reduction in one pass throws away most of the
+source. Halving repeatedly keeps every pixel contributing.
 
 ```typescript
 const STEP_DOWN_THRESHOLD = 0.5;
-const reductionRatio = targetWidth / img.width;
 
-if (reductionRatio < STEP_DOWN_THRESHOLD) {
-  // Multi-pass: 4000 -> 400 -> 100 (two steps)
+if (targetWidth / img.width < STEP_DOWN_THRESHOLD) {
+  // 4000 → 400 → 100 rather than 4000 → 100
   const factor = Math.pow(targetWidth / img.width, 1 / steps);
   for (let i = 0; i < steps; i++) {
-    /* scale by factor each step */
+    /* draw into a canvas scaled by factor, then use it as the next source */
   }
-} else {
-  // Single-pass is fine for small reductions
 }
 ```
 
-See [examples/canvas.md](examples/canvas.md) Pattern 1 for complete step-down implementation with automatic strategy selection.
+Full code: [examples/canvas.md](examples/canvas.md)
 
----
-
-### Pattern 4: EXIF Orientation
-
-**Modern browsers (2020+) auto-rotate images for display** via CSS `image-orientation: from-image` (default). Manual EXIF handling is only needed when:
-
-- Processing images for upload (server may strip EXIF and not rotate)
-- Using Node.js canvas (no auto-rotation)
-- Needing to detect orientation programmatically
+### Pattern 4: EXIF orientation
 
 ```typescript
-// For DISPLAY: modern browsers handle it - do nothing
-<img src={URL.createObjectURL(file)} /> // Auto-rotated
+// Display: the browser has already rotated it
+<img src={URL.createObjectURL(file)} />
 
-// For UPLOAD PROCESSING: normalize before sending to server
-const orientation = await getExifOrientation(file); // Read from JPEG header
-if (orientation !== 1) {
-  const normalized = await normalizeOrientation(file);
-  await uploadToServer(normalized);
-}
+// Outbound bytes: normalise, because the next consumer may not rotate
+const orientation = await getExifOrientation(file);
+const normalized = orientation === 1 ? file : await normalizeOrientation(file);
 
-// To BYPASS auto-rotation (show raw orientation)
-<img src={url} style={{ imageOrientation: 'none' }} />
+// Displaying an already-normalised image: suppress the second rotation
+<img src={url} style={{ imageOrientation: "none" }} />
 ```
 
-**Gotcha:** Applying `normalizeOrientation()` then displaying via `<img>` causes double-rotation in modern browsers.
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/core.md](examples/core.md) Pattern 4 for EXIF parsing implementation.
+### Pattern 5: Format conversion
 
----
-
-### Pattern 5: Format Conversion
-
-Convert between JPEG/PNG/WebP with format-appropriate quality defaults. Key detail: JPEG cannot represent transparency, so fill white background before conversion.
+Quality means something different per format, and PNG ignores the parameter entirely.
 
 ```typescript
 const FORMAT_QUALITY_DEFAULTS: Record<string, number> = {
   "image/jpeg": 0.85,
   "image/webp": 0.82,
-  "image/png": 1, // Lossless - quality param ignored
+  "image/png": 1, // lossless — the quality argument is ignored
 };
 ```
 
-WebP is supported in all modern browsers (including Safari 14+). For target file size, use binary search over quality parameter.
+WebP encodes everywhere modern, including Safari 14 and later. To hit a byte budget rather than a
+quality setting, binary-search the quality parameter.
 
-See [examples/canvas.md](examples/canvas.md) Pattern 2 for binary search quality targeting.
-
----
+Full code: [examples/canvas.md](examples/canvas.md)
 
 ### Pattern 6: Cropping
 
-Canvas-based cropping using `drawImage()` with source rectangle parameters. Validate crop region is within image bounds, support resize-during-crop for generating specific output dimensions.
+`drawImage` with nine arguments takes a source rectangle and a destination rectangle, so a crop and
+a resize are one call. Clamp the source rectangle to the image first — an out-of-bounds region
+draws nothing rather than erroring.
 
 ```typescript
 // drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh)
@@ -217,64 +215,39 @@ ctx.drawImage(
 );
 ```
 
-See [examples/canvas.md](examples/canvas.md) Pattern 3 for complete crop implementation with aspect ratio helper.
+Full code: [examples/canvas.md](examples/canvas.md)
 
 </patterns>
 
 ---
 
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Preview hooks, components, dimension validation, EXIF parsing
-- [examples/preview.md](examples/preview.md) - Drag-and-drop, thumbnails, gallery grid
-- [examples/canvas.md](examples/canvas.md) - Resize pipeline, target-size compression, cropping, watermarks, filters
-- [reference.md](reference.md) - Decision frameworks, constants reference, browser compatibility, anti-patterns
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Not calling `URL.revokeObjectURL()` - causes memory leaks that accumulate indefinitely
-- Canvas dimensions exceeding 4096px - crashes browser tab or silently fails
-- Double EXIF rotation - applying manual rotation in browsers that auto-rotate (all modern browsers since 2020)
+- No `URL.revokeObjectURL()` — every selection pins another image in memory for the life of the
+  page — revoke in the effect cleanup and before replacing the URL
+- `URL.createObjectURL()` called during render — a new URL per render, none of them revoked — move
+  it into an effect
+- A canvas dimension above 4096px — the tab crashes, or the canvas silently produces nothing —
+  clamp before assigning `canvas.width`
+- Normalising orientation and then rendering the result in `<img>` — the browser rotates it a
+  second time — set `image-orientation: none` on that element, or do not normalise for display
+- Converting a transparent PNG to JPEG without a background fill — the transparent areas come out
+  black — `fillRect` white first
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using `FileReader.readAsDataURL()` for preview - slow and memory-intensive vs object URLs
-- Single-pass resize for large reductions (>50%) - results in blurry/aliased images
-- Creating object URLs inside render functions - creates new URL every render cycle
-
-**Gotchas & Edge Cases:**
-
-- Object URLs persist until page unload even without cleanup (but waste memory)
-- Canvas `toBlob()` is async, `toDataURL()` is sync - prefer toBlob for performance
-- PNG with transparency converted to JPEG needs white background fill (otherwise black)
-- Very large images may exceed WebGL limits even within canvas dimension limits
-- Node.js canvas does NOT auto-rotate EXIF - still needs manual handling server-side
-- Use `image-orientation: none` CSS to bypass browser auto-rotation when needed
+- A single-pass reduction past 50% looks soft and aliased where a two-pass reduction looks sharp
+- `toBlob()` is asynchronous and `toDataURL()` is not, and the synchronous one is the expensive one
+- A data URL is roughly a third larger than the file it encodes, so a 10MB image becomes a 13MB
+  string on the main thread
+- Node has no `image-orientation`, so server-side canvas work still needs manual EXIF handling
+- `createImageBitmap` skips layout and decode, and its result holds memory until `close()`
+- An image can be within the per-dimension limit and still exceed the total canvas area limit
+- AVIF encoding from `toBlob()` is not available across browsers; decoding it is
+- Re-encoding an already-optimised image usually makes it larger, not smaller
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST cleanup object URLs with `URL.revokeObjectURL()` in useEffect cleanup or when replacing URLs)**
-
-**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling causes double rotation)**
-
-**(You MUST use step-down scaling when reducing images by more than 50% - single-pass resize loses quality)**
-
-**(You MUST limit canvas dimensions to browser maximums (typically 4096px) - larger canvases crash browsers)**
-
-**Failure to follow these rules will cause memory leaks, browser crashes, and poor image quality.**
-
-</critical_reminders>

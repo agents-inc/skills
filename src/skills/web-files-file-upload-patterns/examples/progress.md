@@ -1,16 +1,19 @@
-# Progress Tracking Examples
+# File Upload — Progress Examples
 
-> Progress indicators, speed calculation, abort handling for file uploads. Reference from [SKILL.md](../SKILL.md).
+> Reporting how an upload is going, and letting the user stop it. Decisions are in
+> [SKILL.md](../SKILL.md).
 
 ---
 
-## Pattern 1: XHR Upload with Progress
+## Pattern 10: XHR upload with progress
 
-### Basic Progress Tracking
+`xhr.upload` is the only progress source for a request body. The rolling average over the last few
+samples is what makes the speed readable — a raw per-event figure swings by an order of magnitude
+between packets.
 
 ```typescript
 // use-upload-progress.ts
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 interface UploadProgress {
   loaded: number;
@@ -45,9 +48,7 @@ export function useUploadProgress(): UseUploadProgressResult {
     const loadedDelta = loaded - lastLoadedRef.current;
 
     if (timeDelta > 0) {
-      const currentSpeed = (loadedDelta / timeDelta) * 1000;
-      speedSamplesRef.current.push(currentSpeed);
-
+      speedSamplesRef.current.push((loadedDelta / timeDelta) * 1000);
       if (speedSamplesRef.current.length > SPEED_SAMPLE_SIZE) {
         speedSamplesRef.current.shift();
       }
@@ -56,19 +57,17 @@ export function useUploadProgress(): UseUploadProgressResult {
     lastLoadedRef.current = loaded;
     lastTimeRef.current = time;
 
-    // Return rolling average for smooth display
-    const sum = speedSamplesRef.current.reduce((a, b) => a + b, 0);
-    return sum / speedSamplesRef.current.length || 0;
+    const samples = speedSamplesRef.current;
+    return samples.reduce((a, b) => a + b, 0) / samples.length || 0;
   }, []);
 
   const upload = useCallback(
-    (file: File, url: string): Promise<Response> => {
-      return new Promise((resolve, reject) => {
+    (file: File, url: string): Promise<Response> =>
+      new Promise((resolve, reject) => {
         setUploading(true);
         setError(null);
         setProgress(null);
 
-        // Reset speed tracking
         speedSamplesRef.current = [];
         lastLoadedRef.current = 0;
         lastTimeRef.current = performance.now();
@@ -77,19 +76,19 @@ export function useUploadProgress(): UseUploadProgressResult {
         xhrRef.current = xhr;
 
         xhr.upload.addEventListener("progress", (event) => {
-          if (event.lengthComputable) {
-            const speed = calculateSpeed(event.loaded, performance.now());
-            const remaining = event.total - event.loaded;
-            const remainingTime = speed > 0 ? remaining / speed : 0;
+          // false when the body has no known length — show a spinner instead
+          if (!event.lengthComputable) return;
 
-            setProgress({
-              loaded: event.loaded,
-              total: event.total,
-              percentage: Math.round((event.loaded / event.total) * 100),
-              speed,
-              remainingTime,
-            });
-          }
+          const speed = calculateSpeed(event.loaded, performance.now());
+          const remaining = event.total - event.loaded;
+
+          setProgress({
+            loaded: event.loaded,
+            total: event.total,
+            percentage: Math.round((event.loaded / event.total) * 100),
+            speed,
+            remainingTime: speed > 0 ? remaining / speed : 0,
+          });
         });
 
         xhr.addEventListener("load", () => {
@@ -105,11 +104,12 @@ export function useUploadProgress(): UseUploadProgressResult {
                 },
               }),
             );
-          } else {
-            const err = new Error(`Upload failed: ${xhr.status}`);
-            setError(err.message);
-            reject(err);
+            return;
           }
+
+          const err = new Error(`Upload failed: ${xhr.status}`);
+          setError(err.message);
+          reject(err);
         });
 
         xhr.addEventListener("error", () => {
@@ -128,8 +128,7 @@ export function useUploadProgress(): UseUploadProgressResult {
 
         xhr.open("POST", url);
         xhr.send(file);
-      });
-    },
+      }),
     [calculateSpeed],
   );
 
@@ -142,18 +141,17 @@ export function useUploadProgress(): UseUploadProgressResult {
 }
 ```
 
-**Why good:** Uses XHR for progress events (fetch doesn't support upload progress), rolling average smooths speed display, provides abort capability, returns remaining time
+Wrapping the response in a `Response` keeps callers from caring that this used XHR at all.
 
 ---
 
-## Pattern 2: Progress Bar Component
+## Pattern 11: Progress bar
 
-### Accessible Progress Bar
+The visible percentage is `aria-hidden`, because `aria-label` already announces it — otherwise a
+screen reader reads it twice.
 
 ```typescript
 // progress-bar.tsx
-// Apply your styling solution via className prop
-
 type ProgressSize = 'sm' | 'md' | 'lg';
 type ProgressStatus = 'uploading' | 'success' | 'error';
 
@@ -174,8 +172,8 @@ export function ProgressBar({
   status = 'uploading',
   className,
 }: ProgressBarProps) {
-  const clampedProgress = Math.min(100, Math.max(0, progress));
-  const displayLabel = label ?? `${Math.round(clampedProgress)}%`;
+  const clamped = Math.min(100, Math.max(0, progress));
+  const displayLabel = label ?? `${Math.round(clamped)}%`;
 
   return (
     <div
@@ -183,32 +181,21 @@ export function ProgressBar({
       data-size={size}
       data-status={status}
       role="progressbar"
-      aria-valuenow={clampedProgress}
+      aria-valuenow={clamped}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={`Upload progress: ${displayLabel}`}
     >
-      <div
-        className="fill"
-        style={{ width: `${clampedProgress}%` }}
-      />
-      {showLabel && (
-        <span className="label" aria-hidden="true">
-          {displayLabel}
-        </span>
-      )}
+      <div data-fill style={{ width: `${clamped}%` }} />
+      {showLabel && <span aria-hidden="true">{displayLabel}</span>}
     </div>
   );
 }
 ```
 
-**Why good:** Accessible with role="progressbar" and aria attributes, variants via `data-size` and `data-status` attributes (style-agnostic), clamps progress to valid range, label hidden from screen readers (aria-hidden) since aria-label provides info. Style using the data attributes via your styling solution.
-
 ---
 
-## Pattern 3: Format Utilities
-
-### Speed and Time Formatters
+## Pattern 12: Formatters
 
 ```typescript
 // format-progress.ts
@@ -231,17 +218,13 @@ const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
 
 export function formatRemainingTime(seconds: number): string {
-  if (!isFinite(seconds) || seconds < 0) {
-    return "Calculating...";
-  }
+  // an estimate before the first sample is Infinity, not a number to show
+  if (!isFinite(seconds) || seconds < 0) return "Calculating...";
 
-  if (seconds < SECONDS_PER_MINUTE) {
-    return `${Math.ceil(seconds)}s remaining`;
-  }
+  if (seconds < SECONDS_PER_MINUTE) return `${Math.ceil(seconds)}s remaining`;
 
   if (seconds < SECONDS_PER_HOUR) {
-    const minutes = Math.ceil(seconds / SECONDS_PER_MINUTE);
-    return `${minutes}m remaining`;
+    return `${Math.ceil(seconds / SECONDS_PER_MINUTE)}m remaining`;
   }
 
   const hours = Math.floor(seconds / SECONDS_PER_HOUR);
@@ -256,15 +239,18 @@ export function formatProgress(loaded: number, total: number): string {
 
 ---
 
-## Pattern 4: Upload Progress Display
+## Pattern 13: Progress display
 
-### Complete Progress UI Component
+Cancel while it runs, retry once it has failed — the same slot, different affordance.
 
 ```typescript
 // upload-progress-display.tsx
 import { ProgressBar } from './progress-bar';
-import { formatBytes, formatSpeed, formatRemainingTime } from './format-progress';
-// Apply your styling solution via className prop
+import {
+  formatBytes,
+  formatSpeed,
+  formatRemainingTime,
+} from './format-progress';
 
 interface UploadProgress {
   loaded: number;
@@ -292,16 +278,13 @@ export function UploadProgressDisplay({
   onRetry,
 }: UploadProgressDisplayProps) {
   return (
-    <div className="container" data-status={status}>
-      <div className="header">
-        <span className="file-name" title={fileName}>
-          {fileName}
-        </span>
+    <div data-status={status}>
+      <div>
+        <span title={fileName}>{fileName}</span>
 
         {status === 'uploading' && onAbort && (
           <button
             type="button"
-            className="abort-button"
             onClick={onAbort}
             aria-label={`Cancel upload of ${fileName}`}
           >
@@ -312,7 +295,6 @@ export function UploadProgressDisplay({
         {status === 'error' && onRetry && (
           <button
             type="button"
-            className="retry-button"
             onClick={onRetry}
             aria-label={`Retry upload of ${fileName}`}
           >
@@ -323,12 +305,8 @@ export function UploadProgressDisplay({
 
       {status === 'uploading' && progress && (
         <>
-          <ProgressBar
-            progress={progress.percentage}
-            status="uploading"
-          />
-
-          <div className="details">
+          <ProgressBar progress={progress.percentage} status="uploading" />
+          <div>
             <span>
               {formatBytes(progress.loaded)} / {formatBytes(progress.total)}
             </span>
@@ -339,22 +317,18 @@ export function UploadProgressDisplay({
       )}
 
       {status === 'pending' && (
-        <div className="pending" aria-live="polite">
-          Waiting to upload...
-        </div>
+        <div aria-live="polite">Waiting to upload...</div>
       )}
 
       {status === 'success' && (
-        <div className="success" role="status">
-          <span aria-hidden="true">✓</span>
-          Upload complete
+        <div role="status">
+          <span aria-hidden="true">✓</span> Upload complete
         </div>
       )}
 
       {status === 'error' && error && (
-        <div className="error" role="alert">
-          <span aria-hidden="true">✗</span>
-          {error}
+        <div role="alert">
+          <span aria-hidden="true">✗</span> {error}
         </div>
       )}
     </div>
@@ -362,17 +336,16 @@ export function UploadProgressDisplay({
 }
 ```
 
-**Why good:** Shows all progress details (bytes, speed, ETA), abort button during upload, retry button on error, accessible with aria-live and role attributes, visual state indication via `data-status` attribute. Style using the data attributes via your styling solution.
-
 ---
 
-## Pattern 5: Multi-File Progress Manager
+## Pattern 14: Concurrent uploads
 
-### Managing Multiple Concurrent Uploads
+A cap on how many run at once. Without it, twenty files open twenty connections, each one slower
+than three would have been, and each competing for the same upstream bandwidth.
 
 ```typescript
 // use-multi-upload.ts
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface FileUploadState {
   id: string;
@@ -385,7 +358,7 @@ interface FileUploadState {
 interface UseMultiUploadOptions {
   maxConcurrent?: number;
   uploadUrl: string;
-  onFileComplete?: (file: File, response: Response) => void;
+  onFileComplete?: (file: File) => void;
   onAllComplete?: () => void;
 }
 
@@ -400,42 +373,43 @@ export function useMultiUpload(options: UseMultiUploadOptions) {
   } = options;
 
   const [files, setFiles] = useState<FileUploadState[]>([]);
-  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const abortControllersRef = useRef(new Map<string, AbortController>());
   const activeCountRef = useRef(0);
 
-  const generateId = () =>
-    `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  // the queue reads this rather than reading state inside an updater: starting an
+  // upload is a side effect, and React may run an updater more than once
+  const filesRef = useRef<FileUploadState[]>([]);
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
+  const patch = useCallback((id: string, changes: Partial<FileUploadState>) => {
+    setFiles((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, ...changes } : f)),
+    );
+  }, []);
 
   const uploadFile = useCallback(
     async (state: FileUploadState) => {
       const controller = new AbortController();
       abortControllersRef.current.set(state.id, controller);
 
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === state.id ? { ...f, status: "uploading", progress: 0 } : f,
-        ),
-      );
+      patch(state.id, { status: "uploading", progress: 0 });
 
       try {
-        const xhr = new XMLHttpRequest();
-
         await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+
           xhr.upload.addEventListener("progress", (e) => {
-            if (e.lengthComputable) {
-              const progress = Math.round((e.loaded / e.total) * 100);
-              setFiles((prev) =>
-                prev.map((f) => (f.id === state.id ? { ...f, progress } : f)),
-              );
-            }
+            if (!e.lengthComputable) return;
+            patch(state.id, {
+              progress: Math.round((e.loaded / e.total) * 100),
+            });
           });
 
           xhr.addEventListener("load", () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve();
-            } else {
-              reject(new Error(`Upload failed: ${xhr.status}`));
-            }
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload failed: ${xhr.status}`));
           });
 
           xhr.addEventListener("error", () =>
@@ -451,63 +425,51 @@ export function useMultiUpload(options: UseMultiUploadOptions) {
           xhr.send(state.file);
         });
 
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === state.id ? { ...f, status: "success", progress: 100 } : f,
-          ),
-        );
-
-        onFileComplete?.(state.file, new Response(null, { status: 200 }));
+        patch(state.id, { status: "success", progress: 100 });
+        onFileComplete?.(state.file);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Upload failed";
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === state.id ? { ...f, status: "error", error: message } : f,
-          ),
-        );
+        patch(state.id, {
+          status: "error",
+          error: err instanceof Error ? err.message : "Upload failed",
+        });
       } finally {
         abortControllersRef.current.delete(state.id);
         activeCountRef.current--;
         processQueue();
       }
     },
-    [uploadUrl, onFileComplete],
+    [uploadUrl, onFileComplete, patch],
   );
 
   const processQueue = useCallback(() => {
-    setFiles((prev) => {
-      const pending = prev.filter((f) => f.status === "pending");
-      const canStart = maxConcurrent - activeCountRef.current;
+    const current = filesRef.current;
+    const pending = current.filter((f) => f.status === "pending");
+    const slots = maxConcurrent - activeCountRef.current;
 
-      pending.slice(0, canStart).forEach((file) => {
-        activeCountRef.current++;
-        uploadFile(file);
-      });
-
-      // Check if all complete
-      const allDone = prev.every(
-        (f) => f.status === "success" || f.status === "error",
-      );
-      if (allDone && prev.length > 0) {
-        onAllComplete?.();
-      }
-
-      return prev;
+    pending.slice(0, slots).forEach((file) => {
+      activeCountRef.current++;
+      uploadFile(file);
     });
+
+    const allSettled =
+      current.length > 0 &&
+      current.every((f) => f.status === "success" || f.status === "error");
+    if (allSettled) onAllComplete?.();
   }, [maxConcurrent, uploadFile, onAllComplete]);
 
   const addFiles = useCallback(
     (newFiles: File[]) => {
-      const newStates: FileUploadState[] = newFiles.map((file) => ({
-        id: generateId(),
-        file,
-        status: "pending",
-        progress: 0,
-      }));
+      setFiles((prev) => [
+        ...prev,
+        ...newFiles.map((file) => ({
+          id: crypto.randomUUID(),
+          file,
+          status: "pending" as const,
+          progress: 0,
+        })),
+      ]);
 
-      setFiles((prev) => [...prev, ...newStates]);
-
-      // Start processing after state update
+      // deferred so the commit, and the ref that mirrors it, land before the queue reads
       setTimeout(processQueue, 0);
     },
     [processQueue],
@@ -519,16 +481,10 @@ export function useMultiUpload(options: UseMultiUploadOptions) {
 
   const retryFile = useCallback(
     (id: string) => {
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === id
-            ? { ...f, status: "pending", progress: 0, error: undefined }
-            : f,
-        ),
-      );
+      patch(id, { status: "pending", progress: 0, error: undefined });
       setTimeout(processQueue, 0);
     },
-    [processQueue],
+    [patch, processQueue],
   );
 
   const removeFile = useCallback((id: string) => {
@@ -546,9 +502,3 @@ export function useMultiUpload(options: UseMultiUploadOptions) {
   };
 }
 ```
-
-**Why good:** Limits concurrent uploads to prevent overwhelming server/browser, maintains queue of pending files, supports abort/retry per file, tracks individual progress, fires callbacks on completion
-
----
-
-_Extended examples: [core.md](core.md) | [validation.md](validation.md) | [preview.md](preview.md) | [s3-upload.md](s3-upload.md) | [resumable.md](resumable.md) | [accessibility.md](accessibility.md)_

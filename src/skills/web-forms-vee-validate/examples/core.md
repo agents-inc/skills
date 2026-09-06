@@ -4,8 +4,8 @@
 
 **Additional Examples:**
 
-- [validation.md](validation.md) - Schema validation integration
-- [arrays.md](arrays.md) - useFieldArray for dynamic forms
+- [validation.md](validation.md) - schema through toTypedSchema, conditional validation, errorBag
+- [arrays.md](arrays.md) - useFieldArray for repeatable groups
 
 ---
 
@@ -90,7 +90,9 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** toTypedSchema provides full type inference from schema, initialValues prevents undefined warnings, aria-invalid ensures accessibility, isSubmitting disables button during submission, named constant for MIN_PASSWORD_LENGTH, role="alert" announces errors to screen readers
+**Why good:** `toTypedSchema` types `values` from the schema, `v-bind="…Attrs"` attaches the handlers
+that drive validation timing, `initialValues` covers every field, and `aria-invalid` with
+`role="alert"` announces each error to a screen reader.
 
 ### Bad Example - Missing types and poor patterns
 
@@ -125,7 +127,10 @@ const onSubmit = handleSubmit((values) => {
 </template>
 ```
 
-**Why bad:** no TypeScript generics or schema means no autocomplete or type checking, missing initialValues can cause undefined behavior, magic number 8 not documented as constant, missing aria-invalid breaks accessibility, inline validation duplicates schema logic
+**Why bad:** with no schema and no generic, `values` is untyped and nothing validates — the template
+compensates with a hand-written length check, which is a second rule in a second place that no
+submit path consults. Without `initialValues` the fields start undefined, and the bare inputs give a
+screen reader nothing to announce.
 
 ---
 
@@ -208,7 +213,9 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** inline validation functions work without schema libraries, validation functions return error message or true for valid, named constants for MIN_NAME_LENGTH and MAX_NAME_LENGTH, optional fields (message) don't need validation
+**Why good:** an inline validator is a plain function of the value returning a message or `true`, so
+no schema library is needed. Each one sees only its own field — which is the limit of the approach,
+and the reason cross-field rules go through `validationSchema` instead.
 
 ---
 
@@ -234,7 +241,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: "",
 });
 
-// CRITICAL: Use function form for reactivity
+// Getter form, so the binding follows the name prop if it changes
 const { value, errorMessage, handleBlur, handleChange, meta } =
   useField<string>(() => props.name, undefined, {
     validateOnValueUpdate: false,
@@ -301,7 +308,10 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** function form `() => props.name` maintains reactivity when name changes, validateOnValueUpdate: false shows errors only after blur, aria-describedby links error message to input for screen readers, component is reusable across forms
+**Why good:** `() => props.name` keeps the binding live if the parent changes the name,
+`validateOnValueUpdate: false` holds errors back to blur, and `aria-describedby` ties the message to
+the input so a screen reader reads them together. The component takes a name and nothing else, so
+any form can drop it in.
 
 ### Bad Example - Losing reactivity
 
@@ -316,7 +326,8 @@ const { value, errorMessage } = useField(props.name);
 </script>
 ```
 
-**Why bad:** passing `props.name` directly (not as function) means useField won't react to prop changes, if parent changes the name prop the field won't update, should use `() => props.name` or `toRef(props, 'name')`
+**Why bad:** `props.name` is read once during setup, so the field stays bound to the name it mounted
+with. Pass `() => props.name` or `toRef(props, "name")` instead.
 
 ---
 
@@ -384,7 +395,9 @@ const handleCancel = () => {
 </template>
 ```
 
-**Why good:** meta.dirty enables cancel button only when changes exist, meta.valid combined with meta.dirty enables smart submit button state, resetForm(values) clears dirty state while keeping new values, isSubmitting prevents double submission
+**Why good:** `meta.dirty` and `meta.valid` together mean the submit button is live only when there
+is something valid to save, and `resetForm({ values: data })` makes the saved data the new baseline
+so `dirty` returns to false without discarding it.
 
 ### Meta Properties Reference
 
@@ -431,6 +444,8 @@ const validationListeners = computed(() => ({
 </template>
 ```
 
-**Why good:** shows errors only after blur (non-intrusive), once error exists validates on every keystroke for immediate feedback, best UX balance between validation timing
+**Why good:** nothing is reported while the user is first filling the field, and once it has failed
+each keystroke re-checks — so the message clears the moment the value becomes valid rather than at
+the next blur.
 
 ---
