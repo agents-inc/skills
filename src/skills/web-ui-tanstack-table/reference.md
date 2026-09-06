@@ -1,122 +1,43 @@
 # TanStack Table Reference
 
-> Decision frameworks, checklists, and anti-patterns for TanStack Table development. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
-
-**Version:** TanStack Table v8.21.3 (latest as of April 2025)
+> Imports, per-feature checklists and anti-patterns with code. See [SKILL.md](SKILL.md) for the
+> decisions and red flags, [examples/](examples/) for full implementations. Targets v8.
 
 ---
 
-## Decision Framework
+## Implementation Choices
 
-### When to Use TanStack Table
+### Rendering pinned columns
 
-```
-Do you need a data table?
-├─ NO → Use plain HTML table or list
-└─ YES → Do you need interactive features (sort/filter/paginate)?
-    ├─ NO → Use plain HTML table (simpler)
-    └─ YES → Do you need full control over styling?
-        ├─ YES → TanStack Table (headless)
-        └─ NO → Consider Material React Table or similar pre-styled libraries
-```
+| Layout                                  | Approach                                                                                           |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| A few pinned columns, one scroll area   | `getIsPinned()` plus `position: sticky` and a computed offset on each pinned cell                  |
+| Independent scrolling or complex sizing | Three tables, from `getLeftVisibleCells()`, `getCenterVisibleCells()` and `getRightVisibleCells()` |
 
-### Client-Side vs Server-Side
+### Resize mode
 
-```
-How much data do you have?
-├─ < 10,000 rows → Client-side is likely fine
-│   └─ Use getSortedRowModel, getFilteredRowModel, getPaginationRowModel
-└─ > 10,000 rows → Consider server-side OR virtualization
-    ├─ Is data relatively static?
-    │   └─ YES → Virtualization with @tanstack/react-virtual
-    └─ Does data change frequently / need fresh from server?
-        └─ YES → Server-side with manualPagination/Sorting/Filtering
-```
-
-### Which Row Model to Import
-
-```
-What features do you need?
-├─ getCoreRowModel → ALWAYS (required base)
-├─ getSortedRowModel → Column sorting (client-side)
-├─ getFilteredRowModel → Column/global filtering (client-side)
-├─ getPaginationRowModel → Page navigation (client-side)
-├─ getExpandedRowModel → Expandable rows / sub-rows
-├─ getGroupedRowModel → Row grouping
-└─ getFacetedRowModel → Faceted filtering (distinct values)
-
-Note: Column pinning and column sizing are part of core - no extra row model needed
-```
-
-### Column Pinning vs Split Tables
-
-```
-Do you need pinned columns?
-├─ NO → Standard rendering
-└─ YES → How complex is your layout?
-    ├─ Simple → Sticky CSS approach (getIsPinned + position: sticky)
-    └─ Complex → Split table approach (getLeftVisibleCells, getCenterVisibleCells, getRightVisibleCells)
-```
-
-### Column Resize Mode
-
-```
-Do users need to resize columns?
-├─ NO → Don't enable (smaller bundle)
-└─ YES → What kind of feedback?
-    ├─ Live resize → columnResizeMode: "onChange" (requires CSS variables + memoization)
-    └─ Resize on release → columnResizeMode: "onEnd" (simpler, more performant)
-```
-
-### accessorKey vs accessorFn
-
-```
-How do you access the data?
-├─ Direct property access (row.firstName)
-│   └─ Use accessorKey: "firstName"
-├─ Nested property (row.address.city)
-│   └─ Use accessorKey: "address.city" (dot notation)
-└─ Computed value (firstName + lastName)
-    └─ Use accessorFn with explicit id
-        └─ accessorFn: (row) => `${row.firstName} ${row.lastName}`, id: "fullName"
-```
-
-### Column Definition Type
-
-```
-What kind of column is it?
-├─ Data column (displays/sorts/filters by data)
-│   └─ Use columnHelper.accessor()
-├─ Actions column (buttons, no data)
-│   └─ Use columnHelper.display() with id
-└─ Grouping header (groups other columns)
-    └─ Use columnHelper.group()
-```
+| Mode         | Cost                                                                   | Use when                              |
+| ------------ | ---------------------------------------------------------------------- | ------------------------------------- |
+| `"onEnd"`    | One re-render, on release                                              | The default choice                    |
+| `"onChange"` | A re-render per pointer move — needs CSS variables and a memoised body | Live width feedback is worth the work |
 
 ---
 
 ## Anti-Patterns
 
-> See [SKILL.md](SKILL.md) `<red_flags>` for the full list of red flags and gotchas.
-
-### Inline Column Definitions
-
-Column definitions must be stable references. Defining them inline causes the table to think columns changed on every render.
+### Column definitions built inline
 
 ```typescript
-// WRONG - Creates new array every render
+// WRONG — a new array identity on every render, so the table rebuilds forever
 function BadTable({ data }) {
   const table = useReactTable({
     data,
-    columns: [
-      // BAD: New array reference
-      { accessorKey: "name", header: "Name" },
-    ],
+    columns: [{ accessorKey: "name", header: "Name" }],
     getCoreRowModel: getCoreRowModel(),
   });
 }
 
-// CORRECT - Memoized columns
+// CORRECT — stable identities for both inputs
 function GoodTable({ data }) {
   const columns = useMemo(() => [{ accessorKey: "name", header: "Name" }], []);
 
@@ -128,38 +49,37 @@ function GoodTable({ data }) {
 }
 ```
 
-### Returning JSX from Accessor Functions
+### JSX returned from an accessor
 
-Accessor functions should return primitive values that can be sorted and filtered. Use `cell` for custom rendering.
+The accessor's value is what sorting and filtering compare. Rendering belongs in `cell`.
 
 ```typescript
-// WRONG - JSX in accessor
+// WRONG — sorting now compares React elements
 {
-  accessorFn: (row) => <span>{row.status}</span>, // BAD
+  accessorFn: (row) => <span>{row.status}</span>,
   id: "status",
 }
 
-// CORRECT - Primitive accessor, JSX in cell
+// CORRECT — a primitive to sort by, markup to display
 {
   accessorKey: "status",
   cell: (info) => <span data-status={info.getValue()}>{info.getValue()}</span>,
 }
 ```
 
-### Mixed Client/Server Modes
-
-Using client-side row models with server-side data causes incorrect behavior. Be consistent.
+### Client-side row models alongside `manual*` flags
 
 ```typescript
-// WRONG - Mixed modes
+// WRONG — manualPagination disables getPaginationRowModel, so the import
+// is dead weight that reads as a working feature
 const table = useReactTable({
-  data: serverData, // Already paginated from server
+  data: serverData,
   getCoreRowModel: getCoreRowModel(),
-  getPaginationRowModel: getPaginationRowModel(), // BAD: Will paginate again
-  manualPagination: true, // This disables getPaginationRowModel, making it pointless
+  getPaginationRowModel: getPaginationRowModel(),
+  manualPagination: true,
 });
 
-// CORRECT - Server-side only
+// CORRECT
 const table = useReactTable({
   data: serverData,
   getCoreRowModel: getCoreRowModel(),
@@ -170,52 +90,49 @@ const table = useReactTable({
 });
 ```
 
-### Missing Row ID for Selection
-
-Using default array index for row IDs breaks selection when data changes.
+### Selection without a stable row id
 
 ```typescript
-// WRONG - Selection uses array index
+// WRONG — the selection map is keyed by array index, so sorting the table
+// reassigns every selection to whichever record now sits in that position
 const table = useReactTable({
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
   enableRowSelection: true,
-  // No getRowId - selection will break on sort/filter
 });
 
-// CORRECT - Stable row ID
+// CORRECT
 const table = useReactTable({
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
   enableRowSelection: true,
-  getRowId: (row) => row.id, // Use database ID
+  getRowId: (row) => row.id,
 });
 ```
 
-### Uncontrolled State
+### State left internal
 
-Using default state makes it impossible to persist or sync with URL.
+Internal state cannot be read, so it cannot be persisted, put in the URL, or sent to a server.
 
 ```typescript
-// WRONG - Uncontrolled, can't persist
+// WRONG — the sort exists but nothing outside the table can see it
 const table = useReactTable({
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
-  // Sorting state is internal-only
 });
 
-// CORRECT - Controlled state
+// CORRECT
 const [sorting, setSorting] = useState<SortingState>([]);
 
 const table = useReactTable({
   data,
   columns,
   state: { sorting },
-  onSortingChange: setSorting, // Now can persist to URL
+  onSortingChange: setSorting,
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
 });
@@ -223,17 +140,23 @@ const table = useReactTable({
 
 ---
 
-## Quick Reference
-
-### Essential Imports
+## Imports
 
 ```typescript
-// Core (always needed)
+// Always
 import {
   useReactTable,
   getCoreRowModel,
   createColumnHelper,
   flexRender,
+} from "@tanstack/react-table";
+
+// Per feature — import only what is used; the rest tree-shakes out
+import {
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getExpandedRowModel,
 } from "@tanstack/react-table";
 
 // Types
@@ -249,123 +172,88 @@ import type {
   ColumnSizingState,
   ColumnResizeMode,
 } from "@tanstack/react-table";
-
-// Row models (import only what you need)
-import {
-  getSortedRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getExpandedRowModel,
-} from "@tanstack/react-table";
 ```
-
-### Minimum Table Setup Checklist
-
-- [ ] Data memoized with `useMemo` or defined outside component
-- [ ] Columns memoized with `useMemo` or defined outside component
-- [ ] `getCoreRowModel()` provided (required)
-- [ ] `getRowId` set for tables with selection or data changes
-- [ ] Type parameter provided to `createColumnHelper<YourType>()`
-
-### Server-Side Table Checklist
-
-- [ ] `manualPagination: true` set
-- [ ] `manualSorting: true` set (if sorting needed)
-- [ ] `manualFiltering: true` set (if filtering needed)
-- [ ] `rowCount` or `pageCount` provided
-- [ ] State lifted to component (`useState`) for query params
-- [ ] No client-side row models imported (except `getCoreRowModel`)
-
-### Sorting Checklist
-
-- [ ] `getSortedRowModel()` imported (client-side)
-- [ ] Sorting state lifted if needed for persistence
-- [ ] `sortingFn: "datetime"` for Date columns
-- [ ] `enableSorting: false` on non-sortable columns
-- [ ] Click handler uses `getToggleSortingHandler()`
-- [ ] Sort indicator shows direction
-
-### Filtering Checklist
-
-- [ ] `getFilteredRowModel()` imported (client-side)
-- [ ] Column filters and global filter state lifted
-- [ ] Custom `filterFn` for complex filtering
-- [ ] `enableColumnFilter: false` on non-filterable columns
-- [ ] Page reset on filter change (`setPagination` with pageIndex: 0)
-
-### Pagination Checklist
-
-- [ ] `getPaginationRowModel()` imported (client-side)
-- [ ] Pagination state lifted for persistence
-- [ ] Navigation buttons use `getCanPreviousPage()`/`getCanNextPage()`
-- [ ] Page count displayed correctly
-- [ ] Page size selector updates `setPageSize()`
-
-### Selection Checklist
-
-- [ ] `enableRowSelection: true` set
-- [ ] `getRowId` provides stable IDs
-- [ ] Selection state lifted for bulk actions
-- [ ] Checkbox column uses `columnHelper.display()`
-- [ ] `indeterminate` state handled for select-all
-
-### Column Pinning Checklist
-
-- [ ] `ColumnPinningState` type for state
-- [ ] `onColumnPinningChange` handler set
-- [ ] Sticky CSS applied to pinned columns
-- [ ] Background color set on pinned cells (prevents overlap)
-- [ ] Left/right offsets calculated for multiple pinned columns
-- [ ] Shadow on pinned columns for visual separation
-- [ ] `enablePinning: false` on columns that shouldn't be pinnable
-
-### Column Resizing Checklist
-
-- [ ] `enableColumnResizing: true` set
-- [ ] `columnResizeMode` chosen ("onChange" or "onEnd")
-- [ ] Resize handle element with `getResizeHandler()`
-- [ ] CSS variables for width (performance)
-- [ ] Table body memoized (if using "onChange")
-- [ ] `size`, `minSize`, `maxSize` set on columns
-- [ ] Visual feedback during resize (`getIsResizing()`)
-- [ ] Double-click to reset (`resetSize()`)
-
-### Accessibility Checklist
-
-- [ ] Sortable headers have `aria-sort` attribute
-- [ ] Icon-only buttons have `aria-label`
-- [ ] Expandable rows have `aria-expanded`
-- [ ] Selection checkboxes have `aria-label`
-- [ ] Virtual tables announce row count with `aria-live`
-- [ ] Pagination has `aria-label` on navigation buttons
-- [ ] Resize handles have `aria-label`
 
 ---
 
-## Performance Guidelines
+## Checklists
 
-### When to Virtualize
+### Any table
 
-- 1,000+ rows: Consider virtualization
-- 5,000+ rows: Strongly recommend virtualization
-- 10,000+ rows: Virtualization essential
+- [ ] `data` and `columns` memoised, or defined outside the component
+- [ ] `getCoreRowModel()` supplied
+- [ ] `createColumnHelper<Row>()` given its type parameter
+- [ ] `getRowId` set wherever rows are selected or the data reloads
+- [ ] Cells and headers rendered through `flexRender`
 
-### Memoization Rules
+### Server-side
 
-1. **Always memoize:** columns, data
-2. **Memoize if derived:** filtered/sorted subsets
-3. **Don't memoize:** table instance (created fresh is fine)
+- [ ] `manualPagination`, and `manualSorting` / `manualFiltering` for whatever the server handles
+- [ ] `rowCount` or `pageCount` supplied
+- [ ] No client-side row models beyond `getCoreRowModel`
+- [ ] State lifted, so it can be turned into query parameters
+- [ ] `autoResetPageIndex: false`, so arriving data does not reset the page
 
-### Bundle Size Tips
+### Sorting
 
-1. Import row models individually (tree-shaking)
-2. Don't import unused features
-3. Use type-only imports for TypeScript types
+- [ ] `getSortedRowModel()` imported
+- [ ] `sortingFn: "datetime"` on every `Date` column
+- [ ] `enableSorting: false` on columns that should not sort
+- [ ] Header click goes through `getToggleSortingHandler()`
+- [ ] `aria-sort` reflects `getIsSorted()`, and a visible indicator matches it
 
-```typescript
-// Good - tree-shakable
-import { getSortedRowModel } from "@tanstack/react-table";
+### Filtering
 
-// Also good - type-only
-import type { SortingState } from "@tanstack/react-table";
-```
+- [ ] `getFilteredRowModel()` imported
+- [ ] A custom `filterFn` wherever the built-ins do not fit
+- [ ] `enableColumnFilter: false` on columns that should not filter
+- [ ] Page index reset when a filter changes
+
+### Pagination
+
+- [ ] `getPaginationRowModel()` imported
+- [ ] Navigation buttons disabled from `getCanPreviousPage()` / `getCanNextPage()`
+- [ ] Page-size control calls `setPageSize()`
+
+### Selection
+
+- [ ] `enableRowSelection: true`
+- [ ] `getRowId` supplies stable ids
+- [ ] Checkbox column declared with `columnHelper.display()`
+- [ ] Select-all shows indeterminate from `getIsSomeRowsSelected()`
+
+### Pinning
+
+- [ ] `position: sticky` and a computed offset on each pinned cell
+- [ ] An opaque background on pinned cells, or content scrolls through them
+- [ ] `enablePinning: false` on columns that should not pin
+
+### Resizing
+
+- [ ] `enableColumnResizing: true` and a `columnResizeMode` chosen
+- [ ] Handle wired to `getResizeHandler()` on both `onMouseDown` and `onTouchStart`
+- [ ] `size`, `minSize`, `maxSize` set on resizable columns
+- [ ] Widths delivered as CSS variables, and the body memoised, under `"onChange"`
+- [ ] The handle shows it is active, from `getIsResizing()`
+- [ ] Double-click calls `resetSize()`
+
+### Accessibility
+
+- [ ] `aria-sort` on sortable headers
+- [ ] `aria-label` on every icon-only control — sort, expand, resize, pagination
+- [ ] `aria-expanded` on expander controls
+- [ ] `aria-label` on selection checkboxes, naming the row
+- [ ] Row count announced through `aria-live` where rows are windowed
+
+---
+
+## Performance
+
+**Memoise** `columns` and `data` always, and any derived subset you pass in. The table instance itself
+does not need memoising.
+
+**Windowing** becomes worth its complexity somewhere past a thousand rows, and is hard to avoid past
+ten thousand. It reduces DOM nodes rather than render work, so a slow cell renderer stays slow.
+
+**Bundle** — import row models individually and use `import type` for types, both of which the
+package is structured to reward.

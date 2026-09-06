@@ -2,17 +2,11 @@
 
 > Complete code examples for TabGroup patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for API reference.
 
-**Related examples:**
-
-- [Popover & Disclosure](popover-disclosure.md) - Floating panels, accordion patterns
-- [Switch & RadioGroup](switch-radio.md) - Toggle and option selection patterns
-- [Dialog & Modal](dialog.md) - Modal overlays
+**Related examples:** [popover-disclosure.md](popover-disclosure.md), [switch-radio.md](switch-radio.md), [dialog.md](dialog.md)
 
 ---
 
 ## Basic Horizontal Tabs
-
-A tab interface with automatic keyboard navigation (Left/Right arrows) and `data-[selected]` styling.
 
 ```tsx
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
@@ -48,7 +42,8 @@ export function ContentTabs() {
 }
 ```
 
-**Why good:** `data-[selected]` styles active tab, `data-[hover]` styles hover state, keyboard navigation automatic (Left/Right arrows), Tab/TabPanel order matches automatically
+**Why good:** Left/Right arrow navigation is automatic, `data-selected` styles the active tab, and
+Tab and TabPanel pair up by order rather than by an id you maintain.
 
 ---
 
@@ -92,7 +87,7 @@ export function VerticalTabs() {
 }
 ```
 
-**Why good:** `vertical` switches keyboard navigation to Up/Down arrows, `selectedIndex`/`onChange` for controlled state, layout is your responsibility via Tailwind
+**Why good:** `vertical` switches keyboard navigation to Up/Down arrows, and `selectedIndex`/`onChange` make the group controlled. The two-column layout is yours.
 
 ---
 
@@ -168,4 +163,5 @@ export function MailTabs() {
 }
 ```
 
-**Why good:** Controlled via `selectedIndex`/`onChange`, `data-[selected]` styles active tab with white background and shadow, badges show count, Tab/TabPanel order matches automatically, keyboard navigation (Left/Right arrows) built in
+**Why good:** the badge is ordinary markup inside the `Tab` — nothing about it needs the library's
+cooperation, and the tab keeps its keyboard behaviour and `data-selected` regardless.

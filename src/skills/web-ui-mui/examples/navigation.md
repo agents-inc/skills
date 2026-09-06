@@ -2,11 +2,7 @@
 
 > AppBar, Drawer, Tabs, Breadcrumbs, Menu patterns. See [SKILL.md](../SKILL.md) for core patterns.
 
-**Related examples:**
-
-- [layout.md](layout.md) -- Grid, Container for page structure
-- [core.md](core.md) -- Dark mode toggle in AppBar
-- [feedback.md](feedback.md) -- Dialog, Snackbar for user actions
+**Related examples:** [layout.md](layout.md), [core.md](core.md), [feedback.md](feedback.md)
 
 ---
 

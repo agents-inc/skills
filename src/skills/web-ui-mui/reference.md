@@ -204,6 +204,16 @@ createTheme({
 
 ---
 
+## What Changed in v7 (March 2025)
+
+- CSS layers, through `enableCssLayer` on the cache or engine provider
+- `slots` / `slotProps` standardised across every component; `components` / `componentsProps`
+  deprecated
+- Grid v2 promoted to `Grid`; the previous component is now `GridLegacy`
+- Lab components graduated into `@mui/material` — Alert, Skeleton, Autocomplete and others
+- ESM/CJS dual package layout, which is why imports may go only one level deep
+- React 19 compatibility
+
 ## MUI v7 Migration Quick Reference
 
 | v6 Pattern                                                       | v7 Pattern                                           |
@@ -330,27 +340,35 @@ npm i @mui/material @emotion/react @emotion/styled
 npm i @mui/material @emotion/react @emotion/styled @mui/icons-material
 ```
 
-### With Next.js
+### With server rendering
+
+MUI publishes one adapter package per supported server framework, each exporting a cache provider
+that flushes Emotion's output with the streamed HTML.
 
 ```bash
-npm i @mui/material @emotion/react @emotion/styled @emotion/cache @mui/material-nextjs
+npm i @mui/material @emotion/react @emotion/styled @emotion/cache <the adapter for your framework>
 ```
 
 ### MUI X Components
 
 ```bash
-# DataGrid (free)
-npm i @mui/x-data-grid
-
-# DataGrid Pro (paid license)
-npm i @mui/x-data-grid-pro
-
-# Date Pickers
+npm i @mui/x-data-grid        # free tier
+npm i @mui/x-data-grid-pro    # paid licence: virtualisation, tree data, more
 npm i @mui/x-date-pickers dayjs
-
-# Charts
 npm i @mui/x-charts
-
-# Tree View
 npm i @mui/x-tree-view
 ```
+
+### Package Versions
+
+| Package                             | Purpose                                   | Version |
+| ----------------------------------- | ----------------------------------------- | ------- |
+| `@mui/material`                     | Core components                           | v7.x    |
+| `@mui/system`                       | `sx`, `styled()`, ThemeProvider           | v7.x    |
+| `@mui/icons-material`               | 2000+ Material Design icons               | v7.x    |
+| `@mui/x-*`                          | DataGrid, date pickers, charts, tree view | v8.x    |
+| server-framework adapter            | Cache provider for SSR style flushing     | v7.x    |
+| `@emotion/react`, `@emotion/styled` | Required peer dependencies                | v11.x   |
+
+Emotion is the styling engine and the only production-ready one. Pigment CSS, the zero-runtime
+replacement, is alpha and on hold.

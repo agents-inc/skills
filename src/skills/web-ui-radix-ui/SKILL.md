@@ -5,310 +5,235 @@ description: Unstyled accessible UI primitives
 
 # Radix UI Primitives
 
-> **Quick Guide:** Radix UI provides unstyled, accessible primitives for building design systems. Use compound component patterns (Root, Trigger, Content), `asChild` for polymorphism, and `data-state` attributes for animations. Focus on behavior and accessibility - defer styling decisions to your styling solution. **Current: v1.4.x (May 2025)** - Full React 19 and RSC compatibility with new preview primitives.
+> **Quick Guide:** Radix ships unstyled primitives that carry the behaviour and accessibility of a
+> component and none of its appearance. Every primitive is a compound component — `Root`, `Trigger`,
+> `Portal`, `Content` — sharing context; `asChild` merges a primitive's behaviour onto your own
+> element; `data-state` attributes drive CSS animation. Current major is v1.4.x: React 19 and RSC
+> compatible, `forwardRef` no longer required, and `radix-ui` is the unified package that replaces
+> the individual `@radix-ui/react-*` ones.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — Dialog, `asChild`, `Slot` and `Slottable`
+- [examples/overlays.md](examples/overlays.md) — AlertDialog, controlled Dialog with async work
+- [examples/menus.md](examples/menus.md) — DropdownMenu, submenus, checkable and radio items
+- [examples/forms.md](examples/forms.md) — Select, CSP `nonce`, indeterminate Progress
+- [examples/navigation.md](examples/navigation.md) — Accordion and Tabs
+- [examples/animation.md](examples/animation.md) — `data-state` keyframes and height animation
+- [examples/preview.md](examples/preview.md) — `unstable_` primitives: OTP field, password toggle, Form
+- [reference.md](reference.md) — anti-patterns with code, checklists, CSS variable table, v1.4.x changes
+
+---
+
+## Which path applies
+
+- **A stable primitive** — the eight-year-old API surface, semver-stable. Follow
+  [examples/core.md](examples/core.md), then the file for the primitive family you need.
+- **A preview primitive** — `unstable_OneTimePasswordField`, `unstable_PasswordToggleField`,
+  `unstable_Form`. The prefix is the API contract: these change between minors, so follow
+  [examples/preview.md](examples/preview.md) and expect to revisit on upgrade.
+- **Animating enter and exit** — the approach forks on complexity. CSS `@keyframes` keyed to
+  `data-state` covers fades, slides and height; orchestrated sequences need `forceMount`. Both are in
+  [examples/animation.md](examples/animation.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Radix UI code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Install the unified `radix-ui` package** rather than individual `@radix-ui/react-*` ones. One
+version of the shared internals means no duplicate context providers and no stacking-order conflicts
+between primitives.
 
-**(You MUST use compound component anatomy - Root, Trigger, Portal, Content, Close - for overlay components)**
+**Give overlays their full anatomy — `Root`, `Trigger`, `Portal`, `Overlay`, `Content`, `Close`.**
+Each part registers itself with the Root's context; a missing part removes the behaviour it carried
+rather than just its markup.
 
-**(You MUST use `forwardRef` and spread all props when using `asChild` with custom components - unless using React 19+ where `ref` is a regular prop)**
+**Wrap overlay content in `Portal`.** Content rendered in place inherits every ancestor's
+`overflow: hidden` and stacking context, so a dialog inside a scrolling panel is clipped by it.
 
-**(You MUST use Portal for overlays to escape CSS stacking contexts and parent overflow constraints)**
+**Give every Dialog and AlertDialog a `Title`.** It is what a screen reader announces on open, and
+Radix logs a console error when it is missing (a warning for a missing `Description`).
 
-**(You MUST provide accessible labels via Title/Description components or ARIA attributes - Dialog logs console errors for missing Title)**
+**Forward the ref and spread every prop on a component used with `asChild`.** The ref is how Radix
+positions floating content and returns focus on close; the spread is how the ARIA attributes and
+event handlers reach the DOM element. React 19 passes `ref` as an ordinary prop; below that it needs
+a `forwardRef` wrapper.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Radix UI, radix-ui, @radix-ui, Dialog, Dropdown, DropdownMenu, Select, Popover, Tooltip, Accordion, Tabs, AlertDialog, asChild, Slot, Portal, data-state, OneTimePasswordField, PasswordToggleField, unstable_Form, Form.Field, Form.Message
+**Auto-detection:** radix-ui, @radix-ui, Dialog.Root, AlertDialog, DropdownMenu, Popover, Tooltip,
+Accordion, Tabs, Select.Viewport, asChild, Slot, Slottable, ItemIndicator, data-state, forceMount,
+onOpenAutoFocus, onInteractOutside, --radix-accordion-content-height, unstable_OneTimePasswordField,
+unstable_PasswordToggleField, unstable_Form
 
-**When to use:**
+**Applies to:**
 
-- Building accessible overlay components (dialogs, popovers, dropdowns, tooltips)
-- Creating compound component APIs with multiple coordinated parts
-- Implementing keyboard navigation and focus management
-- Needing polymorphic components via `asChild` pattern
+- Overlay behaviour — focus trapping, dismissal, collision-aware positioning, stacking order
+- Compound component APIs whose parts coordinate through shared context
+- Keyboard interaction and ARIA wiring for menus, selects, tabs and accordions
+- Polymorphism — rendering a primitive's behaviour on a different element via `asChild`
+- Building your own components with `asChild` support, using `Slot`
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Pre-styled components desired (use a component library built on Radix)
-- Simple components without complex interactions (use plain HTML)
-- Non-React projects (Radix primitives are React-specific)
-
-**Package Installation:**
-
-```bash
-# Recommended: Unified tree-shakeable package (prevents version conflicts)
-npm i radix-ui
-
-# Alternative: Individual packages
-npm i @radix-ui/react-dialog @radix-ui/react-dropdown-menu
-```
-
-**Detailed Resources:**
-
-- For core code examples (Dialog, asChild, Slot), see [examples/core.md](examples/core.md)
-- For overlay patterns (AlertDialog, controlled Dialog), see [examples/overlays.md](examples/overlays.md)
-- For menu patterns (DropdownMenu, submenus), see [examples/menus.md](examples/menus.md)
-- For animation patterns (data-state, CSS keyframes), see [examples/animation.md](examples/animation.md)
-- For form patterns (Select), see [examples/forms.md](examples/forms.md)
-- For navigation patterns (Accordion, Tabs), see [examples/navigation.md](examples/navigation.md)
-- For preview components (OneTimePasswordField, PasswordToggleField), see [examples/preview.md](examples/preview.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Visual design — primitives render unstyled and take a `className`; what produces that class is not
+  this skill's concern
+- Form state, schema validation and submission — a Radix `Select` or `Checkbox` reports its value and
+  nothing more
+- Icon artwork — the examples use Unicode glyphs marked `aria-hidden`; supplying real icons is a
+  separate choice
+- Animation orchestration in JavaScript — Radix exposes `forceMount` and `data-state` as the hooks a
+  presence-detecting animation runtime attaches to
 
 ---
 
 <philosophy>
 
-## Philosophy
+Radix separates the two halves of a component that are usually welded together. It owns the half
+that is hard and invisible — ARIA roles, focus order, dismissal semantics, collision detection — and
+leaves the half that is your product's identity entirely alone.
 
-Radix UI Primitives provide behavioral and accessibility foundations without imposing visual design. Each primitive handles:
-
-- **Accessibility**: ARIA attributes, roles, keyboard navigation, focus management
-- **Behavior**: Open/close state, dismissal patterns, collision detection
-- **Composition**: Compound components that work together as coordinated systems
-
-**Radix is styling-agnostic:** Apply styles via `className` prop using your styling solution. The primitives expose `data-state` attributes for state-based styling.
-
-**Compound Component Model:** Each primitive consists of multiple parts (Root, Trigger, Content, etc.) that share context. This enables flexible composition while maintaining coordinated behavior.
-
-**React 19 & RSC Support (v1.4.3):** Full compatibility with React 19 and React Server Components. Enhanced keyboard handling avoids browser hotkey interference.
+That split has a consequence worth internalising: **a primitive is a set of parts, not a component
+with props.** `Dialog` is not a thing you configure; it is `Root`, `Trigger`, `Portal`, `Overlay`,
+`Content`, `Title`, `Description` and `Close`, communicating through context you never see. You
+compose the parts you need, in the arrangement your design calls for, and the coordination comes
+free. Reaching for a prop where a part exists is the usual sign of fighting the model.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Choosing a primitive
+
+```
+Blocking the page?
+├─ Destructive confirmation → AlertDialog (no click-outside dismiss, by design)
+├─ Form or content         → Dialog
+└─ Page-level, not blocking → Dialog with modal={false}, or Popover
+
+Floating beside a trigger?
+├─ Opened by click, holds interactive content → Popover
+├─ Opened by hover or focus, text only        → Tooltip
+└─ A list of actions                          → DropdownMenu
+
+Choosing from options?
+├─ One value, in a form   → Select
+├─ Several values         → Popover containing Checkbox items
+└─ An action, not a value → DropdownMenu
+
+Showing and hiding regions?
+├─ One at a time, in place → Accordion (type="single" collapsible)
+├─ Several at once         → Accordion (type="multiple")
+└─ One panel replacing another → Tabs
+```
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Compound Component Anatomy
+### Pattern 1: Compound component anatomy
 
-Radix primitives use a compound component pattern where multiple parts work together through shared context.
+Every overlay is the same six parts. Root holds the state, Portal escapes the layout, Title and
+Description carry the accessible name.
 
-#### Standard Structure for Overlay Components
-
-```typescript
-import { Dialog } from "radix-ui";
-
-// Root provides context and state management
-// Trigger opens the dialog
-// Portal renders content outside React tree
-// Overlay covers the page
-// Content contains the dialog body
-// Close dismisses the dialog
-// Title and Description provide accessibility
-
+```tsx
 <Dialog.Root>
   <Dialog.Trigger>Open</Dialog.Trigger>
   <Dialog.Portal>
-    <Dialog.Overlay className={className} />
-    <Dialog.Content className={className}>
-      <Dialog.Title>Dialog Title</Dialog.Title>
-      <Dialog.Description>Accessible description</Dialog.Description>
-      {/* Dialog content */}
-      <Dialog.Close>Close</Dialog.Close>
+    <Dialog.Overlay className={overlayClass} />
+    <Dialog.Content className={contentClass}>
+      <Dialog.Title>Account settings</Dialog.Title>
+      <Dialog.Description>Manage preferences and security.</Dialog.Description>
+      <Dialog.Close aria-label="Close">×</Dialog.Close>
     </Dialog.Content>
   </Dialog.Portal>
 </Dialog.Root>
 ```
 
-**Why this structure:** Root manages state and context, Portal escapes CSS stacking contexts, Overlay provides visual backdrop, Title/Description ensure screen reader accessibility
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 2: Controlled and uncontrolled state
 
-### Pattern 2: Controlled vs Uncontrolled State
+`defaultOpen` lets Radix own the state. `open` with `onOpenChange` takes it back — needed to close
+after an async save, to open from somewhere other than the trigger, or to mirror the URL.
+`onOpenChange` is the only channel for user intent, so a controlled primitive that omits it can
+never be dismissed.
 
-Radix primitives support both controlled and uncontrolled state patterns.
+```tsx
+const [open, setOpen] = useState(false);
 
-#### Uncontrolled (Radix Manages State)
-
-```typescript
-// Let Radix manage internal state - simpler for basic use cases
-<Dialog.Root defaultOpen={false}>
-  <Dialog.Trigger>Open</Dialog.Trigger>
-  <Dialog.Portal>
-    <Dialog.Content>
-      {/* Content */}
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
+<Dialog.Root open={open} onOpenChange={setOpen}>
+  {/* … */}
+</Dialog.Root>;
 ```
 
-**When to use:** Simple dialogs without external state requirements
+Full code: [examples/overlays.md](examples/overlays.md)
 
-#### Controlled (You Manage State)
+### Pattern 3: `asChild` for polymorphism
 
-```typescript
-import { useState } from "react";
-import { Dialog } from "radix-ui";
+`asChild` tells a part to render its child instead of its own element, merging props and behaviour
+onto it. This is how a `Tooltip.Trigger` becomes an anchor, or a `Dialog.Trigger` becomes your own
+button, without a wrapper element.
 
-function ControlledDialog() {
-  const [open, setOpen] = useState(false);
+```tsx
+<Tooltip.Trigger asChild>
+  <a href="/docs">Documentation</a>
+</Tooltip.Trigger>
+```
 
-  const handleSave = async () => {
-    await saveData();
-    setOpen(false); // Programmatically close after async operation
-  };
+A custom component in that position takes `ref` and spreads the rest, or the merge silently drops
+the handlers and ARIA attributes Radix passed down.
 
-  return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger>Open</Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Content>
-          <Dialog.Title>Edit Profile</Dialog.Title>
-          <button onClick={handleSave}>Save</button>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 4: Building your own `asChild` components with `Slot`
+
+`Slot` is the merging machinery `asChild` uses, exposed for your own components. Swap the rendered
+element for `Slot` when `asChild` is set. `Slottable` marks where the child's content belongs when
+the component also renders fixed decoration around it.
+
+```tsx
+function Button({ asChild = false, ...props }: ButtonProps) {
+  const Comp = asChild ? Slot : "button";
+  return <Comp {...props} />;
 }
 ```
 
-**When to use:** Programmatic control needed (close after async, open from external trigger, sync with URL state)
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 5: Portal and its container
 
-### Pattern 3: asChild for Polymorphism
+Portal moves content to `document.body`, out of every ancestor's clipping and stacking context.
+Pass `container` to send it somewhere else — a shadow root, an iframe body, or a
+micro-frontend's own mount point.
 
-The `asChild` prop enables Radix to merge behavior onto your custom components or different element types.
-
-#### Changing Element Type
-
-```typescript
-import { Tooltip } from "radix-ui";
-
-// Tooltip trigger defaults to button, but you may want a link
-<Tooltip.Root>
-  <Tooltip.Trigger asChild>
-    <a href="/docs">Documentation</a>
-  </Tooltip.Trigger>
-  <Tooltip.Portal>
-    <Tooltip.Content>View the docs</Tooltip.Content>
-  </Tooltip.Portal>
-</Tooltip.Root>
+```tsx
+<Popover.Portal container={containerRef.current}>
+  <Popover.Content>
+    <Popover.Arrow />
+  </Popover.Content>
+</Popover.Portal>
 ```
 
-**Why good:** Radix passes all required props and event handlers to the anchor, maintaining accessibility
+Full code: [examples/core.md](examples/core.md)
 
-#### With Custom Components
+### Pattern 6: Animation through `data-state`
 
-```typescript
-import { forwardRef } from "react";
-import { Dialog } from "radix-ui";
-
-// Custom component MUST use forwardRef and spread props
-const CustomButton = forwardRef<HTMLButtonElement, React.ComponentProps<"button">>(
-  ({ className, ...props }, ref) => {
-    return <button ref={ref} className={className} {...props} />;
-  }
-);
-CustomButton.displayName = "CustomButton";
-
-// Use with asChild
-<Dialog.Trigger asChild>
-  <CustomButton className="custom-class">Open Dialog</CustomButton>
-</Dialog.Trigger>
-```
-
-**Why this works:** forwardRef allows Radix to attach refs for positioning/focus, spreading props passes event handlers and ARIA attributes
-
----
-
-### Pattern 4: Building Custom asChild Components with Slot
-
-Use the `Slot` utility to build your own components with `asChild` support.
-
-```typescript
-import { forwardRef } from "react";
-import { Slot } from "radix-ui";
-
-export type ButtonProps = React.ComponentProps<"button"> & {
-  asChild?: boolean;
-};
-
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ asChild = false, className, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return <Comp ref={ref} className={className} {...props} />;
-  }
-);
-Button.displayName = "Button";
-
-// Usage - renders as button
-<Button>Click me</Button>
-
-// Usage with asChild - renders as anchor
-<Button asChild>
-  <a href="/page">Navigate</a>
-</Button>
-```
-
-**Why good:** Slot merges all props onto the child element, eliminating wrapper elements while preserving behavior
-
----
-
-### Pattern 5: Portal Usage for Overlays
-
-Portal renders content outside the React component tree to escape CSS stacking contexts.
-
-```typescript
-import { Popover } from "radix-ui";
-
-<Popover.Root>
-  <Popover.Trigger>Toggle Popover</Popover.Trigger>
-  <Popover.Portal>
-    {/* Rendered in document.body, escaping parent overflow:hidden */}
-    <Popover.Content className={className}>
-      <Popover.Arrow />
-      Popover content
-    </Popover.Content>
-  </Popover.Portal>
-</Popover.Root>
-```
-
-**When to use:** All overlay components (dialogs, popovers, tooltips, dropdown menus)
-
-#### Custom Portal Container
-
-```typescript
-import { useRef } from "react";
-import { Dialog } from "radix-ui";
-
-function DialogWithCustomContainer() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <>
-      <div ref={containerRef} />
-      <Dialog.Root>
-        <Dialog.Trigger>Open</Dialog.Trigger>
-        <Dialog.Portal container={containerRef.current}>
-          <Dialog.Content>Content in custom container</Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </>
-  );
-}
-```
-
-**When to use:** Micro-frontends, iframes, or specific DOM hierarchy requirements
-
----
-
-### Pattern 6: Animation with data-state Attributes
-
-Radix primitives expose `data-state` attributes for CSS-based animations. The unmount is suspended while exit animations complete. Use CSS `@keyframes` (not `transition`) -- Radix detects animation end events.
+Radix sets `data-state="open"` and `"closed"` on the animatable parts and suspends unmount until the
+exit animation reports it has finished. It listens for `animationend`, so `@keyframes` delays the
+unmount and `transition` does not.
 
 ```css
-/* CSS keyframes — Radix suspends unmount until animation completes */
 .dialog-overlay[data-state="open"] {
   animation: fadeIn 150ms ease-out;
 }
@@ -317,199 +242,79 @@ Radix primitives expose `data-state` attributes for CSS-based animations. The un
 }
 ```
 
-**Critical:** CSS `transition` does NOT delay unmount -- only `@keyframes` animation works for exit animations.
+For sequences a JavaScript runtime drives, `forceMount` on Portal, Overlay and Content hands
+unmounting back to you.
 
-#### JavaScript Animation Libraries
+Full code: [examples/animation.md](examples/animation.md)
 
-For complex orchestrated animations, use `forceMount` on Portal, Overlay, and Content to prevent Radix from unmounting during exit animations. Wrap with your animation library's presence detection.
+### Pattern 7: Focus management
 
-```typescript
-// Key pattern: controlled state + forceMount + conditional rendering
-<Dialog.Root open={open} onOpenChange={setOpen}>
-  {open && (
-    <Dialog.Portal forceMount>
-      <Dialog.Overlay asChild forceMount>{/* animated overlay */}</Dialog.Overlay>
-      <Dialog.Content asChild forceMount>{/* animated content */}</Dialog.Content>
-    </Dialog.Portal>
-  )}
-</Dialog.Root>
+Modal content traps focus and returns it to the trigger on close, with no configuration. Override
+where the initial focus lands with `onOpenAutoFocus` — a destructive confirmation should open on
+Cancel rather than on Delete.
+
+```tsx
+<AlertDialog.Content
+  onOpenAutoFocus={(event) => {
+    event.preventDefault();
+    cancelRef.current?.focus();
+  }}
+>
 ```
 
-See [examples/animation.md](examples/animation.md) for complete CSS keyframe and accordion height animation examples.
+Full code: [examples/overlays.md](examples/overlays.md)
 
----
+### Pattern 8: Accessible names for overlays
 
-### Pattern 7: Focus Management
+`Title` is the accessible name and is required. Where the design has no visible heading, keep the
+element and hide it visually — removing it removes the announcement, not just the text.
 
-Radix handles focus automatically for accessible interactions.
-
-#### Default Behavior
-
-```typescript
-// Focus automatically trapped in modal dialogs
-// Focus returns to trigger on close
-<Dialog.Root>
-  <Dialog.Trigger>Open</Dialog.Trigger>
-  <Dialog.Portal>
-    <Dialog.Content>
-      {/* Focus trapped here until closed */}
-      <input autoFocus /> {/* Receives focus on open */}
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
+```tsx
+<VisuallyHidden asChild>
+  <Dialog.Title>Filter results</Dialog.Title>
+</VisuallyHidden>
 ```
 
-#### Custom Focus Control
+Set `aria-describedby={undefined}` on `Content` when there is deliberately no `Description`, which
+silences the warning without inventing text.
 
-```typescript
-import { useRef } from "react";
-import { AlertDialog } from "radix-ui";
-
-function AlertDialogWithCustomFocus() {
-  const cancelRef = useRef<HTMLButtonElement>(null);
-
-  return (
-    <AlertDialog.Root>
-      <AlertDialog.Trigger>Delete</AlertDialog.Trigger>
-      <AlertDialog.Portal>
-        <AlertDialog.Content
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            cancelRef.current?.focus(); // Focus cancel instead of first element
-          }}
-        >
-          <AlertDialog.Title>Confirm Delete</AlertDialog.Title>
-          <AlertDialog.Cancel ref={cancelRef}>Cancel</AlertDialog.Cancel>
-          <AlertDialog.Action>Delete</AlertDialog.Action>
-        </AlertDialog.Content>
-      </AlertDialog.Portal>
-    </AlertDialog.Root>
-  );
-}
-```
-
-**Why custom focus:** Destructive dialogs should focus the safe action (Cancel) by default
-
----
-
-### Pattern 8: Accessible Labels
-
-Radix provides Title and Description components for screen reader accessibility.
-
-```typescript
-import { Dialog } from "radix-ui";
-
-<Dialog.Root>
-  <Dialog.Trigger>Settings</Dialog.Trigger>
-  <Dialog.Portal>
-    <Dialog.Content
-      aria-describedby={undefined} // Remove if no description
-    >
-      {/* Title is announced when dialog opens */}
-      <Dialog.Title>Account Settings</Dialog.Title>
-
-      {/* Description provides additional context */}
-      <Dialog.Description>
-        Manage your account preferences and security settings.
-      </Dialog.Description>
-
-      {/* Or visually hide but keep accessible */}
-      <VisuallyHidden asChild>
-        <Dialog.Description>
-          This description is read by screen readers but not visible.
-        </Dialog.Description>
-      </VisuallyHidden>
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
-```
-
-**Why mandatory:** Screen readers announce Title when dialog opens, Description provides context for the interaction
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**Radix is behavior-only:** Components are unstyled. Apply styles via `className` prop using your styling solution.
-
-**Works with:**
-
-- **Slot utility**: Build custom `asChild` components with the `Slot` component from `radix-ui`
-- **Any CSS solution**: Styles applied via className prop
-- **Animation libraries**: Use `forceMount` for JavaScript animation control
-
-**Common Component Pairs:**
-
-| Primitive    | Use Case                                                       |
-| ------------ | -------------------------------------------------------------- |
-| Dialog       | Modal dialogs, forms, confirmations                            |
-| AlertDialog  | Destructive confirmations requiring explicit action            |
-| DropdownMenu | Navigation menus, action menus                                 |
-| Select       | Form selects with custom styling                               |
-| Popover      | Non-modal floating content                                     |
-| Tooltip      | Contextual information on hover/focus                          |
-| Accordion    | Expandable content sections                                    |
-| Tabs         | Tabbed interfaces                                              |
-| Progress     | Progress bars (supports `value={undefined}` for indeterminate) |
-
-**Preview Components (Unstable API):**
-
-| Primitive            | Use Case                                         | Import Prefix | Version |
-| -------------------- | ------------------------------------------------ | ------------- | ------- |
-| OneTimePasswordField | OTP input with keyboard nav, paste, autofill     | `unstable_`   | 0.1.8   |
-| PasswordToggleField  | Password visibility toggle with focus management | `unstable_`   | 0.1.3   |
-| Form                 | Form validation with constraint API              | `unstable_`   | 0.1.8   |
-
-**Note:** Preview components use `unstable_` prefix. APIs may change before stable release.
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Missing `forwardRef` on custom `asChild` components -- Radix cannot attach refs for positioning and focus management
-- Not spreading props on `asChild` components -- ARIA attributes and event handlers are lost
-- Missing Portal for overlays -- content clipped by parent `overflow: hidden` or z-index issues
-- Missing Title/Description on dialogs -- screen readers have no context (Dialog logs console errors)
-- Using Dialog for destructive confirmations -- use AlertDialog (prevents accidental dismissal)
+- A custom `asChild` child that does not take a ref — Radix cannot measure or focus it, so floating
+  content mispositions and focus never returns; take `ref` as a prop (React 19) or wrap in
+  `forwardRef`
+- A custom `asChild` child that does not spread its remaining props — the merged event handlers and
+  ARIA attributes are dropped, leaving a trigger that looks right and does nothing
+- Overlay content outside `Portal` — clipped by any ancestor with `overflow: hidden`, and layered
+  against the wrong stacking context
+- A Dialog without `Title` — no accessible name, and a console error on every open
+- `transition` used for an exit animation — unmount is not delayed, so the element disappears before
+  anything animates; use `@keyframes`
+- Mounting content with a JavaScript animation runtime but no `forceMount` — Radix unmounts it the
+  moment state flips, cutting the exit animation off at frame one
 
-**Gotchas & Edge Cases:**
+**Surprising behaviour:**
 
-- CSS `transition` does NOT delay unmount -- only `@keyframes` animation works for exit
-- `data-state` changes to "closed" before exit animation starts
-- AlertDialog requires Cancel or Action to close (no click-outside dismiss by design)
-- React 19: `forwardRef` wrapper no longer needed -- `ref` is a regular prop
-- Prefer unified `radix-ui` package over individual `@radix-ui/*` packages to prevent version conflicts
-
-See [reference.md](reference.md) for full anti-pattern examples with code and decision frameworks.
+- `data-state` flips to `"closed"` before the exit animation starts, not after it ends
+- `--radix-accordion-content-height` and its siblings are set only while an animation is running,
+  and read as empty outside one
+- AlertDialog has no click-outside or Escape dismissal — `Cancel` or `Action` is the only way out,
+  which is the point of choosing it
+- `Slot` merges handlers rather than replacing them, and the child's own handler runs first
+- Setting an explicit `z-index` on portalled content fights the ordering Radix maintains between
+  layered primitives; isolate the container instead
+- A `Progress` with `value={undefined}` is indeterminate rather than zero
+- `Select` and `ScrollArea` take a `nonce` prop, needed wherever a Content Security Policy blocks
+  unnonced inline styles
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use compound component anatomy - Root, Trigger, Portal, Content, Close - for overlay components)**
-
-**(You MUST use `forwardRef` and spread all props when using `asChild` with custom components - unless using React 19+ where `ref` is a regular prop)**
-
-**(You MUST use Portal for overlays to escape CSS stacking contexts and parent overflow constraints)**
-
-**(You MUST provide accessible labels via Title/Description components or ARIA attributes - Dialog logs console errors for missing Title)**
-
-**Failure to follow these rules will break accessibility, focus management, and proper DOM rendering.**
-
-</critical_reminders>

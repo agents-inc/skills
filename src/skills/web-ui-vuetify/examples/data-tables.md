@@ -13,7 +13,7 @@
 ## Client-Side Data Table with Custom Columns
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 
 const search = ref("");
@@ -24,7 +24,12 @@ const headers = [
   { title: "Email", key: "email" },
   { title: "Status", key: "status" },
   { title: "Role", key: "role" },
-  { title: "Actions", key: "actions", sortable: false, align: "center" as const },
+  {
+    title: "Actions",
+    key: "actions",
+    sortable: false,
+    align: "center" as const,
+  },
 ];
 
 interface User {
@@ -140,8 +145,8 @@ const headers = [
 Use `v-data-table-server` when data is fetched from an API. Vuetify emits events for sort/filter/page changes -- you handle the API calls.
 
 ```vue
-<script setup>
-import { ref, watch } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -208,7 +213,7 @@ async function loadItems(options: LoadOptions) {
 ## Row Selection
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 
 const selected = ref<number[]>([]);

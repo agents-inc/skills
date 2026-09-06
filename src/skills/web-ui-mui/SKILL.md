@@ -5,143 +5,170 @@ description: Material UI component library patterns for React
 
 # MUI (Material UI) Patterns
 
-> **Quick Guide:** MUI provides pre-styled React components implementing Material Design. Use `createTheme` + `ThemeProvider` for global theming, `sx` prop for one-off styles, `styled()` for reusable styled components, and `slots`/`slotProps` for deep component customization. Prefer path imports in development for faster builds. **Current: v7.x (March 2025)** -- CSS layers support, standardized slot pattern, Grid v2 promoted, React 19 compatible. MUI X v8 for DataGrid, DatePicker, Charts.
+> **Quick Guide:** MUI is a pre-styled React component library built on a theme. `createTheme` +
+> `ThemeProvider` define the tokens every component reads; `sx` styles one instance, `styled()`
+> makes a reusable one, `theme.components` changes every instance, and `slots` / `slotProps` reach
+> inner elements. **Current: v7.x (March 2025)** — CSS layers, `slots`/`slotProps` standardised
+> everywhere, Grid v2 promoted to `Grid`, React 19 compatible. MUI X v8 covers DataGrid, DatePicker
+> and Charts. Emotion is the styling engine; Pigment CSS is still alpha and on hold.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — theme with colour schemes, component overrides, dark-mode menu, TypeScript augmentation, SSR and SPA setup with CSS layers
+- [examples/styling.md](examples/styling.md) — `styled()`, custom props via `shouldForwardProp`, `sx` theme-aware, responsive and callback forms
+- [examples/form-inputs.md](examples/form-inputs.md) — TextField, Select, Autocomplete, slots and slotProps
+- [examples/layout.md](examples/layout.md) — Grid, Stack, Box, Container, responsive card grid
+- [examples/navigation.md](examples/navigation.md) — AppBar, Drawer, Tabs, responsive dashboard shell
+- [examples/feedback.md](examples/feedback.md) — Dialog, Snackbar, Alert, Skeleton, CircularProgress
+- [examples/data-grid.md](examples/data-grid.md) — DataGrid columns, pagination, cell rendering
+- [reference.md](reference.md) — component tables, theme structure, `sx` shorthands, breakpoints, package list, v6 → v7 migration, anti-pattern code
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing MUI code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap the app in `ThemeProvider` with a `createTheme()` instance.** Without one, components fall
+back to MUI's default theme and render correctly but wrong — no error, just someone else's design.
 
-**(You MUST wrap the app in `ThemeProvider` with a `createTheme()` instance -- never use MUI components without a theme)**
+**Import from the path, not the barrel** — `@mui/material/Button`, not `{ Button } from
+"@mui/material"`. The barrel makes the dev server parse the whole package on first load, and
+`@mui/icons-material` alone is over 2000 modules.
 
-**(You MUST use path imports (`@mui/material/Button`) in development for faster startup -- barrel imports (`@mui/material`) cause 6x slower dev builds)**
+**Use `slots` and `slotProps` to reach inner elements.** They are the v7 API across every component;
+`components` and `componentsProps` are deprecated and scheduled for removal.
 
-**(You MUST use `slots`/`slotProps` for component inner-element customization -- `componentsProps` is deprecated in v7)**
-
-**(You MUST use `theme.applyStyles('dark', {...})` for dark mode conditional styles -- never use `theme.palette.mode === 'dark'` which causes flickering)**
+**Write dark-mode branches as `theme.applyStyles("dark", { … })`.** It emits both rulesets and lets
+CSS pick, so the server and the client agree. `theme.palette.mode === "dark"` decides at render time,
+which is what makes the wrong theme flash before hydration.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** MUI, Material UI, @mui/material, @mui/system, @mui/icons-material, @mui/x-data-grid, @mui/x-date-pickers, createTheme, ThemeProvider, sx prop, styled, CssBaseline, useTheme, useMediaQuery, DataGrid, DatePicker, AppBar, Drawer, Dialog, Snackbar, TextField, Autocomplete, slotProps
+**Auto-detection:** MUI, Material UI, @mui/material, @mui/system, @mui/icons-material,
+@mui/x-data-grid, @mui/x-date-pickers, createTheme, ThemeProvider, CssBaseline, sx prop, styled,
+useTheme, useColorScheme, colorSchemes, cssVariables, applyStyles, slots, slotProps,
+shouldForwardProp, GridColDef, StyledEngineProvider, enableCssLayer
 
-**When to use:**
+**Applies to:**
 
-- Building React applications with pre-styled Material Design components
-- Creating themed UIs with consistent design tokens (palette, typography, spacing)
-- Implementing complex data views with DataGrid, DatePicker, or Charts (MUI X)
-- Building admin dashboards, forms, and CRUD interfaces rapidly
+- Building on MUI's component set and customising it through the theme rather than by forking
+- Choosing between `sx`, `styled()`, `theme.components` and `slots`/`slotProps` for a given override
+- Colour schemes and dark mode, including the CSS-variables route that survives server rendering
+- Typing custom palette colours and typography variants through module augmentation
+- MUI X — DataGrid, date pickers, charts
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Headless/unstyled components needed (use a headless component library instead)
-- Minimal bundle size is critical (MUI adds significant weight)
-- Non-Material Design aesthetic required without heavy theme customization
-- Server Components needed as primary rendering strategy (MUI components are client-only)
-
-**Key patterns covered:**
-
-- Theme setup, color schemes, and dark mode
-- sx prop styling (theme-aware, responsive, callbacks)
-- styled() API for reusable components
-- Slots/slotProps for component customization (v7)
-- Layout components (Grid, Stack, Box, Container)
-- TypeScript theme augmentation
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) -- ThemeProvider, createTheme, CssBaseline, color schemes, dark mode toggle, TypeScript augmentation, Next.js integration, CSS layers
-- [examples/form-inputs.md](examples/form-inputs.md) -- TextField, Select, Autocomplete, slots/slotProps customization
-- [examples/layout.md](examples/layout.md) -- Grid, Stack, Box, Container, responsive card grid
-- [examples/data-grid.md](examples/data-grid.md) -- @mui/x-data-grid columns, pagination, custom rendering
-- [examples/feedback.md](examples/feedback.md) -- Dialog, Snackbar, Alert, Skeleton, CircularProgress
-- [examples/navigation.md](examples/navigation.md) -- AppBar, Drawer, Tabs, responsive dashboard layout
-- [examples/styling.md](examples/styling.md) -- styled() API, sx prop patterns, dark mode styling, custom props
-- [reference.md](reference.md) -- Decision frameworks, anti-patterns, quick reference tables
+- CSS methodology and design-token architecture beyond MUI's own theme — `enableCssLayer` puts MUI's
+  styles in a named layer so an external stylesheet can order itself against them, and how that
+  stylesheet is written is settled elsewhere
+- Unstyled primitives — this library arrives fully styled, and a project that wants to own every
+  pixel wants headless primitives instead
+- Form state and validation — `TextField` takes `error` and `helperText` to render a failure, and
+  `inputRef` to hand the underlying `<input>` to a library that registers by ref; what decides those
+  values is not this skill's concern
+- Server state — components take data as props
 
 ---
 
 <philosophy>
 
-## Philosophy
+**The theme is the product.** Palette, typography, spacing, shadows, breakpoints, z-index and
+transitions are all one object, and every component reads from it. An override written at a call
+site is a decision that will need repeating; the same decision in `theme.components` is made once.
 
-MUI implements Material Design as a comprehensive React component library. It provides:
+**Customisation is layered, and the layer is the choice.** `sx` for this instance, `styled()` for a
+reusable variant, `theme.components` for every instance, `slots`/`slotProps` for elements inside a
+component you do not own. Reaching for a heavier layer than the situation needs is the usual source
+of style that cannot be changed later.
 
-- **Design System**: Complete palette, typography, spacing, shadows, and breakpoint tokens
-- **Pre-styled Components**: 50+ components with consistent visual language
-- **Customization Layers**: From simple `sx` overrides to deep theme-level component restyling
-- **Accessibility**: Built-in ARIA attributes, keyboard navigation, and focus management
-
-**Core Principle:** Theme drives everything. Define your design tokens in `createTheme()`, and all components inherit consistent styling. Override at the component level with `sx`, `styled()`, or `slots`/`slotProps`.
-
-**MUI v7 Key Changes (March 2025):**
-
-- CSS layers support via `enableCssLayer` (integrates with utility-first CSS frameworks)
-- Standardized `slots`/`slotProps` across all components (replaces `components`/`componentsProps`)
-- Grid v2 promoted to `Grid` (old Grid renamed to `GridLegacy`)
-- Lab components graduated to `@mui/material` (Alert, Skeleton, Autocomplete, etc.)
-- Package layout updated for ESM/CJS dual support (no deep imports beyond one level)
-- React 19 full compatibility
-
-**Pigment CSS Status:** MUI's zero-runtime CSS-in-JS engine is currently **on hold / alpha**. Production apps should continue using the default Emotion-based styling engine.
+**MUI components are client components.** They use context and effects, so a server-rendered app
+needs a cache provider above `ThemeProvider` and a client boundary around the pages that use them.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which styling layer
+
+```
+Used in one place                  → sx prop
+Reused, same shape each time       → styled()
+Every instance in the app          → theme.components.MuiX
+An element inside the component    → slots / slotProps
+```
+
+## Which layout component
+
+```
+One axis, even spacing             → Stack
+Twelve-column grid                 → Grid (size prop)
+Centred page with a max width      → Container
+Anything else that needs sx        → Box
+```
+
+## Colour scheme
+
+```
+No dark mode                       → one palette in createTheme
+Follow the system only             → cssVariables: true
+User can choose                    → colorSchemes + useColorScheme
+Both, without a flash              → cssVariables: { colorSchemeSelector: "data" } + useColorScheme
+```
+
+## MUI X data display
+
+```
+Under ~100 rows, read-only         → Table
+Sorting, filtering, pagination     → DataGrid
+Very large datasets                → DataGridPro (row virtualisation)
+Date or time entry                 → DatePicker / DateTimePicker
+Charts                             → MUI X Charts
+Hierarchy                          → TreeView
+```
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Theme Setup and Configuration
+### Pattern 1: Theme and provider
 
-Every MUI app starts with `createTheme()` and `ThemeProvider`. The theme defines all design tokens.
-
-```typescript
-import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
-
+```tsx
 const theme = createTheme({
-  palette: {
-    primary: { main: "#1976d2" },
-    secondary: { main: "#9c27b0" },
-  },
+  palette: { primary: { main: "#1976d2" } },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", sans-serif',
     button: { textTransform: "none" },
   },
   shape: { borderRadius: 8 },
   spacing: 8,
 });
 
-function App({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      {children}
-    </ThemeProvider>
-  );
-}
-
-export { App };
+<ThemeProvider theme={theme}>
+  <CssBaseline />
+  {children}
+</ThemeProvider>;
 ```
 
-**Why good:** Centralized design tokens, CssBaseline normalizes cross-browser styles, all children inherit theme
+`CssBaseline` applies MUI's normalisation and the theme's background and text colours to `<body>` —
+without it the page around the components keeps the browser defaults.
 
-For production-ready theme with color schemes, dark mode, component overrides, and TypeScript augmentation, see [examples/core.md](examples/core.md).
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: CSS Variables and Dark Mode
+### Pattern 2: CSS variables and dark mode
 
-MUI v7 supports CSS variables natively. Use `colorSchemes` for flicker-free light/dark mode.
-
-```typescript
+```tsx
 const theme = createTheme({
   cssVariables: { colorSchemeSelector: "data" },
   colorSchemes: {
@@ -149,149 +176,109 @@ const theme = createTheme({
     dark: { palette: { primary: { main: "#90caf9" } } },
   },
 });
+
+const { mode, setMode } = useColorScheme(); // "light" | "dark" | "system"
 ```
 
-Toggle with the `useColorScheme` hook:
+With `cssVariables`, both palettes are emitted as custom properties and a `data-*` attribute selects
+between them, so the scheme is settled before React runs. `mode` is `undefined` on the first render —
+guard on it before rendering anything that depends on the scheme.
 
-```typescript
-import { useColorScheme } from "@mui/material/styles";
-const { mode, setMode } = useColorScheme();
-setMode(mode === "light" ? "dark" : "light");
-```
-
-**Why good:** CSS variables prevent flash of wrong theme on SSR, persists preference to localStorage
-
-```typescript
-// BAD: Causes SSR flicker
-backgroundColor: theme.palette.mode === "dark" ? "#333" : "#fff";
-// GOOD: Use applyStyles in styled()
-...theme.applyStyles("dark", { backgroundColor: "#1a1a2e" });
-```
-
-For full dark mode toggle component, see [examples/core.md](examples/core.md).
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: The sx Prop
+### Pattern 3: The `sx` prop
 
-The `sx` prop is MUI's primary styling escape hatch. It accesses theme values, supports responsive breakpoints, and handles pseudo-selectors.
-
-```typescript
+```tsx
 <Box
   sx={{
-    p: 3,                         // theme.spacing(3) = 24px
-    bgcolor: "background.paper",  // theme.palette.background.paper
-    borderRadius: 1,              // theme.shape.borderRadius * 1
-    boxShadow: 3,                 // theme.shadows[3]
-    width: { xs: "100%", md: "50%" }, // Responsive
+    p: 3, // theme.spacing(3)
+    bgcolor: "background.paper", // theme.palette.background.paper
+    borderRadius: 1, // theme.shape.borderRadius
+    boxShadow: 3, // theme.shadows[3]
+    width: { xs: "100%", md: "50%" },
     "&:hover": { boxShadow: 6 },
   }}
 />
 ```
 
-**Why good:** Theme-aware shorthand properties, responsive without media queries
+Numbers go through the theme's scales and dotted strings resolve against the palette, so a themed
+value never needs to be repeated as a literal. Breakpoint objects replace media queries, and an
+array of `sx` objects merges left to right — which is how a conditional style is added without
+rebuilding the object.
 
-```typescript
-// BAD: Inline styles bypass theme
-<Box style={{ padding: 24, backgroundColor: "#1976d2" }}>
-```
-
-**Why bad:** Hardcoded values, no theme consistency, no responsive support, no dark mode awareness
-
-For callback syntax and advanced sx patterns, see [examples/styling.md](examples/styling.md).
+Full code: [examples/styling.md](examples/styling.md)
 
 ---
 
-### Pattern 4: styled() API for Reusable Components
+### Pattern 4: `styled()`
 
-Use `styled()` when you need a reusable component with theme-aware styles. Prefer `sx` for one-off styles.
-
-```typescript
-import { styled } from "@mui/material/styles";
-import Card from "@mui/material/Card";
-
-const HOVER_ELEVATION = 8;
-
+```tsx
 const StyledCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(3),
-  borderRadius: theme.shape.borderRadius * 2,
-  "&:hover": { boxShadow: theme.shadows[HOVER_ELEVATION] },
-  ...theme.applyStyles("dark", {
-    backgroundColor: theme.palette.grey[900],
-  }),
+  "&:hover": { boxShadow: theme.shadows[8] },
+  ...theme.applyStyles("dark", { backgroundColor: theme.palette.grey[900] }),
 }));
-
-export { StyledCard };
 ```
 
-**Why good:** Reusable, theme-aware, dark mode handled with `applyStyles`
+Reach for this when the same styling appears more than once. A second argument takes
+`shouldForwardProp`, which is what stops a styling-only prop reaching the DOM as an unknown
+attribute.
 
-For styled with custom props (`shouldForwardProp`), gradient buttons, and more, see [examples/styling.md](examples/styling.md).
+Full code: [examples/styling.md](examples/styling.md)
 
 ---
 
-### Pattern 5: Slots and SlotProps (v7 Standard)
+### Pattern 5: Slots and slotProps
 
-In MUI v7, `slots` and `slotProps` are the standardized API for customizing component inner elements. The older `components`/`componentsProps` API is deprecated.
-
-```typescript
+```tsx
 <Autocomplete
-  slots={{ paper: Paper }}
+  slots={{ paper: CustomPaper }}
   slotProps={{
     paper: { elevation: 8, sx: { borderRadius: 2 } },
     listbox: { sx: { maxHeight: 300 } },
+    input: ({ open }) => ({
+      sx: { borderColor: open ? "primary.main" : "divider" },
+    }),
   }}
   renderInput={(params) => <TextField {...params} label="Framework" />}
 />
 ```
 
-**Why good:** Standardized API across all MUI components, replaces deprecated patterns
+`slots` replaces an inner component, `slotProps` configures one, and a slotProp written as a callback
+receives that slot's own state. Define slot components outside the render — an inline arrow is a new
+component type each time, which remounts the slot on every render.
 
-```typescript
-// BAD: Deprecated in v7
-<Autocomplete componentsProps={{ paper: { elevation: 8 } }} />
-```
-
-For callback slotProps and advanced customization, see [examples/form-inputs.md](examples/form-inputs.md).
+Full code: [examples/form-inputs.md](examples/form-inputs.md)
 
 ---
 
-### Pattern 6: Layout Components
+### Pattern 6: Layout
 
-MUI provides `Box`, `Stack`, `Grid`, and `Container` for layout. In v7, `Grid` is the former Grid2.
-
-```typescript
-// Grid: 12-column responsive layout (v7 uses size prop)
-const SIDEBAR_COLUMNS = 4;
-const MAIN_COLUMNS = 8;
-
+```tsx
 <Grid container spacing={3}>
-  <Grid size={{ xs: 12, md: SIDEBAR_COLUMNS }}><Sidebar /></Grid>
-  <Grid size={{ xs: 12, md: MAIN_COLUMNS }}><MainContent /></Grid>
+  <Grid size={{ xs: 12, md: 4 }}><Sidebar /></Grid>
+  <Grid size={{ xs: 12, md: 8 }}><MainContent /></Grid>
 </Grid>
 
-// Stack: single-axis layout with consistent spacing
 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
   <Button variant="contained">Save</Button>
-  <Button variant="outlined">Cancel</Button>
 </Stack>
 
-// Container: centered content with maxWidth
 <Container maxWidth="lg" sx={{ py: 4 }}>{children}</Container>
 ```
 
-**When to use each:** Box (flex/sx wrapper), Stack (single axis), Grid (12-column), Container (page centering)
+In v7 `Grid` is the former Grid2 and takes one `size` prop instead of separate `xs`/`sm`/`md` props;
+the previous component is still available as `GridLegacy`.
 
-For product card grids, dashboard layouts, and more, see [examples/layout.md](examples/layout.md).
+Full code: [examples/layout.md](examples/layout.md)
 
 ---
 
-### Pattern 7: TypeScript Theme Augmentation
+### Pattern 7: TypeScript augmentation
 
-Extend MUI's theme type system when adding custom palette colors or typography variants.
-
-```typescript
-// theme-augmentation.d.ts
+```ts
 declare module "@mui/material/styles" {
   interface Palette {
     neutral: Palette["primary"];
@@ -307,52 +294,34 @@ declare module "@mui/material/Button" {
 }
 ```
 
-Then use in theme and components:
+Two augmentations, and both are needed: the first makes the token exist on the theme, the second
+lets a component accept it as a prop value. Skip the second and `color="neutral"` is a type error at
+every call site even though the theme carries it.
 
-```typescript
-const theme = createTheme({
-  palette: { neutral: { main: "#64748b", contrastText: "#fff" } },
-});
-<Button color="neutral" variant="contained">Neutral</Button>
-```
-
-**Why good:** Full type safety, IDE autocomplete for custom colors/variants
-
-For complete augmentation with typography variants, see [examples/core.md](examples/core.md).
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 8: Next.js App Router Integration
+### Pattern 8: Server-rendered setup
 
-MUI requires `AppRouterCacheProvider` from `@mui/material-nextjs` for proper SSR style injection.
-
-```typescript
-// app/layout.tsx
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-
-function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </AppRouterCacheProvider>
-      </body>
-    </html>
-  );
-}
-
-export default RootLayout; // Next.js requires default export for layouts
+```tsx
+<AppRouterCacheProvider options={{ enableCssLayer: true }}>
+  <GlobalStyles styles="@layer theme, base, mui, components, utilities;" />
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    {children}
+  </ThemeProvider>
+</AppRouterCacheProvider>
 ```
 
-**Why good:** Prevents style hydration mismatches, CSS layers enable predictable specificity with utility-first CSS
+Emotion generates styles as components render, so a server-rendered app needs a cache provider above
+`ThemeProvider` to collect and flush them with the streamed HTML — without it the markup arrives
+unstyled and restyles on hydration. MUI publishes an adapter package per supported server framework;
+a client-only app uses `StyledEngineProvider` in the same position instead. `enableCssLayer` puts
+MUI's output into a named layer, and the `@layer` declaration is what fixes the order of that layer
+against everything else on the page.
 
-For CSS layers integration and Vite setup, see [examples/core.md](examples/core.md).
+Full code, both arrangements: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -360,229 +329,55 @@ For CSS layers integration and Vite setup, see [examples/core.md](examples/core.
 
 <performance>
 
-## Performance Optimization
+## Performance
 
-### Import Optimization
+**Path imports.** `import Button from "@mui/material/Button"` skips barrel parsing; the barrel form
+costs several times the dev-server startup. Some bundlers and frameworks rewrite barrel imports
+automatically — check before assuming the cost applies. A lint rule restricting the pattern
+`^@mui/[^/]+$` is what keeps it from creeping back.
 
-```typescript
-// GOOD: Path imports -- fast in development
-import Button from "@mui/material/Button";
-import DeleteIcon from "@mui/icons-material/Delete";
+**Stable references for anything a component treats as identity.** DataGrid `columns`, slot
+components, and `Dialog` `TransitionProps` are all compared by reference: define them at module
+scope, or memoise them. Inline, they cause a re-render or a remount on every parent render.
 
-// BAD: Barrel imports -- 6x slower dev startup
-import { Button } from "@mui/material";
-import { Delete } from "@mui/icons-material";
-```
-
-Path imports skip barrel file parsing. `@mui/icons-material` has 2000+ modules -- barrel imports force parsing all of them.
-
-**Exception:** Next.js 13.5+ auto-optimizes via `optimizePackageImports`.
-
-### Memoize Expensive Props
-
-```typescript
-// GOOD: Columns outside component (stable reference)
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 90 },
-];
-function Table({ rows }: { rows: User[] }) {
-  return <DataGrid rows={rows} columns={columns} />;
-}
-
-// BAD: Inline columns cause re-render every parent render
-```
-
-### Stable Slot References
-
-```typescript
-// GOOD: Defined outside render
-const CustomPaper = (props: PaperProps) => <Paper {...props} elevation={8} />;
-<Autocomplete slots={{ paper: CustomPaper }} />
-
-// BAD: Inline function causes remount every render
-<Autocomplete slots={{ paper: (props) => <Paper {...props} /> }} />
-```
-
-### ESLint Rule for Import Enforcement
-
-```json
-{
-  "rules": {
-    "no-restricted-imports": [
-      "error",
-      {
-        "patterns": [
-          {
-            "regex": "^@mui/[^/]+$",
-            "message": "Use path imports: import Button from '@mui/material/Button'"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+**`createTheme` does not affect bundle size** — it is data, not components. The bundle is decided by
+which components are imported.
 
 </performance>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Styling Approach
-
-```
-How many places will this style be used?
-+-- One place --> sx prop (inline, theme-aware)
-+-- Multiple places (same type) --> styled() (reusable, typed)
-+-- All instances of a component --> theme.components (global override)
-+-- Customize inner elements --> slots/slotProps
-```
-
-### Layout Component Selection
-
-```
-What kind of layout?
-+-- Single axis (row or column) --> Stack
-+-- 12-column grid --> Grid
-+-- Centered page content --> Container
-+-- Flexible box with sx --> Box
-+-- Both axes + complex --> Grid (nested)
-```
-
-### Component vs Custom Build
-
-```
-Does MUI have this component?
-+-- YES --> Use it
-|   +-- Minor style changes --> sx prop
-|   +-- Structural changes --> slots/slotProps
-|   +-- Completely different behavior --> Build custom
-+-- NO --> Build custom
-    +-- Simple interaction --> Base HTML + sx
-    +-- Complex interaction --> Consider a headless component library
-```
-
-### Color Scheme Strategy
-
-```
-Do you need dark mode?
-+-- YES --> Use colorSchemes in createTheme
-|   +-- System preference only --> cssVariables: true
-|   +-- Manual toggle --> useColorScheme hook
-|   +-- Both --> colorSchemeSelector: "data" + useColorScheme
-+-- NO --> Single palette in createTheme
-```
-
-### MUI X Component Selection
-
-```
-What data display do you need?
-+-- Tabular data
-|   +-- Simple (< 100 rows, no editing) --> Table component
-|   +-- Complex (sorting, filtering, pagination) --> DataGrid
-|   +-- Large dataset (100K+ rows) --> DataGridPro (virtualized)
-+-- Date/time input --> DatePicker / DateTimePicker
-+-- Charts --> MUI X Charts
-+-- Tree structure --> TreeView
-```
-
-</decision_framework>
-
----
-
-<integration>
-
-## Integration Notes
-
-**React 19:** Full compatibility in MUI v7.
-
-**SSR Frameworks:** Use `@mui/material-nextjs` with `AppRouterCacheProvider` for Next.js App Router. See [examples/core.md](examples/core.md) for setup.
-
-**CSS Layers:** Enable with `enableCssLayer` to integrate with utility-first CSS frameworks. Allows predictable specificity ordering.
-
-**Form Libraries:** MUI `TextField` works with any form library via `inputRef` for registration or controlled `value`/`onChange` props. Map validation errors to `helperText` and `error` props.
-
-**Styling Engine:** Emotion is the default and only production-ready engine. `@emotion/react` and `@emotion/styled` are required peer dependencies.
-
-**Package Ecosystem:**
-
-| Package                | Purpose                                   | Version |
-| ---------------------- | ----------------------------------------- | ------- |
-| `@mui/material`        | Core components (Button, TextField, etc.) | v7.x    |
-| `@mui/system`          | sx prop, styled(), ThemeProvider          | v7.x    |
-| `@mui/icons-material`  | 2000+ Material Design icons               | v7.x    |
-| `@mui/x-data-grid`     | DataGrid (free tier)                      | v8.x    |
-| `@mui/x-data-grid-pro` | DataGrid Pro (sorting, filtering, etc.)   | v8.x    |
-| `@mui/x-date-pickers`  | DatePicker, TimePicker                    | v8.x    |
-| `@mui/x-charts`        | Bar, Line, Pie, Scatter charts            | v8.x    |
-| `@mui/x-tree-view`     | TreeView component                        | v8.x    |
-| `@mui/material-nextjs` | Next.js SSR integration                   | v7.x    |
-| `@emotion/react`       | Required peer dependency                  | v11.x   |
-| `@emotion/styled`      | Required peer dependency                  | v11.x   |
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `theme.palette.mode === 'dark'` for conditional styles (causes SSR flicker -- use `theme.applyStyles('dark', {...})`)
-- Missing `ThemeProvider` wrapper (components render with MUI defaults instead of your design tokens)
-- Using barrel imports from `@mui/material` or `@mui/icons-material` (6x slower dev builds)
-- Inline object/function definitions in `slots` prop (causes component remount every render)
+- `theme.palette.mode === "dark"` in a style function — resolved at render time, so the server and
+  the first client paint disagree and the wrong theme flashes
+- An inline arrow in `slots` — a new component type each render, so the slot remounts and loses its
+  state and focus
+- Inline `columns` on a DataGrid — a new array each render, re-rendering the whole grid
+- Importing more than one level deep, `@mui/material/styles/createTheme` — the v7 ESM package layout
+  does not expose those paths
+- `@mui/lab` imports for Alert, Skeleton or Autocomplete — they graduated to `@mui/material` in v7
+- MUI components rendered on the server without a client boundary — they need context and effects,
+  and the boundary belongs on the page, not only on the root layout
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using deprecated `components`/`componentsProps` instead of `slots`/`slotProps` (removed in future versions)
-- Using `GridLegacy` instead of the new `Grid` component with `size` prop
-- Hardcoding colors/spacing instead of using theme tokens (`#1976d2` vs `primary.main`)
-- Using `style` prop instead of `sx` (bypasses theme, no responsive support)
-- Deep importing beyond one level: `@mui/material/styles/createTheme` (broken in v7 ESM)
-
-**Common Mistakes:**
-
-- Forgetting `CssBaseline` (inconsistent cross-browser baseline styles)
-- Not memoizing DataGrid `columns` array (causes unnecessary re-renders)
-- Using `@mui/lab` for graduated components (Alert, Skeleton, etc. are now in `@mui/material`)
-- Missing TypeScript augmentation for custom palette colors (no autocomplete, type errors at usage)
-- Setting `zIndex` manually on MUI components (conflicts with MUI's z-index scale)
-
-**Gotchas & Edge Cases:**
-
-- MUI components are **client-only** -- they require `'use client'` in Next.js App Router pages, not just layout
-- `sx` prop arrays merge styles left-to-right; later items override earlier ones (useful for conditional styles)
-- `spacing` theme value is a **multiplier**, not pixels: `spacing(2)` = `2 * 8px` = `16px` by default
-- `Grid` `size` prop in v7 replaces `xs`/`sm`/`md`/`lg`/`xl` individual props from Grid2
-- `TextField` is a composed component (Input + InputLabel + FormHelperText) -- use `slotProps.input` to target the actual input element
-- `Dialog` `TransitionProps` must not remount the Transition component -- keep it stable between renders
-- `useMediaQuery` returns `false` during SSR -- design for mobile-first and handle the hydration mismatch
-- `createTheme` is not tree-shakeable -- a large theme config doesn't increase bundle, but unused components still need tree shaking via path imports
+- `spacing` is a multiplier, not pixels: `spacing(2)` is 16px at the default base of 8
+- `sx` arrays merge left to right, so a later entry wins — which is what makes conditional styles work
+- `TextField` is three components in a trench coat (input, label, helper text), so targeting the
+  actual `<input>` means `slotProps.input`
+- Setting `zIndex` by hand fights MUI's own scale, where modal, drawer, snackbar and tooltip already
+  have assigned values
+- `useMediaQuery` returns `false` during server rendering, so a desktop-first branch renders the
+  wrong thing before hydration
+- `useColorScheme().mode` is `undefined` on the first render, and rendering a scheme-dependent icon
+  from it produces a hydration mismatch
+- A missing TypeScript augmentation for a custom palette colour is a type error at the usage site,
+  not at the theme
+- `components` and `componentsProps` still work in v7 but are deprecated
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST wrap the app in `ThemeProvider` with a `createTheme()` instance -- never use MUI components without a theme)**
-
-**(You MUST use path imports (`@mui/material/Button`) in development for faster startup -- barrel imports (`@mui/material`) cause 6x slower dev builds)**
-
-**(You MUST use `slots`/`slotProps` for component inner-element customization -- `componentsProps` is deprecated in v7)**
-
-**(You MUST use `theme.applyStyles('dark', {...})` for dark mode conditional styles -- never use `theme.palette.mode === 'dark'` which causes flickering)**
-
-**Failure to follow these rules will cause SSR flickering, degraded dev performance, and deprecated API usage.**
-
-</critical_reminders>

@@ -1,19 +1,31 @@
 # Radix UI - Preview Components
 
-> Preview components with unstable APIs. Import using `unstable_` prefix. **Updated: May 2025** - Includes OneTimePasswordField, PasswordToggleField, and Form primitives.
-
----
-
-## Pattern 1: OneTimePasswordField (Preview)
-
-OneTimePasswordField provides OTP input with keyboard navigation, paste support, and password manager integration.
-
-### Good Example - OTP Verification
+> The `unstable_`-prefixed primitives. They ship and work; their props change between minor
+> versions. Lookup tables for the OTP keyboard map and the Form `match` values are in
+> [reference.md](../reference.md).
 
 ```typescript
 import {
   unstable_OneTimePasswordField as OneTimePasswordField,
+  unstable_PasswordToggleField as PasswordToggleField,
+  unstable_Form as Form,
 } from "radix-ui";
+```
+
+The prefix is a statement about the API surface rather than the implementation. Reach for these when
+the behaviour is worth owning an upgrade cost for, and pin the version when it is not.
+
+---
+
+## Pattern 1: OneTimePasswordField
+
+A row of single-character inputs that behaves as one field: arrow keys and backspace move between
+them, a pasted code fills them all, and password managers autofill it.
+
+### Good Example - OTP Verification
+
+```typescript
+import { unstable_OneTimePasswordField as OneTimePasswordField } from "radix-ui";
 
 const OTP_LENGTH = 6;
 
@@ -48,25 +60,8 @@ export function OTPInput({
           aria-label={`Digit ${i + 1} of ${length}`}
         />
       ))}
-      {/* Hidden input for form submission */}
       <OneTimePasswordField.HiddenInput name="otp" />
     </OneTimePasswordField.Root>
-  );
-}
-
-// Usage
-function VerificationForm() {
-  const handleOTPComplete = (otp: string) => {
-    console.log("OTP entered:", otp);
-    // Submit verification
-  };
-
-  return (
-    <form>
-      <label htmlFor="otp-input">Enter verification code</label>
-      <OTPInput onComplete={handleOTPComplete} />
-      <button type="submit">Verify</button>
-    </form>
   );
 }
 ```
@@ -96,43 +91,21 @@ function VerificationForm() {
 }
 ```
 
-**Why good:** Named constant for OTP length, HiddenInput enables form submission, onComplete callback for completion handling, autoSubmit for automatic form submission, validationType restricts input, aria-label for accessibility, data-invalid for error styling
-
-**Key Features:**
-
-- Keyboard navigation mimics single input field (arrow keys, backspace)
-- Paste support (auto-fills from clipboard)
-- Password manager autofill compatibility
-- Validation support via `validationType` prop (numeric/alphanumeric)
-- `autoSubmit` prop for automatic form submission when complete
-- `sanitizeValue` prop for custom value processing
-- Hidden input for form data submission
-- Support for `disabled`, `readOnly`, `placeholder` props
-
-**Keyboard Shortcuts:**
-
-| Key           | Behavior                         |
-| ------------- | -------------------------------- |
-| Enter         | Submit associated form           |
-| Tab/Shift+Tab | Navigate outside root            |
-| Arrow Keys    | Move between inputs              |
-| Home/End      | Jump to first/last input         |
-| Delete        | Clear current, shift values back |
-| Backspace     | Clear current, move focus left   |
-| Cmd+Backspace | Clear all inputs                 |
+**Why good:** `HiddenInput` is what carries the assembled value into a native form submission — the
+visible inputs are unnamed, so without it the form posts nothing. Each `Input` needs its own
+`aria-label`, since "Digit 3 of 6" is the only thing distinguishing it by ear. `validationType`
+rejects unwanted characters at the input rather than at submit, and drives the mobile keyboard.
 
 ---
 
-## Pattern 2: PasswordToggleField (Preview)
+## Pattern 2: PasswordToggleField
 
-PasswordToggleField provides password input with visibility toggle and accessibility.
+A password input with a show/hide control that keeps focus and caret position across the toggle.
 
 ### Good Example - Password Input with Toggle
 
 ```typescript
-import {
-  unstable_PasswordToggleField as PasswordToggleField,
-} from "radix-ui";
+import { unstable_PasswordToggleField as PasswordToggleField } from "radix-ui";
 
 type PasswordInputProps = {
   name: string;
@@ -184,30 +157,6 @@ export function PasswordInput({
     </PasswordToggleField.Root>
   );
 }
-
-// Icon components (example)
-function EyeIcon() {
-  return <span aria-hidden="true">👁</span>;
-}
-
-function EyeOffIcon() {
-  return <span aria-hidden="true">👁‍🗨</span>;
-}
-
-// Usage
-function LoginForm() {
-  return (
-    <form>
-      <PasswordInput name="password" label="Password" />
-      <PasswordInput
-        name="confirmPassword"
-        label="Confirm Password"
-        error="Passwords do not match"
-      />
-      <button type="submit">Sign In</button>
-    </form>
-  );
-}
 ```
 
 ```css
@@ -250,26 +199,21 @@ function LoginForm() {
 }
 ```
 
-**Why good:** Implicit accessible labeling for toggle button, Icon component switches based on visibility state, focus returns to input after pointer toggle, aria-invalid and aria-describedby for error states, onVisibilityChange for controlled visibility
-
-**Key Features:**
-
-- Focus returns to input after pointer toggle
-- Focus maintained with keyboard navigation
-- Visibility resets after form submission
-- Implicit accessible labeling for icon buttons
-- `data-visible` attribute for styling
-- Controlled visibility via `visible`/`onVisibilityChange` props
-- `Slot` component for alternative rendering with `visible`/`hidden` props or `render` function
-- `autoComplete` defaults to `"current-password"` (configurable)
+**Why good:** `Icon` swaps on visibility state, so the two glyphs need no conditional and no state of
+their own. Focus returns to the input after a pointer toggle, which is the behaviour a hand-rolled
+button loses. Visibility resets on form submission, so a revealed password does not persist into the
+next render. `autoComplete` defaults to `"current-password"`; set it to `"new-password"` on a
+sign-up form or password managers will offer the wrong entry.
 
 ---
 
-## Pattern 3: Form Validation (Preview)
+## Pattern 3: Form Validation
 
-Form provides accessible form validation with constraint API support.
+Form builds on the browser's own constraint validation API rather than a schema. `Message` renders
+when its `match` condition holds, and Radix wires `aria-describedby` between the control and
+whichever messages are showing.
 
-### Good Example - Form with Validation Messages
+### Good Example - Sign-up Form with Validation Messages
 
 ```typescript
 import { unstable_Form as Form } from "radix-ui";
@@ -306,7 +250,7 @@ export function SignUpForm() {
         <Form.Message match="tooShort" className="form-message">
           Password must be at least 8 characters
         </Form.Message>
-        {/* Custom validation */}
+        {/* A custom match receives (value, formData) and may be async */}
         <Form.Message
           match={(value) => !/[A-Z]/.test(value)}
           className="form-message"
@@ -315,7 +259,7 @@ export function SignUpForm() {
         </Form.Message>
       </Form.Field>
 
-      {/* Server-side validation */}
+      {/* forceMatch shows a message the client cannot derive */}
       <Form.Field name="username" serverInvalid={false} className="form-field">
         <Form.Label className="form-label">Username</Form.Label>
         <Form.Control asChild>
@@ -368,59 +312,9 @@ export function SignUpForm() {
 }
 ```
 
-**Why good:** Built-in constraint validation matching (`valueMissing`, `typeMismatch`, `tooShort`), custom validation via `match` function, server-side validation with `serverInvalid` and `forceMatch`, automatic label association, focus management to first invalid field
-
-**Key Features:**
-
-- Built on native browser constraint validation API
-- `match` prop supports built-in validators or custom functions
-- Custom validation functions receive `(value, formData)` and support async
-- `serverInvalid` prop marks fields with server-side errors
-- `forceMatch` displays message regardless of client validation
-- `onClearServerErrors` callback for clearing server state
-- `ValidityState` component exposes raw validity state via render prop
-- Automatic `aria-describedby` connection between controls and messages
-- Focus management routes to first invalid field on submission
-
-**Built-in Match Values:**
-
-| Match             | Constraint                            |
-| ----------------- | ------------------------------------- |
-| `valueMissing`    | Required field empty                  |
-| `typeMismatch`    | Type doesn't match (email, url, etc.) |
-| `tooShort`        | Below minLength                       |
-| `tooLong`         | Above maxLength                       |
-| `rangeUnderflow`  | Below min                             |
-| `rangeOverflow`   | Above max                             |
-| `stepMismatch`    | Doesn't match step                    |
-| `patternMismatch` | Doesn't match pattern                 |
-| `badInput`        | Invalid input                         |
-
----
-
-## Important Notes
-
-### Unstable API Warning
-
-Preview components use the `unstable_` prefix because their APIs may change:
-
-```typescript
-// Current import pattern (May 2025)
-import {
-  unstable_OneTimePasswordField as OneTimePasswordField,
-  unstable_PasswordToggleField as PasswordToggleField,
-  unstable_Form as Form,
-} from "radix-ui";
-```
-
-### Best Practices
-
-1. **Don't rely on exact APIs** - Test thoroughly with each Radix update
-2. **Provide fallbacks** - Consider progressive enhancement
-3. **Watch release notes** - API may stabilize or change
-4. **TypeScript users** - Types may be incomplete or change
-
-### When to Use Preview Components
-
-- **Use when:** You need the specific functionality and can accept API changes
-- **Avoid when:** Building critical production features that can't tolerate breaking changes
+**Why good:** `Field`'s `name` is what associates the label, the control and every message, so no
+`htmlFor` or `id` is written by hand. The built-in matches map onto `ValidityState` flags the browser
+already computes, so `required` and `minLength` on the input are the validation rather than a
+duplicate of it. `serverInvalid` plus `forceMatch` is the pair that surfaces an error only the server
+knows — "username taken" has no client-side test — and `onClearServerErrors` retires it once the
+field is edited. Submission moves focus to the first invalid field.

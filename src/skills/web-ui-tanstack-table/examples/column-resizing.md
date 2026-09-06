@@ -76,7 +76,7 @@ export function ResizableTable({ data }: { data: User[] }) {
     enableColumnResizing: true,
   });
 
-  // CRITICAL: Memoize CSS variables for performance
+  // Memoized: recomputed per pointer move otherwise, which is the cost being avoided
   // Only recalculate when sizing state changes
   const columnSizeVars = useMemo(() => {
     const headers = table.getFlatHeaders();
@@ -145,7 +145,8 @@ export function ResizableTable({ data }: { data: User[] }) {
   );
 }
 
-// CRITICAL: Memoize table body to prevent re-renders during resize
+// Memoized body: the drag updates CSS variables on the container, and this
+// keeps React from re-rendering every cell while that happens
 const MemoizedTableBody = React.memo(
   function TableBody<TData>({ table }: { table: Table<TData> }) {
     return (
@@ -171,7 +172,12 @@ const MemoizedTableBody = React.memo(
 );
 ```
 
-**Why good:** CSS variables update without re-rendering, memoized table body prevents unnecessary renders, `columnResizeMode: "onChange"` provides live feedback, double-click resets column size, touch support included
+**Why good:** the two techniques exist for one reason. Under `"onChange"` a width changes on every
+pointer move, and rendering that through props re-renders every cell tens of times a second.
+Publishing the widths as CSS variables on a container moves the update out of React entirely, and
+memoising the body keeps it from re-rendering while the drag runs — the cells read the variables and
+follow along. `getResizeHandler()` is attached to `onMouseDown` and `onTouchStart` both, or the
+handle is inert on touch.
 
 ---
 
@@ -241,7 +247,9 @@ export function SimpleResizableTable({ data }: { data: User[] }) {
 }
 ```
 
-**When to use:** Smaller tables (< 100 rows), simpler setup needed, performance not critical
+**Why good:** `"onEnd"` commits once on release, so it needs neither the CSS-variable indirection nor
+a memoised body — which makes it the mode to reach for unless live width feedback is worth the extra
+machinery.
 
 ---
 
@@ -293,19 +301,9 @@ table.getState().columnSizingInfo; // Resize in-progress info
 
 ---
 
-## Column Resize Mode Comparison
-
-| Mode         | Behavior                      | Performance           | Use Case                    |
-| ------------ | ----------------------------- | --------------------- | --------------------------- |
-| `"onChange"` | Updates width during drag     | Requires optimization | Live resize feedback        |
-| `"onEnd"`    | Updates width after drag ends | Better by default     | Simple tables, less flicker |
-
----
-
 ## Performance Tips
 
-1. **Use CSS variables** - Avoids inline style recalculations
-2. **Memoize table body** - Prevents child re-renders during resize
-3. **Use `columnResizeMode: "onEnd"`** - If live feedback not needed
-4. **Limit column count** - Consider virtualization for 50+ columns
-5. **Avoid complex cell renderers** - Keep cells simple during resize
+Beyond the CSS variables and the memoised body above:
+
+1. **Limit column count** — window the columns as well as the rows past about fifty
+2. **Keep cell renderers cheap** — every one of them runs again on each committed width

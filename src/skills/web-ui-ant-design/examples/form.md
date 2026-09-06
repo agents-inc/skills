@@ -172,6 +172,8 @@ function RegistrationForm() {
 export { RegistrationForm };
 ```
 
+**Why good:** one interface types the form instance, the `initialValues` and the `onFinish` payload. `dependencies` re-runs the confirmation rule whenever `password` changes. `Form.useWatch` drives the conditional fields without the whole-form re-render that `onValuesChange` causes — reach for it deliberately, since it does re-render the component that calls it.
+
 ---
 
 ## Modal Form Pattern
@@ -228,7 +230,7 @@ function InviteMemberModal() {
         onOk={handleOk}
         onCancel={handleCancel}
         confirmLoading={loading}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form<InviteFormValues>
           form={form}
@@ -356,148 +358,4 @@ function TeamForm() {
 export { TeamForm };
 ```
 
----
-
-## Form.useWatch for Reactive Fields
-
-```tsx
-import { Form, Input, Select, InputNumber } from "antd";
-
-function PricingForm() {
-  const [form] = Form.useForm();
-  const planType = Form.useWatch("planType", form);
-
-  return (
-    <Form form={form} layout="vertical">
-      <Form.Item name="planType" label="Plan">
-        <Select
-          options={[
-            { label: "Free", value: "free" },
-            { label: "Pro", value: "pro" },
-            { label: "Enterprise", value: "enterprise" },
-          ]}
-        />
-      </Form.Item>
-
-      {/* Conditionally show fields based on watched value */}
-      {planType !== "free" && (
-        <Form.Item
-          name="seats"
-          label="Number of Seats"
-          rules={[{ required: true }]}
-        >
-          <InputNumber min={1} style={{ width: "100%" }} />
-        </Form.Item>
-      )}
-    </Form>
-  );
-}
-export { PricingForm };
-```
-
-**When to use:** Form.useWatch is ideal for conditional rendering based on field values, avoids unnecessary re-renders compared to onValuesChange.
-
----
-
-## Typed Create Form with Validation
-
-```tsx
-import { Form, Input, Select, Button, InputNumber, App } from "antd";
-import type { Rule } from "antd/es/form";
-
-interface CreateUserFormValues {
-  name: string;
-  email: string;
-  role: "admin" | "editor" | "viewer";
-  age: number;
-}
-
-const MIN_NAME_LENGTH = 2;
-const MAX_NAME_LENGTH = 50;
-const MIN_AGE = 18;
-const MAX_AGE = 120;
-
-const NAME_RULES: Rule[] = [
-  { required: true, message: "Name is required" },
-  {
-    min: MIN_NAME_LENGTH,
-    max: MAX_NAME_LENGTH,
-    message: `Name must be ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} characters`,
-  },
-];
-
-const EMAIL_RULES: Rule[] = [
-  { required: true, message: "Email is required" },
-  { type: "email", message: "Enter a valid email" },
-];
-
-function CreateUserForm({
-  onSubmit,
-}: {
-  onSubmit: (values: CreateUserFormValues) => Promise<void>;
-}) {
-  const [form] = Form.useForm<CreateUserFormValues>();
-  const { message } = App.useApp();
-
-  const handleFinish = async (values: CreateUserFormValues) => {
-    try {
-      await onSubmit(values);
-      message.success("User created successfully");
-      form.resetFields();
-    } catch {
-      message.error("Failed to create user");
-    }
-  };
-
-  return (
-    <Form<CreateUserFormValues>
-      form={form}
-      layout="vertical"
-      onFinish={handleFinish}
-      initialValues={{ role: "viewer" }}
-    >
-      <Form.Item name="name" label="Name" rules={NAME_RULES}>
-        <Input placeholder="Enter name" />
-      </Form.Item>
-
-      <Form.Item name="email" label="Email" rules={EMAIL_RULES}>
-        <Input placeholder="Enter email" />
-      </Form.Item>
-
-      <Form.Item name="role" label="Role" rules={[{ required: true }]}>
-        <Select
-          options={[
-            { label: "Admin", value: "admin" },
-            { label: "Editor", value: "editor" },
-            { label: "Viewer", value: "viewer" },
-          ]}
-        />
-      </Form.Item>
-
-      <Form.Item
-        name="age"
-        label="Age"
-        rules={[
-          { required: true, message: "Age is required" },
-          {
-            type: "number",
-            min: MIN_AGE,
-            max: MAX_AGE,
-            message: `Age must be ${MIN_AGE}-${MAX_AGE}`,
-          },
-        ]}
-      >
-        <InputNumber style={{ width: "100%" }} />
-      </Form.Item>
-
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Create User
-        </Button>
-      </Form.Item>
-    </Form>
-  );
-}
-export { CreateUserForm };
-export type { CreateUserFormValues };
-```
+**Why good:** `Form.List` owns the array's keys, so `name={[name, "email"]}` addresses the nested field without a manual index. The list-level `rules` validator enforces the array's own constraints, and `Form.ErrorList` renders them.

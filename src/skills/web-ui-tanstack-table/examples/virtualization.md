@@ -1,12 +1,19 @@
 # TanStack Table - Virtual Scrolling
 
-> Virtual scrolling examples. See [core.md](core.md) for basic table setup.
+> Windowing the row output. See [core.md](core.md) for basic table setup.
 
-**Use when:** Rendering 1000+ rows where pagination is not suitable.
+**Use when:** the client holds every row, there are too many to render, and paging is not wanted.
+
+**What this file teaches is the bridge, not the windowing.** The table produces a flat array from
+`table.getRowModel().rows`; a windowing library produces a list of indices that are currently on
+screen. The whole integration is `rows[virtualRow.index]`, plus padding rows that reserve the height
+of what is not rendered. Any windowing library exposing a count, a scroll element, an estimated size
+and a list of visible items substitutes into the same three points — the one used below is the
+companion package to this table library and is shown because it needs no adapter.
 
 ---
 
-## Virtualized Table with @tanstack/react-virtual
+## Bridging the Row Model to a Windowed List
 
 ### Good Example - Efficient rendering of large datasets
 
@@ -129,45 +136,33 @@ export function VirtualizedTable({ data }: { data: DataRow[] }) {
 }
 ```
 
-**Why good:** `@tanstack/react-virtual` for efficient rendering, overscan prevents blank spaces during scroll, padding rows maintain scroll position, sticky header for context, accessibility announcement for row count
+**Why good:** the padding rows are what make the scrollbar honest — without them the container is
+only as tall as the handful of rendered rows, and the scroll position means nothing. `overscan`
+renders a few rows beyond the viewport so a fast scroll shows content rather than blank space. The
+header sits outside the virtualised body and stays put. `aria-live` announces the true row count,
+which a screen reader cannot otherwise learn from a DOM holding twenty of ten thousand rows.
 
 ---
 
-## When to Use Virtual Scrolling
+## Choosing Between Windowing and Paging
 
-| Row Count | Recommendation               |
-| --------- | ---------------------------- |
-| < 100     | Standard table               |
-| 100-500   | Consider pagination          |
-| 500-1000  | Pagination or virtualization |
-| 1000+     | **Use virtualization**       |
-
----
-
-## Key Virtualization Options
-
-```typescript
-import { useVirtualizer } from "@tanstack/react-virtual";
-
-const rowVirtualizer = useVirtualizer({
-  count: rows.length, // Total row count
-  getScrollElement: () => ref, // Scroll container ref
-  estimateSize: () => ROW_HEIGHT, // Row height estimate (constant for best perf)
-  overscan: 5, // Extra rows to render above/below viewport
-});
-
-// Virtualizer utilities
-const virtualRows = rowVirtualizer.getVirtualItems(); // Currently visible items
-const totalSize = rowVirtualizer.getTotalSize(); // Total height for scrollbar
-rowVirtualizer.scrollToIndex(index); // Scroll to specific row
-```
+Both stop the browser rendering ten thousand rows; they differ in what the user gets. Paging gives an
+addressable position and a finite page to scan. Windowing gives an unbroken list, working browser
+find-in-page over the rendered slice only, and no page state to keep in the URL. Below roughly a
+thousand rows neither is needed; above it, the question is whether the list is something to browse or
+something to look through.
 
 ---
 
-## Performance Tips
+## Tuning
 
-1. **Use constant row height** - `estimateSize` should return a fixed value for best performance
-2. **Set appropriate overscan** - 5-10 is usually good; prevents flicker during fast scroll
-3. **Memoize columns and data** - Same as regular tables
-4. **Use sticky header** - Keep context visible during scroll
-5. **Avoid complex cell renderers** - Virtualization helps with DOM count, not render time
+**Keep `estimateSize` constant** where the rows really are a fixed height. A varying estimate forces
+remeasurement, and the scroll position drifts as the total is revised.
+
+**`overscan` of five to ten** is the usual range. Too low and fast scrolling shows blank bands; too
+high and the saving shrinks.
+
+**Windowing reduces DOM nodes, not render time.** A cell renderer that is slow for twenty rows is
+still slow for twenty rows — it is just no longer slow for ten thousand.
+
+Memoising `columns` and `data` matters exactly as much as it does for any other table.

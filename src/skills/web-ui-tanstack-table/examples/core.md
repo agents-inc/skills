@@ -45,7 +45,7 @@ type User = {
 const columnHelper = createColumnHelper<User>();
 
 export function UserTable({ users }: { users: User[] }) {
-  // CRITICAL: Memoize columns
+  // Memoized: a new array identity here restarts the table on every render
   const columns = useMemo(
     () => [
       columnHelper.accessor("firstName", {
@@ -80,7 +80,7 @@ export function UserTable({ users }: { users: User[] }) {
     []
   );
 
-  // CRITICAL: Memoize data
+  // Memoized for the same reason — the prop is a new array on each parent render
   const data = useMemo(() => users, [users]);
 
   const table = useReactTable({
@@ -125,7 +125,11 @@ export function UserTable({ users }: { users: User[] }) {
 }
 ```
 
-**Why good:** `createColumnHelper<User>()` provides type inference for accessors, memoized columns and data prevent infinite re-renders, `getRowId` uses database ID for stable keys, `flexRender` handles both string and component headers/cells
+**Why good:** the type parameter on `createColumnHelper` is what checks every accessor key against
+`User` and types each `info.getValue()` from the field it reads, so renaming a field breaks the build
+rather than producing a column of `undefined`. `flexRender` is needed because `header` here is
+sometimes a string and `cell` sometimes a function — reading `columnDef.header` directly would render
+the function itself for the `status` column.
 
 ### Bad Example - Missing memoization and type safety
 
@@ -155,7 +159,95 @@ export function BadTable({ users }) {
 }
 ```
 
-**Why bad:** missing `useMemo` on columns causes re-renders on every state change, `accessorFn` without `id` causes runtime errors, no TypeScript types means accessor typos won't be caught, unstable data reference causes infinite re-render loops
+**Why bad:** three separate failures. The unmemoised `columns` and the raw `users` prop are both new
+identities on every render, so the table rebuilds and re-renders without settling — the symptom is an
+unresponsive tab rather than an error. The `accessorFn` has no `id` to derive, which throws while the
+instance is built. And with no type parameter, a mistyped accessor key compiles and produces an empty
+column.
+
+---
+
+## Pattern 2: A Reusable Generic Table
+
+One component, any row type. The generics are what keep `columns` and `data` checked against each
+other at the call site instead of collapsing to `unknown`.
+
+```typescript
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
+
+type DataTableProps<TData, TValue> = {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  getRowId?: (row: TData) => string;
+};
+
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  getRowId,
+}: DataTableProps<TData, TValue>) {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId,
+  });
+
+  return (
+    <table>
+      <thead>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <tr key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <th key={header.id}>
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+              </th>
+            ))}
+          </tr>
+        ))}
+      </thead>
+      <tbody>
+        {table.getRowModel().rows.length === 0 ? (
+          <tr>
+            <td colSpan={columns.length}>No results.</td>
+          </tr>
+        ) : (
+          table.getRowModel().rows.map((row) => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+// The caller keeps ownership of memoisation, since it owns both inputs
+const columns = useMemo(() => buildUserColumns(), []);
+<DataTable columns={columns} data={users} getRowId={(user) => user.id} />;
+```
+
+**Why good:** the two type parameters travel together, so a `ColumnDef<User, string>[]` cannot be
+handed a `Product[]`. Memoisation stays with the caller — a generic component cannot memoise inputs
+it did not create, and doing it internally would only hide an unstable reference one level down.
+`getRowId` is optional and passed through rather than assumed, because not every row type has an
+`id`. The empty branch is here because an empty `<tbody>` renders as nothing at all, which reads as a
+broken table rather than as no results.
 
 ---
 

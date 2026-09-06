@@ -13,11 +13,11 @@
 ## Form Validation with useRules (v3.8+)
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 import { useRules } from "vuetify/labs/rules";
 
-const form = (ref < HTMLFormElement) | (null > null);
+const form = ref<HTMLFormElement | null>(null);
 const name = ref("");
 const email = ref("");
 const password = ref("");
@@ -115,10 +115,10 @@ const customRules = {
 ## Programmatic Form Control
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 
-const form = (ref < HTMLFormElement) | (null > null);
+const form = ref<HTMLFormElement | null>(null);
 
 async function validateForm() {
   if (!form.value) return;
@@ -167,7 +167,7 @@ function resetValidation() {
 ### Select with Object Items
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 
 interface Country {
@@ -205,7 +205,7 @@ const countries: Country[] = [
 ### Autocomplete with Custom Filtering
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 
 const selected = ref(null);
@@ -230,8 +230,8 @@ function customFilter(value: string, query: string, item: any): boolean {
 ### File Input with Preview
 
 ```vue
-<script setup>
-import { ref, computed } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED_TYPES = "image/png, image/jpeg, image/webp";
@@ -239,7 +239,8 @@ const ACCEPTED_TYPES = "image/png, image/jpeg, image/webp";
 const files = ref<File[]>([]);
 
 const fileSizeRule = (file: File) =>
-  file.size < MAX_FILE_SIZE_MB * 1024 * 1024 || `Max size is ${MAX_FILE_SIZE_MB}MB`;
+  file.size < MAX_FILE_SIZE_MB * 1024 * 1024 ||
+  `Max size is ${MAX_FILE_SIZE_MB}MB`;
 </script>
 
 <template>

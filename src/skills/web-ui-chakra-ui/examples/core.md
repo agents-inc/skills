@@ -40,11 +40,11 @@ createRoot(document.getElementById("root")!).render(
 ### SSR Framework Setup
 
 ```tsx
-// For SSR frameworks, add suppressHydrationWarning to prevent flash
-// and wrap with ColorModeProvider for dark mode support
+// Server-rendered: suppressHydrationWarning avoids the color-mode flash,
+// and ColorModeProvider comes from the generated snippet (see below).
 
 import { ChakraProvider } from "@chakra-ui/react";
-import { ColorModeProvider } from "@/components/ui/color-mode";
+import { ColorModeProvider } from "./components/ui/color-mode";
 import { system } from "./theme";
 
 export function RootLayout({ children }: { children: React.ReactNode }) {
@@ -201,9 +201,11 @@ import { Button, IconButton } from "@chakra-ui/react";
 ### Field Component
 
 ```tsx
+import { useState } from "react";
 import { Field, Input, Textarea, Stack, Button } from "@chakra-ui/react";
 
 function ContactForm() {
+  // Whatever owns the values supplies the validity flags; Field renders them.
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   return (

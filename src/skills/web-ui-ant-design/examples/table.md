@@ -292,19 +292,19 @@ export { InvoiceTable };
 
 ---
 
-## Client-Side Table with Sorting and Filtering
+## Client-Side Sorting and Filtering
+
+Where the whole dataset is already in memory, `sorter` takes a comparator and `filters` pairs with `onFilter` — the same props that carry `true` in the server-driven table above.
 
 ```tsx
-import { Table, Tag, Space, Button } from "antd";
+import { Table, Tag } from "antd";
 import type { ColumnsType, TableProps } from "antd/es/table";
 
 interface UserRecord {
   id: string;
   name: string;
-  email: string;
   role: "admin" | "editor" | "viewer";
   status: "active" | "inactive";
-  lastLogin: string;
 }
 
 const ROLE_COLORS: Record<UserRecord["role"], string> = {
@@ -313,63 +313,34 @@ const ROLE_COLORS: Record<UserRecord["role"], string> = {
   viewer: "green",
 };
 
-const STATUS_FILTERS = [
-  { text: "Active", value: "active" },
-  { text: "Inactive", value: "inactive" },
-] as const;
-
-const PAGE_SIZE = 20;
-
 const columns: ColumnsType<UserRecord> = [
   {
     title: "Name",
     dataIndex: "name",
-    key: "name",
     sorter: (a, b) => a.name.localeCompare(b.name),
     ellipsis: true,
   },
   {
-    title: "Email",
-    dataIndex: "email",
-    key: "email",
-  },
-  {
     title: "Role",
     dataIndex: "role",
-    key: "role",
-    render: (role: UserRecord["role"]) => (
-      <Tag color={ROLE_COLORS[role]}>{role.toUpperCase()}</Tag>
-    ),
     filters: [
       { text: "Admin", value: "admin" },
       { text: "Editor", value: "editor" },
       { text: "Viewer", value: "viewer" },
     ],
     onFilter: (value, record) => record.role === value,
+    render: (role: UserRecord["role"]) => (
+      <Tag color={ROLE_COLORS[role]}>{role.toUpperCase()}</Tag>
+    ),
   },
   {
     title: "Status",
     dataIndex: "status",
-    key: "status",
-    filters: [...STATUS_FILTERS],
+    filters: [
+      { text: "Active", value: "active" },
+      { text: "Inactive", value: "inactive" },
+    ],
     onFilter: (value, record) => record.status === value,
-    render: (status: UserRecord["status"]) => (
-      <Tag color={status === "active" ? "green" : "default"}>{status}</Tag>
-    ),
-  },
-  {
-    title: "Actions",
-    key: "actions",
-    render: (_, record) => (
-      <Space>
-        <Button type="link" onClick={() => handleEdit(record)}>
-          Edit
-        </Button>
-        <Button type="link" danger onClick={() => handleDelete(record.id)}>
-          Delete
-        </Button>
-      </Space>
-    ),
   },
 ];
 
@@ -380,12 +351,14 @@ function UserTable({
   data: UserRecord[];
   loading: boolean;
 }) {
+  // The alias types all four parameters; extra.action says which one fired
   const handleChange: TableProps<UserRecord>["onChange"] = (
     pagination,
     filters,
     sorter,
+    extra,
   ) => {
-    // Handle table change events
+    saveViewPreferences({ pagination, filters, sorter, cause: extra.action });
   };
 
   return (
@@ -394,11 +367,7 @@ function UserTable({
       dataSource={data}
       rowKey="id"
       loading={loading}
-      pagination={{
-        pageSize: PAGE_SIZE,
-        showSizeChanger: true,
-        showTotal: (total) => `Total ${total} items`,
-      }}
+      pagination={{ pageSize: 20, showSizeChanger: true }}
       onChange={handleChange}
     />
   );
@@ -406,6 +375,8 @@ function UserTable({
 export { UserTable };
 export type { UserRecord };
 ```
+
+**On typing `onChange`:** `TableProps<T>["onChange"]` types the pagination, filter, sorter and extra arguments in one annotation. One handler fires for all three interactions, so `extra.action` is what separates a sort from a filter from a page change.
 
 ---
 
@@ -415,8 +386,11 @@ export type { UserRecord };
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
-const VIRTUAL_SCROLL_HEIGHT = 500;
-const VIRTUAL_SCROLL_WIDTH = 1200;
+interface DataRecord {
+  id: string;
+  name: string;
+  value: number;
+}
 
 const columns: ColumnsType<DataRecord> = [
   { title: "ID", dataIndex: "id", width: 100 },
@@ -431,7 +405,7 @@ function VirtualTable({ data }: { data: DataRecord[] }) {
       dataSource={data}
       rowKey="id"
       virtual
-      scroll={{ x: VIRTUAL_SCROLL_WIDTH, y: VIRTUAL_SCROLL_HEIGHT }}
+      scroll={{ x: 1200, y: 500 }}
       pagination={false}
     />
   );
@@ -439,4 +413,4 @@ function VirtualTable({ data }: { data: DataRecord[] }) {
 export { VirtualTable };
 ```
 
-**Important:** Virtual scrolling requires both `scroll.x` and `scroll.y` to be set as numbers. All columns should have explicit `width` values to avoid alignment issues.
+**Important:** `scroll.x` and `scroll.y` must both be numbers, and every column needs an explicit `width` — without them the columns collapse or virtual mode never engages.

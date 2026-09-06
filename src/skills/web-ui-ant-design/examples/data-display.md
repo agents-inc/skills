@@ -1,6 +1,6 @@
 # Ant Design -- Data Display Examples
 
-> Card, Descriptions, Statistic, Tag, and Badge patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Descriptions, Statistic cards and Badge patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Related examples:**
 
@@ -46,12 +46,14 @@ export { UserDetail };
 ## Dashboard Stats Cards
 
 ```tsx
-import { Card, Row, Col, Statistic } from "antd";
+import { Card, Row, Col, Statistic, theme } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 
 const PRECISION = 2;
 
 function DashboardCards() {
+  const { token } = theme.useToken();
+
   return (
     <Row gutter={[16, 16]}>
       <Col xs={24} sm={12} lg={6}>
@@ -61,7 +63,7 @@ function DashboardCards() {
             value={112893}
             precision={PRECISION}
             prefix="$"
-            valueStyle={{ color: "#3f8600" }}
+            valueStyle={{ color: token.colorSuccess }}
             suffix={<ArrowUpOutlined />}
           />
         </Card>
@@ -71,7 +73,7 @@ function DashboardCards() {
           <Statistic
             title="Active Users"
             value={9280}
-            valueStyle={{ color: "#cf1322" }}
+            valueStyle={{ color: token.colorError }}
             suffix={<ArrowDownOutlined />}
           />
         </Card>
@@ -81,3 +83,5 @@ function DashboardCards() {
 }
 export { DashboardCards };
 ```
+
+`valueStyle` takes a token rather than a hex, so the figures follow the dark and compact algorithms instead of staying green-on-anything.

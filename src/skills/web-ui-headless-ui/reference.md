@@ -1,6 +1,6 @@
 # Headless UI Quick Reference
 
-> Component APIs, keyboard shortcuts, and data attributes for all Headless UI v2 components. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **Current: v2.2.9 (React only)**
+> Component APIs, keyboard shortcuts, and data attributes for all Headless UI v2 components. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **v2 is React only.**
 
 ---
 
@@ -226,23 +226,26 @@ Transition (show, appear, beforeEnter, afterEnter, beforeLeave, afterLeave, unmo
 | `data-leave`      | During leave transition    | Leave-specific styles (duration, easing) |
 | `data-transition` | During any transition      | Shared transition styles                 |
 
-### Tailwind Usage
+### Selecting on these attributes
+
+Plain CSS selects them directly — `[data-focus] { … }`, `[data-closed] { … }`. The class strings
+below are the equivalent in a utility-class framework's attribute-variant syntax, which is what the
+examples in this skill use.
 
 ```tsx
-// Basic state styling
+// State
 className =
   "data-[focus]:bg-blue-100 data-[selected]:font-bold data-[disabled]:opacity-50";
 
-// Parent state styling via group
-className = "group ...";
-// On child:
-className = "group-data-[checked]:translate-x-5 group-data-[open]:rotate-180";
+// Parent state reaching a child: mark the parent, scope the child's variant to it
+className = "group ..."; // parent
+className = "group-data-[checked]:translate-x-5 group-data-[open]:rotate-180"; // child
 
-// Transition styling
+// Transition
 className =
   "transition duration-200 data-[closed]:opacity-0 data-[closed]:scale-95";
 
-// Direction-specific transitions (enter from left, leave to right)
+// Enter from the left, leave to the right
 className =
   "transition duration-300 data-[closed]:opacity-0 data-[closed]:data-[enter]:-translate-x-4 data-[closed]:data-[leave]:translate-x-4";
 ```

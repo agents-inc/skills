@@ -1,180 +1,89 @@
 # Radix UI Reference
 
-> Decision frameworks, anti-patterns, and red flags for Radix UI primitives. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **Current: v1.4.x (May 2025)** - Full React 19 and RSC compatibility with new preview primitives.
+> Anti-patterns with code, checklists and API lookup. See [SKILL.md](SKILL.md) for the decisions and
+> [examples/](examples/) for full implementations. Current major: v1.4.x.
 
 ---
 
-## Decision Framework
+## Decision Frameworks
 
-### When to Use Portal
+### Controlled or uncontrolled
 
-```
-Does component overlay other content?
-├─ YES → Is it a dialog, popover, dropdown, or tooltip?
-│   ├─ YES → Use Portal (escape stacking context)
-│   └─ NO → Consider if parent overflow:hidden would clip content
-│       ├─ YES → Use Portal
-│       └─ NO → Portal optional
-└─ NO → Skip Portal (content inline with React tree)
-```
+| You need                                       | Use                     |
+| ---------------------------------------------- | ----------------------- |
+| Close after an async operation resolves        | `open` + `onOpenChange` |
+| Open from something other than the Trigger     | `open` + `onOpenChange` |
+| Mirror open state into the URL or a store      | `open` + `onOpenChange` |
+| React to opening or closing, without owning it | `onOpenChange` alone    |
+| Nothing outside the component cares            | `defaultOpen`           |
 
-### Controlled vs Uncontrolled State
+### Animation approach
 
-```
-Do you need programmatic control?
-├─ YES → Need to close after async?
-│   ├─ YES → Controlled (open + onOpenChange)
-│   └─ NO → Need to open from external trigger?
-│       ├─ YES → Controlled (open + onOpenChange)
-│       └─ NO → Uncontrolled usually sufficient
-└─ NO → Do you need to react to state changes?
-    ├─ YES → Semi-controlled (onOpenChange only)
-    └─ NO → Uncontrolled (defaultOpen)
-```
-
-### When to Use asChild
-
-```
-Is the default element appropriate?
-├─ YES → Skip asChild (use Radix default)
-└─ NO → Are you changing element type?
-    ├─ YES → Use asChild with correct element
-    │   ├─ Link instead of button → <a> with asChild
-    │   ├─ Custom component → forwardRef + spread props
-    │   └─ Framework link component → wrap with asChild
-    └─ NO → Skip asChild
-```
-
-### Animation Approach
-
-```
-How complex are your animations?
-├─ Simple fade/slide → CSS keyframes + data-state
-├─ Height animation → CSS + --radix-*-content-height variables
-├─ Complex orchestrated → JavaScript animation library + forceMount
-│   └─ Use forceMount on Portal, Overlay, Content
-└─ No animation → Skip (Radix handles mount/unmount)
-```
-
-### Component Selection
-
-```
-What interaction pattern do you need?
-
-Modal blocking interaction?
-├─ Destructive confirmation → AlertDialog (requires explicit action)
-├─ Form or content → Dialog (modal: true, default)
-└─ Non-blocking information → Dialog (modal: false) or Popover
-
-Floating non-modal content?
-├─ Triggered by click → Popover
-├─ Triggered by hover/focus → Tooltip
-└─ Menu with actions → DropdownMenu
-
-Selection from options?
-├─ Form input (single select) → Select
-├─ Form input (multiple select) → Custom with Popover + Checkbox
-└─ Navigation or actions → DropdownMenu
-
-Expandable sections?
-├─ One open at a time → Accordion (type="single")
-├─ Multiple open → Accordion (type="multiple")
-└─ Tabbed view → Tabs
-```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing forwardRef on asChild components** - Radix cannot attach refs for positioning and focus management
-- **Not spreading props on asChild components** - ARIA attributes and event handlers are lost
-- **Missing Portal for overlays** - Content clipped by parent overflow:hidden or z-index issues
-- **Missing Title/Description on dialogs** - Screen readers have no context for the interaction
-- **Using Dialog for destructive confirmations** - AlertDialog prevents accidental dismissal
-
-### Medium Priority Issues
-
-- **CSS transitions instead of animations** - Radix detects animation end, not transition end, for unmount timing
-- **Manually managing z-index on portals** - Radix manages stacking order; manual z-index causes conflicts
-- **Forgetting forceMount with JavaScript animation libraries** - Content unmounts before exit animation completes
-- **Not using onOpenAutoFocus for destructive dialogs** - Users should focus safe action (Cancel) by default
-- **Missing aria-label on icon-only close buttons** - Screen readers announce empty button
-
-### Common Mistakes
-
-- Using asChild without forwardRef (breaks ref forwarding)
-- Using CSS transitions expecting unmount delay (use CSS animations instead)
-- Setting explicit z-index on portal content (conflicts with Radix stacking)
-- Forgetting to provide accessible labels (Title is required, Description recommended)
-- Using Dialog when AlertDialog is appropriate for destructive actions
-
-### Gotchas & Edge Cases
-
-- `onOpenChange` fires on every user interaction (Trigger click, Escape, click outside) -- in controlled mode you still need it as the sole way to learn the user wants to open/close
-- CSS animations must use `@keyframes`, not `transition`, for unmount detection
-- `--radix-accordion-content-height` and similar CSS variables are only available during animation
-- Portal content renders in document.body by default, may need custom container for micro-frontends
-- Slot merges event handlers with child handler taking precedence
-- `data-state` changes to "closed" before unmount animation starts (use animation, not transition)
-- AlertDialog requires Cancel or Action to close (no click-outside dismiss by design)
-- **v1.4.3+**: Dialog logs console **errors** for missing Title and **warnings** for missing Description
-- **v1.4.3+**: Components with `hideWhenDetached` prevent interactions when content is hidden
-- **v1.4.3+**: Progress supports `value={undefined}` for indeterminate state representation
-- **v1.4.3+**: Select and Scroll Area support `nonce` prop for Content Security Policy compliance
-- **React 19**: `forwardRef` wrapper no longer needed - `ref` can be passed as a regular prop
-- **Import Patterns**: Prefer unified `radix-ui` package over individual `@radix-ui/*` packages to prevent version conflicts
+| Animation                   | Approach                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| Fade, slide, scale          | CSS `@keyframes` on `[data-state]`                                              |
+| Height or width of a region | CSS `@keyframes` reading `--radix-*-content-height/-width`                      |
+| Orchestrated, interruptible | `forceMount` on Portal, Overlay and Content, driven by a presence-aware runtime |
+| None                        | Nothing — Radix mounts and unmounts on its own                                  |
 
 ---
 
 ## Anti-Patterns
 
-### Missing forwardRef on Custom Components
+### A custom `asChild` child that cannot receive a ref
 
-Custom components used with `asChild` MUST use forwardRef. Without it, Radix cannot attach refs for positioning, focus management, and animations.
+Radix attaches a ref to position floating content and to return focus on close.
 
-```typescript
-// WRONG - Radix can't attach ref
-const CustomButton = ({ children, onClick }) => {
-  return <button onClick={onClick}>{children}</button>;
-};
+```tsx
+// WRONG — no ref reaches the DOM node
+const CustomButton = ({ children, onClick }) => (
+  <button onClick={onClick}>{children}</button>
+);
 
-// CORRECT - forwardRef allows Radix to attach ref
+// CORRECT (React 19) — ref is an ordinary prop
+function CustomButton({ ref, ...props }: ButtonProps) {
+  return <button ref={ref} {...props} />;
+}
+
+// CORRECT (React 18 and below)
 const CustomButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, ...props }, ref) => {
-    return <button ref={ref} {...props}>{children}</button>;
-  }
+  (props, ref) => <button ref={ref} {...props} />,
 );
 CustomButton.displayName = "CustomButton";
 ```
 
-### Not Spreading Props on Custom Components
+### Props destructured but not spread
 
-All props must be spread onto the underlying DOM element. Without spreading, Radix event handlers and ARIA attributes are lost.
+Everything Radix passes down — `onClick`, `aria-expanded`, `data-state` — arrives in the rest
+object. Naming a few props and dropping the rest silently disconnects the trigger.
 
-```typescript
-// WRONG - Props not spread, Radix handlers lost
-const CustomButton = forwardRef<HTMLButtonElement, Props>(
-  ({ className, children }, ref) => {
-    return <button ref={ref} className={className}>{children}</button>;
-  }
-);
+```tsx
+// WRONG — Radix's handlers and ARIA attributes never reach the element
+function CustomButton({ ref, className, children }: Props) {
+  return (
+    <button ref={ref} className={className}>
+      {children}
+    </button>
+  );
+}
 
-// CORRECT - All props spread to element
-const CustomButton = forwardRef<HTMLButtonElement, Props>(
-  ({ className, children, ...props }, ref) => {
-    return <button ref={ref} className={className} {...props}>{children}</button>;
-  }
-);
+// CORRECT
+function CustomButton({ ref, className, children, ...props }: Props) {
+  return (
+    <button ref={ref} className={className} {...props}>
+      {children}
+    </button>
+  );
+}
 ```
 
-### Using CSS Transitions for Mount/Unmount Animations
+### `transition` for an exit animation
 
-Radix detects CSS animation end events, not transition end events. Using transitions means content unmounts immediately without exit animation.
+Unmount is suspended on `animationend`. A transition fires no such event, so the element is removed
+immediately and the exit is never seen.
 
 ```css
-/* WRONG - Transition won't delay unmount */
+/* WRONG */
 .dialog-content {
   transition: opacity 150ms ease;
 }
@@ -182,7 +91,7 @@ Radix detects CSS animation end events, not transition end events. Using transit
   opacity: 0;
 }
 
-/* CORRECT - Animation delays unmount until complete */
+/* CORRECT */
 .dialog-content[data-state="closed"] {
   animation: fadeOut 150ms ease-in;
 }
@@ -196,19 +105,17 @@ Radix detects CSS animation end events, not transition end events. Using transit
 }
 ```
 
-### Missing Portal for Overlay Components
+### Overlay content outside `Portal`
 
-Portal is required for overlays to escape CSS stacking contexts and overflow constraints.
-
-```typescript
-// WRONG - Content can be clipped by parent overflow:hidden
+```tsx
+// WRONG — clipped by any ancestor with overflow: hidden
 <Dialog.Root>
   <Dialog.Trigger>Open</Dialog.Trigger>
   <Dialog.Overlay />
   <Dialog.Content>Content</Dialog.Content>
 </Dialog.Root>
 
-// CORRECT - Portal renders outside React tree
+// CORRECT
 <Dialog.Root>
   <Dialog.Trigger>Open</Dialog.Trigger>
   <Dialog.Portal>
@@ -218,43 +125,24 @@ Portal is required for overlays to escape CSS stacking contexts and overflow con
 </Dialog.Root>
 ```
 
-### Missing Accessible Labels
+### Dialog where AlertDialog is meant
 
-Dialog and AlertDialog require Title for screen reader announcements. Description provides additional context.
+Dialog dismisses on click-outside and Escape. A destructive action wants neither.
 
-```typescript
-// WRONG - Screen readers have no context
-<Dialog.Content>
-  <p>Are you sure?</p>
-</Dialog.Content>
-
-// CORRECT - Title is announced when dialog opens
-<Dialog.Content>
-  <Dialog.Title>Confirm Action</Dialog.Title>
-  <Dialog.Description>This action cannot be undone.</Dialog.Description>
-  <p>Are you sure?</p>
-</Dialog.Content>
-```
-
-### Using Dialog for Destructive Confirmations
-
-Dialog can be dismissed by clicking outside or pressing Escape. AlertDialog requires explicit action.
-
-```typescript
-// WRONG - User can accidentally dismiss destructive action
+```tsx
+// WRONG — one stray click away from deleting the account
 <Dialog.Root>
-  <Dialog.Trigger>Delete Account</Dialog.Trigger>
+  <Dialog.Trigger>Delete account</Dialog.Trigger>
   <Dialog.Content>
-    <p>Delete your account?</p>
     <button>Delete</button>
   </Dialog.Content>
 </Dialog.Root>
 
-// CORRECT - AlertDialog requires explicit Cancel or Action
+// CORRECT — Cancel or Action, nothing else
 <AlertDialog.Root>
-  <AlertDialog.Trigger>Delete Account</AlertDialog.Trigger>
+  <AlertDialog.Trigger>Delete account</AlertDialog.Trigger>
   <AlertDialog.Content>
-    <AlertDialog.Title>Delete Account?</AlertDialog.Title>
+    <AlertDialog.Title>Delete account?</AlertDialog.Title>
     <AlertDialog.Description>This cannot be undone.</AlertDialog.Description>
     <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
     <AlertDialog.Action>Delete</AlertDialog.Action>
@@ -262,71 +150,57 @@ Dialog can be dismissed by clicking outside or pressing Escape. AlertDialog requ
 </AlertDialog.Root>
 ```
 
-### Manual z-index Management
+### Hand-managed `z-index` on portalled content
 
-Radix manages portal stacking order automatically. Manual z-index values cause conflicts with other Radix components.
-
-```css
-/* WRONG - Conflicts with Radix stacking */
-.my-dialog {
-  z-index: 9999;
-}
-
-/* CORRECT - Let Radix manage stacking, or use isolation */
-.my-dialog {
-  /* Radix handles z-index automatically */
-  /* Use isolation: isolate on container if needed */
-}
-```
+Radix orders layered primitives against each other. A fixed `z-index` opts one of them out of that
+ordering, and it then wins or loses against every other overlay by accident. Where a portalled layer
+must sit above surrounding page chrome, put `isolation: isolate` on the container rather than a
+number on the content.
 
 ---
 
-## Quick Reference
+## Checklists
 
-### Required Props for Custom asChild Components
+### A custom component used with `asChild`
 
-- [ ] Uses `forwardRef` to allow ref attachment
-- [ ] Spreads all `props` onto the underlying DOM element
-- [ ] Sets `displayName` for React DevTools
+- [ ] Receives `ref` — as a prop under React 19, through `forwardRef` below it
+- [ ] Spreads its remaining props onto the DOM element
+- [ ] Renders exactly one element (Slot merges onto a single child)
 
-### Dialog/AlertDialog Checklist
+### Dialog and AlertDialog
 
-- [ ] Uses Portal to wrap Overlay and Content
-- [ ] Has Title component for screen reader announcement
-- [ ] Has Description (or VisuallyHidden Description) for context
-- [ ] Uses AlertDialog (not Dialog) for destructive actions
-- [ ] Focuses safe action (Cancel) for destructive dialogs via `onOpenAutoFocus`
+- [ ] `Portal` wraps `Overlay` and `Content`
+- [ ] `Title` present, visually hidden where the design has no heading
+- [ ] `Description` present, or `aria-describedby={undefined}` on `Content`
+- [ ] AlertDialog, not Dialog, for anything destructive
+- [ ] Destructive dialogs open focused on Cancel via `onOpenAutoFocus`
+- [ ] A glyph-only `Close` carries an `aria-label` — otherwise it is announced as an empty button
 
-### Animation Checklist
+### Animation
 
-- [ ] Uses CSS `@keyframes`, not `transition`, for unmount animation
-- [ ] Defines both `[data-state="open"]` and `[data-state="closed"]` animations
-- [ ] Uses `forceMount` on Portal, Overlay, Content for JavaScript animation libraries
-- [ ] Uses `--radix-*-content-height` variables for height animations
+- [ ] `@keyframes`, not `transition`
+- [ ] Both `[data-state="open"]` and `[data-state="closed"]` defined
+- [ ] `forceMount` on Portal, Overlay and Content when a JavaScript runtime owns the exit
+- [ ] `--radix-*-content-height` read only inside a keyframe
 
-### Accessibility Checklist
+---
 
-- [ ] Title provided for all dialogs
-- [ ] Description provided or VisuallyHidden
-- [ ] Icon-only buttons have `aria-label`
-- [ ] Destructive actions use AlertDialog
-- [ ] Focus management verified (Tab, Shift+Tab, Escape)
+## API Lookup
 
-### Component Structure
+### Overlay part structure
 
 ```
-Root                    # State and context provider
-├── Trigger             # Opens the component
-└── Portal              # Renders outside React tree (optional)
-    ├── Overlay         # Visual backdrop (dialogs)
-    └── Content         # Main content container
-        ├── Title       # Accessible heading
-        ├── Description # Accessible description
-        ├── [content]   # Your content
-        └── Close       # Closes the component
+Root                    # state and context
+├── Trigger             # opens it
+└── Portal              # renders outside the layout
+    ├── Overlay         # backdrop (dialogs)
+    └── Content         # container
+        ├── Title       # accessible name (required on dialogs)
+        ├── Description # accessible description
+        └── Close       # dismisses it
 ```
 
-### CSS Variables Reference
+### CSS variables
 
 | Component    | Variable                                         | Purpose                         |
 | ------------ | ------------------------------------------------ | ------------------------------- |
@@ -334,44 +208,74 @@ Root                    # State and context provider
 | Accordion    | `--radix-accordion-content-width`                | Content width during animation  |
 | Collapsible  | `--radix-collapsible-content-height`             | Content height during animation |
 | Collapsible  | `--radix-collapsible-content-width`              | Content width during animation  |
-| Select       | `--radix-select-trigger-width`                   | Trigger element width           |
-| Select       | `--radix-select-trigger-height`                  | Trigger element height          |
-| Select       | `--radix-select-content-available-width`         | Available space width           |
-| Select       | `--radix-select-content-available-height`        | Available space height          |
-| Select       | `--radix-select-content-transform-origin`        | Transform origin for animations |
-| Popover      | `--radix-popover-content-transform-origin`       | Transform origin for animations |
-| Tooltip      | `--radix-tooltip-content-transform-origin`       | Transform origin for animations |
-| DropdownMenu | `--radix-dropdown-menu-content-transform-origin` | Transform origin for animations |
+| Select       | `--radix-select-trigger-width`                   | Trigger width                   |
+| Select       | `--radix-select-trigger-height`                  | Trigger height                  |
+| Select       | `--radix-select-content-available-width`         | Space available to the content  |
+| Select       | `--radix-select-content-available-height`        | Space available to the content  |
+| Select       | `--radix-select-content-transform-origin`        | Transform origin                |
+| Popover      | `--radix-popover-content-transform-origin`       | Transform origin                |
+| Tooltip      | `--radix-tooltip-content-transform-origin`       | Transform origin                |
+| DropdownMenu | `--radix-dropdown-menu-content-transform-origin` | Transform origin                |
 
-### v1.4.x Important Changes (May 2025)
+### v1.4.x changes
 
-| Feature                 | Description                                                     |
-| ----------------------- | --------------------------------------------------------------- |
-| React 19 Support        | Full compatibility, `forwardRef` optional                       |
-| RSC Compatibility       | Works with React Server Components                              |
-| Escape Key Capture      | Components capture Escape key events                            |
-| Dialog Console Warnings | Logs errors for missing Title, warnings for missing Description |
-| hideWhenDetached        | Prevents interactions with hidden content                       |
-| Progress Indeterminate  | `value={undefined}` explicitly supported                        |
-| CSP nonce               | Select and Scroll Area support `nonce` prop                     |
-| OneTimePasswordField    | New preview primitive for OTP inputs (Apr 2025)                 |
-| PasswordToggleField     | New preview primitive for password visibility (May 2025)        |
-| Form Bubble Inputs      | Form controls use Radix Primitive component by default          |
-| Tooltip Performance     | Improved rendering performance for Tooltip provider             |
-| Avatar crossOrigin      | Added `crossOrigin` support in Avatar images                    |
+| Change                 | Effect                                                           |
+| ---------------------- | ---------------------------------------------------------------- |
+| React 19 support       | `ref` is an ordinary prop; `forwardRef` wrappers are optional    |
+| RSC compatibility      | Primitives load under React Server Components                    |
+| Escape key capture     | Escape is captured before reaching browser hotkeys               |
+| Dialog console output  | Error for a missing `Title`, warning for a missing `Description` |
+| `hideWhenDetached`     | Blocks interaction once the anchor has left the viewport         |
+| Progress indeterminate | `value={undefined}` is explicitly supported                      |
+| CSP `nonce`            | `Select` and `ScrollArea` accept a `nonce` for inline styles     |
+| Form bubble inputs     | Form controls render through the shared Primitive component      |
+| Avatar `crossOrigin`   | `crossOrigin` forwarded to the underlying image                  |
 
-### Preview Components (Unstable)
+### Preview primitives
 
-| Component            | Import                          | Version | Use Case                                            |
-| -------------------- | ------------------------------- | ------- | --------------------------------------------------- |
-| OneTimePasswordField | `unstable_OneTimePasswordField` | 0.1.8   | OTP input with keyboard navigation, paste, autofill |
-| PasswordToggleField  | `unstable_PasswordToggleField`  | 0.1.3   | Password visibility toggle with focus management    |
-| Form                 | `unstable_Form`                 | 0.1.8   | Form validation with constraint API                 |
+| Primitive            | Export                          | Use case                                            |
+| -------------------- | ------------------------------- | --------------------------------------------------- |
+| OneTimePasswordField | `unstable_OneTimePasswordField` | OTP entry with keyboard navigation, paste, autofill |
+| PasswordToggleField  | `unstable_PasswordToggleField`  | Password visibility toggle with focus return        |
+| Form                 | `unstable_Form`                 | Validation over the native constraint API           |
 
-**Key Preview Features:**
+The `unstable_` prefix is a statement about the API rather than the implementation: these ship and
+work, and their props change between minor versions. See [examples/preview.md](examples/preview.md).
 
-- **OneTimePasswordField**: autoSubmit, validationType (numeric/alphanumeric), sanitizeValue, HiddenInput for forms
-- **PasswordToggleField**: Icon component with visible/hidden props, Slot for custom rendering, onVisibilityChange
-- **Form**: Field, Label, Control, Message (with match prop), ValidityState, Submit components
+Parts and props the examples do not exercise:
 
-**Note:** Preview components have unstable APIs and may change before stable release.
+| Primitive            | Also carries                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| OneTimePasswordField | `sanitizeValue` to transform each entered character; `disabled`, `readOnly` and `placeholder` on `Input`         |
+| PasswordToggleField  | `data-visible` on the parts, for styling the revealed state; `Slot` for rendering the toggle's contents yourself |
+| Form                 | `ValidityState`, a render-prop part exposing the control's raw `ValidityState` object                            |
+
+#### OneTimePasswordField keyboard map
+
+| Key             | Behaviour                        |
+| --------------- | -------------------------------- |
+| Arrow keys      | Move between inputs              |
+| Home / End      | Jump to first / last input       |
+| Backspace       | Clear current, move focus left   |
+| Delete          | Clear current, shift values back |
+| Cmd + Backspace | Clear every input                |
+| Tab / Shift+Tab | Leave the field entirely         |
+| Enter           | Submit the associated form       |
+
+#### Form `match` values
+
+Each maps onto a flag of the browser's own `ValidityState`.
+
+| Match             | Fires when                              |
+| ----------------- | --------------------------------------- |
+| `valueMissing`    | A `required` field is empty             |
+| `typeMismatch`    | The value is not a valid email, url, …  |
+| `tooShort`        | Below `minLength`                       |
+| `tooLong`         | Above `maxLength`                       |
+| `rangeUnderflow`  | Below `min`                             |
+| `rangeOverflow`   | Above `max`                             |
+| `stepMismatch`    | Not on a `step` boundary                |
+| `patternMismatch` | Does not match `pattern`                |
+| `badInput`        | The control cannot parse what was typed |
+
+A function may be passed instead, receiving `(value, formData)` and optionally returning a promise.

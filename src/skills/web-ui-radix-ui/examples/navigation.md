@@ -6,7 +6,8 @@
 
 ## Pattern 1: Accordion Component
 
-CSS custom properties exposed by Radix enable smooth height animations.
+Height cannot animate from `auto`. Radix measures the panel and publishes the number as
+`--radix-accordion-content-height` while the animation runs, which is what makes a keyframe possible.
 
 ### Good Example - FAQ Accordion
 
@@ -93,13 +94,18 @@ export function FAQAccordion({ items, defaultOpen }: FAQAccordionProps) {
 }
 ```
 
-**Why good:** type="single" collapsible allows closing all items, --radix-accordion-content-height CSS variable enables smooth height animation, data-state on trigger enables chevron rotation
+**Why good:** `type="single"` without `collapsible` leaves one item permanently open, since closing
+the last one is refused; the pair is what allows an all-closed state. `overflow: hidden` on the
+content is load-bearing rather than cosmetic — without it the panel's contents spill out during the
+height animation. The chevron rotates off `data-state` on the trigger, so no state is duplicated to
+drive it.
 
 ---
 
 ## Pattern 2: Tabs Component
 
-Radix Tabs provide automatic keyboard navigation with Arrow keys.
+Tabs carries the full WAI-ARIA tab pattern: roving tabindex, arrow-key movement between triggers,
+Home and End, and `aria-controls` wiring between each trigger and its panel.
 
 ### Good Example - Tabbed Content
 
@@ -157,4 +163,6 @@ const TABS = [
 <TabbedContent tabs={TABS} defaultTab="overview" />
 ```
 
-**Why good:** Tabs.List has aria-label for screen readers, keyboard navigation (Arrow keys) works automatically, data-state on triggers enables active tab styling
+**Why good:** `aria-label` on `List` names the tab set, which is otherwise announced as an unlabelled
+group. Trigger and panel pair by matching `value` rather than by document order, so the two arrays
+can be built and reordered independently.

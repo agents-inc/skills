@@ -6,7 +6,8 @@
 
 ## Confirmation Dialog (AlertDialog)
 
-Use AlertDialog for destructive actions that need explicit confirmation. It blocks interaction until the user responds.
+AlertDialog has no click-outside and no Escape. The user answers or stays — which is what makes it,
+rather than Dialog, right for anything irreversible.
 
 ```tsx
 import {
@@ -56,13 +57,18 @@ export function ConfirmDelete({ onConfirm, itemName }: ConfirmDeleteProps) {
 }
 ```
 
-**Why good:** AlertDialog blocks interaction for destructive actions, destructive styling on confirm button reinforces severity, `asChild` on trigger prevents nested buttons
+**Why good:** the description names what is being deleted rather than asking "are you sure?", so the
+dialog carries information the user does not already have. `AlertDialogAction` renders as a button by
+default, so `asChild` on the _trigger_ is what keeps the caller's own `Button` from nesting inside
+one. The destructive class list goes on `Action` rather than on `Cancel`, putting the visual weight
+on the choice that cannot be undone.
 
 ---
 
 ## Sheet (Side Panel)
 
-Use Sheet for contextual editing without leaving the current page (settings, user details, filters).
+Sheet slides in from an edge and leaves the page visible behind it — the right shape when the thing
+being edited is one row of something the user is still looking at.
 
 ```tsx
 import {
@@ -119,20 +125,20 @@ export function EditUserSheet({ user }: { user: User }) {
 }
 ```
 
-**Why good:** Sheet keeps context visible, consistent header/footer pattern, SheetClose auto-closes on action
+**Why good:** `SheetClose asChild` around the submit button closes the panel without the component
+holding open state or the caller wiring a handler. Every `Input` has a matching `Label` with
+`htmlFor`, which is what makes the label clickable and gives the input an accessible name.
 
 ---
 
-## Toast Examples (Sonner)
+## Toasts
 
-Toasts provide non-blocking feedback. shadcn/ui uses Sonner for its toast system.
+Non-blocking feedback. `npx shadcn@latest add sonner` writes the `Toaster`, which mounts once for the
+whole application; anything can then raise a toast without a reference to it.
 
 ### Setup
 
 ```tsx
-// Add sonner: npx shadcn@latest add sonner
-
-// In your layout - add Toaster component once
 import { Toaster } from "@/components/ui/sonner";
 
 export function RootLayout({ children }: { children: React.ReactNode }) {
@@ -179,4 +185,7 @@ toast.promise(saveSettings(), {
 });
 ```
 
-**Why good:** Promise toast handles loading/success/error in one call, action button enables undo patterns, non-blocking feedback
+**Why good:** the promise form owns the whole lifecycle, so there is no loading toast to dismiss by
+hand and no path where a rejection leaves one spinning. An `action` turns a notification into a
+recovery route — "Event created / Undo" lets an accidental action be taken back, where a plain
+confirmation only reports it.

@@ -6,7 +6,8 @@
 
 ## Pattern 1: AlertDialog for Destructive Actions
 
-AlertDialog is similar to Dialog but requires explicit user action (no click-outside dismiss). Use for destructive or important confirmations.
+AlertDialog is Dialog without the escape hatches: no click-outside, no Escape. The user leaves
+through `Cancel` or `Action` and nowhere else.
 
 ### Good Example - Destructive Action Confirmation
 
@@ -69,7 +70,9 @@ export function DeleteConfirmDialog({
 />
 ```
 
-**Why good:** onOpenAutoFocus focuses Cancel button for destructive actions (safe default), AlertDialog requires explicit action (no click-outside dismiss), Description explains consequences clearly, Action and Cancel provide clear choices
+**Why good:** `onOpenAutoFocus` moves the initial focus to Cancel, so Enter on an unread dialog does
+the safe thing rather than the destructive one. The `Description` names the consequence — "cannot be
+undone" — rather than asking "are you sure?", which tells the user nothing.
 
 ---
 
@@ -80,8 +83,6 @@ export function DeleteConfirmDialog({
 ```typescript
 import { useState } from "react";
 import { Dialog } from "radix-ui";
-
-const SUBMIT_DELAY_MS = 1000;
 
 export function EditProfileDialog() {
   const [open, setOpen] = useState(false);
@@ -134,4 +135,7 @@ export function EditProfileDialog() {
 }
 ```
 
-**Why good:** controlled state allows programmatic close after async success, onInteractOutside prevents accidental close during submission, onEscapeKeyDown prevents keyboard dismiss during submission, disabled button prevents double submission
+**Why good:** closing after a successful save needs the state in the component, which is what
+controlled mode buys. `onInteractOutside` and `onEscapeKeyDown` both need blocking during
+submission — Radix routes the two dismissal gestures through separate callbacks, so guarding one
+leaves the other open.

@@ -1,12 +1,9 @@
 # MUI -- Setup & Theming Examples
 
-> Core setup, theme configuration, CSS variables, dark mode, TypeScript augmentation, and SSR framework integration. See [SKILL.md](../SKILL.md) for core patterns.
+> Theme configuration, CSS variables, dark mode, TypeScript augmentation, server and client setup.
+> See [SKILL.md](../SKILL.md) for which layer to customise at.
 
-**Related examples:**
-
-- [form-inputs.md](form-inputs.md) -- TextField, Select, Autocomplete, FormControl
-- [layout.md](layout.md) -- Grid, Stack, Box, Container
-- [styling.md](styling.md) -- styled() API, sx patterns, component overrides
+**Related examples:** [styling.md](styling.md), [form-inputs.md](form-inputs.md), [layout.md](layout.md)
 
 ---
 
@@ -228,6 +225,12 @@ export { theme };
 
 ---
 
+**Why good:** the two augmentations do different jobs — the first puts `neutral` on the theme, the
+second lets each component accept it as a `color` value. Only the first and `color="neutral"` is a
+type error at every call site.
+
+---
+
 ## Dark Mode Toggle with Menu
 
 ```typescript
@@ -296,26 +299,27 @@ export { ColorModeMenu };
 
 ---
 
-## Next.js App Router Setup
+## Server-Rendered Setup, with CSS Layers
+
+The cache provider goes above `ThemeProvider` so Emotion's generated styles are collected and
+flushed with the streamed HTML. MUI publishes one adapter package per supported server framework —
+import its cache provider and the rest of the arrangement is the same everywhere.
 
 ```typescript
-// app/layout.tsx
-import type { Metadata } from "next";
+// root layout
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { theme } from "@/theme";
-
-export const metadata: Metadata = {
-  title: "My App",
-  description: "Built with MUI",
-};
+import GlobalStyles from "@mui/material/GlobalStyles";
+import { theme } from "./theme";
 
 function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <AppRouterCacheProvider>
+        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+          {/* fixes the order of MUI's layer against everything else on the page */}
+          <GlobalStyles styles="@layer theme, base, mui, components, utilities;" />
           <ThemeProvider theme={theme}>
             <CssBaseline />
             {children}
@@ -326,26 +330,23 @@ function RootLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default RootLayout; // Next.js requires default export for layouts
+// A framework that loads layouts by module default export needs one here.
+export default RootLayout;
 ```
 
 ```typescript
-// app/page.tsx
-"use client"; // Required: MUI components need client context
+"use client"; // MUI components need client context — this goes on the page, not only the layout
 
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 
-function HomePage() {
+export function HomePage() {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Typography variant="h2" gutterBottom>
         Welcome
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Built with Material UI.
       </Typography>
       <Stack direction="row" spacing={2}>
         <Button variant="contained">Get Started</Button>
@@ -354,50 +355,17 @@ function HomePage() {
     </Container>
   );
 }
-
-export default HomePage; // Next.js requires default export for pages
 ```
 
 ---
 
-## Next.js with CSS Layers
+## Client-Side App (SPA) with CSS Layers
+
+No cache provider is needed when nothing renders on a server; `StyledEngineProvider` takes the same
+position and carries the same `enableCssLayer` switch.
 
 ```typescript
-// app/layout.tsx
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import GlobalStyles from "@mui/material/GlobalStyles";
-import { theme } from "@/theme";
-
-function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <GlobalStyles
-            styles="@layer theme, base, mui, components, utilities;"
-          />
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </AppRouterCacheProvider>
-      </body>
-    </html>
-  );
-}
-
-export default RootLayout;
-```
-
----
-
-## Client-Side App (Vite) with CSS Layers
-
-```typescript
-import { StyledEngineProvider } from "@mui/material/styles";
-import { ThemeProvider } from "@mui/material/styles";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { theme } from "./theme";

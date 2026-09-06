@@ -5,135 +5,176 @@ description: Material Design component library for Vue 3
 
 # Vuetify Patterns
 
-> **Quick Guide:** Vuetify provides 80+ pre-styled Vue 3 components implementing Material Design. Configure with `createVuetify()` -- set `theme` for colors, `defaults` for global component props, and `blueprint: md3` for MD3 compliance. Use `v-defaults-provider` for scoped prop overrides. Customize at the SASS level with `@use 'vuetify/settings'` for compile-time changes. **Current: v3.8.x** -- `useRules` composable for form validation, date picker improvements, performance optimizations. Vuetify is **template-driven** -- prefer declarative props/slots over imperative JS.
+> **Quick Guide:** Vuetify ships eighty-odd pre-styled Vue 3 components implementing Material Design,
+> configured through a single `createVuetify()` call. The thing to learn first is that it has three
+> customisation layers — theme, defaults and SASS — and they are not interchangeable. Customisation
+> goes through whichever layer owns the property; reaching for CSS overrides usually means the wrong
+> layer was chosen. Vuetify is template-driven throughout — named
+> slots replace internal markup, so a wrapper `div` is rarely the answer. Current major: v3.x, with
+> `useRules` for validation and `v-defaults-provider` for scoped prop cascading.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — plugin setup, themes, defaults, SASS, blueprints, icons, SSR
+- [examples/data-tables.md](examples/data-tables.md) — headers, column slots, server-side, virtual, grouping
+- [examples/forms.md](examples/forms.md) — `v-form`, rules, `useRules`, input components
+- [examples/layout.md](examples/layout.md) — `v-app`, app bar, drawers, grid, dialogs, snackbars
+- [reference.md](reference.md) — component tables, breakpoints, density and variant values, anti-patterns
+
+---
+
+## Which path applies
+
+**Whether the build plugin is installed changes what you write in two files.**
+
+- **With `vite-plugin-vuetify` or `webpack-plugin-vuetify`.** Components resolve and tree-shake
+  automatically, so nothing is imported by hand and `"vuetify/styles"` is not imported at all. SASS
+  variable overrides are only available on this path, through `styles.configFile`. See
+  [examples/core.md](examples/core.md).
+- **Without it.** Import `vuetify/components` and `vuetify/directives` and register them, and import
+  `"vuetify/styles"` in the entry file. Everything ships, so the bundle carries every component.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Vuetify code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Register the plugin with `app.use(vuetify)`.** Every component resolves through it, so without the
+registration Vue treats `<v-btn>` as an unknown element and renders an empty custom tag rather than
+raising an error.
 
-**(You MUST install and register Vuetify as a Vue plugin via `app.use(vuetify)` -- components will not render without the plugin)**
+**Wrap the application in `v-app`.** It is the coordinate system the layout components register with,
+which is how an app bar and a drawer know to inset `v-main` instead of covering it.
 
-**(You MUST use the `defaults` system in `createVuetify()` or `v-defaults-provider` for consistent component props -- never repeat the same prop on every instance)**
+**Set repeated props once, in `defaults` or `v-defaults-provider`.** A `variant` restated on every
+instance is a decision re-made at every call site, and the two mechanisms cover the global and the
+sectional case without a stylesheet.
 
-**(You MUST use named slots (`v-slot:item.<key>`, `v-slot:prepend`) for component customization -- not wrapper divs with manual styling)**
+**Customise through slots before reaching for CSS.** Every internal element of a component has a
+named slot, so replacing one is a `<template v-slot:…>` rather than a selector that a version bump
+can break.
 
-**(You MUST define `v-data-table` headers and column arrays outside the component -- inline arrays cause re-renders on every parent update)**
+**Define `v-data-table` headers outside the template.** An array literal in the template is a new
+identity on every parent render, which re-renders the whole table each time.
+
+**Use the composables, not `this.$vuetify`.** `useTheme()`, `useDisplay()`, `useDate()` and
+`useLocale()` are the Composition API surface; the instance property belongs to the Options API and
+is not available in `<script setup>`.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Vuetify, vuetify, createVuetify, v-btn, v-card, v-data-table, v-text-field, v-select, v-autocomplete, v-dialog, v-navigation-drawer, v-app-bar, v-toolbar, v-chip, v-snackbar, v-form, v-defaults-provider, v-theme-provider, useTheme, useDisplay, useDate, useRules, mdi, @mdi/font, vuetify/blueprints, vuetify/settings, vuetify/styles
+**Auto-detection:** vuetify, createVuetify, vuetify/styles, vuetify/blueprints, vuetify/settings,
+vuetify/iconsets, vite-plugin-vuetify, webpack-plugin-vuetify, v-app, v-main, v-btn, v-card,
+v-data-table, v-data-table-server, v-data-table-virtual, v-text-field, v-select, v-autocomplete,
+v-dialog, v-navigation-drawer, v-app-bar, v-snackbar, v-form, v-defaults-provider,
+v-theme-provider, useTheme, useDisplay, useDate, useRules, useLocale, mdi-, `$vuetify`
 
-**When to use:**
+**Applies to:**
 
-- Building Vue 3 applications with pre-styled Material Design components
-- Rapid development of admin dashboards, data tables, and CRUD interfaces
-- Projects that benefit from a comprehensive defaults/theming system
-- Applications requiring built-in accessibility, RTL, and i18n support
+- Configuring the library: themes, blueprints, defaults, icon sets, SSR
+- Choosing which customisation layer a change belongs in
+- Composing the shipped components — layout, inputs, data tables, overlays, feedback
+- Slot-based customisation of a component's internals
+- Form validation through `rules` arrays and `useRules`
+- Responsive behaviour through the grid props and `useDisplay`
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Non-Vue projects (Vuetify is Vue-only)
-- Projects requiring a non-Material Design aesthetic without heavy customization
-- Minimal bundle size is critical and only a few components are needed (consider a headless library)
-- Projects using Vue 2 (Vuetify 3 requires Vue 3)
-
-**Key patterns covered:**
-
-- Plugin setup with `createVuetify()`, themes, and blueprints
-- Global defaults and scoped defaults with `v-defaults-provider`
-- SASS variable customization at compile time
-- Slot-based component customization
-- Data tables with sorting, filtering, pagination, and custom column rendering
-- Form validation with rules arrays and `useRules` composable
-- Theme toggling and `useTheme` / `useDisplay` composables
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) -- Plugin setup, theming, defaults, SASS variables, blueprints, TypeScript, composables
-- [examples/data-tables.md](examples/data-tables.md) -- v-data-table headers, slots, sorting, filtering, pagination, server-side
-- [examples/forms.md](examples/forms.md) -- v-form, validation rules, useRules, input components, custom validation
-- [examples/layout.md](examples/layout.md) -- v-app, v-app-bar, v-navigation-drawer, v-container/v-row/v-col grid, responsive patterns
-- [reference.md](reference.md) -- Decision frameworks, component quick reference, anti-patterns
+- Vue itself — reactivity, component authoring, lifecycle and the composables you write
+- Routing, and what a navigation item links to
+- Application state beyond a component's own — the components take values and emit changes
+- Data fetching. `v-data-table-server` reports what the user asked for and renders what arrives
+- General CSS technique. Vuetify's own three layers are in scope; a stylesheet architecture around
+  them is not
 
 ---
 
 <philosophy>
 
-## Philosophy
+Vuetify is opinionated on purpose. It is not a set of primitives you assemble a design system from —
+it is a design system, already assembled, that you adjust. Fighting that is the single largest source
+of trouble with it.
 
-Vuetify is an **opinionated, batteries-included** component library. Unlike headless libraries, Vuetify ships styled components with a complete design system. Its power comes from three layers of customization:
+**The adjustment happens in three layers, and picking the right one is most of the skill:**
 
-1. **Theme layer** -- colors, dark mode, typography via `createVuetify({ theme })`. All components inherit automatically.
-2. **Defaults layer** -- global or scoped prop values via `defaults` config or `v-defaults-provider`. Change every `v-btn` to `variant="outlined"` in one line.
-3. **SASS layer** -- compile-time variable overrides via `@use 'vuetify/settings'`. Changes border-radius, heights, font families at the CSS level.
+1. **Theme** — colours and dark mode, resolved at runtime into CSS custom properties. Everything
+   inherits automatically, and a theme switch is reactive across the whole tree.
+2. **Defaults** — prop values, globally in `createVuetify()` or scoped by `v-defaults-provider`.
+   This is the layer people underuse: it changes behaviour as well as appearance, it nests and
+   cascades like CSS scoping, and it costs nothing at runtime.
+3. **SASS** — compile-time CSS variables for the things props do not expose: font families, base
+   radius, element heights. Fixed at build time, and only available with the build plugin.
 
-**Vuetify 3.x key features:**
-
-- Full Vue 3 Composition API support
-- Tree-shakeable components via `vuetify-loader` / `vite-plugin-vuetify`
-- Material Design 3 blueprint (`md3`) for MD3 compliance
-- Built-in composables: `useTheme`, `useDisplay`, `useDate`, `useRules`
-- `v-defaults-provider` for scoped prop cascading (unique to Vuetify)
-- Extensive slot system for deep component customization without CSS hacks
-- Built-in i18n, RTL, and accessibility
+A property belongs to exactly one of these. Reaching for a stylesheet override, and especially for
+`!important`, almost always means the property was available a layer up.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which layer to customise in
+
+| What you are changing                       | Layer                                               |
+| ------------------------------------------- | --------------------------------------------------- |
+| Colours, or dark mode                       | `theme` in `createVuetify()`, read via `useTheme()` |
+| Default props everywhere                    | `defaults` in `createVuetify()`                     |
+| Default props for one part of the page      | `v-defaults-provider`                               |
+| Radius, heights, fonts — anything CSS-level | SASS variables via `@use "vuetify/settings"`        |
+| One internal element of a component         | Its named slot                                      |
+| The arrangement of several components       | Ordinary template composition                       |
+
+## Which table component
+
+```
+Static rows, no interaction        → v-table          (a styled HTML table)
+Sorting, filtering, paging locally → v-data-table
+The server does the sorting/paging → v-data-table-server   (separate component, not a prop)
+Thousands of rows, no paging       → v-data-table-virtual  (height is required)
+Rows grouped under headings        → v-data-table with group-by
+```
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Plugin Setup
+### Pattern 1: Plugin setup
 
-Every Vuetify app requires `createVuetify()` and `app.use()`. The plugin provides the theme, defaults, icons, and locale to all components.
+One `createVuetify()` call carries the theme, the defaults, the icon set and the locale, and every
+component reads from it.
 
 ```typescript
-import { createApp } from "vue";
 import { createVuetify } from "vuetify";
 
 const vuetify = createVuetify({
   theme: {
     defaultTheme: "light",
-    themes: {
-      light: {
-        colors: {
-          primary: "#1867C0",
-          secondary: "#5CBBF6",
-        },
-      },
-    },
+    themes: { light: { colors: { primary: "#1867C0" } } },
   },
   defaults: {
     VBtn: { variant: "flat", rounded: "lg" },
     VTextField: { variant: "outlined", density: "comfortable" },
-    VCard: { elevation: 2, rounded: "lg" },
   },
 });
 
-const app = createApp(App);
-app.use(vuetify);
-app.mount("#app");
+createApp(App).use(vuetify).mount("#app");
 ```
 
-**Why good:** single configuration point, all components inherit theme and default props, tree-shakeable
+Blueprints, SASS overrides, TypeScript augmentation, SSR and the SVG icon set are in
+[examples/core.md](examples/core.md).
 
-For blueprints, SASS variables, TypeScript augmentation, and SSR setup, see [examples/core.md](examples/core.md).
+### Pattern 2: Theming and dark mode
 
----
-
-### Pattern 2: Theming and Dark Mode
-
-Define multiple themes in `createVuetify` and toggle with `useTheme`. Vuetify generates CSS variables for each theme.
+Themes become CSS custom properties, so switching one updates every component reactively without a
+re-render of your own.
 
 ```vue
 <script setup>
@@ -145,71 +186,56 @@ function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
 }
 </script>
-
-<template>
-  <v-btn @click="toggleTheme" icon="mdi-brightness-6" />
-</template>
 ```
 
-**Why good:** reactive theme switching, CSS variables prevent flash of wrong theme, custom themes can extend built-in ones
+`theme.global.name` is a ref — assign to `.value`. Colours are also reachable in CSS as
+`rgb(var(--v-theme-primary))`.
 
-For custom theme creation and color variations, see [examples/core.md](examples/core.md).
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 3: Global and scoped defaults
 
-### Pattern 3: Global Defaults and Scoped Defaults
-
-The `defaults` system is Vuetify's most powerful consistency tool. Set props globally in `createVuetify()` or scope them with `v-defaults-provider`.
+`defaults` sets prop values for a component type. `v-defaults-provider` does the same for a subtree,
+merging with whatever is already in scope.
 
 ```vue
-<template>
-  <!-- All buttons inside this provider get these defaults -->
-  <v-defaults-provider
-    :defaults="{
-      VBtn: { color: 'secondary', variant: 'tonal' },
-      VCard: { elevation: 0, border: true },
-    }"
-  >
-    <v-card>
-      <v-card-text>
-        <!-- This button is tonal + secondary without explicit props -->
-        <v-btn>Scoped Default</v-btn>
-      </v-card-text>
-    </v-card>
-  </v-defaults-provider>
-</template>
+<v-defaults-provider
+  :defaults="{
+    VBtn: { color: 'secondary', variant: 'tonal' },
+    VCard: { elevation: 0, border: true },
+  }"
+>
+  <v-card>
+    <v-btn>Tonal and secondary, with no props of its own</v-btn>
+  </v-card>
+</v-defaults-provider>
 ```
 
-**Why good:** eliminates prop repetition, section-specific styling without CSS, nests and cascades like CSS scoping
+Explicit props on an instance always win over a default, so this narrows the baseline rather than
+overriding anything.
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 4: Slot-Based Component Customization
+### Pattern 4: Slot-based customisation
 
-Vuetify components expose named slots for every internal element. Use `v-slot` to replace or augment internal rendering.
+Every internal element has a named slot. Replacing one keeps the component's behaviour, its
+accessibility wiring and its density handling, all of which a wrapper `div` would sit outside of.
 
 ```vue
-<template>
-  <v-text-field label="Amount" type="number">
-    <template v-slot:prepend-inner>
-      <v-icon>mdi-currency-usd</v-icon>
-    </template>
-    <template v-slot:append-inner>
-      <v-chip size="x-small" color="success">.00</v-chip>
-    </template>
-  </v-text-field>
-</template>
+<v-text-field label="Amount" type="number">
+  <template v-slot:prepend-inner>
+    <v-icon>mdi-currency-usd</v-icon>
+  </template>
+</v-text-field>
 ```
 
-**Why good:** customizes internal elements without CSS overrides, type-safe slot props, preserves component behavior
+Full code: [examples/data-tables.md](examples/data-tables.md) for the per-column slots,
+[examples/layout.md](examples/layout.md) for activator and append slots.
 
-For data table column slots, see [examples/data-tables.md](examples/data-tables.md).
+### Pattern 5: Data tables
 
----
-
-### Pattern 5: Data Table Overview
-
-`v-data-table` handles sorting, pagination, filtering, and selection. Define headers outside the template, use `v-slot:item.<key>` for custom column rendering.
+`v-data-table` handles sorting, paging, searching and selection. Columns are customised with
+`v-slot:item.<key>`, matching the header's `key`.
 
 ```vue
 <script setup>
@@ -221,7 +247,7 @@ const headers = [
 </script>
 
 <template>
-  <v-data-table :items="items" :headers="headers">
+  <v-data-table :items="items" :headers="headers" item-value="id">
     <template v-slot:item.status="{ item }">
       <v-chip
         :color="item.status === 'active' ? 'success' : 'error'"
@@ -230,41 +256,26 @@ const headers = [
         {{ item.status }}
       </v-chip>
     </template>
-    <template v-slot:item.actions="{ item }">
-      <v-icon size="small" @click="edit(item)">mdi-pencil</v-icon>
-    </template>
   </v-data-table>
 </template>
 ```
 
-**Why good:** headers array is stable (no re-render), slot customization per column, built-in sort/filter/paginate
+Full code: [examples/data-tables.md](examples/data-tables.md)
 
-For server-side data tables, expandable rows, and search, see [examples/data-tables.md](examples/data-tables.md).
+### Pattern 6: Form validation
 
----
-
-### Pattern 6: Form Validation
-
-Vuetify forms use `:rules` arrays on inputs. Each rule is a function returning `true` or an error string. The `useRules` composable (v3.8+) provides common validators.
+Rules are plain functions returning `true` or an error string. `useRules` supplies the common ones
+already written.
 
 ```vue
 <script setup>
-import { ref } from "vue";
 import { useRules } from "vuetify/labs/rules";
 
-const form = ref(null);
-const email = ref("");
 const rules = useRules();
-
-async function submit(event: SubmitEvent) {
-  const { valid } = await form.value.validate();
-  if (!valid) return;
-  // proceed with submission
-}
 </script>
 
 <template>
-  <v-form ref="form" validate-on="submit" @submit.prevent="submit">
+  <v-form ref="form" validate-on="submit" @submit.prevent="onSubmit">
     <v-text-field
       v-model="email"
       label="Email"
@@ -275,130 +286,68 @@ async function submit(event: SubmitEvent) {
 </template>
 ```
 
-**Why good:** declarative validation, `useRules` eliminates boilerplate rule functions, `validate-on` controls timing
+`validate-on` decides when rules run — `"submit"` keeps a form quiet until the user is finished,
+where the default validates on every keystroke.
 
-For custom rules, multi-field validation, and input types, see [examples/forms.md](examples/forms.md).
+Full code: [examples/forms.md](examples/forms.md)
 
----
+### Pattern 7: Responsive behaviour with `useDisplay`
 
-### Pattern 7: Responsive Design with useDisplay
-
-The `useDisplay` composable provides reactive breakpoint state. Use it for logic-driven responsive behavior (template responsiveness uses Vuetify's grid props).
+The grid props cover responsive _layout_. `useDisplay` covers responsive _logic_ — deciding which
+component to render, not how wide it is.
 
 ```vue
 <script setup>
 import { useDisplay } from "vuetify";
 
-const { mobile, mdAndUp, name } = useDisplay();
+const { mobile, mdAndUp } = useDisplay();
 </script>
 
 <template>
-  <v-navigation-drawer v-if="mdAndUp" permanent />
-  <v-navigation-drawer v-else v-model="drawer" temporary />
+  <v-navigation-drawer :permanent="mdAndUp" :temporary="!mdAndUp" />
   <v-app-bar :density="mobile ? 'compact' : 'default'" />
 </template>
 ```
 
-**Why good:** reactive breakpoint booleans, avoids CSS media query duplication in script, matches Vuetify's breakpoint system
+Full code: [examples/layout.md](examples/layout.md)
 
 </patterns>
 
 ---
 
-<performance>
-
-## Performance
-
-### Tree-Shaking
-
-Use `vite-plugin-vuetify` (Vite) or `webpack-plugin-vuetify` (Webpack) for automatic tree-shaking. Only imported components are bundled.
-
-```typescript
-// vite.config.ts
-import vuetify from "vite-plugin-vuetify";
-
-export default {
-  plugins: [vuetify({ autoImport: true })],
-};
-```
-
-Without the plugin, import `vuetify/components` and `vuetify/directives` to include everything (larger bundle).
-
-### Stable References
-
-```typescript
-// GOOD: headers defined outside component
-const headers: DataTableHeader[] = [{ title: "Name", key: "name" }];
-
-// BAD: inline array recreated every render
-// <v-data-table :headers="[{ title: 'Name', key: 'name' }]" />
-```
-
-### SASS Variable Customization vs Runtime Theming
-
-```
-Need to change at runtime? --> Use theme colors in createVuetify()
-Need compile-time CSS changes? --> Use SASS variables (@use 'vuetify/settings')
-Need per-section prop defaults? --> Use v-defaults-provider (zero CSS cost)
-```
-
-</performance>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Missing `app.use(vuetify)` -- components render as empty custom elements without the plugin
-- Inline header/column arrays on `v-data-table` -- causes full table re-render on every parent update
-- Using `this.$vuetify` in Composition API -- use `useTheme()`, `useDisplay()`, `useDate()` composables instead
-- Importing `vuetify/components` and `vuetify/directives` when `vite-plugin-vuetify` is available -- negates tree-shaking
+- No `app.use(vuetify)` — Vue does not recognise the components, so they render as empty custom
+  elements with no error to explain it
+- No `import "vuetify/styles"` on the manual-import path — every component mounts and none is styled
+- `this.$vuetify` inside `<script setup>` — there is no component instance there; use the composables
+- `v-col` without a `v-row` parent, or `v-row` outside `v-container` — the grid depends on the full
+  nesting and silently collapses without it
+- Header or column arrays written inline on `v-data-table` — a new identity per parent render, so the
+  whole table re-renders every time
+- `v-data-table` with hand-rolled server paging — `v-data-table-server` is a separate component, and
+  the client-side one will page the page it was given
+- `v-data-table-virtual` without `height` — the virtual scroller has no viewport to measure and
+  renders nothing
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Setting `variant`, `density`, `rounded` on every component instance -- use `defaults` in `createVuetify()` instead
-- Wrapping Vuetify components in extra divs for styling -- use the component's own props/slots/classes
-- Hardcoding colors (`#1867C0`) in templates instead of using theme colors (`color="primary"`)
-- Using `v-if` to toggle dialogs/drawers instead of `v-model` -- loses transition animations and internal state
-
-**Common Mistakes:**
-
-- Forgetting `import 'vuetify/styles'` when not using the build plugin -- no styles load at all
-- Using CSS `!important` to override Vuetify styles -- use SASS variables or `class` prop with higher specificity
-- Not setting `validate-on` on `v-form` -- defaults to `input` which validates on every keystroke (use `"submit"` or `"blur lazy"` for better UX)
-- Placing `v-col` without a parent `v-row` inside `v-container` -- grid system requires the full nesting
-
-**Gotchas & Edge Cases:**
-
-- `density` accepts `"default"`, `"comfortable"`, `"compact"` -- it is NOT a numeric value
-- `v-data-table-server` is a separate component for server-side pagination -- do not use `v-data-table` with manual pagination
-- `v-defaults-provider` cascades -- nested providers merge with parent, later values win
-- `useDisplay` breakpoints differ from CSS breakpoints in default config (xs: 0, sm: 600, md: 960, lg: 1280, xl: 1920, xxl: 2560)
-- Theme `variations` generate `-lighten-N` and `-darken-N` color variants automatically -- do not manually define them
-- `v-model` on `v-dialog` controls visibility -- do not use `value` prop (Vue 3 `v-model` replaces `.sync`)
-- SASS variables require the Vite/Webpack plugin with `styles.configFile` pointing to your settings file
+- `density` takes `"default"`, `"comfortable"` or `"compact"` — it is not numeric
+- Vuetify's breakpoints are not the common CSS ones: `md` starts at 960px, not 768px
+- `v-defaults-provider` merges with the provider above it rather than replacing it, and the innermost
+  value wins
+- `theme.variations` generates `primary-lighten-1`, `primary-darken-2` and so on automatically —
+  declaring them by hand shadows the generated set
+- `v-if` on a dialog or drawer destroys it instead of closing it, losing the transition and any
+  internal state; `v-model` is what toggles visibility
+- SASS variable overrides need the build plugin with `styles.configFile` — without it the file is
+  never compiled and the overrides silently do nothing
+- `"on-primary"` is the text colour used _on_ a primary background, not a primary-tinted text
+- `v-select` and `v-autocomplete` bind `item-value` unless `return-object` is set, so the model holds
+  a key rather than the object it came from
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST install and register Vuetify as a Vue plugin via `app.use(vuetify)` -- components will not render without the plugin)**
-
-**(You MUST use the `defaults` system in `createVuetify()` or `v-defaults-provider` for consistent component props -- never repeat the same prop on every instance)**
-
-**(You MUST use named slots (`v-slot:item.<key>`, `v-slot:prepend`) for component customization -- not wrapper divs with manual styling)**
-
-**(You MUST define `v-data-table` headers and column arrays outside the component -- inline arrays cause re-renders on every parent update)**
-
-**Failure to follow these rules will produce unstyled components, unnecessary re-renders, and inconsistent UI.**
-
-</critical_reminders>

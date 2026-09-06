@@ -2,45 +2,45 @@
 
 > Essential patterns that apply across all Headless UI components. See [SKILL.md](../SKILL.md) for component selection guidance and [reference.md](../reference.md) for API reference.
 
-**Topic-specific examples:**
-
-- [Dialog & Modal](dialog.md) - Modal overlays, form dialogs, slide-over panels
-- [Menu & Dropdowns](menu.md) - Dropdown action menus, sections, icons
-- [Listbox & Combobox](listbox-combobox.md) - Custom select, autocomplete, virtual scrolling
-- [Tabs](tabs.md) - Horizontal/vertical tabs, controlled state
-- [Popover & Disclosure](popover-disclosure.md) - Floating panels, accordion
-- [Switch, RadioGroup & Checkbox](switch-radio.md) - Toggle, option selection
-- [Form Components](forms.md) - Field, Input, Label, Fieldset
+**Topic-specific examples:** [dialog.md](dialog.md), [menu.md](menu.md),
+[listbox-combobox.md](listbox-combobox.md), [tabs.md](tabs.md),
+[popover-disclosure.md](popover-disclosure.md), [switch-radio.md](switch-radio.md),
+[forms.md](forms.md)
 
 ---
 
 ## Pattern 1: Data-Attribute Styling
 
-All Headless UI components expose `data-*` attributes for CSS-based state styling. This is the fundamental styling mechanism and applies to every component.
+Every component publishes its state as `data-*` attributes. This is the styling mechanism the whole
+library shares. The attribute names are the contract; the selector syntax below is a utility-class
+framework's attribute-variant form, and plain CSS writes `[data-focus] { … }` for the same thing.
 
 ```tsx
-// Direct state styling on the component element
+// State on the element itself
 <MenuItem>
   <button className="data-[focus]:bg-blue-100 data-[disabled]:opacity-50">
     Edit
   </button>
 </MenuItem>
 
-// Parent-to-child state propagation using Tailwind's `group` utility
+// Parent state reaching a child: mark the parent, scope the child's variant to it
 <Switch className="group h-6 w-11 rounded-full bg-gray-200 data-[checked]:bg-blue-600">
   <span className="size-5 rounded-full bg-white group-data-[checked]:translate-x-5" />
 </Switch>
 
-// Transition state styling
+// Transition state
 <DialogPanel
   transition
   className="duration-200 ease-out data-[closed]:opacity-0 data-[closed]:scale-95"
 >
 ```
 
-**Why good:** Pure CSS styling (no JS re-renders), RSC-compatible, works with any styling solution via `className`, `group-data-[*]` propagates state to children
+**Why good:** no JavaScript re-render, works in a server component, and the state reaches children
+without prop drilling.
 
-**Most used attributes:** `data-open`, `data-closed`, `data-focus`, `data-selected`, `data-checked`, `data-disabled`, `data-hover`, `data-active`. See [reference.md](../reference.md#data-attributes-reference) for the complete attribute table including per-component availability.
+**Most used:** `data-open`, `data-closed`, `data-focus`, `data-selected`, `data-checked`,
+`data-disabled`, `data-hover`, `data-active`. Per-component availability:
+[reference.md](../reference.md#data-attributes-reference).
 
 ---
 
@@ -63,9 +63,12 @@ Floating panels (MenuItems, ListboxOptions, ComboboxOptions, PopoverPanel) accep
 <MenuItems anchor="bottom" className="[--anchor-gap:4px] sm:[--anchor-gap:8px]">
 ```
 
-**Why good:** Viewport-aware (auto-flips), no manual positioning code, CSS variables for fine-tuning, responsive via media queries
+**Why good:** flips and shifts against the viewport with no positioning code, and the CSS variables
+make the gap responsive without touching the markup.
 
-**Position values:** `"top"`, `"top start"`, `"top end"`, `"bottom"`, `"bottom start"`, `"bottom end"`, `"left"`, `"left start"`, `"left end"`, `"right"`, `"right start"`, `"right end"`. **CSS variables:** `--anchor-gap`, `--anchor-offset`, `--anchor-padding`, `--button-width`, `--input-width`. See [reference.md](../reference.md#anchor-positioning-reference) for full details.
+**Position values:** a side — `top`, `bottom`, `left`, `right` — optionally followed by `start` or
+`end`. **CSS variables:** `--anchor-gap`, `--anchor-offset`, `--anchor-padding`, `--button-width`,
+`--input-width`. Full table: [reference.md](../reference.md#anchor-positioning-reference).
 
 ---
 
@@ -97,14 +100,15 @@ The `transition` prop enables CSS transitions using data attributes. Apply to an
 </Transition>
 ```
 
-**Why good:** `data-[closed]` defines both enter-from and leave-to states, `data-[enter]`/`data-[leave]` allow directional transitions, `Transition`+`TransitionChild` coordinate multiple elements
+### Key rules
 
-### Key Rules
-
-- Always pair `transition` prop with a `duration-*` class (otherwise no visible animation)
-- `data-[closed]` is the target state: elements start at `data-[closed]` state and transition to normal, then back to `data-[closed]` when closing
-- Stack `data-[closed]:data-[enter]:` and `data-[closed]:data-[leave]:` for different enter/leave animations
-- `data-[transition]` applies during any transition (useful for shared styles like `pointer-events-none`)
+- `data-closed` is both the enter-from and the leave-to state — the element starts there, transitions
+  to its resting styles, and returns there on close
+- Pair `transition` with a duration, or the state flips with nothing visible
+- Stack `data-[closed]:data-[enter]:` and `data-[closed]:data-[leave]:` for asymmetric motion
+- `data-transition` applies throughout either direction, which is where shared rules like
+  `pointer-events: none` go
+- `Transition` + `TransitionChild` hold the unmount until every child has finished
 
 ---
 
@@ -124,7 +128,8 @@ Every Headless UI component accepts `as` to change the rendered element.
 </Radio>
 ```
 
-**Why good:** Semantic HTML without wrapper elements, enables links in Menus, `as="button"` on Tab gives it a clickable element (Tab defaults to Fragment)
+**Why good:** semantic HTML with no wrapper element, links inside menus, and a real element to style
+on `Tab`, which is a Fragment by default.
 
 ---
 
@@ -139,16 +144,9 @@ function NestedContent() {
   const close = useClose();
 
   return (
-    <button
-      onClick={() => {
-        // Do something first...
-        close(); // Then close the nearest closeable ancestor
-      }}
-    >
-      Done
-    </button>
+    <button onClick={() => close()}>Done</button> // closes the nearest closeable ancestor
   );
 }
 ```
 
-**Why good:** Avoids prop drilling `onClose` callbacks through deeply nested component trees, works with Dialog, Popover, and Disclosure
+**Why good:** no `onClose` threaded through the tree. Works inside Dialog, Popover and Disclosure.

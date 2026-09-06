@@ -2,17 +2,14 @@
 
 > Complete code examples for Dialog patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for API reference.
 
-**Related examples:**
-
-- [Menu & Dropdowns](menu.md) - Dropdown action menus
-- [Popover & Disclosure](popover-disclosure.md) - Floating panels, accordion patterns
-- [Form Components](forms.md) - Field, Input, Label, Fieldset patterns
+**Related examples:** [menu.md](menu.md), [popover-disclosure.md](popover-disclosure.md), [forms.md](forms.md)
 
 ---
 
 ## Basic Confirmation Dialog
 
-A simple dialog with controlled state, title, and description.
+Controlled state, title and description. Adding `transition` plus `data-[closed]` classes to the
+backdrop and panel animates it — see [core.md](core.md) Pattern 3.
 
 ```tsx
 import { useState } from "react";
@@ -56,57 +53,8 @@ export function ConfirmDialog() {
 }
 ```
 
-**Why good:** Controlled state via `open`/`onClose`, DialogTitle provides aria-labelledby, Description provides aria-describedby, DialogBackdrop dims content, focus automatically trapped in panel
-
----
-
-## Dialog with Enter/Exit Transitions
-
-Add smooth fade and scale transitions using the `transition` prop and `data-[closed]` attributes.
-
-```tsx
-import { useState } from "react";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-} from "@headlessui/react";
-
-export function AnimatedDialog() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <>
-      <button onClick={() => setIsOpen(true)}>Open</button>
-      <Dialog
-        open={isOpen}
-        onClose={() => setIsOpen(false)}
-        className="relative z-50"
-      >
-        <DialogBackdrop
-          transition
-          className="fixed inset-0 bg-black/30 duration-300 ease-out data-[closed]:opacity-0"
-        />
-        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-          <DialogPanel
-            transition
-            className="max-w-lg rounded-xl bg-white p-12 duration-300 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
-          >
-            <DialogTitle className="text-lg font-bold">
-              Animated Dialog
-            </DialogTitle>
-            <p>Content with enter/exit transitions.</p>
-            <button onClick={() => setIsOpen(false)}>Close</button>
-          </DialogPanel>
-        </div>
-      </Dialog>
-    </>
-  );
-}
-```
-
-**Why good:** `transition` prop enables CSS transitions, `data-[closed]:` defines both enter-from and leave-to states, no JavaScript animation library needed
+**Why good:** `DialogTitle` sets `aria-labelledby` and `Description` sets `aria-describedby`, the
+backdrop dims the page, and focus is trapped in the panel without any code.
 
 ---
 
@@ -230,7 +178,8 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
 }
 ```
 
-**Why good:** Dialog `onClose` prevented during submission, `autoFocus` on first field, Field/Label/Input auto-wire ARIA, DialogTitle and Description provide screen reader context, transitions on both backdrop and panel
+**Why good:** `onClose` refuses to dismiss mid-submit, `autoFocus` lands on the first field, and
+`Field` wires the ARIA for the inputs while `DialogTitle` and `Description` do it for the dialog.
 
 ---
 
@@ -269,4 +218,5 @@ export function CoordinatedTransition() {
 }
 ```
 
-**Why good:** Parent Transition coordinates children, waits for all TransitionChild animations to complete before unmounting, backdrop and panel animate independently
+**Why good:** the parent `Transition` holds the unmount until every `TransitionChild` has finished,
+so the backdrop and the panel can animate differently without either being cut off.

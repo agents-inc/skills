@@ -1,66 +1,6 @@
 # Chakra UI v3 Reference
 
-> Decision frameworks, migration guide, and anti-patterns for Chakra UI v3. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
-
----
-
-## Decision Framework
-
-### When to Use Chakra UI
-
-```
-Need UI components?
-├─ Do you want style props (CSS-in-JS via props)?
-│   ├─ YES → Chakra UI is ideal
-│   └─ NO → Consider utility-class or headless approaches
-├─ Do you need accessible, composable components?
-│   ├─ YES → Chakra UI (built on Ark UI)
-│   └─ NO → Consider lighter alternatives
-├─ Do you need a design token system with recipes?
-│   ├─ YES → Chakra UI provides this out of the box
-│   └─ NO → Plain styling or utility classes may suffice
-├─ Are you already using a utility-class CSS framework?
-│   └─ YES → A utility-class-native component library may integrate better
-└─ Do you need maximum bundle-size control?
-    ├─ YES → Consider headless primitives with your own CSS
-    └─ NO → Chakra UI is fine
-```
-
-### Styling Approach Decision
-
-```
-How should I style this?
-├─ Is it a standard Chakra component?
-│   └─ Use style props directly: <Box bg="blue.500" p="4" />
-├─ Does it need variants (size, color, state)?
-│   └─ Create a recipe with defineRecipe
-├─ Is it a multi-part component (card with header/body/footer)?
-│   └─ Create a slot recipe with defineSlotRecipe
-├─ Is it a non-Chakra element that needs style props?
-│   └─ Wrap with chakra factory: const Styled = chakra("div")
-└─ Do I need one-off custom styles?
-    └─ Use the css prop or inline style props
-```
-
-### Component Selection
-
-```
-Need an overlay component?
-├─ Confirmation/alert → Dialog with role="alertdialog"
-├─ Form or detailed content → Dialog (centered modal)
-├─ Side panel → Drawer (slides from edge)
-├─ Contextual info → Popover (anchored to trigger)
-└─ Selection list → Menu (dropdown)
-
-Need a form field?
-├─ Text input → Input
-├─ Multi-line → Textarea
-├─ Selection (few options) → RadioGroup or SegmentedControl
-├─ Selection (many options) → Select or custom Combobox
-├─ Boolean toggle → Switch
-├─ Agreement → Checkbox
-└─ Wrapping any field → Field.Root + Field.Label + Field.ErrorMessage
-```
+> Lookup tables, breakpoints and the v2→v3 migration reference. See [SKILL.md](SKILL.md) for the decision trees, patterns and red flags, and [examples/](examples/) for full code.
 
 ---
 
@@ -122,69 +62,7 @@ npx @chakra-ui/codemod upgrade
 
 Handles component renames, prop changes, import updates, and compound component restructuring.
 
----
-
-## Anti-Patterns
-
-### Using v2 Theme API
-
-```tsx
-// WRONG: v2 extendTheme is removed
-import { extendTheme } from "@chakra-ui/react";
-const theme = extendTheme({ colors: { brand: { 500: "#d53f8c" } } });
-
-// CORRECT: v3 createSystem with defineConfig
-import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
-const config = defineConfig({
-  theme: { tokens: { colors: { brand: { 500: { value: "#d53f8c" } } } } },
-});
-const system = createSystem(defaultConfig, config);
-```
-
-### Using is-Prefixed Boolean Props
-
-```tsx
-// WRONG: v2 boolean props
-<Button isLoading isDisabled>Submit</Button>
-<Input isInvalid isRequired />
-
-// CORRECT: v3 boolean props
-<Button loading disabled>Submit</Button>
-<Input invalid required />
-```
-
-### Using useDisclosure
-
-```tsx
-// WRONG: v2 useDisclosure hook (removed)
-const { isOpen, onOpen, onClose } = useDisclosure();
-<Modal isOpen={isOpen} onClose={onClose}>
-
-// CORRECT: v3 controlled state
-const [open, setOpen] = useState(false);
-<Dialog.Root open={open} onOpenChange={(details) => setOpen(details.open)}>
-```
-
-### Hardcoding Colors Instead of Tokens
-
-```tsx
-// WRONG: hardcoded hex values
-<Box bg="#3182ce" color="#ffffff" p="16px">
-
-// CORRECT: design tokens
-<Box bg="blue.500" color="white" p="4">
-```
-
-### Not Using Composable Components
-
-```tsx
-// WRONG: trying to use v2 flat imports
-import { ModalHeader, ModalBody, ModalFooter } from "@chakra-ui/react";
-
-// CORRECT: v3 compound components
-import { Dialog } from "@chakra-ui/react";
-// Then use: Dialog.Header, Dialog.Body, Dialog.Footer
-```
+Every rewrite it performs is a row in the two tables above; the shapes it produces are in [examples/core.md](examples/core.md) for the provider and [examples/composable-components.md](examples/composable-components.md) for the controlled components.
 
 ---
 
@@ -277,6 +155,17 @@ import { Dialog } from "@chakra-ui/react";
 | `lg`   | 62rem | 992px  |
 | `xl`   | 80rem | 1280px |
 | `2xl`  | 96rem | 1536px |
+
+### Responsive Value Forms
+
+Any style prop takes one of these in place of a plain value:
+
+- `{ base: "4", md: "6", lg: "8" }` — keyed by breakpoint name, mobile-first from `base`.
+- `["4", "4", "6"]` — positional: `base`, `sm`, `md`, `lg`, `xl`, `2xl`.
+- `["medium", undefined, undefined, "bold"]` — `undefined` skips that breakpoint.
+- `{ mdToXl: "bold" }` — a range key, targeting a span rather than everything upward.
+
+`hideBelow="md"` hides the element below that breakpoint; `hideFrom="md"` hides it from that breakpoint up.
 
 ---
 

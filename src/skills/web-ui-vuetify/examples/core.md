@@ -98,7 +98,10 @@ app.mount("#app");
 
 ---
 
-## Vite Plugin Configuration
+## Build Plugin Configuration
+
+Vuetify ships `vite-plugin-vuetify` and `webpack-plugin-vuetify`; the two take the same options and
+the example below shows the first.
 
 ```typescript
 // vite.config.ts
@@ -171,11 +174,8 @@ The `configFile` path is relative to the project root. SASS customization requir
   );
 ```
 
-**When to use SASS vs theme vs defaults:**
-
-- SASS variables: compile-time CSS changes (font family, border radius, element heights). These cannot change at runtime.
-- Theme colors: runtime color palette, dark mode. Theme values become CSS custom properties.
-- Defaults: runtime prop values. Changes component behavior, not just styling.
+These are compile-time and cannot change at runtime. Which layer a given change belongs in is settled
+by the table in [SKILL.md](../SKILL.md).
 
 ---
 
@@ -344,7 +344,8 @@ declare module "vuetify" {
 }
 ```
 
-**Note:** Vuetify's theme system is more flexible than MUI's -- you can add arbitrary color keys to `colors` without augmentation and use them via `color="brand"`. TypeScript augmentation adds autocomplete but is not strictly required for functionality.
+**Note:** augmentation is optional. Arbitrary keys added to `colors` work at runtime and are usable
+as `color="brand"` without it; declaring them here only adds autocomplete and a typo check.
 
 ---
 

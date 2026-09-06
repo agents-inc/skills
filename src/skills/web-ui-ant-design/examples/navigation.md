@@ -60,7 +60,7 @@ function NavigationMenu({ onSelect }: { onSelect: (key: string) => void }) {
 export { NavigationMenu };
 ```
 
-**Why good:** Uses items API (v4.20+) instead of JSX children pattern, proper TypeScript MenuItem type, named constants.
+**Why good:** the `items` API (v4.20+) replaces the JSX-children pattern, and `Required<MenuProps>["items"][number]` is the type to annotate the array with — nesting is a `children` key rather than a nested component.
 
 ---
 

@@ -15,7 +15,7 @@
 ```tsx
 import { App, Button, Space } from "antd";
 
-// Wrap your application root with <App> component
+// Assumes an <App> ancestor — see core.md for the root setup
 function FeedbackDemo() {
   const { message, notification, modal } = App.useApp();
 
@@ -95,7 +95,7 @@ function EditModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       open={open}
       onOk={handleOk}
       onCancel={onClose}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical">
         <Form.Item name="name" label="Name" rules={[{ required: true }]}>
@@ -150,7 +150,7 @@ function SettingsDrawer() {
         width={DRAWER_WIDTH}
         open={open}
         onClose={() => setOpen(false)}
-        destroyOnClose
+        destroyOnHidden
         extra={
           <Space>
             <Button onClick={() => setOpen(false)}>Cancel</Button>

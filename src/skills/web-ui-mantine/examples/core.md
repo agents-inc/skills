@@ -1,12 +1,11 @@
 # Mantine v7 - Core Examples
 
-> Essential setup, styling, and component patterns. See [SKILL.md](../SKILL.md) for decisions and philosophy.
-
-**Prerequisites**: MantineProvider configured, PostCSS preset installed.
+> Setup, styling and layout. See [SKILL.md](../SKILL.md) for decisions,
+> [components.md](components.md) for overlays and compound components.
 
 ---
 
-## Pattern 1: MantineProvider with Full Configuration
+## Pattern 1: MantineProvider and PostCSS
 
 ```tsx
 // app.tsx - root of your application
@@ -30,20 +29,49 @@ export function App() {
 }
 ```
 
-**Why good:** Theme outside component body prevents re-renders, `defaultColorScheme="auto"` respects OS preference
+**Why good:** the theme is created once at module scope. `createTheme(...)` written inline in the
+JSX returns a new object every render, and every theme consumer re-renders with it.
 
-```tsx
-// WRONG - theme inside component causes re-render on every render
-function App() {
-  return (
-    <MantineProvider theme={createTheme({ primaryColor: "blue" })}>
-      {/* Theme object recreated every render */}
-    </MantineProvider>
-  );
-}
+```javascript
+// postcss.config.cjs
+module.exports = {
+  plugins: {
+    "postcss-preset-mantine": {},
+    "postcss-simple-vars": {
+      variables: {
+        "mantine-breakpoint-xs": "36em",
+        "mantine-breakpoint-sm": "48em",
+        "mantine-breakpoint-md": "62em",
+        "mantine-breakpoint-lg": "75em",
+        "mantine-breakpoint-xl": "88em",
+      },
+    },
+  },
+};
 ```
 
-**Why bad:** `createTheme` called inside render creates new object reference every time, triggering unnecessary re-renders of all consumers
+**Why good:** the preset is what compiles `@mixin smaller-than`, `light-dark()` and `rem()`. The
+variables are a second copy of `theme.breakpoints` — change one and the CSS and the JS disagree
+silently, because nothing checks them against each other.
+
+### SSR
+
+```tsx
+import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
+
+<html lang="en" {...mantineHtmlProps}>
+  <head>
+    <ColorSchemeScript defaultColorScheme="auto" />
+  </head>
+  <body>
+    <App />
+  </body>
+</html>;
+```
+
+**Why good:** `ColorSchemeScript` sets the scheme before first paint, so a dark-mode user never sees
+a light flash; `mantineHtmlProps` supplies the attributes it writes, which is what stops React
+reporting a hydration mismatch over them.
 
 ---
 
@@ -110,7 +138,9 @@ export function DashboardCard({ title, metric, trend }: DashboardCardProps) {
 }
 ```
 
-**Why good:** CSS Modules have zero runtime, PostCSS mixins handle responsive/dark mode, Mantine CSS variables keep values consistent with theme
+**Why good:** nothing runs at render time, and the `--mantine-*` variables mean the card's spacing
+and colours move with the theme instead of drifting from it. `@mixin hover` is skipped on touch
+devices, where `:hover` would stick.
 
 ---
 
@@ -169,7 +199,9 @@ import classes from "./custom-input.module.css";
 />;
 ```
 
-**Why good:** Styles API exposes named selectors for every inner element, CSS Modules provide scoping, `data-error` attribute enables error-state styling
+**Why good:** the component's inner elements are reachable by name, so error and focus styling needs
+no wrapper, no fork and no `!important`. The component publishes `data-error`, so the error state is
+a selector rather than a prop you thread.
 
 ```tsx
 // Alternative: inline styles prop (no pseudo-class support)
@@ -181,7 +213,8 @@ import classes from "./custom-input.module.css";
 />
 ```
 
-**When to use:** `classNames` for reusable styles with pseudo-classes; `styles` prop for quick one-off overrides
+**Which one:** `classNames` when the rule needs a pseudo-class or will be reused; `styles` for a
+one-off, since inline objects cannot express `:focus`.
 
 ---
 
@@ -211,7 +244,8 @@ export function ResponsiveLayout() {
 }
 ```
 
-**Why good:** Responsive breakpoints in JSX without media queries, `SimpleGrid` handles column layout responsively, `base` is the mobile-first default
+**Why good:** breakpoints in JSX with no media query and no `useMediaQuery` — `base` is the
+mobile-first value and each named key overrides upward from it.
 
 ---
 
@@ -249,7 +283,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 }
 ```
 
-**Why good:** Responsive navbar collapses on mobile with Burger toggle, `hiddenFrom="sm"` hides burger on desktop, `breakpoint` controls collapse behavior
+**Why good:** `AppShell` owns the header offset and the navbar width, so nothing here hard-codes a
+`padding-top` to clear a fixed header. `breakpoint` and `hiddenFrom` keep the collapse rule and the
+burger's visibility in agreement.
 
 ---
 
@@ -284,4 +320,6 @@ export function DataPanel({ loading, children }: DataPanelProps) {
 }
 ```
 
-**Why good:** Skeletons match actual content dimensions for smooth transitions, `LoadingOverlay` works on existing content without layout shift, `pos="relative"` on parent contains the overlay
+**Why good:** the skeleton's dimensions match what replaces it, so nothing jumps on load.
+`LoadingOverlay` covers content already on screen — and it positions against the nearest positioned
+ancestor, which is what `pos="relative"` on the wrapper is for.

@@ -5,71 +5,65 @@ description: Ant Design enterprise UI library for React
 
 # Ant Design Patterns
 
-> **Quick Guide:** Ant Design is an enterprise-grade React UI library providing a complete set of high-quality components. Use ConfigProvider with design tokens for theming, the three-layer token system (Seed, Map, Alias) for customization, and the App component for context-aware feedback methods. **Current: v6.x** (pure CSS variables by default, zero-runtime mode, React 18+ required). v5.x is in maintenance. All patterns in this skill apply to both v5 and v6 unless noted.
+> **Quick Guide:** Ant Design is an enterprise React component library. Theme through `ConfigProvider` and the three-layer token system (Seed > Map > Alias) rather than CSS overrides, and reach feedback APIs through `App.useApp()` so they inherit that context. **Current: v6.x** — pure CSS variables by default, `zeroRuntime` available, React 18+ required. v5.x is in maintenance and every pattern here applies to both unless noted.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — enterprise theme, dark-mode toggle, algorithm combining, nested themes, `useToken`
+- [examples/form.md](examples/form.md) — dependencies, async validators, `Form.List`, `Form.useWatch`, modal form
+- [examples/table.md](examples/table.md) — server-driven table, expandable rows, summary rows, virtual scrolling
+- [examples/layout.md](examples/layout.md) — Layout shell, 24-column grid, Flex
+- [examples/feedback.md](examples/feedback.md) — `useApp`, declarative Modal, Drawer
+- [examples/data-display.md](examples/data-display.md) — Descriptions, Statistic cards
+- [examples/navigation.md](examples/navigation.md) — Menu items API, Breadcrumb, icon tree-shaking, custom SVG icons
+- [examples/pro-components.md](examples/pro-components.md) — ProLayout, ProTable CRUD, StepsForm
+- [examples/ssr.md](examples/ssr.md) — `AntdRegistry` style extraction, client components, server-component constraints
+- [examples/i18n.md](examples/i18n.md) — ConfigProvider locale kept in sync with dayjs
+- [reference.md](reference.md) — ConfigProvider props, token tables, component matrix, v5→v6 migration notes
+
+---
+
+## Which path applies
+
+- **Building screens from individual components** — `Table`, `Form`, `Layout` and the rest of `antd`. Start at [examples/core.md](examples/core.md) and reach for the topic file the screen needs.
+- **Building a CRUD admin from page-level abstractions** — `ProTable`, `ProForm` and `ProLayout` generate the search form, the toolbar and the route-based menu for you. Follow [examples/pro-components.md](examples/pro-components.md); the token and feedback rules below still apply.
+- **Rendering on a server** — styles need extracting into the HTML or the first paint flashes unstyled. Follow [examples/ssr.md](examples/ssr.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Ant Design code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap the app in `ConfigProvider`, and customise through tokens.** Theme and locale reach every component through that context, and token overrides survive version upgrades where a global `.ant-btn` rule does not.
 
-**(You MUST wrap your app with ConfigProvider for theming and locale - never override component styles with global CSS)**
+**Wrap the tree in `App` and take `message`, `notification` and `modal` from `App.useApp()`.** The static methods mount their own React root outside `ConfigProvider`, so they render with the wrong theme and no translations.
 
-**(You MUST use the App component and useApp() hook for message/notification/modal - never use static methods directly as they cannot consume ConfigProvider context)**
+**Give `Form.useForm<T>()` and `<Form<T>>` the values type.** Field names, `initialValues` and the `onFinish` payload are then checked against one interface instead of inferred as `any`.
 
-**(You MUST use Form.useForm() with TypeScript generics for type-safe form handling - never use untyped form instances)**
-
-**(You MUST use CSS variables mode (cssVar: true) for optimal theme-switching performance in production)**
+**Turn on `cssVar: true` in any app that switches theme.** Theme changes become a CSS-variable swap rather than a full style regeneration; it is the default in v6.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Ant Design, antd, ConfigProvider, theme.defaultAlgorithm, theme.darkAlgorithm, theme.compactAlgorithm, useToken, Form.useForm, Form.List, Form.useWatch, ProTable, ProForm, ProLayout, @ant-design/icons, @ant-design/pro-components, AntdRegistry, Table columns, message.success, notification.open, Modal.confirm
+**Auto-detection:** antd, ConfigProvider, ThemeConfig, theme.defaultAlgorithm, theme.darkAlgorithm, theme.compactAlgorithm, useToken, cssVar, App.useApp, Form.useForm, Form.List, Form.useWatch, ColumnsType, dataIndex, rowKey, ProTable, ProForm, ProLayout, StepsForm, @ant-design/icons, @ant-design/pro-components, AntdRegistry, antd/locale
 
-**When to use:**
+**Applies to:**
 
-- Building enterprise admin panels, dashboards, and data-heavy applications
-- Need a comprehensive component library with consistent design language out of the box
-- Working with complex data tables, forms with validation, and multi-step workflows
-- Requiring built-in internationalization, dark mode, and theme customization
+- Enterprise admin panels, dashboards and data-heavy screens built from a ready-made component set
+- Complex data tables — server-driven sorting, filtering, pagination, selection, virtual scrolling
+- Forms with validation, cross-field dependencies and dynamic field arrays
+- Theming: brand tokens, per-component tokens, dark and compact modes, nested themes
+- Built-in internationalisation, RTL and accessibility
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Building a custom design system from scratch (use headless primitives)
-- Need minimal bundle size for a simple marketing site (Ant Design is large)
-- Want full control over styling without design opinions (use unstyled primitives)
-- Building non-React applications (Ant Design is React-specific)
-
-**Key patterns covered:**
-
-- ConfigProvider theming with design tokens (Seed, Map, Alias, Component tokens)
-- Table with sorting, filtering, virtual scrolling, and custom rendering
-- Form with validation, dynamic fields (Form.List), and TypeScript generics
-- Layout system (Layout, Grid, Space, Flex)
-- Feedback patterns (Modal, Message, Notification via App/useApp)
-- Dark mode and theme switching with algorithms
-- Next.js SSR with AntdRegistry
-- Pro Components (ProTable, ProForm, ProLayout)
-
----
-
-## Examples
-
-- [Core Setup & Theming](examples/core.md) -- ConfigProvider, App wrapper, design tokens, dark mode, nested themes, useToken
-- [Forms & Validation](examples/form.md) -- Form, Form.Item, validation rules, useForm, Form.List, Form.useWatch, modal form
-- [Tables](examples/table.md) -- Table, columns, sorting, filtering, pagination, row selection, virtual scrolling, expandable rows
-- [Layout](examples/layout.md) -- Layout, Sider, Header, Content, Grid (Row/Col), Space, Flex
-- [Feedback Components](examples/feedback.md) -- Modal, Drawer, message, notification, useApp
-- [Data Display](examples/data-display.md) -- Card, Descriptions, Statistic, Tag, Badge
-- [Navigation & Icons](examples/navigation.md) -- Menu, Breadcrumb, icon tree-shaking, custom icons
-- [Pro Components](examples/pro-components.md) -- ProLayout, ProTable, ProForm, StepsForm
-- [Next.js Integration](examples/nextjs.md) -- AntdRegistry, SSR, client components, App Router
-- [Internationalization](examples/i18n.md) -- ConfigProvider locale, dayjs locale sync
-
-For quick reference and component checklists, see [reference.md](reference.md).
+- **Unstyled primitives for a design system you own end to end** — Ant Design ships its opinions with it and is the wrong starting point for one.
+- **Routing** — `Menu`, `Breadcrumb` and `ProLayout` emit keys and hrefs; which navigation layer consumes them is not this skill's concern.
+- **Server state and caching** — `Table` takes rows through `dataSource` and `ProTable` through a `request` callback; where the rows came from is settled elsewhere.
+- **A project's own CSS methodology** — utility classes, CSS modules and token pipelines are settled by whatever owns them; antd's own appearance comes from its token system.
+- **The application's own translated strings** — `ConfigProvider` `locale` covers antd's built-in component text only.
 
 ---
 
@@ -77,28 +71,51 @@ For quick reference and component checklists, see [reference.md](reference.md).
 
 ## Philosophy
 
-Ant Design follows the principles of **Natural**, **Certain**, **Meaningful**, and **Growing** to provide an enterprise-grade design system. It solves UI consistency across large teams by providing:
+Ant Design's bet is that a large team gains more from one consistent, complete component set than from per-screen design freedom. Sixty-plus components cover layout, data display, data entry, navigation and feedback, and every one of them reads its appearance from the same token tree.
 
-- **Complete component set**: 60+ components covering layout, data display, data entry, navigation, and feedback
-- **Design token system**: Three-layer architecture (Seed > Map > Alias) enabling systematic customization without CSS overrides
-- **Enterprise patterns**: Built-in pagination, filtering, form validation, internationalization, and accessibility
+**The token tree is the customisation surface.** Seed tokens (`colorPrimary`, `fontSize`, `borderRadius`) are the inputs; algorithms derive Map tokens from them (`colorPrimaryHover`); Alias tokens name use cases (`colorBgContainer`); component tokens override one component (`Table.headerBg`). Changing a seed token ripples correctly through all four layers, which is what a CSS override cannot do.
 
-**Architecture (CSS-in-JS with CSS Variables):** Ant Design uses a CSS-in-JS engine (`@ant-design/cssinjs`) with design tokens. v6 defaults to pure CSS Variables mode for reduced bundle size and instant theme switching. v6 also supports zero-runtime mode (`zeroRuntime: true`) where styles are pre-extracted to static CSS. Tree-shaking is built-in -- no `babel-plugin-import` needed.
-
-**When to use Ant Design:**
-
-- Enterprise admin interfaces with data tables, forms, and dashboards
-- Internal tools where development speed matters more than unique design
-- Projects needing i18n, RTL, and accessibility out of the box
-- Teams wanting a comprehensive, well-documented component library
-
-**When NOT to use:**
-
-- Consumer-facing products needing distinctive brand design (too opinionated)
-- Performance-critical SPAs where bundle size must be minimal
-- Projects using a utility-class-first styling paradigm
+**Styles are generated, not shipped as a stylesheet.** `@ant-design/cssinjs` produces them at runtime, v6 emitting pure CSS variables so a theme switch is a variable reassignment. `zeroRuntime: true` pre-extracts them to static CSS instead. Tree-shaking works natively — `babel-plugin-import` has not been needed since v4.
 
 </philosophy>
+
+---
+
+<decision_framework>
+
+## Decision Framework
+
+**Which feedback surface?**
+
+```
+Brief status (saved, failed, loading)  -> message via useApp()
+Title plus description, stays on screen -> notification via useApp()
+A yes/no the user must answer           -> modal.confirm() via useApp()
+A form or rich content                  -> <Modal open> (declarative)
+A side panel of content                 -> <Drawer open>
+```
+
+**Table or ProTable?**
+
+```
+Display with client-side sort/filter        -> Table
+Search form generated from the columns      -> ProTable
+Server-driven paging and filtering          -> ProTable (request API)
+Toolbar actions on a CRUD page              -> ProTable (toolBarRender)
+Custom UI wrapped tightly around the rows   -> Table (more control)
+```
+
+**Form or ProForm?**
+
+```
+One page of fields                -> Form
+Multi-step wizard                 -> StepsForm
+Form inside a modal or drawer     -> ModalForm / DrawerForm
+Search or filter bar              -> QueryFilter / LightFilter
+Unusual layout                    -> Form (more flexible)
+```
+
+</decision_framework>
 
 ---
 
@@ -108,94 +125,79 @@ Ant Design follows the principles of **Natural**, **Certain**, **Meaningful**, a
 
 ### Pattern 1: App Root Setup
 
-The minimal app setup wraps everything in ConfigProvider + App:
+`ConfigProvider` supplies theme and locale; `App` enables the context-aware feedback APIs. Every other pattern assumes both are present.
 
 ```tsx
 import { ConfigProvider, App as AntApp } from "antd";
 import type { ThemeConfig } from "antd";
 import enUS from "antd/locale/en_US";
 
-const THEME_CONFIG: ThemeConfig = {
+const THEME: ThemeConfig = {
   cssVar: true,
   token: { colorPrimary: "#1677ff", borderRadius: 6 },
 };
 
-function App() {
-  return (
-    <ConfigProvider theme={THEME_CONFIG} locale={enUS}>
-      <AntApp>
-        <MainContent />
-      </AntApp>
-    </ConfigProvider>
-  );
-}
-export { App };
+<ConfigProvider theme={THEME} locale={enUS}>
+  <AntApp>
+    <MainContent />
+  </AntApp>
+</ConfigProvider>;
 ```
 
-**Why this structure:** ConfigProvider provides theme tokens and locale to all children. App component enables context-aware message/notification/modal APIs. cssVar mode optimizes theme switching performance.
-
-See [examples/core.md](examples/core.md) for enterprise theme, dark mode toggle, nested themes, and useToken patterns.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 2: Design Tokens and Theming
 
-Ant Design uses a three-layer token system:
-
-- **Seed Tokens**: Foundational values (`colorPrimary`, `fontSize`, `borderRadius`) that derive all other tokens
-- **Map Tokens**: Derived from seed tokens via algorithms (`colorPrimaryBg`, `colorPrimaryHover`)
-- **Alias Tokens**: Semantic tokens mapping to use cases (`colorBgContainer`, `colorTextHeading`)
-- **Component Tokens**: Per-component overrides (`Button.primaryShadow`, `Table.headerBg`)
+Customise by setting tokens, and read them back with `useToken()` so your own elements match the active theme — including dark mode, which changes the values under the same names.
 
 ```tsx
-// Access tokens programmatically for custom components
 import { theme } from "antd";
-const { useToken } = theme;
 
-function CustomCard() {
-  const { token } = useToken();
+function StatusPanel() {
+  const { token } = theme.useToken();
   return (
     <div
       style={{ background: token.colorBgContainer, padding: token.paddingLG }}
     >
-      Styled with design tokens
+      Matches the active theme
     </div>
   );
 }
 ```
 
-See [examples/core.md](examples/core.md) for full theme configuration, nested themes, and StatusCard using useToken.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 3: Dark Mode and Theme Switching
 
-```tsx
-import { ConfigProvider, theme as antTheme } from "antd";
+Algorithms rewrite the derived tokens. They compose, so dark and compact can be applied together.
 
-// Switch between algorithms for dark/light/compact modes
+```tsx
+import { theme as antTheme } from "antd";
+
 const themeConfig = {
   cssVar: true,
   algorithm: isDark ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
   token: { colorPrimary: "#1677ff" },
 };
 
-// Combine algorithms: dark + compact
-const combined = {
+const darkCompact = {
   algorithm: [antTheme.darkAlgorithm, antTheme.compactAlgorithm],
 };
 ```
 
-See [examples/core.md](examples/core.md) for dark mode toggle with persistence and algorithm combining.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 4: Layout System
 
-Use Layout for page-level structure, Grid (Row/Col) for responsive content areas, Flex for inline element alignment, Space for uniform gaps between small elements.
+`Layout` for the page shell, `Row`/`Col` for responsive content areas, `Flex` for aligning inline elements, `Space` for uniform gaps between small ones.
 
 ```tsx
-// Page shell: Layout + Sider + Header + Content
 <Layout style={{ minHeight: "100vh" }}>
   <Sider width={200} collapsible>
     <Menu theme="dark" mode="inline" items={MENU_ITEMS} />
@@ -204,53 +206,51 @@ Use Layout for page-level structure, Grid (Row/Col) for responsive content areas
     <Header />
     <Content>{children}</Content>
   </Layout>
-</Layout>
+</Layout>;
 
-// Responsive grid: Row + Col (24-column)
 <Row gutter={[16, 16]}>
-  <Col xs={24} md={8}><Card /></Col>
-  <Col xs={24} md={8}><Card /></Col>
-</Row>
+  <Col xs={24} md={8}>
+    <Card />
+  </Col>
+</Row>;
 
-// Flex alignment (v5.10+)
-<Flex gap={8} justify="space-between" align="center" wrap>
-  <Button type="primary">Save</Button>
-  <Button>Cancel</Button>
-</Flex>
+<Flex gap={8} justify="space-between" align="center" wrap />;
 ```
 
-See [examples/layout.md](examples/layout.md) for full layout, grid, and flex examples.
+Full code: [examples/layout.md](examples/layout.md)
 
 ---
 
 ### Pattern 5: Table
 
-Key requirements: TypeScript generics on `Table<T>` and `ColumnsType<T>`, `rowKey` prop always set, typed `onChange` handler.
+Type both `Table<T>` and `ColumnsType<T>`, set `rowKey`, and type the `onChange` handler as `TableProps<T>["onChange"]`.
 
 ```tsx
-import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
-// Virtual scrolling (10,000+ rows): requires both scroll.x and scroll.y as numbers
-<Table<DataRecord>
-  virtual
-  scroll={{ x: 1200, y: 500 }}
-  columns={columns} // All columns need explicit width
-  pagination={false}
+const columns: ColumnsType<OrderRecord> = [
+  { title: "Customer", dataIndex: "customerName", sorter: true },
+];
+
+<Table<OrderRecord>
+  columns={columns}
+  dataSource={rows}
+  rowKey="id"
+  onChange={handleTableChange}
 />;
 ```
 
-See [examples/table.md](examples/table.md) for server-side table, expandable rows, summary rows, and virtual scrolling.
+Full code: [examples/table.md](examples/table.md)
 
 ---
 
 ### Pattern 6: Form with Validation and Dynamic Fields
 
-Key requirements: `Form.useForm<T>()` with TypeScript generic, `initialValues` on Form (not Form.Item), `htmlType="submit"` on submit button, `destroyOnClose` on Modal/Drawer containing Form.
+`initialValues` belongs on `Form`, not on individual items. `Form.useWatch` reads a field without re-rendering the whole form on every keystroke elsewhere.
 
 ```tsx
 const [form] = Form.useForm<MyFormValues>();
-const watchedValue = Form.useWatch("fieldName", form);
+const accountType = Form.useWatch("accountType", form);
 
 <Form<MyFormValues>
   form={form}
@@ -264,283 +264,149 @@ const watchedValue = Form.useWatch("fieldName", form);
 </Form>;
 ```
 
-See [examples/form.md](examples/form.md) for complex validation, Form.List dynamic fields, Form.useWatch, and modal form patterns.
+Full code: [examples/form.md](examples/form.md)
 
 ---
 
-### Pattern 7: Feedback Components (Modal, Message, Notification)
+### Pattern 7: Feedback Components
 
-Always use `App.useApp()` for feedback -- never static methods:
+`App.useApp()` returns instances bound to the surrounding `ConfigProvider`.
 
 ```tsx
-function MyComponent() {
-  const { message, notification, modal } = App.useApp();
+function DeleteButton() {
+  const { message, modal } = App.useApp();
 
-  // These respect ConfigProvider theme and locale
-  message.success("Saved!");
-  notification.open({ message: "Update", description: "..." });
-  modal.confirm({
-    title: "Delete?",
-    onOk: async () => {
-      /* ... */
-    },
-  });
+  const confirm = () =>
+    modal.confirm({
+      title: "Delete?",
+      onOk: async () => {
+        await remove();
+        message.success("Deleted");
+      },
+    });
+
+  return <Button danger onClick={confirm} />;
 }
 ```
 
-See [examples/feedback.md](examples/feedback.md) for declarative Modal, Drawer, and Popconfirm patterns.
+Full code: [examples/feedback.md](examples/feedback.md)
 
 ---
 
-### Pattern 8: Data Display Components
+### Pattern 8: Data Display
+
+`Descriptions` for detail views, `Statistic` for dashboard figures. Both take a data-driven `items` API.
 
 ```tsx
-// Descriptions for detail views
-<Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} items={details} />
+<Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} items={details} />;
 
-// Statistic cards for dashboards
-<Statistic title="Revenue" value={112893} prefix="$" precision={2} />
+<Statistic title="Revenue" value={112893} prefix="$" precision={2} />;
 ```
 
-See [examples/data-display.md](examples/data-display.md) for Descriptions, Statistic, Card grid, Tag, and Badge patterns.
+Full code: [examples/data-display.md](examples/data-display.md)
 
 ---
 
 ### Pattern 9: Navigation and Icons
 
+`Menu` and `Breadcrumb` take `items` arrays rather than JSX children. Icons are imported one at a time — the whole set is over 500KB.
+
 ```tsx
-// Use items API (v4.20+) - not JSX children
+import { UserOutlined } from "@ant-design/icons";
+
 <Menu mode="inline" items={MENU_ITEMS} onClick={({ key }) => navigate(key)} />;
 
-// Icons: always import individually for tree-shaking
-import { UserOutlined } from "@ant-design/icons";
-// NEVER: import * as Icons from "@ant-design/icons" (500KB+)
+<Breadcrumb items={[{ href: "/", title: "Home" }, { title: current }]} />;
 ```
 
-See [examples/navigation.md](examples/navigation.md) for Menu, Breadcrumb, icon tree-shaking, and custom SVG icons.
+Full code: [examples/navigation.md](examples/navigation.md)
 
 ---
 
-### Pattern 10: Next.js App Router Integration
+### Pattern 10: SSR Style Extraction
+
+Ant Design publishes its own registry for the extraction step; it wraps `ConfigProvider` rather than sitting inside it.
 
 ```tsx
-// app/layout.tsx - wrapping order matters: AntdRegistry > ConfigProvider > App
+import { AntdRegistry } from "@ant-design/nextjs-registry";
+
 <AntdRegistry>
   <ConfigProvider theme={THEME} locale={enUS}>
     <AntApp>{children}</AntApp>
   </ConfigProvider>
-</AntdRegistry>
+</AntdRegistry>;
 ```
 
-See [examples/nextjs.md](examples/nextjs.md) for SSR setup, client components, and sub-component workarounds.
+Full code: [examples/ssr.md](examples/ssr.md)
 
 ---
 
 ### Pattern 11: Internationalization
 
-ConfigProvider locale handles antd component text. Set dayjs locale separately for date/time formatting.
+`ConfigProvider` `locale` covers antd's own component text. Date formatting comes from dayjs, whose locale is set separately — set both from one map or they drift.
 
-See [examples/i18n.md](examples/i18n.md) for locale switching with dayjs sync.
+```tsx
+import zhCN from "antd/locale/zh_CN";
+import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+
+dayjs.locale("zh-cn");
+
+<ConfigProvider locale={zhCN}>
+  <DatePicker />
+</ConfigProvider>;
+```
+
+Full code: [examples/i18n.md](examples/i18n.md)
 
 ---
 
 ### Pattern 12: Pro Components
 
-ProTable, ProForm, and ProLayout provide page-level enterprise abstractions with auto-generated search forms, step wizards, and route-based menus.
+A `request` callback replaces the fetch-and-store wiring around the table.
 
-See [examples/pro-components.md](examples/pro-components.md) for ProLayout, ProTable CRUD, and StepsForm patterns.
+```tsx
+<ProTable<ProductRecord>
+  columns={columns}
+  rowKey="id"
+  search={{ labelWidth: "auto" }}
+  request={async (params, sort, filter) => {
+    const res = await fetchProducts({ ...params, sort, filter });
+    return { data: res.items, success: true, total: res.total };
+  }}
+/>
+```
+
+Full code: [examples/pro-components.md](examples/pro-components.md)
 
 </patterns>
 
 ---
 
-<performance>
-
-## Performance Optimization
-
-### CSS Variables Mode
-
-```tsx
-// v6: CSS variables are default. v5: opt in with cssVar: true
-const THEME: ThemeConfig = {
-  cssVar: true,
-  hashed: false, // Disable hash when only one antd version in the app
-};
-
-// v6 zero-runtime mode: no runtime style generation
-// Import 'antd/dist/antd.css' for default styles, or use
-// @ant-design/static-style-extract for custom themes
-const ZERO_RUNTIME_THEME: ThemeConfig = {
-  zeroRuntime: true,
-};
-```
-
-CSS variables mode eliminates runtime style recalculation when switching themes. `hashed: false` is safe when only one antd version exists. Zero-runtime mode (v6) completely removes runtime style generation for maximum performance.
-
-### Tree-Shaking
-
-Tree-shaking works natively -- no `babel-plugin-import` needed. Icons must always be imported individually (`import { UserOutlined } from "@ant-design/icons"`) or via path imports.
-
-### Virtual Scrolling
-
-```tsx
-// Table: virtual requires both scroll.x and scroll.y as numbers
-<Table virtual scroll={{ x: 1200, y: 500 }} />
-
-// Select: virtual prop for large option lists
-<Select virtual options={largeOptionsList} />
-
-// Tree/TreeSelect: virtual prop
-<Tree virtual treeData={largeTreeData} />
-```
-
-</performance>
-
----
-
-<decision_framework>
-
-## Decision Framework
-
-### Choosing Feedback Components
-
-```
-Need to show user feedback?
-├─ Brief status update (success/error/loading) -> message via useApp()
-├─ Detailed notification with title + description -> notification via useApp()
-├─ Requires user decision -> modal.confirm() via useApp()
-├─ Complex form or content -> Modal component (declarative, with open prop)
-└─ Side panel with content -> Drawer component
-```
-
-### Table vs ProTable
-
-```
-Building a data table?
-├─ Simple display with basic sort/filter -> Table
-├─ Need auto-generated search form -> ProTable
-├─ Need server-side pagination + filtering -> ProTable (request API)
-├─ Custom complex UI around table -> Table (more control)
-└─ CRUD page with toolbar actions -> ProTable (toolBarRender)
-```
-
-### Form vs ProForm
-
-```
-Building a form?
-├─ Simple single-page form -> Form
-├─ Multi-step wizard -> StepsForm (from ProForm)
-├─ Form in modal -> ModalForm (from ProForm)
-├─ Form in drawer -> DrawerForm (from ProForm)
-├─ Search/filter form -> QueryFilter or LightFilter (from ProForm)
-└─ Need full layout control -> Form (more flexible)
-```
-
-### Layout Approach
-
-```
-How to lay out content?
-├─ Page-level shell (sidebar + header + content) -> Layout
-├─ Responsive grid of cards/panels -> Row + Col (24-column grid)
-├─ Flex alignment of inline elements -> Flex (v5.10+)
-├─ Uniform spacing between small elements -> Space
-├─ Enterprise admin with route-based menu -> ProLayout
-└─ Responsive breakpoints needed -> Row + Col with xs/sm/md/lg/xl props
-```
-
-### Theming Approach
-
-```
-How to customize appearance?
-├─ Brand colors only -> Seed tokens (colorPrimary, etc.)
-├─ Specific component tweaks -> Component tokens (Button.colorPrimary)
-├─ Dark mode -> algorithm: theme.darkAlgorithm
-├─ Compact spacing -> algorithm: theme.compactAlgorithm
-├─ Section-specific theme -> Nested ConfigProvider
-├─ Access tokens in custom components -> useToken() hook
-└─ Dynamic theme switching -> cssVar: true + state-driven algorithm
-```
-
-</decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Routing:** Layout, Menu, and Breadcrumb components accept `onClick` / `href` handlers -- wire them to your router's navigation. Menu `items` array maps naturally to route definitions.
-
-**Data fetching:** Table and ProTable work with any data source. Pass fetched data via `dataSource` prop or use ProTable's `request` callback which expects `{ data, success, total }`.
-
-**Date library:** dayjs is the default date library (replaces moment.js from v4). Date components use it internally -- set dayjs locale separately from ConfigProvider locale.
-
-**Ant Design ecosystem packages:**
-
-- `@ant-design/pro-components` -- enterprise patterns (ProTable, ProForm, ProLayout)
-- `@ant-design/nextjs-registry` -- SSR style extraction for SSR frameworks
-- `@ant-design/icons` -- icon library (import individually for tree-shaking)
-
-**Styling coexistence:** Avoid overriding antd styles with global CSS -- use design tokens and component tokens instead. Antd's CSS-in-JS styles have their own specificity; mixing with utility-class frameworks requires careful management.
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using static `message.success()`, `notification.open()`, `Modal.confirm()` without App wrapper -- they bypass ConfigProvider context, leading to wrong theme and broken locale
-- Overriding antd styles with global CSS (`.ant-btn { ... }`) -- breaks on theme changes and version upgrades, use component tokens instead
-- Importing entire icon set (`import * as Icons from "@ant-design/icons"`) -- adds 500KB+ to bundle
-- Using `value`/`defaultValue` on form controls inside `Form.Item` with `name` -- conflicts with Form's state management
+- Static `message.success()` / `notification.open()` / `Modal.confirm()` without the `App` wrapper — they mount outside `ConfigProvider`, so the theme colours, the locale and the CSS variable references are all wrong. Take them from `App.useApp()`.
+- `value` or `defaultValue` on a control inside a `Form.Item` that has a `name` — two owners of the same state, and the form's copy loses.
+- Missing `rowKey` on `Table` — React key warnings, and rows update in the wrong place.
+- Virtual `Table` without explicit column `width` values and numeric `scroll.x` and `scroll.y` — columns collapse or virtual mode does not engage.
+- `ProTable`'s `request` returning a payload without `success: true` — the table loads forever.
+- `@ant-design/icons@6` against `antd@5` — incompatible; the two majors upgrade together.
+- `AntdRegistry` nested inside `ConfigProvider` under SSR — style extraction never runs and the first paint flashes unstyled.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Missing `rowKey` on Table -- causes React key warnings and update bugs
-- Using `Form.Item initialValue` instead of `Form initialValues` -- inconsistent behavior with form reset
-- Not wrapping app with `<App>` component when using feedback methods -- feedback renders outside theme context
-- Missing `destroyOnClose` on Modal with Form inside -- stale form state persists across open/close
-
-**Common Mistakes:**
-
-- Forgetting to set dayjs locale alongside ConfigProvider locale (date components show wrong language)
-- Using dot-notation sub-components in Next.js App Router server components (`<Select.Option>`)
-- Not enabling `cssVar: true` for apps that switch themes (causes full style recalculation)
-- Wrapping AntdRegistry inside ConfigProvider instead of outside in Next.js (breaks style extraction)
-
-**Gotchas & Edge Cases:**
-
-- `Form.useWatch` triggers component re-render -- use sparingly in performance-sensitive forms
-- Table `onChange` fires for pagination, filters, AND sorting -- check the extra parameter to determine which changed
-- `Modal.confirm()` returns a reference for updating/destroying -- store it if you need to close programmatically
-- ConfigProvider `theme.components` tokens with `algorithm: true` derive from the component's `colorPrimary`, not the global one
-- Virtual Table requires explicit column `width` values and both `scroll.x` and `scroll.y` as numbers -- without them, columns collapse or virtual mode fails
-- ProTable `request` must return `{ data, success, total }` -- missing `success: true` causes infinite loading
-- Nested ConfigProvider inherits unset tokens from parent -- set tokens explicitly if you want isolation
-- `@ant-design/icons@6` is NOT compatible with `antd@5` -- always upgrade both packages together
+- `Form.useWatch` re-renders the component on every change of the watched field — reach for it deliberately in large forms.
+- `Table`'s `onChange` fires for pagination, filters and sorting alike; the `extra` parameter says which.
+- `Form.Item`'s `initialValue` and `Form`'s `initialValues` behave differently on reset — set them on `Form`.
+- A `Modal` or `Drawer` containing a `Form` keeps stale field state across open and close without `destroyOnHidden` — the prop was `destroyOnClose` before 5.25.
+- A nested `ConfigProvider` inherits every token the parent set; isolation means stating them explicitly.
+- Component tokens with `algorithm: true` derive from that component's own `colorPrimary`, not the global one.
+- `modal.confirm()` returns a handle for updating or destroying the dialog — keep it if anything else has to close it.
+- Dot-notation sub-components (`<Select.Option>`) do not resolve in a server component; destructure them or use the `options` API.
+- dayjs keeps its own locale — setting `ConfigProvider` `locale` alone leaves dates in the previous language.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST wrap your app with ConfigProvider for theming and locale - never override component styles with global CSS)**
-
-**(You MUST use the App component and useApp() hook for message/notification/modal - never use static methods directly as they cannot consume ConfigProvider context)**
-
-**(You MUST use Form.useForm() with TypeScript generics for type-safe form handling - never use untyped form instances)**
-
-**(You MUST use CSS variables mode (cssVar: true) for optimal theme-switching performance in production)**
-
-**Failure to follow these rules will cause theme inconsistencies, broken internationalization, and degraded performance.**
-
-</critical_reminders>

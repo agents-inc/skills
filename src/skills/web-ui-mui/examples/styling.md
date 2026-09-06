@@ -2,11 +2,7 @@
 
 > styled() API, sx prop patterns, custom styled components. See [SKILL.md](../SKILL.md) for core patterns.
 
-**Related examples:**
-
-- [core.md](core.md) -- Theme config, component overrides, dark mode
-- [layout.md](layout.md) -- sx prop for responsive layout
-- [form-inputs.md](form-inputs.md) -- slotProps for input customization
+**Related examples:** [core.md](core.md), [layout.md](layout.md), [form-inputs.md](form-inputs.md)
 
 ---
 

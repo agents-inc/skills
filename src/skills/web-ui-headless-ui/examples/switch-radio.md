@@ -2,11 +2,7 @@
 
 > Complete code examples for Switch (toggle), RadioGroup (option selection), and Checkbox patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for API reference.
 
-**Related examples:**
-
-- [Form Components](forms.md) - Field, Input, Label, Fieldset patterns
-- [Listbox & Combobox](listbox-combobox.md) - Select/autocomplete patterns
-- [Tabs](tabs.md) - Tabbed content navigation
+**Related examples:** [forms.md](forms.md), [listbox-combobox.md](listbox-combobox.md), [tabs.md](tabs.md)
 
 ---
 
@@ -44,7 +40,9 @@ export function NotificationToggle() {
 }
 ```
 
-**Why good:** Field groups Label, Description, and Switch with automatic ARIA association, `passive` on Label prevents toggle on label click (appropriate when label is far from switch), `name` enables form submission, `data-[checked]` styles on state, `group-data-[checked]` styles child elements
+**Why good:** `Field` associates the label and description with the switch. `passive` stops a click
+on the label from toggling — right when the label sits far from the control. `name` puts the switch
+in the submitted form data, and `group-data-[checked]` moves the thumb from the parent's state.
 
 ---
 
@@ -136,7 +134,9 @@ export function PlanSelector() {
 }
 ```
 
-**Why good:** `data-[checked]` styles selected card, `data-[focus]` shows keyboard focus ring, `group-data-[checked]` shows checkmark on parent checked state, Label and Description inside Radio provide accessibility, arrow keys navigate between options
+**Why good:** the whole card is the control, so `data-checked` and `data-focus` style it directly and
+`group-data-[checked]` reveals the tick. Arrow keys move between options with no key handling of
+your own.
 
 ---
 
@@ -178,4 +178,5 @@ export function TermsCheckbox() {
 }
 ```
 
-**Why good:** Field auto-associates Label and Description via ARIA, `data-[checked]` styles checked state, `group-data-[checked]` reveals checkmark icon, `name` enables form submission
+**Why good:** `Field` associates the label and description, `group-data-[checked]` reveals the tick,
+and `name` puts the checkbox in the submitted form data. `indeterminate` adds the third state.

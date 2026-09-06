@@ -192,7 +192,11 @@ export function FilterableEmployeeTable({ employees }: { employees: Employee[] }
 }
 ```
 
-**Why good:** custom filter function for range filtering, different filter UI per column type (text, select, range), global filter for quick search, named constants for filter bounds
+**Why good:** the filter value is whatever shape the `filterFn` expects — a string for text, a
+`[min, max]` tuple for the salary range — so the control and the predicate are chosen together per
+column. `setFilterValue` accepts an updater function, which is what lets the two number inputs each
+change one end of the tuple without knowing the other. `undefined` clears a filter, where an empty
+string would be a filter matching nothing.
 
 ---
 

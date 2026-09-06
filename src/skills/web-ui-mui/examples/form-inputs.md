@@ -2,11 +2,7 @@
 
 > TextField, Select, Autocomplete, FormControl patterns. See [SKILL.md](../SKILL.md) for core patterns.
 
-**Related examples:**
-
-- [core.md](core.md) -- ThemeProvider, createTheme, CssBaseline
-- [feedback.md](feedback.md) -- Dialog, Snackbar, Alert
-- [layout.md](layout.md) -- Grid, Stack for form layout
+**Related examples:** [core.md](core.md), [feedback.md](feedback.md), [layout.md](layout.md)
 
 ---
 

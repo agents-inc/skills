@@ -5,4 +5,4 @@ domain: web
 author: "@vince"
 displayName: Headless UI
 cliDescription: Unstyled accessible UI components by Tailwind Labs
-usageGuidance: Use when building accessible UI with Headless UI — Dialog, Menu, Listbox, Combobox, Popover, Tabs, Disclosure, and other unstyled primitives designed for Tailwind CSS.
+usageGuidance: Use when building accessible UI with Headless UI — Dialog, Menu, Listbox, Combobox, Popover, Tabs, Disclosure, and other unstyled primitives you style yourself.

@@ -1,14 +1,13 @@
 # Mantine v7 - Theming Examples
 
-> Theme customization, custom colors, component defaults, and color scheme management. See [core.md](core.md) for setup patterns.
-
-**Prerequisites**: Understand MantineProvider and createTheme from core examples.
+> Custom colours, component defaults, colour scheme. See [core.md](core.md) for provider setup.
 
 ---
 
 ## Pattern 1: Custom Colors with 10-Shade Tuples
 
-Every custom color requires exactly 10 shades (index 0 lightest, index 9 darkest). Use Mantine's color generator or define manually.
+A custom colour is exactly ten shades, index 0 lightest to index 9 darkest — written by hand, or
+taken from Mantine's own colour generator.
 
 ```tsx
 import { createTheme, MantineProvider } from "@mantine/core";
@@ -53,7 +52,9 @@ Usage in components:
 // .element { color: var(--mantine-color-brand-6); }
 ```
 
-**Why good:** Named constant for color tuple, `primaryShade` adjusts for light/dark automatically, dot notation accesses specific shades
+**Why good:** `primaryShade` picks a different index per scheme, so `color="brand"` stays legible in
+both without a conditional anywhere. Dot notation (`brand.3`) reaches a specific shade when the
+automatic one is wrong.
 
 ---
 
@@ -85,7 +86,8 @@ const theme = createTheme({
 </Paper>;
 ```
 
-**Why good:** No conditional logic needed in components, color switching is handled at the theme level
+**Why good:** the swap happens in the theme, so no component branches on the colour scheme and
+nothing has to re-render when it changes.
 
 ---
 
@@ -143,7 +145,9 @@ const theme = createTheme({
 });
 ```
 
-**Why good:** Reduces prop repetition across the app, consistent defaults enforced at theme level, `Component.extend()` is type-safe
+**Why good:** `Component.extend()` is checked against that component's own props, so a typo in
+`defaultProps` is a compile error rather than a prop silently ignored at runtime. Three routes are
+available per component — `defaultProps`, `classNames`, and `vars` for CSS custom properties.
 
 ---
 
@@ -162,7 +166,8 @@ const theme = createTheme({
 <Button color="dark">White text on dark</Button>
 ```
 
-**Why good:** Ensures WCAG-compliant contrast ratios without manual color calculations, `luminanceThreshold` controls the switching point
+**Why good:** the text colour is derived from the background's luminance, so a brand colour changing
+cannot leave unreadable text behind it. `luminanceThreshold` moves the switching point.
 
 ---
 
@@ -213,7 +218,9 @@ export function ColorSchemeSelector() {
 }
 ```
 
-**Why good:** `useComputedColorScheme` resolves `"auto"` to actual value for toggle logic, SegmentedControl gives three-way choice, localStorage persistence is automatic
+**Why good:** the toggle reads `useComputedColorScheme`, which resolves `"auto"`; the three-way
+selector reads `colorScheme`, because there `"auto"` is one of the choices being displayed. Both
+persist without any storage code.
 
 ---
 
@@ -250,4 +257,5 @@ const theme = mergeThemeOverrides(
 );
 ```
 
-**Why good:** Modular theme composition, later overrides win, each concern is separated into its own createTheme call
+**Why good:** later overrides win, so a base theme can ship separately from the per-app layers that
+adjust it, each one still type-checked by its own `createTheme`.

@@ -62,7 +62,10 @@ export function NavigationMenu() {
 }
 ```
 
-**Why good:** Sub component creates accessible submenu with arrow key navigation, Separator provides visual grouping, Portal ensures proper layering, named constants for offset values
+**Why good:** `Sub` wires the submenu's own roving focus, hover intent and arrow-key entry — Right
+opens, Left returns. The inner `Portal` is separate from the outer one, so the submenu escapes the
+parent menu's clipping as well as the page's. `Separator` is announced as a group boundary rather
+than being a decorative rule.
 
 ---
 
@@ -135,4 +138,7 @@ export function ViewOptionsMenu() {
 }
 ```
 
-**Why good:** CheckboxItem and RadioGroup provide accessible toggles with proper ARIA, ItemIndicator shows visual feedback, Label groups related items, controlled state enables external state sync
+**Why good:** `CheckboxItem` and `RadioItem` carry `role="menuitemcheckbox"` and
+`role="menuitemradio"`, so the checked state is announced rather than merely drawn. `ItemIndicator`
+renders only when its item is selected, which is why the checkmark needs no conditional of its own.
+`Label` is skipped by keyboard navigation.

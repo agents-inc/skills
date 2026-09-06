@@ -26,10 +26,14 @@ import type { ThemeConfig } from "antd";
 
 const theme: ThemeConfig = {
   // CSS variables mode for efficient theme switching
-  cssVar: true, // or { key: "my-app" } for React <18
+  cssVar: true, // or { key: "my-app" } to namespace the variables
 
   // Disable hashed class names (safe with single antd version)
   hashed: false,
+
+  // v6 only: pre-extract styles to static CSS, no runtime generation.
+  // Pair with @ant-design/static-style-extract for a custom theme.
+  zeroRuntime: true,
 
   // Theme algorithm(s)
   algorithm: theme.defaultAlgorithm, // or darkAlgorithm, compactAlgorithm, or array
@@ -112,6 +116,16 @@ Algorithms can be combined: `algorithm: [theme.darkAlgorithm, theme.compactAlgor
 
 ---
 
+## Virtualisation
+
+Three components render a long list through a windowed viewport rather than the whole set, each behind the same `virtual` prop:
+
+- `Table` — rows. Needs explicit column `width` values and numeric `scroll.x` and `scroll.y`.
+- `Select` — options, for long option lists.
+- `Tree` and `TreeSelect` — nodes, for large `treeData`.
+
+---
+
 ## Form Component Checklist
 
 - [ ] `Form.useForm<T>()` with TypeScript generic for field types
@@ -119,7 +133,7 @@ Algorithms can be combined: `algorithm: [theme.darkAlgorithm, theme.compactAlgor
 - [ ] `onFinish` handler for successful validation
 - [ ] Rules defined on `Form.Item` with proper messages
 - [ ] `layout` set: `"vertical"` | `"horizontal"` | `"inline"`
-- [ ] `destroyOnClose` on Modal/Drawer containing the Form
+- [ ] `destroyOnHidden` on Modal/Drawer containing the Form (`destroyOnClose` before 5.25)
 - [ ] `htmlType="submit"` on the submit button
 - [ ] `Form.useWatch` for conditional field rendering (not `onValuesChange`)
 - [ ] `Form.List` for dynamic field arrays with `add`/`remove` operations
@@ -201,7 +215,7 @@ import {
 } from "@ant-design/pro-components";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 
-// Next.js
+// SSR style extraction
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 ```
 
@@ -269,7 +283,7 @@ Import from `antd/locale/{locale_code}`:
 
 ## v5 to v6 Migration Notes
 
-Ant Design v6 was released November 2025 and is the current major version (6.3.x as of March 2026). v5 is in a 1-year maintenance period.
+v6 is the current major version; v5 is in a one-year maintenance period.
 
 **Key v6 changes:**
 
