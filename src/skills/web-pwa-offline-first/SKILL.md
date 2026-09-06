@@ -5,61 +5,79 @@ description: Local-first architecture with sync queues
 
 # Offline-First Application Patterns
 
-> **Quick Guide:** Build applications that work primarily with local data, treating network connectivity as an enhancement. Use IndexedDB (via Dexie.js 4.x or idb 8.x) as the single source of truth. Implement sync queues for reliable background synchronization. Use optimistic UI patterns for instant feedback. Note: Background Sync API is experimental with limited browser support (Chrome/Edge only).
+> **Quick Guide:** Reads and writes go to a local database first and the network catches up
+> afterwards. IndexedDB is the store — reached through a wrapper such as Dexie (reactive queries,
+> larger) or idb (thin, ~1.2KB) — and every syncable record carries `_syncStatus`, `_lastModified`
+> and `_localVersion` so the queue knows what is outstanding. Deletes are tombstones, never
+> removals, or a delayed sync resurrects them. The Background Sync API is Chromium-only, so an
+> `online` listener is the mechanism and background sync the optimisation.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — syncable entity, repository, sync queue with backoff, connectivity detection, optimistic updates, hooks for status and mutations
+- [examples/indexeddb.md](examples/indexeddb.md) — Dexie schema and migrations, the idb alternative, multi-tab coordination, quota management
+- [examples/sync.md](examples/sync.md) — last-write-wins, field-level merge, conflict UI, version vectors, delta cursors, background sync, pull-push, status indicators
+- [reference.md](reference.md) — storage and conflict-strategy selection, troubleshooting by symptom, performance and security notes
+
+---
+
+## Which path applies
+
+- **Read-mostly, writes require connectivity** — a local copy for reading, refreshed when online,
+  with no queue and no conflict resolution. Patterns 1, 4 and 6 are the whole of it.
+- **Full CRUD offline** — mutations queue, conflicts happen, and every pattern here applies. Start
+  at [examples/core.md](examples/core.md) and pick a resolution strategy from
+  [examples/sync.md](examples/sync.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing offline-first code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Treat the local database as authoritative.** Every read comes from it and every write lands there
+before anything is sent, which is what makes the UI answer instantly whatever the connection is
+doing.
 
-**(You MUST use IndexedDB (via wrapper library) as the single source of truth for all offline data)**
+**Give every syncable record `_syncStatus`, `_lastModified` and `_localVersion`.** Without them
+there is no way to ask what is outstanding, and no way to tell a conflict from a fresh write.
 
-**(You MUST implement sync metadata (\_syncStatus, \_lastModified, \_localVersion) on ALL entities that need synchronization)**
+**Delete by writing a `_deletedAt` tombstone.** A removed row has nothing left to sync, so the next
+pull brings the record back.
 
-**(You MUST queue mutations during offline and process them when connectivity returns)**
+**Queue every mutation and drain the queue on reconnect, with exponential backoff and jitter.** A
+transient 502 is otherwise a permanently lost write, and synchronised retries from many clients are
+what turn a brief outage into a long one.
 
-**(You MUST use soft deletes (tombstones) for deletions to enable proper sync across devices)**
-
-**(You MUST implement exponential backoff with jitter for ALL sync retry logic)**
-
-**(You MUST NOT await non-IndexedDB operations mid-transaction - transactions auto-close when control returns to event loop)**
+**Keep an IndexedDB transaction free of any other `await`.** The transaction closes as soon as
+control returns to the event loop with no request pending, so an awaited `fetch` mid-transaction
+fails with `TRANSACTION_INACTIVE_ERR`. Fetch first, then open the transaction.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** offline-first, IndexedDB, Dexie, idb, sync queue, local-first, offline storage, background sync, optimistic UI offline, conflict resolution, CRDT, last-write-wins
+**Auto-detection:** IndexedDB, indexedDB.open, IDBDatabase, IDBObjectStore, openDB, DBSchema, Dexie,
+useLiveQuery, dexie-react-hooks, idb-keyval, sync queue, tombstone, \_syncStatus, \_lastModified,
+last-write-wins, version vector, offline-first, local-first, navigator.onLine, navigator.storage.persist,
+BroadcastChannel, QuotaExceededError
 
-**When to use:**
+**Applies to:**
 
-- Building applications that must work without network connectivity
-- Field service apps with poor or intermittent connectivity
-- Note-taking or productivity apps requiring instant responsiveness
-- Apps where data ownership and local-first architecture is prioritized
-- Progressive Web Apps (PWAs) needing robust offline support
+- Choosing and shaping a local store that survives a reload and a disconnection
+- Modelling sync metadata on records the user edits offline
+- Queueing mutations, retrying them, and reporting what is outstanding
+- Detecting real connectivity rather than a network interface
+- Resolving concurrent edits, from last-write-wins to version vectors
+- Showing the user what has saved locally and what has reached the server
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Real-time dashboards requiring always-fresh server data
-- Financial transactions requiring immediate server confirmation
-- Simple read-only apps where cache-first is sufficient
-- Apps where offline capability adds no user value
-
-**Storage Considerations:**
-
-- IndexedDB: Up to 50% of available disk space (typically 1GB+), async, supports complex queries
-- LocalStorage: Limited to 5MB per origin, synchronous (blocks UI), simple key-value only
-- Safari: 7-day cap on script-writable storage (IndexedDB, Cache API) may evict data
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Syncable entities, repository pattern, sync queue, network detection, optimistic UI, connection-aware fetching
-- [examples/indexeddb.md](examples/indexeddb.md) - Dexie.js setup, CRUD hooks, idb alternative, migrations, multi-tab coordination, quota management
-- [examples/sync.md](examples/sync.md) - LWW resolution, field-level merge, conflict UI, version vectors, delta sync, background sync, pull-push strategy, sync indicators
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, troubleshooting
+- Intercepting network requests and versioning an HTTP response cache — a response cache stores
+  what the server said and expires; this skill owns records the user authored
+- Precaching an application shell so the app boots without a network
+- Collaborative character-level editing, which wants a convergent replicated data type rather than
+  a queue and a merge
 
 ---
 
@@ -67,35 +85,31 @@ description: Local-first architecture with sync queues
 
 ## Philosophy
 
-Offline-first is a design philosophy where applications are built to work primarily with local data, treating network connectivity as an enhancement rather than a requirement.
+The network is an enhancement. Local storage is the database, and the server is a peer it
+reconciles with — which inverts the usual arrangement, where local storage is a cache of the truth.
 
-**Core Principles:**
-
-1. **Local is the Source of Truth:** The local database is always authoritative. All reads and writes go through local storage first. Server sync happens in the background.
-
-2. **Immediate Responsiveness:** Users never wait for network operations. Changes are applied locally instantly, synced later.
-
-3. **Graceful Degradation:** Apps work fully offline, enhance when online, and handle transitions seamlessly.
-
-4. **Sync Transparency:** Users understand their data's sync state through clear UI indicators without technical jargon.
-
-**The Offline-First Data Flow:**
+Two things follow. Writes never block on a request, so the UI responds at disk speed rather than at
+network speed. And every write becomes a claim that may be contested, which is why sync metadata is
+foundational rather than an add-on: a record with no version is a record no merge can reason about.
 
 ```
-User Action
-    |
-Local Database (IndexedDB) <-- Single Source of Truth
-    |
-UI Updates Immediately (Optimistic)
-    |
-Sync Queue (Background)
-    |
-Server (When Online)
-    |
-Conflict Resolution (If Needed)
-    |
-Local Database Updated
+User action
+    │
+Local database  ←── the single source of truth
+    │
+UI updates immediately
+    │
+Sync queue (background)
+    │
+Server, when reachable
+    │
+Conflict resolution, if the record moved on both sides
+    │
+Local database updated
 ```
+
+The user's remaining job is trust: they need to see that a change is saved, that it is queued, and
+that it eventually landed. Sync status is a product surface, not a debugging aid.
 
 </philosophy>
 
@@ -103,11 +117,12 @@ Local Database Updated
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Syncable Entity Structure
+### Pattern 1: Syncable entity
 
-Every entity that needs synchronization must include metadata for tracking sync state. This is the foundational pattern - all other patterns depend on it.
+Every other pattern reads these fields. Business data and sync metadata stay separate, with the
+metadata prefixed so a merge can skip it wholesale.
 
 ```typescript
 interface SyncableEntity {
@@ -117,62 +132,56 @@ interface SyncableEntity {
   _serverTimestamp?: number;
   _localVersion: string;
   _serverVersion?: string;
-  _deletedAt?: number; // Soft delete tombstone
+  _deletedAt?: number; // tombstone
 }
 ```
 
-**Why this matters:** Without sync metadata, you cannot track what needs syncing, detect conflicts, or implement soft deletes. See [examples/core.md](examples/core.md) Pattern 1 for full implementation with factory functions.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 2: Repository
 
-### Pattern 2: Repository Pattern
-
-Use a repository as the single access point for all data operations, encapsulating local storage and sync queue logic. All reads come from local DB, all writes save locally first then queue for sync.
+One access point for a collection, so no caller has to remember that a write is two operations.
+Reads filter tombstones; writes stamp metadata, save locally, then enqueue.
 
 ```typescript
 interface DataRepository<T extends SyncableEntity> {
-  get(id: string): Promise<T | null>;
+  get(id: string): Promise<T | null>; // null for a tombstone
   getAll(): Promise<T[]>;
-  save(item: T): Promise<void>; // Local write + queue sync
-  delete(id: string): Promise<void>; // Soft delete + queue sync
+  save(item: T): Promise<void>; // local write, then enqueue
+  delete(id: string): Promise<void>; // tombstone, then enqueue
   getPendingCount(): Promise<number>;
 }
 ```
 
-**Why this matters:** Encapsulates the local-first write pattern (save locally, queue for sync) so consumers don't need to manage both operations. See [examples/core.md](examples/core.md) Pattern 2 for full implementation.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 3: Sync queue with backoff
 
-### Pattern 3: Sync Queue with Retry
-
-Queue operations when offline, process reliably with exponential backoff when connectivity returns.
+Exponential delay bounded by a ceiling, plus jitter so reconnecting clients do not arrive together.
 
 ```typescript
-const MAX_RETRY_ATTEMPTS = 5;
 const INITIAL_BACKOFF_MS = 1000;
-const MAX_BACKOFF_MS = 30000;
+const MAX_BACKOFF_MS = 30_000;
+const JITTER_FACTOR = 0.5;
 
 function calculateBackoff(attempt: number): number {
-  const exponentialDelay = Math.min(
-    INITIAL_BACKOFF_MS * Math.pow(2, attempt),
-    MAX_BACKOFF_MS,
-  );
-  const jitter = exponentialDelay * 0.5 * (Math.random() * 2 - 1);
-  return Math.floor(exponentialDelay + jitter);
+  const delay = Math.min(INITIAL_BACKOFF_MS * 2 ** attempt, MAX_BACKOFF_MS);
+  const jitter = delay * JITTER_FACTOR * (Math.random() * 2 - 1);
+  return Math.floor(delay + jitter);
 }
 ```
 
-**Why this matters:** Without retry logic, transient network failures cause permanent data loss. Jitter prevents thundering herd when many clients reconnect simultaneously. See [examples/core.md](examples/core.md) Pattern 3 for full queue implementation.
+Full code: [examples/core.md](examples/core.md) — retry limits, ordering by timestamp, dead-letter
+handling
 
----
+### Pattern 4: Connectivity detection
 
-### Pattern 4: Network Status Detection
-
-Don't rely solely on `navigator.onLine` (returns `true` behind captive portals, dead WiFi). Verify with actual health check requests.
+`navigator.onLine` reports whether a network interface exists, which is true behind a captive
+portal and on a router with no upstream. Confirm with a request.
 
 ```typescript
 async function checkConnectivity(): Promise<boolean> {
-  if (!navigator.onLine) return false;
+  if (!navigator.onLine) return false; // cheap negative, trustworthy
   try {
     const response = await fetch("/api/health", {
       method: "HEAD",
@@ -185,37 +194,59 @@ async function checkConnectivity(): Promise<boolean> {
 }
 ```
 
-**Why this matters:** `navigator.onLine` only checks for a network interface, not actual internet connectivity. See [examples/core.md](examples/core.md) Pattern 4 for full status manager with slow connection detection.
+Full code: [examples/core.md](examples/core.md) — latency sampling and a "slow" state
 
----
+### Pattern 5: Optimistic update with rollback
 
-### Pattern 5: Optimistic UI with Rollback
+Capture the previous value before writing and hand back the undo, so the caller's error path is one
+call rather than a reconstruction.
 
-Update UI immediately, store previous value for rollback if sync fails. Return a rollback function from each optimistic update.
+```typescript
+async function applyOptimistically<T>(id: string, next: T) {
+  const previous = (await localDb.get(id)) ?? null;
+  await localDb.put(next);
 
-See [examples/core.md](examples/core.md) Pattern 5 for full implementation with rollback support.
+  return async function rollback() {
+    if (previous) await localDb.put(previous);
+    else await localDb.delete(id);
+  };
+}
+```
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 6: Connection-Aware Data Fetching
+### Pattern 6: Connection-aware fetching
 
-Fetch from network when online, fall back to cache when offline. Return source metadata (`"network"` | `"cache"`) so UI can indicate data freshness.
+Return where the data came from alongside the data, so the UI can say "showing saved data" instead
+of silently presenting something stale as current.
 
-See [examples/core.md](examples/core.md) Pattern 6 for full implementation with timeout and cache fallback.
+```typescript
+interface FetchResult<T> {
+  data: T;
+  source: "network" | "cache";
+  timestamp: number;
+}
 
----
+// try network with a timeout, cache the success, fall back to cache on any failure
+const response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+```
 
-### Pattern 7: Conflict Resolution Strategies
+Full code: [examples/core.md](examples/core.md)
 
-Three strategies ordered by complexity:
+### Pattern 7: Conflict resolution
 
-1. **Last-Write-Wins (LWW):** Simplest. Most recent timestamp wins. Good for independent values. See [examples/sync.md](examples/sync.md) Pattern 18.
+Three strategies, in increasing cost. Pick by what the field means, not by what is easiest.
 
-2. **Field-Level Merge:** Only conflicts where both sides changed the _same_ field. Preserves non-conflicting changes from both sides. See [examples/sync.md](examples/sync.md) Pattern 19.
+- **Last-write-wins** — most recent timestamp takes the record. Correct for independent values;
+  wrong wherever two people edited different fields. [examples/sync.md](examples/sync.md)
+  Pattern 17.
+- **Field-level merge** — compare each field against the last common state and conflict only where
+  both sides moved the same one. [examples/sync.md](examples/sync.md) Pattern 18.
+- **Version vectors** — a per-client counter that distinguishes a concurrent edit from a sequential
+  one without trusting any clock. [examples/sync.md](examples/sync.md) Pattern 20.
 
-3. **Version Vectors:** Detect true concurrent modifications without clock synchronization. Use when timestamp-based approaches fail due to clock drift. See [examples/sync.md](examples/sync.md) Pattern 21.
-
-For collaborative text editing, use a CRDT library (separate concern from this skill).
+Where neither side can be discarded, surface the conflict and let the user choose:
+[examples/sync.md](examples/sync.md) Pattern 19.
 
 </patterns>
 
@@ -223,53 +254,37 @@ For collaborative text editing, use a CRDT library (separate concern from this s
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority:**
+**Breaks at runtime:**
 
-- Never use hard deletes - soft delete with tombstones or data will "resurrect" after sync
-- Never trust `navigator.onLine` alone - verify with actual network request
-- Never block UI on network operations - save locally first, sync in background
-- Never await `fetch()` or `setTimeout()` inside an IndexedDB transaction - transaction auto-closes
+- `await fetch(...)` or `await new Promise(setTimeout)` inside an IndexedDB transaction — the
+  transaction has already closed and the next operation throws `TRANSACTION_INACTIVE_ERR` — do the
+  async work first, then open a short transaction
+- A hard delete on a record that has not synced — the next pull resurrects it — write `_deletedAt`
+  and sweep tombstones once they are confirmed synced
+- Writing without checking the quota — `QuotaExceededError` surfaces as a failed save with no
+  warning — check `navigator.storage.estimate()` and evict before writing
+- An unbounded queue — a long offline session exhausts storage, and draining it all at once
+  exhausts memory — cap the queue and batch the drain
+- Awaiting the server before updating the UI — the app is now online-first with extra steps — save
+  locally, then enqueue
 
-**Medium Priority:**
+**Surprising behaviour:**
 
-- No retry logic on sync operations - transient failures cause permanent data loss
-- No sync status indicators in UI - users lose trust when they can't see sync state
-- Unbounded sync queue - can exhaust storage or cause OOM during batch processing
-- Timestamp-only conflict detection - clock drift makes this unreliable for concurrent edits
-
-**Gotchas & Edge Cases:**
-
-- Safari (iOS 13.4+) enforces a 7-day cap on script-writable storage if the user doesn't interact with the site; request `navigator.storage.persist()` and encourage home screen install
-- `navigator.storage.estimate()` requires HTTPS; returns `{ usage: 0, quota: 0 }` in unsecured contexts
-- Background Sync API is Chrome/Edge only (experimental) - always implement `online` event listener as fallback
-- IndexedDB compound index queries use arrays: `.where("[userId+completed]").equals([userId, 1])` (1 = true)
-- Dexie `useLiveQuery` returns `undefined` while loading, not `null` - check with `=== undefined`
-- Multiple tabs can cause write conflicts - use `BroadcastChannel` for coordination (see [examples/indexeddb.md](examples/indexeddb.md) Pattern 16)
+- `navigator.onLine === true` means an interface exists, not that anything is reachable
+- Safari caps script-writable storage at seven days without user interaction, IndexedDB included;
+  `navigator.storage.persist()` helps and an installed app helps more
+- `navigator.storage.estimate()` needs a secure context and answers `{ usage: 0, quota: 0 }`
+  otherwise
+- Background Sync is Chromium-only, so an `online` listener has to carry the load everywhere else
+- IndexedDB has no boolean index type — a compound query matches `[userId+completed]` against
+  `[userId, 1]`
+- Dexie's `useLiveQuery` returns `undefined` while loading, not `null`, so a `=== undefined` check
+  is the loading state
+- Two tabs write to one database with no coordination; `BroadcastChannel` is how they agree
+  ([examples/indexeddb.md](examples/indexeddb.md) Pattern 15)
+- Comparing timestamps across devices detects difference, not causality — clock drift makes a
+  sequential edit look concurrent and the reverse
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use IndexedDB (via wrapper library) as the single source of truth for all offline data)**
-
-**(You MUST implement sync metadata (\_syncStatus, \_lastModified, \_localVersion) on ALL entities that need synchronization)**
-
-**(You MUST queue mutations during offline and process them when connectivity returns)**
-
-**(You MUST use soft deletes (tombstones) for deletions to enable proper sync across devices)**
-
-**(You MUST implement exponential backoff with jitter for ALL sync retry logic)**
-
-**(You MUST NOT await non-IndexedDB operations mid-transaction - transactions auto-close when control returns to event loop)**
-
-**Failure to follow these rules will result in data loss, sync conflicts, and poor offline user experience.**
-
-</critical_reminders>

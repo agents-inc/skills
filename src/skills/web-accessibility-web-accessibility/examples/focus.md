@@ -1,146 +1,122 @@
-# Focus Management Patterns
+# Accessibility — Focus Management
 
-> Modal dialogs, focus indicators, and focus trapping patterns.
+> Dialogs, focus trapping and restoration, and focus indicators. See [SKILL.md](../SKILL.md) for the decisions.
 
 ---
 
-## Modal Dialogs
+## Pattern 7: The dialog contract
 
-### Example: Accessible Modal Dialog
+A modal owes six things. A tested primitive gives you all of them; this is what to check it against,
+and what to implement if you are not using one.
 
-Use your headless component library for dialogs - they handle focus trapping, Escape to close, and ARIA attributes automatically.
-
-**Key accessibility requirements for dialogs:**
-
-- Focus trapped inside dialog while open
-- Escape key closes dialog
-- Focus moves to dialog on open
-- Focus returns to trigger element on close
-- `role="dialog"` and `aria-modal="true"`
-- `aria-labelledby` pointing to dialog title
+1. Focus moves into the dialog when it opens — the first control, or the dialog itself
+2. Tab and Shift+Tab cycle within it and never reach the page behind
+3. Escape closes it
+4. Focus returns to the element that opened it
+5. `role="dialog"` with `aria-modal="true"`, and a name from `aria-labelledby`
+6. Content behind it is inert — not merely covered
 
 ```typescript
-// components/dialog.tsx
-// Use your headless component library
-// This shows the accessibility contract:
-
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from "react";
 
 interface DialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   title: string;
   description?: string;
   children: ReactNode;
-  className?: string;
 }
 
-export function Dialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  children,
-  className,
-}: DialogProps) {
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+export function Dialog({ isOpen, onClose, title, description, children }: DialogProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<Element | null>(null);
 
-  // Focus close button when dialog opens
   useEffect(() => {
-    if (open) {
-      closeButtonRef.current?.focus();
-    }
-  }, [open]);
+    if (!isOpen) return;
 
-  // Your headless component library handles:
-  // - Focus trapping (Tab cycles within dialog)
-  // - Escape to close
-  // - Click outside to close (overlay)
-  // - aria-modal="true"
-  // - Scroll lock on body
+    // Remember what to give focus back to
+    triggerRef.current = document.activeElement;
+    dialogRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      (triggerRef.current as HTMLElement | null)?.focus();
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
-    // Wrap with your component library's Dialog primitive
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
-      aria-describedby={description ? "dialog-desc" : undefined}
-      className={className}
+      aria-describedby={description ? "dialog-description" : undefined}
+      tabIndex={-1}
     >
       <h2 id="dialog-title">{title}</h2>
-
-      {description && (
-        <p id="dialog-desc">{description}</p>
-      )}
-
+      {description && <p id="dialog-description">{description}</p>}
       <div>{children}</div>
-
-      <button
-        ref={closeButtonRef}
-        onClick={() => onOpenChange(false)}
-        aria-label="Close dialog"
-      >
-        <span aria-hidden="true">X</span>
-      </button>
+      <button onClick={onClose}>Close</button>
     </div>
   );
 }
 ```
 
-**Why good:** Traps focus in dialog. Closes on Escape. Restores focus on close. Screen reader announcements. ARIA attributes handled by library.
+**Why good:** the trigger is captured from `document.activeElement` before focus moves, which is the
+only moment it is still available; restoring it in the effect's cleanup means the restore happens
+however the dialog closed — Escape, the button, or the parent unmounting it. `tabIndex={-1}` on the
+container makes it focusable programmatically without adding it to the tab order.
 
-**Edge Cases:**
+**What this does not do:** trap focus. That needs the tab cycle handled explicitly, or the `<dialog>`
+element's own `showModal()`, which supplies trapping and inertness from the platform. Everything
+outside also needs `inert` or `aria-hidden`, or a screen reader will happily read the page behind the
+modal.
 
-- Handle long content with scrolling
-- Prevent body scroll when open
-- Support initial focus on specific element
+**Also owed:** the body must not scroll behind the dialog, and a dialog taller than the viewport must
+scroll internally with its own controls reachable.
 
 ---
 
-## Focus Indicators
-
-### Example: Focus Styles with :focus-visible
+## Pattern 6: Focus indicators
 
 ```css
-/* GOOD: Clear focus indicator using :focus-visible */
-.button {
-  position: relative;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  transition: outline-color 150ms ease;
-}
-
-/* Only show focus ring for keyboard navigation */
 .button:focus-visible {
-  outline-color: var(--color-primary);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
-/* Hide focus ring for mouse clicks */
-.button:focus:not(:focus-visible) {
-  outline-color: transparent;
-}
-
-/* GOOD: High-contrast focus indicator for links */
 .link:focus-visible {
-  outline: 3px solid var(--color-primary);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
+```
 
-/* NEVER do this - removes focus indicator completely */
-.bad-button {
-  outline: none; /* Keyboard users can't see focus! */
-}
+**Why good:** `:focus-visible` shows the ring when the browser judges it useful — keyboard and
+assistive input — and withholds it after a mouse click, which is the complaint that leads people to
+remove focus styles altogether. `outline-offset` separates the ring from the element's own border so
+it stays visible against a busy background, and `outline` rather than `box-shadow` means it survives
+forced-colors mode.
 
-.bad-button:focus {
+```css
+/* Bad */
+.button:focus {
   outline: none;
 }
 ```
 
-**Why good:**
+**Why bad:** a keyboard user now has no way to tell where they are. If the default ring is wrong for
+the design, replace it; removing it is not a design decision but a functional one.
 
-- `:focus-visible` shows focus ring only for keyboard navigation
-- Mouse users don't see annoying focus ring on click
-- Keyboard users always see clear focus state
-- 3:1 contrast ratio meets WCAG requirements
+**The requirements:** at least 2px thick, at least 3:1 against the adjacent background, and
+consistent across every interactive element so its meaning is learnable. WCAG 2.2 adds that the
+focused element must not be entirely hidden behind sticky headers and footers — worth a scroll test
+on any page that has one.

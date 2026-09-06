@@ -1,260 +1,141 @@
 # Accessibility Reference
 
-> Decision frameworks, anti-patterns, and WCAG quick reference for the Accessibility skill. For core patterns, see [SKILL.md](SKILL.md). For code examples, see [examples/](examples/).
+> WCAG criteria, name resolution, audit rule IDs and the manual checklists. Decisions and red flags are in [SKILL.md](SKILL.md); code is in [examples/](examples/).
 
 ---
 
-<decision_framework>
+## Accessible name resolution
 
-## Decision Framework
+First one found wins:
 
-```
-Need to make content accessible?
-├─ Is it interactive (button, input, link)?
-│   ├─ YES → Use semantic HTML (<button>, <a>, <input>)
-│   │        Add keyboard support (Enter/Space activation)
-│   │        Ensure visible focus indicator (:focus-visible)
-│   │        Add ARIA if needed (aria-label for icon-only)
-│   └─ NO → Is it complex (modal, dropdown, table)?
-│       ├─ YES → Use your headless component library (built-in a11y)
-│       └─ NO → Is it informational (status, error)?
-│           ├─ YES → Add role="alert" or role="status"
-│           │        Use aria-live for dynamic updates
-│           │        Never use color alone (add icon/text)
-│           └─ NO → Use semantic HTML (<nav>, <main>, <header>)
-│                    Add landmarks for navigation
-│                    Provide skip links for complex layouts
-├─ Does it use color to convey information?
-│   └─ YES → Add icon, text label, or pattern (never color alone)
-└─ Is contrast ratio sufficient?
-    ├─ Text → 4.5:1 minimum (AA), 7:1 ideal (AAA)
-    ├─ UI components → 3:1 minimum
-    └─ Focus indicators → 3:1 minimum, 2px thickness
-```
+1. `aria-labelledby` — the referenced element's text, and it beats everything below
+2. `aria-label` — a string on the element itself
+3. The element's own content — button text, link text, `alt` on an image
+4. `title` — a last resort, unreliably announced and invisible to touch
 
-</decision_framework>
+`aria-labelledby` overrides visible content, so an element with both announces something a sighted
+user cannot see. Where the visible text is already the name, add nothing.
 
----
+**Non-negotiable:** icon-only controls carry `aria-label` or visually hidden text; every input has an
+associated `<label>`; every meaningful image has `alt` text and every decorative one has `alt=""`.
 
-<red_flags>
+## Contrast ratios
 
-## RED FLAGS
+| Content                                          | AA    | AAA   |
+| ------------------------------------------------ | ----- | ----- |
+| Text under 18pt (or under 14pt bold)             | 4.5:1 | 7:1   |
+| Text 18pt and over (or 14pt bold and over)       | 3:1   | 4.5:1 |
+| UI component boundaries, focus indicators, icons | 3:1   | —     |
 
-**High Priority Issues:**
+WCAG states the threshold in points, and 1pt = 1.333px — so "large" is **24px**, or **18.5px bold**,
+not 18px. Applying the 3:1 row at 18px is a failure the table itself invites if the units are read
+as pixels.
 
-- **Removing focus outlines without replacement** - Keyboard users can't navigate, violates WCAG 2.4.7
-- **Using `div` or `span` for buttons/links** - No semantic meaning, no keyboard support, screen readers can't identify
-- **Click handlers on non-interactive elements without role/keyboard support** - Keyboard inaccessible, violates WCAG 2.1.1
-- **Form inputs without labels** - Screen readers can't announce purpose, violates WCAG 1.3.1
+## Target size
 
-**Medium Priority Issues:**
+| Criterion                    | Level | Requirement                                         |
+| ---------------------------- | ----- | --------------------------------------------------- |
+| 2.5.8 Target Size (Minimum)  | AA    | 24×24 CSS px, or 24px clear spacing between targets |
+| 2.5.5 Target Size (Enhanced) | AAA   | 44×44 CSS px                                        |
 
-- **Color-only error indicators** - Color-blind users can't distinguish, needs icon or text
-- **Placeholder text as label replacement** - Disappears on input, not read by all screen readers
-- **Disabled form submit buttons** - Show validation errors instead, don't hide submit button
-- **Auto-playing audio/video without controls** - Violates WCAG 1.4.2, disrupts screen readers
+Exempt: inline links within a sentence, browser-supplied controls, and cases where the size is
+essential to the information (a map pin, for instance).
 
-**Common Mistakes:**
+## WCAG 2.2
 
-- Not using `aria-label` on icon-only buttons
-- Missing `alt` text on images (or using redundant alt text)
-- Not trapping focus in modals
-- Forgetting to restore focus when closing modals
-- Using `tabindex > 0` (creates unpredictable tab order)
-- Not providing skip links on pages with navigation
-- Missing `aria-invalid` and `aria-describedby` on form errors
+W3C Recommendation, October 2023; ISO/IEC 40500:2025. Nine criteria added over 2.1, and one removed.
 
-**Gotchas & Edge Cases:**
+**Added at Level A**
 
-- **`:focus` vs `:focus-visible`** - Use `:focus-visible` to avoid showing focus rings on mouse clicks
-- **Empty `alt=""` is correct for decorative images** - Don't skip the alt attribute entirely
-- **`aria-hidden="true"` also hides from keyboard** - Don't use on focusable elements
-- **Headless component libraries handle most ARIA automatically** - Don't add redundant ARIA attributes
-- **Live regions announce ALL content** - Keep messages concise to avoid spam
-- **`role="button"` on `<div>` doesn't add keyboard support** - Still need to handle Enter/Space keys manually
-- **`prefers-reduced-motion: reduce` means minimize, not eliminate** - Essential animations can remain; replace motion effects with non-motion alternatives (fade, dissolve)
+- **3.2.6 Consistent Help** — a help mechanism appears in the same relative order on every page that has it
+- **3.3.7 Redundant Entry** — information already entered in a process is auto-filled or offered for selection
 
-</red_flags>
+**Added at Level AA**
 
----
+- **2.4.11 Focus Not Obscured (Minimum)** — the focused element is not entirely hidden by sticky headers, footers or overlays
+- **2.5.7 Dragging Movements** — anything achieved by dragging has a single-pointer alternative
+- **2.5.8 Target Size (Minimum)** — 24×24 px, or adequate spacing
+- **3.3.8 Accessible Authentication** — no cognitive function test unless an alternative exists
 
-<anti_patterns>
+**Added at Level AAA**
 
-## Anti-Patterns
+- **2.4.12 Focus Not Obscured (Enhanced)** — no part of the focus indicator is hidden
+- **2.4.13 Focus Appearance** — the indicator is at least a 2px perimeter at 3:1 contrast
+- **3.3.9 Accessible Authentication (Enhanced)** — stricter still
 
-### Removing Focus Outlines
+**Removed:** 4.1.1 Parsing, obsolete now that browsers recover from malformed markup consistently.
 
-Never remove focus outlines (`outline: none`) without providing a visible replacement. This makes the site unusable for keyboard users and violates WCAG 2.4.7.
+**Baseline expectations carried forward:** text alternatives for non-text content; information never
+by colour alone; all functionality from the keyboard; no keyboard traps; visible focus; skip
+navigation; errors identified with a suggested correction.
 
-```css
-/* WRONG - Removes focus visibility */
-button:focus {
-  outline: none;
-}
+## Common audit rule IDs
 
-/* CORRECT - Custom focus indicator */
-button:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
-}
-```
+The rule identifiers an automated audit reports, with the severity each carries. Useful for reading a
+report and for deciding what blocks a build versus what is filed.
 
----
+| Rule ID             | Impact   | What it caught                                       |
+| ------------------- | -------- | ---------------------------------------------------- |
+| `color-contrast`    | Serious  | Text below the required ratio against its background |
+| `image-alt`         | Critical | An `<img>` with no `alt` attribute at all            |
+| `label`             | Critical | A form control with no associated label              |
+| `button-name`       | Critical | A button with no discernible accessible name         |
+| `link-name`         | Serious  | A link with no discernible accessible name           |
+| `landmark-one-main` | Moderate | The document has no `<main>`, or more than one       |
+| `region`            | Moderate | Content sitting outside every landmark               |
+| `heading-order`     | Moderate | Heading levels skipped, so the outline is wrong      |
 
-### Using Divs for Buttons
+Critical and serious findings are the sensible gate for CI; moderate ones are usually structural and
+better fixed in a pass of their own. A rule can be suppressed per element, and every suppression
+should carry a reason — an unexplained one is indistinguishable from an unfixed failure.
 
-Using `<div onclick>` instead of `<button>` removes semantic meaning, keyboard support, and screen reader identification.
+## Manual checks
 
-```tsx
-// WRONG - No keyboard support, no semantics
-<div onClick={handleClick}>Click me</div>
+Automated auditing finds roughly half of WCAG failures. The rest is these.
 
-// CORRECT - Native button with all a11y built-in
-<button onClick={handleClick}>Click me</button>
-```
+**Keyboard**
 
----
+- [ ] Tab reaches every interactive element, in the order the page reads
+- [ ] Enter and Space activate buttons; Enter follows links
+- [ ] Escape closes dialogs and menus, and focus returns to what opened them
+- [ ] Arrow keys move within composite widgets — menus, tabs, listboxes
+- [ ] Nothing traps focus
+- [ ] The focus indicator is visible at every stop, including over sticky headers
 
-### Color-Only Information
+**Screen reader**
 
-Never convey information using color alone. Color-blind users cannot distinguish between success/error states.
-
-```tsx
-// WRONG - Color only
-<span className={isError ? "text-red" : "text-green"}>Status</span>
-
-// CORRECT - Color + icon
-<span className={isError ? "text-red" : "text-green"}>
-  {isError ? "X" : "✓"} Status
-</span>
-```
-
----
-
-### Placeholder as Label
-
-Placeholders disappear on input and are not reliably announced by screen readers.
-
-```tsx
-// WRONG - No visible label
-<input placeholder="Email" />
-
-// CORRECT - Visible label
-<label htmlFor="email">Email</label>
-<input id="email" placeholder="user@example.com" />
-```
-
----
-
-### Manual ARIA Instead of Headless Components
-
-Don't manually implement complex ARIA patterns when headless component libraries provide tested, accessible alternatives.
-
-```tsx
-// WRONG - Manual ARIA implementation (error-prone, incomplete)
-<div role="dialog" aria-modal="true" aria-labelledby="title">...</div>
-
-// CORRECT - Let your headless component library handle ARIA
-// It manages focus trapping, Escape to close, and all ARIA attributes
-<MyDialog open={open} onClose={handleClose}>
-  <DialogContent>...</DialogContent>
-</MyDialog>
-```
-
----
-
-### Ignoring Motion Preferences
-
-Never force animations on users who have requested reduced motion.
-
-```css
-/* WRONG - Ignores user preference */
-.card {
-  animation: slide-in 300ms ease-out;
-}
-
-/* CORRECT - Only animate when user has no preference */
-@media (prefers-reduced-motion: no-preference) {
-  .card {
-    animation: slide-in 300ms ease-out;
-  }
-}
-```
-
-</anti_patterns>
-
----
-
-## Accessible Names Priority
-
-**Priority order (first found wins):**
-
-1. `aria-labelledby` - Reference to another element
-2. `aria-label` - Direct string label
-3. Element content (button text, link text)
-4. `title` attribute (last resort, not well supported)
-
-**Rules:**
-
-- Icon-only buttons MUST have `aria-label`
-- Form inputs MUST have associated `<label>` or `aria-label`
-- Images MUST have descriptive `alt` text (empty `alt=""` for decorative images)
-
----
-
-## WCAG 2.2 Quick Reference
-
-### Level A (Minimum)
-
-- All non-text content has text alternatives
-- Information not conveyed by color alone
-- All functionality keyboard accessible
-- No keyboard traps
-- **NEW 3.2.6** - Consistent Help: Help mechanisms in same relative order
-- **NEW 3.3.7** - Redundant Entry: Auto-populate previously entered info
-
-### Level AA (Required for compliance)
-
-- 4.5:1 contrast for normal text
-- 3:1 contrast for large text and UI components
-- Focus visible on all interactive elements
-- Skip navigation links for repetitive content
-- Error identification and suggestions
-- **NEW 2.4.11** - Focus Not Obscured: Focused element not entirely hidden
-- **NEW 2.5.7** - Dragging Movements: Single-pointer alternative to drag
-- **NEW 2.5.8** - Target Size Minimum: 24x24px or adequate spacing
-- **NEW 3.3.8** - Accessible Authentication: No cognitive tests without alternatives
-
-### Level AAA (Ideal)
-
-- 7:1 contrast for normal text
-- 4.5:1 contrast for large text
-- Extended sign language for video
-- No timing limits
-- **NEW 2.4.12** - Focus Not Obscured (Enhanced): No part of indicator hidden
-- **NEW 2.4.13** - Focus Appearance: 2px perimeter, 3:1 contrast
-- **NEW 3.3.9** - Accessible Authentication (Enhanced): Stricter requirements
-
-### Removed in WCAG 2.2
-
-- **4.1.1 Parsing** - Obsolete (modern browsers auto-correct parsing errors)
-
----
-
-## Browser & Assistive Technology Support
-
-### Screen Readers
-
-| Screen Reader | Platform  | Notes                   |
-| ------------- | --------- | ----------------------- |
-| NVDA          | Windows   | Free, most popular      |
-| JAWS          | Windows   | Industry standard, paid |
-| VoiceOver     | macOS/iOS | Built-in                |
-| TalkBack      | Android   | Built-in                |
-
-### Browser Testing Priority
-
-1. **Chrome** - Most users
-2. **Safari** - macOS/iOS accessibility
-3. **Firefox** - Strong accessibility support
-4. **Edge** - Enterprise users
+- [ ] Every image is either described or explicitly decorative
+- [ ] Every input is announced with its label
+- [ ] Errors are announced when they appear
+- [ ] Headings form a sensible outline with no skipped levels
+- [ ] Landmarks are present and distinguishable
+- [ ] Dynamic updates are announced once, and not repeatedly
+
+**Visual**
+
+- [ ] Contrast clears 4.5:1 for text and 3:1 for UI
+- [ ] No information carried by colour alone
+- [ ] Text reflows at 200% zoom without horizontal scrolling
+- [ ] Targets meet 24×24 px, or have the spacing that substitutes for it
+- [ ] Animation respects `prefers-reduced-motion`
+
+## Screen readers
+
+| Screen reader | Platform  | Notes                               |
+| ------------- | --------- | ----------------------------------- |
+| NVDA          | Windows   | Free; the most widely used          |
+| JAWS          | Windows   | Paid; common in enterprise contexts |
+| VoiceOver     | macOS/iOS | Built in                            |
+| TalkBack      | Android   | Built in                            |
+
+Pair each with the browser its users pair it with — the combination changes the behaviour, so a
+pattern verified in one is not verified in all.
+
+## Specifications
+
+- WCAG 2.2 quick reference — <https://www.w3.org/WAI/WCAG22/quickref/>
+- What's new in WCAG 2.2 — <https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/>
+- ARIA Authoring Practices Guide — <https://www.w3.org/WAI/ARIA/apg/>
+
+The APG is the reference for any widget with a keyboard contract: it states the roles, states and key
+bindings each pattern owes, which is what to check a component library against.

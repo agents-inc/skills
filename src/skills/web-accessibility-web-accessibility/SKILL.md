@@ -5,59 +5,58 @@ description: WCAG, ARIA, keyboard navigation
 
 # Accessibility
 
-> **Quick Guide:** All interactive elements keyboard accessible. Use headless component libraries for ARIA patterns. WCAG AA minimum (4.5:1 text contrast). Proper form labels and error handling. Combine automated axe-core checks with manual keyboard and screen reader testing.
+> **Quick Guide:** Most of accessibility is settled by choosing the right element: a `<button>` arrives with focus, keyboard activation and a role that a `<div>` needs a dozen lines to fake. What the element cannot give you is the rest — a name for every control, a visible focus indicator, 4.5:1 contrast on text, an announcement when content changes, and information never carried by colour alone. Target WCAG 2.2 Level AA. Automated checks find roughly half the failures, so a keyboard pass is not optional.
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
-- [examples/forms.md](examples/forms.md) - Form validation, error handling, accessible select
-- [examples/focus.md](examples/focus.md) - Modal dialogs, focus indicators
-- [examples/color.md](examples/color.md) - Contrast, color-independent indicators, tokens
-- [examples/tables.md](examples/tables.md) - Sortable data tables
-- [examples/touch-targets.md](examples/touch-targets.md) - Touch target sizing
-- [examples/screen-reader.md](examples/screen-reader.md) - sr-only, hiding decorative content
-- [examples/testing.md](examples/testing.md) - Accessibility testing with axe-core
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, WCAG quick reference
+- [examples/core.md](examples/core.md) — skip links, landmarks, semantic structure, button versus link
+- [examples/forms.md](examples/forms.md) — labels, error handling, required fields, the listbox contract
+- [examples/focus.md](examples/focus.md) — dialogs, focus trapping and restoration, focus indicators
+- [examples/color.md](examples/color.md) — contrast, colour-independent status, link styling
+- [examples/tables.md](examples/tables.md) — headers, captions, sortable columns
+- [examples/touch-targets.md](examples/touch-targets.md) — target size and spacing
+- [examples/screen-reader.md](examples/screen-reader.md) — visually hidden text, decorative content
+- [examples/testing.md](examples/testing.md) — automated auditing, role-based queries, the manual pass
+- [reference.md](reference.md) — WCAG 2.2 criteria, accessible-name rules, audit rule IDs, screen readers
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing UI code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Reach for the semantic element before the ARIA attribute.** `<button>`, `<a href>`, `<nav>` and `<table>` arrive with a role, keyboard behaviour and focus already correct — every one of which has to be rebuilt by hand on a `<div>`, and the rebuild is where the failures are.
 
-**(You MUST ensure all interactive elements are keyboard accessible with visible focus indicators)**
+**Make every interactive element reachable and visibly focused.** Keyboard users navigate by what the focus ring tells them, so `outline: none` without a replacement leaves them moving blind through the page.
 
-**(You MUST use headless component libraries for complex ARIA patterns instead of manual implementation)**
+**Give every control a name a screen reader can announce.** An icon-only button reads as "button" without one, which tells the listener there is something there and nothing about what it does.
 
-**(You MUST maintain WCAG AA minimum contrast ratios - 4.5:1 for text, 3:1 for UI components)**
+**Hold text to 4.5:1 against its background, and UI boundaries and focus indicators to 3:1.** Below that the text is unreadable in bright light, on a cheap panel, or to anyone with reduced contrast sensitivity — which is most people eventually.
 
-**(You MUST never use color alone to convey information - always add icons, text, or patterns)**
+**Pair every colour signal with a shape, an icon or a word.** Red-for-error carries nothing to a red-green colour-blind reader, and nothing at all through a screen reader.
+
+**Announce content that appears without a page change.** A validation error, a saved confirmation and a loaded result are all silent unless they arrive in a live region.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Accessibility (a11y), WCAG compliance, ARIA patterns, keyboard navigation, screen reader support, focus management, aria-label, aria-live, role attribute, skip link
+**Auto-detection:** accessibility, a11y, WCAG, ARIA, aria-label, aria-labelledby, aria-describedby, aria-live, aria-expanded, aria-invalid, role attribute, keyboard navigation, focus management, focus trap, focus-visible, skip link, landmark, screen reader, sr-only, colour contrast, prefers-reduced-motion, tabindex, axe
 
-**When to use:**
+**Applies to:**
 
-- Implementing keyboard navigation and focus management
-- Ensuring WCAG AA color contrast (4.5:1 text, 3:1 UI components)
-- Building interactive components (buttons, forms, modals, tables) with proper ARIA
-- Adding dynamic content updates (live regions, status messages)
-- Implementing skip links, landmarks, and semantic HTML structure
-- Handling motion preferences with `prefers-reduced-motion`
+- Keyboard reachability, tab order, focus movement and focus indicators
+- ARIA roles, states and properties, and when the element makes them unnecessary
+- Contrast ratios and colour-independent information
+- Accessible names, live regions and announcement timing
+- Target size, motion preferences, and the WCAG 2.2 criteria that added them
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Working on backend/API code with no UI
-- Writing build scripts or configuration files
-- Creating documentation or non-rendered content
-- Working with CLI tools (different accessibility considerations)
-
-**Target:** WCAG 2.2 Level AA compliance (minimum), AAA where feasible
+- Component internals for complex widgets — a tested primitive library implements the ARIA contract below; this skill states the contract so you can check whichever one you use.
+- Visual design tokens — the palette is designed elsewhere, and this skill supplies the ratio it has to clear.
+- Test runner mechanics — running an audit is your test tooling's job, and what to assert is here.
+- Content authoring — reading level, plain language and caption text are writing decisions rather than markup ones.
 
 ---
 
@@ -65,394 +64,251 @@ description: WCAG, ARIA, keyboard navigation
 
 ## Philosophy
 
-Accessibility ensures digital products are usable by everyone, including users with disabilities. **Accessibility is a requirement, not a feature** - it should be built in from the start, not retrofitted.
+An accessible interface is not a variant of the interface. It is the same one, built out of elements
+that already carry meaning, with the parts a browser cannot infer stated explicitly.
 
-Key philosophy:
+That reframes most of the work as subtraction. Semantic HTML is the accessible baseline; every
+`<div>` that replaces a real element is a debt paid back in ARIA attributes, key handlers and focus
+management, and paid back badly. The attributes below exist for the cases where no element carries
+the meaning — not as a layer applied over markup that could have carried it.
 
-- **Semantic HTML first** - Use native elements for built-in accessibility
-- **Headless components for complex patterns** - Leverage tested, accessible component primitives from your component library
-- **Progressive enhancement** - Start with keyboard, add mouse interactions on top
-- **WCAG as baseline** - Meet AA minimum, aim for AAA where feasible
+Build for the keyboard first. Everything a pointer can do, a keyboard has to do too, and a design
+that works without a mouse works with one.
 
 </philosophy>
 
 ---
 
-<patterns>
+<decision_framework>
 
-## Core Patterns
+## Which mechanism the case needs
 
-### Keyboard Navigation Standards
-
-**CRITICAL: All interactive elements must be keyboard accessible**
-
-#### Tab Order
-
-- **Logical flow** - Tab order must follow visual reading order (left-to-right, top-to-bottom)
-- **No keyboard traps** - Users can always tab away from any element
-- **Skip repetitive content** - Provide skip links to main content
-- **tabindex rules:**
-  - `tabindex="0"` - Adds element to natural tab order (use sparingly)
-  - `tabindex="-1"` - Programmatic focus only (modal content, headings)
-  - Never use `tabindex > 0` (creates unpredictable tab order)
-
-#### Focus Management
-
-- **Visible focus indicators** - Always show clear focus state (never `outline: none` without replacement)
-- **Focus on open** - When opening modals/dialogs, move focus to first interactive element or close button
-- **Focus on close** - Restore focus to trigger element when closing modals/dialogs
-- **Focus trapping** - Trap focus inside modals using your headless component library or manual implementation
-- **Programmatic focus** - Use `element.focus()` for dynamic content (search results, error messages)
-
-#### Keyboard Shortcuts
-
-- **Standard patterns:**
-  - `Escape` - Close modals, cancel actions, clear selections
-  - `Enter/Space` - Activate buttons and links
-  - `Arrow keys` - Navigate lists, tabs, menus, sliders
-  - `Home/End` - Jump to first/last item
-  - `Tab/Shift+Tab` - Navigate between interactive elements
-
-#### Skip Links
-
-**MANDATORY for pages with navigation** - place as first focusable element, visually hidden until focused.
-
-```typescript
-// components/skip-link.tsx
-export function SkipLink({ className }: { className?: string }) {
-  return (
-    <a href="#main-content" className={className}>
-      Skip to main content
-    </a>
-  );
-}
+```
+What is being built?
+├─ Something that acts when activated → <button>
+│   └─ Icon only → add an accessible name
+├─ Something that navigates → <a href>
+│   └─ Current destination → aria-current="page"
+├─ A structural region → <nav>, <main>, <header>, <aside>, <footer>
+│   └─ More than one of a kind → label each with aria-label
+├─ A complex widget — dialog, listbox, tabs, combobox, tree
+│   └─ Take a tested primitive. The ARIA contract is large,
+│      and a partial implementation reads as broken rather than absent.
+└─ Content that appears without navigation
+    ├─ An error or something urgent → role="alert"
+    └─ Progress or confirmation → role="status"
 ```
 
-See [examples/core.md](examples/core.md) for full skip link implementation with styling.
+**ARIA or not:** the first rule of ARIA is not to use ARIA. `role="button"` on a `<div>` gives a
+screen reader the right word and gives the keyboard nothing, so the handlers, `tabindex` and focus
+styling are all still owed. Reach for ARIA when no element expresses the thing — a live region, a
+disclosure's `aria-expanded`, a sort direction on a column header.
+
+**AA or AAA:** AA is the compliance target and what regulation generally references. Individual AAA
+criteria are often cheap — 7:1 contrast, 44×44 targets — and worth taking where the design allows,
+without committing the whole product to AAA.
+
+</decision_framework>
 
 ---
 
-### ARIA Patterns
+<patterns>
 
-**Use headless component libraries** - they handle ARIA automatically for complex patterns like dialogs, selects, tabs, tooltips, and popovers.
+## Core patterns
 
-#### Component-Specific ARIA
+### Pattern 1: Skip link
 
-**Buttons:**
+The first focusable element on the page, hidden until it takes focus, jumping past the navigation
+every page repeats.
 
-- `aria-label` - For icon-only buttons
-- `aria-pressed` - For toggle buttons
-- `aria-expanded` - For expandable sections
-- `aria-disabled` - Use with `disabled` attribute
+```typescript
+<a href="#main-content" className="skip-link">Skip to main content</a>
+…
+<main id="main-content" tabIndex={-1}>{children}</main>
+```
 
-**Forms:**
+`tabIndex={-1}` on the target is what lets focus actually land there; without it the fragment moves
+the viewport and leaves focus at the top of the document.
 
-- `aria-required` - Required fields (use with `required`)
-- `aria-invalid` - Invalid fields
-- `aria-describedby` - Link to error messages, helper text
-- `aria-errormessage` - Explicit error message reference
+Full code: [examples/core.md](examples/core.md)
 
-**Navigation:**
+### Pattern 2: Landmarks
 
-- `aria-current="page"` - Current page in navigation
-- `aria-label` - Describe navigation purpose ("Main navigation", "Footer navigation")
+Landmark elements are how a screen reader user jumps between regions rather than reading linearly.
 
-**Modals/Dialogs:**
+```html
+<header>…</header>
+<nav aria-label="Main">…</nav>
+<main>…</main>
+<aside aria-label="Related">…</aside>
+<footer>…</footer>
+```
 
-- `role="dialog"` or `role="alertdialog"`
-- `aria-modal="true"`
-- `aria-labelledby` - Points to dialog title
-- `aria-describedby` - Points to dialog description
+One `<main>` per page. Where two landmarks share a type, each needs a distinguishing label — two
+unlabelled `<nav>`s are announced identically.
 
-**Tables:**
+Full code: [examples/core.md](examples/core.md)
 
-- `scope="col"` and `scope="row"` for headers
-- `<caption>` for table description
-- `aria-sort` for sortable columns
+### Pattern 3: Button versus link
 
-#### Live Regions
+Activation is a button; navigation is a link. The distinction decides the keyboard behaviour, the
+announcement, and whether the browser's own affordances work.
 
-**Use for dynamic content updates:**
+```typescript
+<button onClick={handleSubmit}>Submit form</button>
+<a href="/dashboard">Go to dashboard</a>
+```
 
-- `aria-live="polite"` - Announce when user is idle (status messages, non-critical updates)
-- `aria-live="assertive"` - Announce immediately (errors, critical alerts)
-- `aria-atomic="true"` - Announce entire region content
-- `role="status"` - For status messages (implies `aria-live="polite"`)
-- `role="alert"` - For error messages (implies `aria-live="assertive"`)
+A `<button>` that navigates costs the reader "open in new tab", the status-bar URL and the middle
+click. A `<div onClick>` costs them the whole interaction.
 
-**Best practices:**
+Full code: [examples/core.md](examples/core.md)
 
-- Keep messages concise and meaningful
-- Clear old messages before new ones
-- Don't spam with rapid updates (debounce)
+### Pattern 4: Accessible names
 
----
+Every control needs a name, and the icon-only case is where it goes missing.
 
-### Color Contrast & Visual Design
+```typescript
+<button aria-label="Delete item">
+  <TrashIcon aria-hidden="true" />
+</button>
 
-**Text contrast (AA):**
+<button>
+  <TrashIcon aria-hidden="true" />
+  <span className="sr-only">Delete item</span>
+</button>
+```
 
-- Normal text (< 18px): 4.5:1 minimum
-- Large text (>= 18px or >= 14px bold): 3:1 minimum
-- AAA (recommended): 7:1 for normal, 4.5:1 for large
+Both announce "Delete item, button". The second survives translation tooling and shows up in a
+text search of the DOM, so prefer it where either matters.
 
-**Non-text contrast:**
+Resolution order is in [reference.md](reference.md); full code in
+[examples/screen-reader.md](examples/screen-reader.md).
 
-- UI components (buttons, form inputs): 3:1 minimum
-- Focus indicators: 3:1 against background
-- Icons (functional): 3:1 minimum
+### Pattern 5: Form fields and errors
 
-**Color Independence:**
+A label associated with the input, the invalid state on the input, and the message reachable from it.
 
-- Add icons to color-coded states (check for success, X for error)
-- Use text labels with status colors
-- Provide patterns/textures in charts
-- Underline links in body text
+```typescript
+<label htmlFor="email">Email</label>
+<input
+  id="email"
+  type="email"
+  aria-required="true"
+  aria-invalid={Boolean(error)}
+  aria-describedby={error ? "email-error" : undefined}
+/>
+{error && <span id="email-error" role="alert">{error}</span>}
+```
 
-See [examples/color.md](examples/color.md) for contrast examples and design tokens.
+A placeholder is not a label: it disappears the moment typing starts, and it fails contrast in most
+designs.
 
----
+Full code: [examples/forms.md](examples/forms.md)
 
-### Semantic HTML
+### Pattern 6: Focus indicators
 
-**Always use semantic HTML:**
-
-- `<button>` for actions (not `<div onclick>`)
-- `<a>` for navigation (not `<div onclick>`)
-- `<nav>` for navigation sections
-- `<main>` for primary content (one per page)
-- `<header>` and `<footer>` for page sections
-- `<ul>/<ol>` for lists
-- `<table>` for tabular data (not divs with grid CSS)
-- `<form>` with proper `<label>` associations
-
-**Never:**
-
-- Use `<div>` or `<span>` for interactive elements
-- Use click handlers on non-interactive elements without proper role
-- Use tables for layout
-- Use placeholder as label replacement
-
----
-
-### Form Accessibility
-
-**Label Associations:**
-
-- Always use proper `<label>` with `htmlFor` attribute
-- Or wrap input inside label element
-
-**Error Handling:**
-
-- `aria-invalid="true"` on invalid fields
-- `aria-describedby` linking to error message
-- `role="alert"` on error messages for screen reader announcement
-- Visual error indicators (icons, border color)
-- Error summary at top of form for multiple errors
-
-See [examples/forms.md](examples/forms.md) for complete form validation and error handling patterns.
-
----
-
-### Focus Indicators
-
-**Minimum requirements:**
-
-- 3:1 contrast ratio against background
-- 2px minimum thickness
-- Clear visual difference from unfocused state
-- Consistent across all interactive elements
-
-**Use `:focus-visible` for better UX:**
+`:focus-visible` shows the ring for keyboard interaction and withholds it from a mouse click, which
+removes the reason people delete focus styles in the first place.
 
 ```css
-/* Shows only for keyboard navigation, not mouse clicks */
-button:focus-visible {
-  outline: 2px solid var(--color-primary);
+.button:focus-visible {
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 ```
 
-See [examples/focus.md](examples/focus.md) for full focus indicator patterns.
+At least 2px, and at least 3:1 against whatever sits behind it.
 
----
+Full code: [examples/focus.md](examples/focus.md)
 
-### Touch Target Sizes
+### Pattern 7: Dialogs and focus movement
 
-**WCAG 2.2 Target Size Requirements:**
+The contract a modal owes, whoever implements it: focus moves in on open, cannot leave while it is
+open, Escape closes it, and focus returns to the element that opened it.
 
-- **Level AA (2.5.8):** 24x24 CSS pixels minimum, or adequate spacing (24px between targets)
-- **Level AAA (2.5.5):** 44x44 CSS pixels (recommended for best UX)
-- Exceptions: inline text links, user agent controls, essential designs
+```typescript
+<div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+  <h2 id="dialog-title">{title}</h2>
+  …
+</div>
+```
 
-See [examples/touch-targets.md](examples/touch-targets.md) for sizing and spacing examples.
+Focus returning to the trigger is the half most often missed — without it a keyboard user is dropped
+back at the top of the document with no idea where they were.
 
----
+Full code: [examples/focus.md](examples/focus.md)
 
-### Screen Reader Support
+### Pattern 8: Live regions
 
-- Use `.sr-only` class for screen reader only text
-- Use `aria-label` for icon-only buttons
-- Use empty `alt=""` for decorative images
-- Use `aria-hidden="true"` for decorative content (but never on focusable elements)
+Content that arrives without a navigation is silent unless a live region announces it.
 
-See [examples/screen-reader.md](examples/screen-reader.md) for sr-only and hiding patterns.
+```typescript
+<div role="status">{savedMessage}</div>
+<div role="alert">{errorMessage}</div>
+```
 
----
+`role="status"` waits for a pause; `role="alert"` interrupts. The region must be in the DOM before
+the message arrives — inserting the region and its content together often announces nothing.
 
-### Motion and Animation Accessibility
+### Pattern 9: Colour-independent status
 
-**WCAG 2.3.3 Animation from Interactions (AAA):**
+Colour is an accent on the signal, never the signal.
 
-Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million people). Use `prefers-reduced-motion` to respect user preferences:
+```typescript
+<span className={statusClass}>
+  <span aria-hidden="true">{status === "error" ? "×" : "✓"}</span>
+  <span>{status === "error" ? "Failed" : "Complete"}</span>
+</span>
+```
+
+The icon carries it visually and the text carries it to a screen reader; remove the colour and both
+still work.
+
+Full code: [examples/color.md](examples/color.md)
+
+### Pattern 10: Motion preferences
+
+Animate by opting in, so a reader who has asked for less motion gets it by default.
 
 ```css
-/* Only animate when user has no motion preference */
 @media (prefers-reduced-motion: no-preference) {
-  .animated-element {
+  .card {
     animation: slide-in 300ms ease-out;
   }
 }
 ```
 
-**Key principles:**
-
-- `reduce` means minimize, not eliminate all motion - essential animations can remain
-- Replace motion effects (scale, rotate, slide) with non-motion effects (fade, dissolve, color change)
-- Provide pause/stop controls for auto-playing content longer than 5 seconds
-- Avoid parallax scrolling effects or provide alternatives
-
----
-
-### WCAG 2.2 New Success Criteria
-
-**WCAG 2.2** (W3C Recommendation October 2023, ISO/IEC 40500:2025 as of October 2025) added 9 new success criteria. Key ones for developers:
-
-**Level A:**
-
-- **3.2.6 Consistent Help** - Help mechanisms (contact, chat) must appear in same relative order across pages
-- **3.3.7 Redundant Entry** - Previously entered info must be auto-populated or available for selection
-
-**Level AA:**
-
-- **2.4.11 Focus Not Obscured (Minimum)** - Focused element must not be entirely hidden by other content (sticky headers, modals)
-- **2.5.7 Dragging Movements** - Provide single-pointer alternative to drag operations
-- **2.5.8 Target Size (Minimum)** - 24x24px minimum or adequate spacing
-- **3.3.8 Accessible Authentication** - No cognitive function tests (CAPTCHAs) unless alternatives exist
-
-**Level AAA:**
-
-- **2.4.12 Focus Not Obscured (Enhanced)** - No part of focus indicator hidden
-- **2.4.13 Focus Appearance** - Focus indicator 2px perimeter, 3:1 contrast
-- **3.3.9 Accessible Authentication (Enhanced)** - Stricter CAPTCHA requirements
-
-**Removed from WCAG 2.2:**
-
-- **4.1.1 Parsing** - Obsolete due to modern browser error correction
+`reduce` means minimise rather than eliminate — a fade in place of a slide keeps the feedback and
+drops the vestibular trigger.
 
 </patterns>
 
 ---
 
-## Testing Accessibility
-
-**Multi-layered approach required** - automated tools catch ~57% of WCAG issues. Always combine with manual testing.
-
-**Automated:** Use axe-core based tools in your test runner for automated WCAG checks. See [examples/testing.md](examples/testing.md) for axe integration patterns.
-
-**Manual keyboard checklist:**
-
-- [ ] Tab through all interactive elements in logical order
-- [ ] Activate buttons with Enter/Space
-- [ ] Close modals with Escape
-- [ ] Navigate dropdowns with arrows
-- [ ] No keyboard traps
-- [ ] Focus indicators visible on all elements
-
-**Manual screen reader checklist:**
-
-- [ ] All images have alt text (or alt="" if decorative)
-- [ ] Form inputs have labels
-- [ ] Error messages are announced
-- [ ] Headings create logical outline
-- [ ] Landmarks are labeled
-- [ ] Live regions announce updates
-
-**Manual visual checklist:**
-
-- [ ] Color contrast meets WCAG AA (4.5:1 text, 3:1 UI)
-- [ ] Information not conveyed by color alone
-- [ ] Text resizable to 200% without horizontal scroll
-- [ ] Touch targets meet 24x24px minimum (AA)
-- [ ] Focus indicators have 3:1 contrast
-- [ ] Animations respect prefers-reduced-motion
-
-**Screen readers to test with:** NVDA (Windows, free), JAWS (Windows, paid), VoiceOver (macOS/iOS, built-in), TalkBack (Android, built-in)
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Removing focus outlines without replacement - keyboard users can't navigate, violates WCAG 2.4.7
-- Using `div` or `span` for buttons/links - no semantic meaning, no keyboard support
-- Click handlers on non-interactive elements without role/keyboard support - violates WCAG 2.1.1
-- Form inputs without labels - screen readers can't announce purpose, violates WCAG 1.3.1
+- `outline: none` with no replacement — keyboard users lose their position entirely; scope the ring to `:focus-visible` instead of removing it.
+- A `<div>` or `<span>` with an `onClick` — not focusable, not activated by Enter or Space, announced as nothing; use a `<button>`.
+- `role="button"` on a `<div>` — supplies the word and none of the behaviour, so Tab, Enter and Space are all still owed.
+- `aria-hidden="true"` on anything focusable — focus lands on an element the screen reader insists is not there.
+- `tabindex` above zero — hoists the element ahead of the whole document order, and one such value disorders the entire page.
+- An input with no associated label — announced by its type alone, so a form reads as "edit text, edit text, edit text".
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Color-only error indicators - color-blind users can't distinguish
-- Placeholder text as label replacement - disappears on input
-- Auto-playing audio/video without controls - violates WCAG 1.4.2
-
-**Gotchas & Edge Cases:**
-
-- `:focus` vs `:focus-visible` - use `:focus-visible` to avoid focus rings on mouse clicks
-- Empty `alt=""` is correct for decorative images - don't skip the alt attribute entirely
-- `aria-hidden="true"` also hides from keyboard - don't use on focusable elements
-- `role="button"` on `<div>` doesn't add keyboard support - still need Enter/Space handlers
-- `prefers-reduced-motion: reduce` means minimize, not eliminate - essential animations can remain
-- Live regions announce ALL content - keep messages concise to avoid spam
-
-See [reference.md](reference.md) for full anti-patterns with code examples.
+- `alt=""` is the correct value for a decorative image; omitting `alt` entirely makes a screen reader read the filename.
+- A live region added to the DOM at the same moment as its message usually announces nothing — render the container first.
+- A live region announces only the part that changed, so "3 of 10 results" updating in place can be read as "5" with no context; `aria-atomic="true"` makes it re-read the whole region.
+- `role="alert"` interrupts whatever is being read, so a per-keystroke validation message in one is unusable.
+- A placeholder is not a label, and disappears exactly when the reader needs it most.
+- Disabled buttons are skipped by focus, so a submit button disabled until the form is valid gives no route to the reason.
+- A `<label>` wrapping the input and a `for`/`htmlFor` both work; two labels on one input do not, and only one is announced.
+- `prefers-reduced-motion: reduce` asks for less, not none — removing essential feedback overshoots.
+- Automated audits find roughly half of WCAG failures. Everything about order, wording and whether the announcement made sense needs a person.
 
 </red_flags>
-
----
-
-## Resources
-
-**Official guidelines:**
-
-- WCAG 2.2 Guidelines: https://www.w3.org/WAI/WCAG22/quickref/
-- What's New in WCAG 2.2: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
-- WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
-
-**Tools:**
-
-- axe DevTools: https://www.deque.com/axe/devtools/
-- WAVE: https://wave.webaim.org/
-- WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST ensure all interactive elements are keyboard accessible with visible focus indicators)**
-
-**(You MUST use headless component libraries for complex ARIA patterns instead of manual implementation)**
-
-**(You MUST maintain WCAG AA minimum contrast ratios - 4.5:1 for text, 3:1 for UI components)**
-
-**(You MUST never use color alone to convey information - always add icons, text, or patterns)**
-
-**Failure to follow these rules will make the site unusable for keyboard users, screen reader users, and color-blind users - violating WCAG 2.2 Level AA compliance.**
-
-</critical_reminders>

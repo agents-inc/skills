@@ -1,39 +1,16 @@
-# Image Optimization
+# Performance — Images
 
-> Image formats, lazy loading, and responsive image patterns. See [core.md](core.md) for React runtime patterns.
+> Formats, responsive sources and lazy loading. Format and weight tables are in [reference.md](../reference.md).
 
----
-
-## Image Format Priority
-
-```typescript
-// constants/image.ts
-export const IMAGE_FORMATS = {
-  AVIF_SIZE_REDUCTION_PERCENT: 40, // 30-50% smaller than JPEG
-  WEBP_SIZE_REDUCTION_PERCENT: 30, // 25-35% smaller than JPEG
-} as const;
-
-export const IMAGE_SIZE_BUDGETS_KB = {
-  HERO: 200,
-  THUMBNAIL: 50,
-} as const;
-```
-
-**Format priority (prefer in order):**
-
-1. **AVIF** - Best compression (30-50% smaller than JPEG), ~95% browser support (2026)
-2. **WebP** - Good compression (25-35% smaller), ~97% browser support
-3. **JPEG** - Universal fallback
+Images are typically the largest share of a page's bytes and the usual LCP element, so format and
+dimensions move the metric more than anything else on this page.
 
 ---
 
-## Progressive Enhancement with Multiple Formats
-
-### Good Example - Picture Element with Fallbacks
+## Serving the best format the browser supports
 
 ```html
 <picture>
-  <!-- AVIF: Best compression (30-50% smaller) -->
   <source
     srcset="
       /images/hero-400.avif   400w,
@@ -42,8 +19,6 @@ export const IMAGE_SIZE_BUDGETS_KB = {
     "
     type="image/avif"
   />
-
-  <!-- WebP: Good compression (25-35% smaller) -->
   <source
     srcset="
       /images/hero-400.webp   400w,
@@ -52,8 +27,6 @@ export const IMAGE_SIZE_BUDGETS_KB = {
     "
     type="image/webp"
   />
-
-  <!-- JPEG: Universal fallback -->
   <img
     src="/images/hero-800.jpg"
     srcset="
@@ -61,35 +34,37 @@ export const IMAGE_SIZE_BUDGETS_KB = {
       /images/hero-800.jpg   800w,
       /images/hero-1200.jpg 1200w
     "
-    sizes="(max-width: 600px) 400px,
-           (max-width: 1200px) 800px,
-           1200px"
-    alt="Hero image"
-    loading="lazy"
-    decoding="async"
+    sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
+    alt="Hero"
     width="1200"
     height="600"
+    decoding="async"
   />
 </picture>
 ```
 
-**Why good:** Browser chooses best supported format (AVIF > WebP > JPEG), serves appropriate size for viewport, smaller file sizes improve LCP, explicit dimensions prevent CLS
-
-### Bad Example - Single Format, No Responsive Sizes
+**Why good:** the browser takes the first `<source>` whose type it supports and the narrowest
+`srcset` entry that satisfies `sizes`, so a phone downloads a 400-pixel AVIF where a desktop
+downloads a 1200-pixel one. The `<img>` is both the fallback and the element the attributes apply
+to — `alt`, `width` and `height` belong there rather than on the sources.
 
 ```html
+<!-- Bad -->
 <img src="/images/hero-4k.jpg" alt="Hero" />
 ```
 
-**Why bad:** Serves 4K image to mobile (wasted bandwidth), no modern format optimization (30-50% larger files), no lazy loading, no dimensions (causes CLS)
+**Why bad:** one enormous file for every device, in the largest format, with no reserved space.
+
+`sizes` describes the layout, not the file. Getting it wrong is the common failure: a value that
+overstates the rendered width makes the browser pick a larger file than it needs, and the whole
+`srcset` buys nothing.
 
 ---
 
-## Lazy Loading Images
-
-### Good Example - Lazy Load Below-Fold Images
+## Lazy loading, and where not to
 
 ```html
+<!-- Below the fold: defer it -->
 <img
   src="/image.webp"
   alt="Description"
@@ -98,63 +73,46 @@ export const IMAGE_SIZE_BUDGETS_KB = {
   width="800"
   height="400"
 />
+
+<!-- Above the fold: fetch it immediately and early -->
+<img
+  src="/hero.avif"
+  alt="Hero"
+  fetchpriority="high"
+  decoding="async"
+  width="1200"
+  height="600"
+/>
 ```
 
-**Why good:** Defers loading until image nears viewport, reduces initial page weight, faster Time to Interactive
-
-### Bad Example - Lazy Loading Above-Fold Image
+**Why good:** deferring what is off-screen removes it from the initial load entirely, while the LCP
+candidate gets the opposite treatment.
 
 ```html
-<!-- Delays LCP! -->
+<!-- Bad -->
 <img src="/hero.jpg" alt="Hero" loading="lazy" width="1200" height="600" />
 ```
 
-**Why bad:** Delays LCP element, poor perceived performance, lazy loading adds network round-trip for critical images
+**Why bad:** `loading="lazy"` delays discovery of the element that defines LCP, so the metric it was
+meant to improve gets worse.
 
-**When to use lazy loading:**
-
-- Below-the-fold images
-- Images in long pages
-- Carousels and galleries
-
-**When NOT to use:**
-
-- Above-the-fold / hero images (use `loading="eager"` + `fetchpriority="high"`)
-- Images needed for initial render (LCP candidates)
+**Lazy:** below-fold images, long pages, gallery and carousel items past the first.
+**Eager:** the LCP candidate, anything in the first viewport, anything needed for the first paint.
 
 ---
 
-## Image Optimization Automation
+## Generating the formats
 
-### Build Script
+Conversion belongs in the build rather than in anyone's hands: the source stays a single original,
+and the derivatives are reproducible.
 
 ```bash
-#!/bin/bash
-# scripts/optimize-images.sh
-
-# Convert images to WebP and AVIF
-for img in public/images/*.{jpg,png}; do
-  filename="${img%.*}"
-
-  # Convert to WebP (quality 80)
-  cwebp -q 80 "$img" -o "${filename}.webp"
-
-  # Convert to AVIF (quality 80)
-  avifenc -s 6 -q 80 "$img" -o "${filename}.avif"
-
-  echo "Optimized: $img"
-done
+# Quality 80 is the usual point where the artefacts stop being visible
+cwebp -q 80 "$source" -o "${base}.webp"
+avifenc -s 6 -q 80 "$source" -o "${base}.avif"
 ```
 
-### package.json Integration
-
-```json
-{
-  "scripts": {
-    "optimize:images": "bash scripts/optimize-images.sh",
-    "prebuild": "bun run optimize:images"
-  }
-}
-```
-
-**Why good:** Automated image optimization in build pipeline, consistent quality across all images, no manual optimization needed
+The decisions worth carrying between projects are the quality setting, which widths to emit, and
+whether conversion runs as a build step or as a check that fails when a committed image has no
+derivatives. AVIF encoding is slow enough that it belongs in a cached step rather than on every
+build.

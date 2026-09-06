@@ -1,15 +1,17 @@
-# Service Worker - Update Examples
+# Service Worker — Update Examples
 
-> Update handling and versioning patterns for Service Workers. See [SKILL.md](../SKILL.md) for concepts and [core.md](core.md) for basic lifecycle patterns.
+> Version communication and the five ways to apply a waiting worker. Which one to pick is in
+> [reference.md](../reference.md); the lifecycle they build on is in [core.md](core.md).
 
 ---
 
-## Pattern 10: Version Tracking and Communication
+## Pattern 10: Version communication
 
-Typed bidirectional messaging between service worker and clients for version tracking and update coordination.
+A typed protocol in both directions, so a client can ask which version is running and the worker can
+announce itself on activation.
 
 ```typescript
-// sw.ts - Version communication
+// sw.ts
 declare const self: ServiceWorkerGlobalScope;
 
 const SW_VERSION = "1.2.0";
@@ -64,31 +66,28 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
 export type { ClientBoundMessage, WorkerBoundMessage };
 ```
 
-**Why good:** Typed message protocol with discriminated unions, bidirectional communication, notifies all clients on activation
+`event.source` is the client that sent the message; `clients.matchAll` reaches every open tab.
 
 ---
 
-## Pattern 11: Aggressive Update (Use Sparingly)
+## Pattern 11: Aggressive update
 
-For critical security fixes, skip waiting and claim immediately. Disrupts user session.
+Take over immediately. This changes behaviour under an open session, so keep it for security fixes
+and breaking changes.
 
 ```typescript
 const CACHE_VERSION = "v2.0.0";
 
-// Install - skip waiting immediately
 self.addEventListener("install", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(`static-${CACHE_VERSION}`);
       await cache.addAll(PRECACHE_URLS);
-
-      // AGGRESSIVE: Only use for critical security fixes
       await self.skipWaiting();
     })(),
   );
 });
 
-// Activate - claim and optionally force reload
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
@@ -101,7 +100,6 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
 
       await self.clients.claim();
 
-      // Notify clients to reload
       const clients = await self.clients.matchAll({ type: "window" });
       for (const client of clients) {
         client.postMessage({ type: "FORCE_RELOAD" });
@@ -111,13 +109,11 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
 });
 ```
 
-**Warning:** This disrupts user experience mid-session. Use only for critical security fixes or breaking changes.
-
 ---
 
-## Pattern 12: Deferred Update with User Control
+## Pattern 12: Deferred update, user-triggered
 
-Let users choose when to apply updates. Track dismissed versions to avoid re-prompting.
+The default. Remembering dismissed versions stops the banner returning on every page load.
 
 ```typescript
 interface UpdateHandler {
@@ -145,12 +141,10 @@ function createUpdateHandler(
   };
 
   navigator.serviceWorker.addEventListener("message", (event: MessageEvent) => {
-    if (
+    const isNewVersion =
       event.data?.type === "VERSION" &&
-      !dismissedVersions.has(event.data.version)
-    ) {
-      onUpdateAvailable(event.data.version);
-    }
+      !dismissedVersions.has(event.data.version);
+    if (isNewVersion) onUpdateAvailable(event.data.version);
   });
 
   return {
@@ -172,19 +166,19 @@ function createUpdateHandler(
     },
 
     dismissUpdate(): void {
-      if (waitingWorker) {
-        waitingWorker.postMessage({ type: "GET_VERSION" });
+      if (!waitingWorker) return;
 
-        const handler = (event: MessageEvent) => {
-          if (event.data?.type === "VERSION") {
-            dismissedVersions.add(event.data.version);
-            saveDismissed();
-            navigator.serviceWorker.removeEventListener("message", handler);
-          }
-        };
+      // ask for the version so the dismissal can be recorded against it
+      waitingWorker.postMessage({ type: "GET_VERSION" });
 
-        navigator.serviceWorker.addEventListener("message", handler);
-      }
+      const handler = (event: MessageEvent) => {
+        if (event.data?.type !== "VERSION") return;
+        dismissedVersions.add(event.data.version);
+        saveDismissed();
+        navigator.serviceWorker.removeEventListener("message", handler);
+      };
+
+      navigator.serviceWorker.addEventListener("message", handler);
     },
   };
 }
@@ -193,17 +187,18 @@ export { createUpdateHandler };
 export type { UpdateHandler };
 ```
 
-**Why good:** User controls update timing, dismissed versions persisted in localStorage, framework-agnostic (wire up to any UI)
+Nothing here touches the DOM, so the same handler drives any UI.
 
 ---
 
-## Pattern 13: Update at Idle Time
+## Pattern 13: Update at idle
 
-Apply updates when user is idle to minimize disruption. Uses `requestIdleCallback` with a max-wait fallback.
+Automatic, but not mid-interaction. The max-wait timer stops a user who never goes idle from never
+getting the update.
 
 ```typescript
-const IDLE_TIMEOUT_MS = 30000; // 30 seconds of inactivity
-const MAX_IDLE_WAIT_MS = 300000; // 5 minutes max wait
+const IDLE_TIMEOUT_MS = 30_000;
+const MAX_IDLE_WAIT_MS = 300_000;
 
 async function applyUpdateWhenIdle(
   registration: ServiceWorkerRegistration,
@@ -231,7 +226,6 @@ async function applyUpdateWhenIdle(
 
       scheduleIdleCheck();
 
-      // Reschedule on user activity
       const activityEvents = ["mousedown", "keydown", "touchstart", "scroll"];
       const onActivity = () => {
         if (idleCallback !== null) cancelIdleCallback(idleCallback);
@@ -243,7 +237,6 @@ async function applyUpdateWhenIdle(
       });
     }
 
-    // Fallback: apply after max wait time regardless
     maxWaitTimeout = setTimeout(applyUpdate, MAX_IDLE_WAIT_MS);
   });
 }
@@ -251,13 +244,11 @@ async function applyUpdateWhenIdle(
 export { applyUpdateWhenIdle };
 ```
 
-**Why good:** Uses `requestIdleCallback` for browser-native idle detection, max-wait fallback prevents indefinite deferral, reschedules on user activity
-
 ---
 
-## Pattern 14: Progressive Rollout
+## Pattern 14: Progressive rollout
 
-Roll out updates to a percentage of users using persistent bucketing.
+Bucket each client once and persist it, so a user does not flip between versions on reload.
 
 ```typescript
 const ROLLOUT_STORAGE_KEY = "sw-rollout-bucket";
@@ -288,7 +279,7 @@ async function shouldApplyUpdate(config: RolloutConfig): Promise<boolean> {
         return bucket < data.targetPercentage;
       }
     } catch {
-      // Fall through to local config
+      // remote config unreachable — fall through to the local percentage
     }
   }
 
@@ -302,26 +293,22 @@ async function conditionalUpdate(
   if (!registration.waiting) return false;
 
   const shouldUpdate = await shouldApplyUpdate(config);
+  if (!shouldUpdate) return false;
 
-  if (shouldUpdate) {
-    registration.waiting.postMessage({ type: "SKIP_WAITING" });
-    return true;
-  }
-
-  return false;
+  registration.waiting.postMessage({ type: "SKIP_WAITING" });
+  return true;
 }
 
 export { conditionalUpdate, getUserBucket, shouldApplyUpdate };
 export type { RolloutConfig };
 ```
 
-**Why good:** Consistent bucketing per user, optional remote config with local fallback, deterministic rollout
-
 ---
 
-## Pattern 15: Update with Data Migration
+## Pattern 15: Update with cache migration
 
-Handle data migrations between service worker versions. Detect previous version from cache names and run versioned migration tasks.
+When the shape of cached data changes, transform it before the old caches are deleted. The previous
+version is recoverable from the cache names themselves.
 
 ```typescript
 declare const self: ServiceWorkerGlobalScope;
@@ -339,30 +326,27 @@ const MIGRATIONS: MigrationTask[] = [
     fromVersion: "v1.0.0",
     toVersion: "v2.0.0",
     async migrate() {
-      // Example: transform cached API data to new schema
       const oldCache = await caches.open("api-v1.0.0");
       const newCache = await caches.open(`api-${CACHE_VERSION}`);
 
-      const requests = await oldCache.keys();
-      for (const request of requests) {
+      for (const request of await oldCache.keys()) {
         const response = await oldCache.match(request);
-        if (response) {
-          const data = await response.json();
-          const transformed = transformData(data);
-          await newCache.put(
-            request,
-            new Response(JSON.stringify(transformed), {
-              headers: response.headers,
-            }),
-          );
-        }
+        if (!response) continue;
+
+        const transformed = transformData(await response.json());
+        await newCache.put(
+          request,
+          new Response(JSON.stringify(transformed), {
+            headers: response.headers,
+          }),
+        );
       }
     },
   },
 ];
 
 function transformData(data: unknown): unknown {
-  return data; // Apply actual transformation
+  return data;
 }
 
 async function runMigrations(fromVersion: string): Promise<void> {
@@ -385,11 +369,10 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
       );
 
       if (previousStaticCache) {
-        const prevVersion = previousStaticCache.replace("static-", "");
-        await runMigrations(prevVersion);
+        await runMigrations(previousStaticCache.replace("static-", ""));
       }
 
-      // Clean old caches after migration
+      // deletion comes last, so a failed migration leaves the old data intact
       await Promise.all(
         cacheNames
           .filter((name) => !name.includes(CACHE_VERSION))
@@ -401,5 +384,3 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
   );
 });
 ```
-
-**Why good:** Versioned migration tasks, detects previous version from cache names, transforms cached data before cleanup, runs migrations before deleting old caches

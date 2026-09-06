@@ -1,20 +1,13 @@
-# Core Accessibility Patterns
+# Accessibility — Core Examples
 
-> Skip links, semantic HTML, landmarks, and button vs link patterns.
+> Skip links, landmarks, semantic structure and button versus link. See [SKILL.md](../SKILL.md) for the decisions.
 
 ---
 
-## Skip Links
-
-### Example: Skip Link Component
+## Pattern 1: Skip link
 
 ```typescript
-// components/skip-link.tsx
-interface SkipLinkProps {
-  className?: string;
-}
-
-export function SkipLink({ className }: SkipLinkProps) {
+export function SkipLink({ className }: { className?: string }) {
   return (
     <a href="#main-content" className={className}>
       Skip to main content
@@ -24,16 +17,14 @@ export function SkipLink({ className }: SkipLinkProps) {
 ```
 
 ```css
-/* Skip link styling pattern - apply via your styling solution */
 .skip-link {
   position: absolute;
   top: -100px;
   left: 0;
-  padding: 1rem;
-  background: var(--color-primary);
-  color: white;
-  text-decoration: none;
   z-index: 9999;
+  padding: 1rem;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .skip-link:focus {
@@ -42,9 +33,6 @@ export function SkipLink({ className }: SkipLinkProps) {
 ```
 
 ```typescript
-// layout.tsx
-import type { ReactNode } from 'react';
-
 function Layout({ children }: { children: ReactNode }) {
   return (
     <>
@@ -59,127 +47,144 @@ function Layout({ children }: { children: ReactNode }) {
 }
 ```
 
-**Why good:** Keyboard users can skip navigation. WCAG requirement. Better UX for screen reader users.
+**Why good:** it is the first thing Tab reaches and invisible until it is, so it costs sighted mouse
+users nothing. `tabIndex={-1}` on `<main>` is what lets focus land there — a fragment link alone
+scrolls the viewport and leaves focus at the top, so the next Tab returns to the navigation the
+reader just skipped.
 
-**Edge Cases:**
+Moving it off-screen with `top: -100px` rather than `display: none` matters: a hidden element is not
+focusable at all, so the link would never appear.
 
-- Add multiple skip links for complex layouts
-- Focus main content programmatically
-- Ensure visible focus indicator
+Complex layouts can carry more than one — "skip to main content", "skip to search" — in the order
+someone would want them.
 
 ---
 
-## Semantic HTML
+## Pattern 2: Landmarks
 
-### Example: Semantic List
+```html
+<body>
+  <header><!-- banner --></header>
+  <nav aria-label="Main"><!-- navigation --></nav>
+  <main>
+    <!-- main -->
+    <section aria-labelledby="features-heading">
+      <h2 id="features-heading">Features</h2>
+    </section>
+  </main>
+  <aside aria-label="Related articles"><!-- complementary --></aside>
+  <footer><!-- contentinfo --></footer>
+</body>
+```
+
+**Why good:** each element carries its landmark role implicitly, so no `role` attribute is needed;
+screen readers offer a list of these regions as the primary way to move around a page.
+
+```html
+<nav aria-label="Main">…</nav>
+<nav aria-label="Footer">…</nav>
+```
+
+**Why good:** two unlabelled `<nav>` elements are announced identically, so the label is what makes
+the list of landmarks usable.
+
+A `<section>` only counts as a region when it has an accessible name — hence
+`aria-labelledby` pointing at its own heading, which reuses text already on the page rather than
+duplicating it in an `aria-label`.
+
+---
+
+## Pattern 3: Button versus link
 
 ```typescript
-// components/feature.tsx
-// GOOD: Uses <li> for list item
+// Acts on the page
+<button onClick={handleSubmit}>Submit form</button>
 
+// Goes somewhere
+<a href="/dashboard">Go to dashboard</a>
+```
+
+```typescript
+// Bad — a button that navigates
+<button onClick={() => navigate("/dashboard")}>Go to dashboard</button>
+```
+
+**Why bad:** no URL in the status bar, no middle-click, no "open in new tab", and it is announced as
+a button when it behaves as a link.
+
+```typescript
+// Bad — a div that acts
+<div onClick={handleSubmit}>Submit form</div>
+```
+
+**Why bad:** Tab passes it by, Enter and Space do nothing, and a screen reader announces the text
+with no indication that it does anything at all. The `role`, `tabIndex` and key handlers needed to
+fix it are the behaviour `<button>` already had.
+
+---
+
+## Semantic structure
+
+```typescript
 interface FeatureProps {
   id: string;
   title: string;
   description: string;
-  status: 'done' | 'pending';
-  className?: string;
+  isComplete: boolean;
 }
 
-export function Feature({ id, title, description, status, className }: FeatureProps) {
+export function Feature({ id, title, description, isComplete }: FeatureProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const detailsId = `${id}-details`;
 
   return (
-    <li  // Semantic HTML element
-      className={className}
-      data-expanded={isExpanded}
-    >
-      <div>
-        {/* Use your component library's switch/toggle - it handles role="switch" and ARIA */}
-        <input
-          type="checkbox"
-          role="switch"
-          id={`${id}-switch`}
-          checked={status === "done"}
-        />
-        <h2>{title}</h2>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-        >
-          {/* Use your icon component here */}
-          <span aria-hidden="true">{isExpanded ? '−' : '+'}</span>
-        </button>
-      </div>
-      {isExpanded && <p>{description}</p>}
+    <li>
+      <h3>{title}</h3>
+      <input type="checkbox" role="switch" id={`${id}-switch`} checked={isComplete} readOnly />
+      <label htmlFor={`${id}-switch`}>Complete</label>
+
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+        aria-controls={detailsId}
+      >
+        <span aria-hidden="true">{isExpanded ? "−" : "+"}</span>
+        <span className="sr-only">{isExpanded ? "Collapse" : "Expand"} details</span>
+      </button>
+
+      {isExpanded && <p id={detailsId}>{description}</p>}
     </li>
   );
 }
 ```
 
+**Why good:** the `<li>` is what makes a screen reader announce "list, 5 items" and offer list
+navigation — a `<div>` in a `<ul>` breaks both. `aria-expanded` announces the disclosure's state and
+`aria-controls` names what it controls, which is the pair a toggle owes; the visible `+` is hidden
+from assistive technology because the adjacent text already says what the button does.
+
 ```typescript
-// Usage: Wrapped in semantic <ul>
+// Usage
 <ul>
-  {features.map(feature => (
+  {features.map((feature) => (
     <Feature key={feature.id} {...feature} />
   ))}
 </ul>
 ```
 
-**Why good:** Screen readers announce "list, 5 items" and provide list navigation shortcuts.
-
 ---
 
-## Button vs Link
+## Headings
 
-### Example: Correct Usage
-
-```typescript
-// GOOD: Button for actions
-<button onClick={handleSubmit}>
-  Submit Form
-</button>
-
-// GOOD: Link for navigation
-<a href="/dashboard">
-  Go to Dashboard
-</a>
-
-// BAD: Div for button
-<div onClick={handleSubmit}>  // Missing role, keyboard support, focus
-  Submit Form
-</div>
-
-// BAD: Button for navigation
-<button onClick={() => navigate('/dashboard')}>  // Should be a link!
-  Go to Dashboard
-</button>
-```
-
-**Rule:** Buttons for actions, links for navigation.
-
----
-
-## Landmarks
-
-### Example: Semantic HTML Landmarks
+Headings are the outline, not the type scale. Level follows structure and CSS handles size.
 
 ```html
-<body>
-  <header><!-- role="banner" --></header>
-  <nav><!-- role="navigation" --></nav>
-  <main>
-    <!-- role="main" -->
-    <section aria-label="Features"><!-- role="region" --></section>
-  </main>
-  <aside><!-- role="complementary" --></aside>
-  <footer><!-- role="contentinfo" --></footer>
-</body>
+<h1>Page title</h1>
+<h2>Section</h2>
+<h3>Subsection</h3>
+<h2>Another section</h2>
 ```
 
-**Multiple landmarks of same type need labels:**
-
-```html
-<nav aria-label="Main navigation">...</nav>
-<nav aria-label="Footer navigation">...</nav>
-```
+**Why good:** screen reader users navigate by heading level, so skipping from `<h2>` to `<h4>` reads
+as a missing section rather than as a smaller font. One `<h1>` per page, and never a heading chosen
+for how large it renders.
