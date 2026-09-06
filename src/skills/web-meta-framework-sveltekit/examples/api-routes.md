@@ -1,12 +1,13 @@
-# SvelteKit API Routes Examples
+# SvelteKit — API Routes
 
-> Complete code examples for SvelteKit API route patterns (+server.ts). See [SKILL.md](../SKILL.md) for core concepts.
+> `+server.ts`: one export per HTTP verb, plus streaming, uploads and content negotiation. The
+> endpoint checklist is in [reference.md](../reference.md).
 
 ---
 
-## Pattern 1: RESTful API Routes
+## Pattern 1: RESTful Endpoints
 
-### Good Example — CRUD Endpoints
+### Good Example — CRUD across two files
 
 ```typescript
 // src/routes/api/posts/+server.ts
@@ -134,13 +135,15 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 };
 ```
 
-**Why good:** Named constants for pagination limits, auth checks on mutations, ownership checks, proper HTTP status codes (201 Created, 204 No Content), parallel queries with Promise.all
+**Why good:** `limit` is clamped between 1 and 100, so no caller can request the whole table. Each
+mutation re-reads the row and checks ownership rather than trusting the id in the URL. The status
+codes carry information a client can act on: 201 with the created body, 204 with none.
 
 ---
 
 ## Pattern 2: Streaming Response
 
-### Good Example — Server-Sent Events (SSE)
+### Good Example — server-sent events
 
 ```typescript
 // src/routes/api/events/+server.ts
@@ -192,13 +195,15 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 ```
 
-**Why good:** SSE format (`data: ...\n\n`), heartbeat prevents timeout, cleanup on disconnect, auth check, proper headers
+**Why good:** The double newline is the SSE record separator, so omitting it means nothing is ever
+delivered. The heartbeat exists because proxies close idle connections, and the cleanup returned from
+`start` is what stops the interval and the subscription outliving the client.
 
 ---
 
 ## Pattern 3: File Upload
 
-### Good Example — File Upload Endpoint
+### Good Example — validating before storing
 
 ```typescript
 // src/routes/api/upload/+server.ts
@@ -239,13 +244,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 ```
 
-**Why good:** Named constants for limits, type validation, size validation, auth check, proper status code
+**Why good:** `file instanceof File` is the narrowing that makes `.size` and `.type` safe to read —
+`formData.get` returns `FormDataEntryValue`, which may be a string. Both limits are checked before a
+byte is written anywhere.
 
 ---
 
-## Pattern 4: Response Helpers
+## Pattern 4: Response Types
 
-### Good Example — Different Response Types
+### Good Example — JSON, CSV and a redirect
 
 ```typescript
 // src/routes/api/health/+server.ts
@@ -302,13 +309,15 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 ```
 
-**Why good:** `json()` helper for JSON responses, custom `Response` for other formats, `redirect()` for redirects, proper headers for file downloads
+**Why good:** `json()` handles the common case and a raw `Response` handles everything else — the CSV
+needs `Content-Disposition` to download rather than render. `redirect()` throws, so nothing after it
+runs, which is why the missing-parameter branch returns first.
 
 ---
 
 ## Pattern 5: Fallback Handler
 
-### Good Example — Handling Unsupported Methods
+### Good Example — a 405 for everything else
 
 ```typescript
 // src/routes/api/posts/+server.ts
@@ -331,13 +340,14 @@ export const fallback: RequestHandler = async ({ request }) => {
 };
 ```
 
-**Why good:** `fallback` catches unhandled methods, returns proper 405 status, descriptive error message
+**Why good:** Without `fallback` an unhandled verb produces SvelteKit's own 405; with it the response
+names the method, which is what a client debugging its own request needs to see.
 
 ---
 
 ## Pattern 6: Content Negotiation
 
-### Good Example — Page + API on Same Route
+### Good Example — a page and an API at the same URL
 
 ```
 src/routes/posts/
@@ -377,8 +387,11 @@ export const GET: RequestHandler = async () => {
 };
 ```
 
-**Why good:** Same route serves both HTML pages and JSON API, SvelteKit routes based on Accept header and request type, forms go to actions, API calls go to server routes
+**Why good:** `/posts` serves HTML to a browser and JSON to a client that asks for it, from one URL —
+SvelteKit picks by the `Accept` header. Form posts still reach the actions, so adding the API does not
+disturb the page.
 
 ---
 
-_For load function patterns, see [load-functions.md](load-functions.md). For form actions, see [form-actions.md](form-actions.md). For hooks, see [hooks.md](hooks.md)._
+_Loads are in [load-functions.md](load-functions.md), mutations in
+[form-actions.md](form-actions.md), request-wide concerns in [hooks.md](hooks.md)._

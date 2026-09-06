@@ -93,7 +93,7 @@ export function useFetch<T = unknown>(
 ```vue
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useFetch } from "@/composables/use-fetch";
+import { useFetch } from "./use-fetch";
 
 interface Post {
   id: number;

@@ -1,68 +1,70 @@
 ---
 name: web-framework-angular-standalone
-description: Angular 17-19 standalone components, signals, control flow, dependency injection patterns
+description: Angular 17–19 standalone components, signals, built-in control flow, inject() DI, the resource API. Load when writing or migrating Angular components.
 ---
 
-# Angular Standalone Components
+# Angular Standalone Patterns
 
-> **Quick Guide:** Components are standalone by default in Angular 19. Use `signal()`, `computed()`, `effect()`, `linkedSignal()` for reactive state. Use `input()`, `output()`, `model()` for component communication. Use `@if`, `@for`, `@switch`, `@defer` for template control flow. Use `inject()` for dependency injection. Use `resource()` for async data fetching.
+> **Quick Guide:** Components are standalone and declare their own `imports`; NgModules are opt-in. State is signals — `signal()`, `computed()`, `linkedSignal()` for derived state you also write to, `effect()` only for genuine side effects and `afterRenderEffect()` for DOM work. Communication is `input()`, `output()` and `model()`. Templates use `@if`, `@for` (always with `track`), `@switch` and `@defer`, none of which need an import. Dependencies come from `inject()`.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — a complete standalone component, signals, control flow, parent-child communication
+- [examples/dependency-injection.md](examples/dependency-injection.md) — `inject()`, `InjectionToken`, injection options
+- [examples/model.md](examples/model.md) — `model()` two-way binding, and when `input()` + `output()` is the better fit
+- [examples/defer.md](examples/defer.md) — every `@defer` trigger, with prefetch and placeholder timing
+- [examples/angular-19-features.md](examples/angular-19-features.md) — `linkedSignal()`, `resource()`, `rxResource()`, `afterRenderEffect()` phases
+- [examples/rxjs.md](examples/rxjs.md) — `toSignal()`, `toObservable()`, and which of the two a problem wants
+- [reference.md](reference.md) — decision trees, anti-patterns with corrected code, API and syntax tables, component checklist
+
+---
+
+## Which path applies
+
+- **Angular 19** — `standalone: true` is the default, so the flag is noise; write `standalone: false` only for a component that genuinely belongs to an NgModule.
+- **Angular 17–18** — the same patterns apply, but `standalone: true` is stated explicitly on every component, directive and pipe.
+- **Signal APIs by version** — `linkedSignal()` and `afterRenderEffect()` land in 19, `httpResource()` in 19.2, and the resource family is still experimental. [examples/angular-19-features.md](examples/angular-19-features.md) marks each one.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Angular code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Declare inputs and outputs with `input()`, `output()` and `model()`.** They are signals, so a `computed()` can depend on an input directly and no `ngOnChanges` is needed to notice it changed.
 
-**(You MUST write standalone components (the default in Angular 19) - only specify `standalone: false` when intentionally using NgModules)**
+**Take dependencies with `inject()` in a field initialiser.** It works outside a constructor — in a function, a route guard, a factory — where constructor parameters cannot reach.
 
-**(You MUST use `input()`, `output()`, `model()` functions instead of `@Input()`, `@Output()` decorators)**
+**Write templates with `@if`, `@for`, `@switch` and `@defer`.** They need no import, narrow types better than the structural directives, and `@for` has `@empty` and the `$index`/`$first`/`$last` context built in.
 
-**(You MUST use `inject()` function for dependency injection, NOT constructor injection)**
+**Give every `@for` a `track` expression.** Without a stable key Angular rebuilds the rows rather than moving them, which loses focus and element state along with the performance.
 
-**(You MUST use `@if`, `@for`, `@switch` control flow blocks, NOT `*ngIf`, `*ngFor`, `*ngSwitch`)**
+**Update a signal through `.set()` or `.update()` returning a new reference.** Equality is `Object.is`, so mutating the array or object in place leaves the reference unchanged and nothing is notified.
 
-**(You MUST use `track` expression in ALL `@for` loops)**
-
-**(You MUST use `linkedSignal()` instead of manual signal synchronization for dependent writable state)**
+**Use `linkedSignal()` for derived state that is also writable.** It recomputes from its source and still accepts a direct write, which is what a pair of signals kept in step by an `effect()` was imitating.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Angular component, standalone component, signal, computed, effect, linkedSignal, resource, rxResource, httpResource, input(), output(), model(), @if, @for, @switch, @defer, inject(), provideRouter, afterRenderEffect
+**Auto-detection:** Angular standalone component, signal, computed, effect, linkedSignal, resource, rxResource, httpResource, input(), output(), model(), @if, @for, @switch, @defer, inject(), InjectionToken, provideRouter, bootstrapApplication, afterRenderEffect, afterNextRender, DestroyRef, toSignal, toObservable, viewChild, viewChildren
 
-**When to use:**
+**Applies to:**
 
-- Building Angular 17-19 components with standalone architecture
-- Implementing reactive state with signals
-- Creating component communication with signal-based inputs/outputs
-- Setting up routing with standalone components
-- Lazy loading components with `@defer` or `loadComponent`
-- Fetching async data with `resource()`, `rxResource()`, or `httpResource()`
+- Standalone components, their `imports` array and their providers
+- Signal state: `signal`, `computed`, `linkedSignal`, `effect`, `afterRenderEffect`
+- Component communication with `input`, `output` and `model`
+- Built-in control flow and `@defer` lazy loading
+- Dependency injection with `inject()` and injection tokens
+- Application bootstrap and standalone route configuration
+- The resource API, and interop between signals and observables
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Standalone component architecture (default in Angular 19)
-- Signals for reactive state (signal, computed, effect, linkedSignal)
-- Resource API for async data (resource, rxResource, httpResource) [experimental]
-- Signal-based inputs and outputs (input, output, model)
-- Control flow blocks (@if, @for, @switch, @defer)
-- Dependency injection with inject()
-- Routing with provideRouter and loadComponent
-- DOM effects with afterRenderEffect()
-
-**When NOT to use:**
-
-- Legacy Angular projects that must use NgModules (consult migration guides)
-- Simple scripts without Angular framework
-
-**Detailed Resources:**
-
-- For core code examples, see [examples/core.md](examples/core.md)
-- For advanced patterns (@defer, DI config, model(), RxJS interop), see [examples/](examples/)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Styling — a component names its `styles` or `styleUrl` and settles nothing about what goes in them
+- Application-wide state stores layered above component signals
+- Server-state caching and invalidation policy
+- Test doubles for the network
 
 ---
 
@@ -70,14 +72,9 @@ description: Angular 17-19 standalone components, signals, control flow, depende
 
 ## Philosophy
 
-Angular 17-19 embraces a standalone-first architecture that eliminates NgModule boilerplate. **In Angular 19, `standalone: true` is the default** - you only need to specify `standalone: false` for NgModule components. Signals provide synchronous, fine-grained reactivity for predictable state management. The new control flow syntax (`@if`, `@for`, `@switch`, `@defer`) is built into templates without imports, offering better type narrowing and smaller bundles. Components should be self-contained, lazy-loadable units that declare their own dependencies.
+Standalone removed the second declaration site. A component names what it uses in its own `imports`, so the dependency graph is readable from the component and a lazy route can point at a component rather than at a module wrapping one.
 
-**Angular's Four Pillars (17-19):**
-
-1. **Standalone by Default** - Components, directives, and pipes are standalone by default in v19
-2. **Signal-Based Reactivity** - Synchronous, memoized, fine-grained change detection with `signal()`, `computed()`, `linkedSignal()`
-3. **Built-In Control Flow** - Template syntax that requires no imports and optimizes at build time
-4. **Resource API** - Experimental async data fetching that integrates with signals (`resource()`, `rxResource()`, `httpResource()` in 19.2)
+Signals then removed the second question. Change detection used to ask "what might have changed?" and walk the tree; a signal records who read it, so an update notifies exactly those consumers. That is why the guidance keeps pushing work down the chain: `computed()` where a value is derived, `linkedSignal()` where it is derived and writable, `effect()` only where something outside the graph has to happen — and `afterRenderEffect()` where that something is the DOM, because it runs in phases that keep reads and writes from thrashing layout.
 
 </philosophy>
 
@@ -85,472 +82,153 @@ Angular 17-19 embraces a standalone-first architecture that eliminates NgModule 
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Standalone Component Structure
+### Pattern 1: Standalone component
 
-All Angular 17-19 components use `standalone: true` (the default in Angular 19) and declare their own imports.
+A component declares its own imports and communicates through signal functions.
 
 ```typescript
-// user-card.component.ts
-import { Component, input, output } from "@angular/core";
-import { DatePipe } from "@angular/common";
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: Date;
-};
-
 @Component({
   selector: "app-user-card",
-  standalone: true,
   imports: [DatePipe],
   template: `
-    <article class="user-card">
-      <h2>{{ user().name }}</h2>
-      <p>{{ user().email }}</p>
-      <time>Joined: {{ user().createdAt | date: "mediumDate" }}</time>
-      <button (click)="edit.emit(user())">Edit</button>
-    </article>
+    <h2>{{ user().name }}</h2>
+    <time>{{ user().createdAt | date: "mediumDate" }}</time>
+    <button (click)="edit.emit(user())">Edit</button>
   `,
 })
 export class UserCardComponent {
-  // Signal-based input (required)
   user = input.required<User>();
-
-  // Signal-based output
   edit = output<User>();
 }
 ```
 
-**Why good:** standalone: true eliminates NgModule boilerplate, imports array declares dependencies explicitly for tree-shaking, signal-based input() and output() provide type-safe reactive communication, template is colocated for readability
-
-```typescript
-// BAD - Legacy patterns
-@Component({
-  selector: "app-user-card",
-  template: `...`,
-})
-export class UserCardComponent {
-  @Input() user!: User; // Legacy decorator
-  @Output() edit = new EventEmitter<User>(); // Legacy EventEmitter
-}
-```
-
-**Why bad:** @Input decorator lacks signal reactivity, EventEmitter is less type-safe than output(), non-null assertion (!) hides potential undefined errors, no imports array means dependencies aren't explicit
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Signals for Reactive State
-
-Use `signal()` for writable state, `computed()` for derived values, and `effect()` for side effects. Key rules: always use `.set()` or `.update()` for mutations (never mutate the value directly), use `computed()` for derived values (not methods), and reserve `effect()` for true side effects (logging, analytics, localStorage).
+### Pattern 2: Signals
 
 ```typescript
-// Writable signal
 count = signal(0);
-
-// Computed signal (read-only, memoized, recalculates only when deps change)
 doubleCount = computed(() => this.count() * 2);
 
-// Updating signals - always immutable
-this.count.set(5); // Replace value
-this.count.update((value) => value + 1); // Update from previous
+this.count.set(5);
+this.count.update((value) => value + 1);
 
-// For arrays/objects: return new references
 items = signal<Item[]>([]);
-this.items.update((items) => [...items, newItem]); // Spread, don't push
-
-// Effect for side effects only (not derived state)
-effect(() => console.log(`Count: ${this.count()}`));
+this.items.update((items) => [...items, newItem]);
 ```
 
-See [examples/core.md](examples/core.md) for a full shopping cart example with signals.
+`computed()` is memoised and lazy; a method with the same body recomputes on every template read. Reserve `effect()` for logging, analytics, storage and other work outside the signal graph.
 
-```typescript
-// BAD - Direct mutation doesn't trigger reactivity
-this.items().push(newItem);              // signal won't notify consumers
-this.items.update(items => { items.push(newItem); return items; }); // same reference, no update
-
-// BAD - Method instead of computed (recalculates every call, not memoized)
-getTotal(): number { return this.items().reduce(...); }
-```
-
-**Why bad:** direct mutation doesn't trigger change detection, returning same reference skips equality check, methods lack memoization that computed() provides
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Signal Inputs and Outputs
-
-Use `input()`, `output()`, and `model()` functions for component communication.
+### Pattern 3: linkedSignal for writable derived state
 
 ```typescript
-// search-input.component.ts
-import { Component, input, output, model, computed } from "@angular/core";
-
-const MIN_SEARCH_LENGTH = 3;
-
-@Component({
-  selector: "app-search-input",
-  standalone: true,
-  template: `
-    <div class="search-input">
-      <input
-        [value]="query()"
-        (input)="onInput($event)"
-        [placeholder]="placeholder()"
-      />
-      @if (isValidSearch()) {
-        <button (click)="search.emit(query())">Search</button>
-      }
-      @if (query()) {
-        <button (click)="clear()">Clear</button>
-      }
-    </div>
-  `,
-})
-export class SearchInputComponent {
-  // Optional input with default value
-  placeholder = input("Search...");
-
-  // Required input
-  minLength = input.required<number>();
-
-  // Two-way binding with model()
-  query = model("");
-
-  // Output event
-  search = output<string>();
-
-  // Computed from inputs
-  isValidSearch = computed(() => this.query().length >= this.minLength());
-
-  onInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.query.set(target.value);
-  }
-
-  clear(): void {
-    this.query.set("");
-  }
-}
+options = input.required<Option[]>();
+selected = linkedSignal(() => this.options()[0]);
 ```
 
-**Usage in parent:**
+`selected` follows `options` and still accepts `selected.set(...)` from a click. Its computation form takes the previous value, which is how a selection survives a source change instead of resetting.
+
+Full code: [examples/angular-19-features.md](examples/angular-19-features.md)
+
+---
+
+### Pattern 4: Inputs, outputs and model
+
+```typescript
+placeholder = input("Search...");
+minLength = input.required<number>();
+query = model("");
+search = output<string>();
+
+isValidSearch = computed(() => this.query().length >= this.minLength());
+```
+
+`model()` gives the parent `[(query)]`. Reach for it where the child genuinely owns the edit; `input()` plus `output()` keeps the flow one-way and is the better default.
+
+Full code: [examples/model.md](examples/model.md)
+
+---
+
+### Pattern 5: Control flow
 
 ```html
-<app-search-input
-  [minLength]="3"
-  [(query)]="searchQuery"
-  (search)="onSearch($event)"
-/>
+@switch (state()) { @case ("loading") {
+<div>Loading…</div>
+} @case ("error") { <button (click)="retry.emit()">Retry</button> } @case
+("success") { @for (user of users(); track user.id; let i = $index) {
+<li>{{ i + 1 }}. {{ user.name }}</li>
+} @empty {
+<li>No users found</li>
+} } }
 ```
 
-**Why good:** input() and input.required() clearly distinguish optional vs required props, model() enables two-way binding with [(query)] syntax, computed() derives validation state reactively, output() provides type-safe event emission
+`@if (user(); as user)` binds the narrowed value, so the signal is called once rather than in every expression beneath it.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Control Flow with @if, @for, @switch
+### Pattern 6: @defer
 
-Use built-in control flow blocks instead of structural directives.
-
-```typescript
-// user-list.component.ts
-import { Component, input, output } from "@angular/core";
-import type { User } from "./user.types";
-
-type LoadingState = "idle" | "loading" | "error" | "success";
-
-@Component({
-  selector: "app-user-list",
-  standalone: true,
-  template: `
-    @switch (state()) {
-      @case ("loading") {
-        <div class="loading">Loading users...</div>
-      }
-      @case ("error") {
-        <div class="error">
-          <p>Failed to load users</p>
-          <button (click)="retry.emit()">Retry</button>
-        </div>
-      }
-      @case ("success") {
-        @if (users().length > 0) {
-          <ul class="user-list">
-            @for (
-              user of users();
-              track user.id;
-              let i = $index, first = $first, last = $last
-            ) {
-              <li [class.first]="first" [class.last]="last">
-                <span class="index">{{ i + 1 }}.</span>
-                <span class="name">{{ user.name }}</span>
-                <span class="email">{{ user.email }}</span>
-              </li>
-            } @empty {
-              <li class="empty">No users found</li>
-            }
-          </ul>
-        } @else {
-          <p>No users available</p>
-        }
-      }
-      @default {
-        <p>Ready to load users</p>
-      }
-    }
-  `,
-})
-export class UserListComponent {
-  users = input.required<User[]>();
-  state = input<LoadingState>("idle");
-  retry = output<void>();
+```html
+@defer (on viewport) {
+<app-heavy-chart />
+} @placeholder (minimum 200ms) {
+<div class="chart-skeleton"></div>
+} @loading (after 100ms; minimum 500ms) {
+<div class="spinner"></div>
+} @error {
+<div>Failed to load chart</div>
 }
 ```
 
-**Why good:** @switch provides clear multi-branch logic, @for with track enables efficient DOM updates, @empty handles empty collections elegantly, $index/$first/$last provide iteration context without extra code, no CommonModule import required
+`@placeholder` reserves the space, and the `after`/`minimum` timings on `@loading` are what stop a fast load flashing a spinner. Defer what is below the fold, behind an interaction, or conditional — never what is visible on arrival, which trades bundle size for LCP.
 
-```typescript
-// BAD - Legacy structural directives
-@Component({
-  imports: [CommonModule], // Extra import needed
-  template: `
-    <div *ngIf="loading; else content">Loading...</div>
-    <ng-template #content>
-      <ul>
-        <li *ngFor="let user of users; trackBy: trackByFn; let i = index">
-          {{ user.name }}
-        </li>
-      </ul>
-    </ng-template>
-  `,
-})
-export class UserListComponent {
-  trackByFn(index: number, user: User): string {
-    return user.id; // Separate function needed
-  }
-}
-```
-
-**Why bad:** requires CommonModule import, trackBy requires separate function, ng-template syntax is verbose, less optimal type narrowing
+Full code: [examples/defer.md](examples/defer.md)
 
 ---
 
-### Pattern 5: Deferred Loading with @defer
-
-Use `@defer` for lazy loading components and improving initial bundle size.
+### Pattern 7: Dependency injection
 
 ```typescript
-// dashboard.component.ts
-import { Component, signal } from "@angular/core";
-
-@Component({
-  selector: "app-dashboard",
-  standalone: true,
-  template: `
-    <h1>Dashboard</h1>
-
-    <!-- Defer loading until viewport -->
-    @defer (on viewport) {
-      <app-heavy-chart />
-    } @placeholder (minimum 200ms) {
-      <div class="chart-skeleton">Chart loading...</div>
-    } @loading (after 100ms; minimum 500ms) {
-      <div class="spinner">Loading chart...</div>
-    } @error {
-      <div class="error">Failed to load chart</div>
-    }
-
-    <!-- Defer loading on interaction -->
-    @defer (on interaction) {
-      <app-comments-section />
-    } @placeholder {
-      <button>Load Comments</button>
-    }
-
-    <!-- Defer with condition -->
-    @defer (when showAdvanced()) {
-      <app-advanced-settings />
-    } @placeholder {
-      <p>Advanced settings will load when enabled</p>
-    }
-
-    <!-- Prefetch for faster navigation -->
-    @defer (on idle; prefetch on hover) {
-      <app-related-items />
-    } @placeholder {
-      <div class="related-skeleton">Related items</div>
-    }
-  `,
-})
-export class DashboardComponent {
-  showAdvanced = signal(false);
-}
-```
-
-**Why good:** @defer reduces initial bundle size by lazy-loading components, @placeholder prevents layout shift during load, @loading shows progress after delay to avoid flicker, @error handles failures gracefully, prefetch optimizes perceived performance
-
-**When to use @defer:**
-
-- Heavy components below the fold (charts, data tables)
-- Features triggered by user interaction (comments, modals)
-- Conditional features that may never be needed
-- Components that can be prefetched on idle/hover
-
-**When NOT to use @defer:**
-
-- Components visible on initial load (above the fold)
-- Critical UI that users need immediately
-- Components that would cause layout shift when loaded
-
----
-
-### Pattern 6: Dependency Injection with inject()
-
-Use `inject()` function instead of constructor injection for cleaner, more flexible DI.
-
-```typescript
-// user.service.ts
-import { Injectable, inject } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import type { User } from "./user.types";
-
-const API_BASE_URL = "/api";
-
 @Injectable({ providedIn: "root" })
 export class UserService {
   private http = inject(HttpClient);
-
-  getUsers() {
-    return this.http.get<User[]>(`${API_BASE_URL}/users`);
-  }
-
-  getUser(id: string) {
-    return this.http.get<User>(`${API_BASE_URL}/users/${id}`);
-  }
+  private config = inject(CONFIG_TOKEN, { optional: true });
 }
 ```
 
-```typescript
-// user-profile.component.ts
-import { Component, inject, resource } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
-import { toSignal } from "@angular/core/rxjs-interop";
-import type { User } from "./user.types";
+`inject()` also takes `{ skipSelf: true }` to start at the parent injector and `{ self: true }` to refuse to leave the current one. It must run in an injection context — a field initialiser or a constructor — never inside a method.
 
-const API_BASE_URL = "/api";
-
-@Component({
-  selector: "app-user-profile",
-  standalone: true,
-  template: `
-    @if (userResource.isLoading()) {
-      <p>Loading user...</p>
-    }
-    @if (userResource.hasValue()) {
-      <h1>{{ userResource.value().name }}</h1>
-      <p>{{ userResource.value().email }}</p>
-    }
-    @if (userResource.error(); as error) {
-      <p>Error: {{ error }}</p>
-      <button (click)="userResource.reload()">Retry</button>
-    }
-  `,
-})
-export class UserProfileComponent {
-  private route = inject(ActivatedRoute);
-
-  // Convert route params to signal
-  private params = toSignal(this.route.params, { initialValue: { id: "" } });
-
-  // resource() auto-refetches when userId changes
-  userResource = resource({
-    params: () => ({ id: this.params()["id"] }),
-    loader: async ({ params, abortSignal }) => {
-      const response = await fetch(`${API_BASE_URL}/users/${params.id}`, {
-        signal: abortSignal,
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json() as Promise<User>;
-    },
-  });
-}
-```
-
-**Why good:** inject() provides cleaner syntax without constructor boilerplate, resource() handles loading/error states and race conditions automatically, no manual signal + effect combo needed
-
-```typescript
-// BAD - Constructor injection (legacy)
-export class UserProfileComponent {
-  constructor(
-    private route: ActivatedRoute,
-    private userService: UserService,
-  ) {}
-}
-```
-
-**Why bad:** constructor injection requires boilerplate, doesn't work in field initializers, less flexible for conditional injection
-
-**inject() with options:**
-
-```typescript
-// Optional injection
-private optionalService = inject(OptionalService, { optional: true });
-
-// Skip self (look in parent injectors)
-private parentService = inject(ParentService, { skipSelf: true });
-
-// Self only (don't look in parent injectors)
-private selfService = inject(SelfService, { self: true });
-```
+Full code: [examples/dependency-injection.md](examples/dependency-injection.md)
 
 ---
 
-### Pattern 7: Routing with Standalone Components
-
-Configure routing using `provideRouter` and lazy load with `loadComponent`.
+### Pattern 8: Bootstrap and routes
 
 ```typescript
-// app.config.ts
-import { ApplicationConfig } from "@angular/core";
-import {
-  provideRouter,
-  withComponentInputBinding,
-  withPreloading,
-  PreloadAllModules,
-} from "@angular/router";
-import { provideHttpClient } from "@angular/common/http";
-import { routes } from "./app.routes";
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(
       routes,
-      withComponentInputBinding(), // Bind route params to inputs
-      withPreloading(PreloadAllModules), // Preload lazy routes
+      withComponentInputBinding(),
+      withPreloading(PreloadAllModules),
     ),
     provideHttpClient(),
   ],
 };
-```
 
-```typescript
-// app.routes.ts
-import type { Routes } from "@angular/router";
+bootstrapApplication(AppComponent, appConfig);
 
 export const routes: Routes = [
-  {
-    path: "",
-    loadComponent: () =>
-      import("./home/home.component").then((m) => m.HomeComponent),
-  },
-  {
-    path: "users",
-    loadComponent: () =>
-      import("./users/user-list.component").then((m) => m.UserListComponent),
-  },
   {
     path: "users/:id",
     loadComponent: () =>
@@ -558,228 +236,100 @@ export const routes: Routes = [
         (m) => m.UserDetailComponent,
       ),
   },
-  {
-    path: "admin",
-    loadComponent: () =>
-      import("./admin/admin.component").then((m) => m.AdminComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: "**",
-    loadComponent: () =>
-      import("./not-found/not-found.component").then(
-        (m) => m.NotFoundComponent,
-      ),
-  },
 ];
 ```
 
-```typescript
-// user-detail.component.ts - Using withComponentInputBinding
-import { Component, input } from "@angular/core";
-
-@Component({
-  selector: "app-user-detail",
-  standalone: true,
-  template: `
-    <h1>User {{ id() }}</h1>
-    @if (tab()) {
-      <p>Active tab: {{ tab() }}</p>
-    }
-  `,
-})
-export class UserDetailComponent {
-  // Route param :id bound automatically with withComponentInputBinding
-  id = input.required<string>();
-
-  // Query param ?tab bound automatically
-  tab = input<string | undefined>();
-}
-```
-
-**Why good:** provideRouter replaces RouterModule.forRoot(), loadComponent lazy loads individual components without wrapper modules, withComponentInputBinding eliminates ActivatedRoute boilerplate, preloading improves navigation performance
+`loadComponent` lazy-loads a component with no wrapper module. `withComponentInputBinding()` binds route and query params straight to `input()` signals, so a route component needs no `ActivatedRoute` — a query param that may be absent is typed `input<string | undefined>()`.
 
 ---
 
-### Pattern 8: Lifecycle Hooks with Signals
-
-Replace traditional lifecycle hooks with signal-based patterns.
+### Pattern 9: Async data with resource()
 
 ```typescript
-// resize-observer.component.ts
-import {
-  Component,
-  ElementRef,
-  signal,
-  inject,
-  afterNextRender,
-  afterRender,
-  DestroyRef,
-} from "@angular/core";
-
-const DEBOUNCE_MS = 100;
-
-@Component({
-  selector: "app-resize-observer",
-  standalone: true,
-  template: `
-    <div #container class="container">
-      <p>Width: {{ width() }}px</p>
-      <p>Height: {{ height() }}px</p>
-    </div>
-  `,
-})
-export class ResizeObserverComponent {
-  private elementRef = inject(ElementRef);
-  private destroyRef = inject(DestroyRef);
-
-  width = signal(0);
-  height = signal(0);
-
-  constructor() {
-    // Run once after first render (replaces ngAfterViewInit for DOM setup)
-    afterNextRender(() => {
-      this.setupResizeObserver();
+userResource = resource({
+  params: () => ({ id: this.userId() }),
+  loader: async ({ params, abortSignal }) => {
+    const response = await fetch(`/api/users/${params.id}`, {
+      signal: abortSignal,
     });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return (await response.json()) as User;
+  },
+});
+```
 
-    // Run after every render (use sparingly)
-    afterRender(() => {
-      console.log("Component rendered");
-    });
-  }
+The resource re-runs when `params` changes and aborts the superseded request, so the signal-plus-effect combination that used to race is not needed. Guard reads with `hasValue()`, which narrows the type as well as the state. `rxResource()` takes an observable loader and `httpResource()` (19.2) goes through `HttpClient` and its interceptors.
 
-  private setupResizeObserver(): void {
-    const element = this.elementRef.nativeElement;
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        this.width.set(entry.contentRect.width);
-        this.height.set(entry.contentRect.height);
-      }
-    });
+Full code: [examples/angular-19-features.md](examples/angular-19-features.md)
 
-    observer.observe(element);
+---
 
-    // Cleanup on destroy (replaces ngOnDestroy)
-    this.destroyRef.onDestroy(() => {
-      observer.disconnect();
-    });
-  }
+### Pattern 10: Lifecycle and DOM effects
+
+```typescript
+private destroyRef = inject(DestroyRef);
+private elementRef = inject(ElementRef);
+width = signal(0);
+
+constructor() {
+  afterNextRender(() => {
+    const observer = new ResizeObserver(([entry]) => this.width.set(entry.contentRect.width));
+    observer.observe(this.elementRef.nativeElement);
+    this.destroyRef.onDestroy(() => observer.disconnect());
+  });
 }
 ```
 
-**Why good:** afterNextRender runs after first render for DOM setup, afterRender provides per-render hooks, DestroyRef.onDestroy handles cleanup without implementing OnDestroy, signals automatically trigger change detection
+| Legacy hook          | Signal-era replacement                       |
+| -------------------- | -------------------------------------------- |
+| `ngOnInit`           | field initialiser, or `effect()`             |
+| `ngOnChanges`        | `effect()` reading the `input()` signal      |
+| `ngAfterViewInit`    | `afterNextRender()`                          |
+| `ngAfterViewChecked` | `afterRender()` (`afterEveryRender()` in 20) |
+| `ngOnDestroy`        | `DestroyRef.onDestroy()`                     |
+| DOM side effects     | `afterRenderEffect()` with explicit phases   |
 
-**Lifecycle hook mapping:**
+Full code: [examples/angular-19-features.md](examples/angular-19-features.md)
 
-| Legacy Hook        | Signal-Based Alternative                   |
-| ------------------ | ------------------------------------------ |
-| ngOnInit           | constructor + effect()                     |
-| ngOnChanges        | effect() watching input() signals          |
-| ngAfterViewInit    | afterNextRender()                          |
-| ngAfterViewChecked | afterRender() (afterEveryRender() in v20+) |
-| ngOnDestroy        | DestroyRef.onDestroy()                     |
-| DOM side effects   | afterRenderEffect() with phases (v19+)     |
+---
+
+### Pattern 11: Observable interop
+
+```typescript
+users = toSignal(this.userService.getUsers(), { initialValue: [] });
+count$ = toObservable(this.count);
+```
+
+`toSignal()` needs an `initialValue` for any source that has not emitted yet; without one the signal's type includes `undefined` and a template read before the first emission throws.
+
+Full code: [examples/rxjs.md](examples/rxjs.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**Angular standalone architecture is self-contained.** Components declare their own imports and providers. Routing uses `provideRouter`. Services use `providedIn: "root"` or component-level providers.
-
-**Bootstrapping:**
-
-```typescript
-// main.ts
-import { bootstrapApplication } from "@angular/platform-browser";
-import { AppComponent } from "./app/app.component";
-import { appConfig } from "./app/app.config";
-
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err),
-);
-```
-
-**Component Communication:**
-
-- Parent to child: `input()` and `input.required()`
-- Child to parent: `output()` with `.emit()`
-- Two-way binding: `model()` with `[()]` syntax
-- Across tree: Services with `inject()`
-
-**RxJS Interop:**
-
-```typescript
-import { toSignal, toObservable } from "@angular/core/rxjs-interop";
-
-// Observable to Signal
-const users = toSignal(this.userService.getUsers(), { initialValue: [] });
-
-// Signal to Observable
-const count$ = toObservable(this.count);
-```
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority:**
+**Breaks at runtime:**
 
-- **Using @Input/@Output decorators** - Legacy pattern; use `input()`, `output()`, `model()` signal functions
-- **Using *ngIf/*ngFor/\*ngSwitch** - Legacy directives; use `@if`, `@for`, `@switch` built-in control flow
-- **Missing `track` in @for** - Causes unnecessary DOM recreation and poor performance
-- **Constructor injection instead of inject()** - More boilerplate, less flexible
-- **Mutating signal values directly** - `signal().push(item)` doesn't trigger updates; use `.update()` with spread
-- **Manual signal sync instead of linkedSignal()** - Use `linkedSignal()` for writable derived state (v19+)
-- **Using resource() for mutations** - `resource()`/`rxResource()`/`httpResource()` are read-only; use HttpClient for POST/PUT/DELETE
+- A signal's value mutated in place — `items().push(x)` leaves the reference identical, so `Object.is` reports no change and nothing re-renders
+- `inject()` called from a method — it needs an injection context, and throws outside one
+- `toSignal()` without `initialValue` on a source that has not emitted — reads before the first emission fail
+- `resource()`, `rxResource()` or `httpResource()` used for a write — all three are read-only; a POST, PUT or DELETE goes through `HttpClient`
+- `resource.value()` read without checking `hasValue()` — the guard is what narrows away the loading and error states
+- `@for` without `track` — Angular tears down and rebuilds each row, discarding focus, scroll position and animation state
+- A cleanup function returned from `effect()` — the return value is ignored, so a timer or subscription opened there leaks on every re-run; teardown goes in the `onCleanup` callback the effect body is handed as its argument
 
-**Medium Priority:**
+**Surprising behaviour:**
 
-- **@defer above the fold** - Hurts LCP and CLS Core Web Vitals
-- **effect() for derived state** - Use `computed()` or `linkedSignal()` instead
-- **effect() for DOM operations** - Use `afterRenderEffect()` with phases
-- **toSignal() without initialValue** - Can cause runtime errors if observable hasn't emitted
-- **Not checking resource hasValue()** - Use `hasValue()` as type guard before accessing `value()`
-
-**Gotchas & Edge Cases:**
-
-- `signal()` uses `Object.is()` equality by default; provide custom equality for objects
-- `inject()` must be called in constructor or field initializer, not in methods
-- `@defer` always renders `@placeholder` on server (SSR); triggers are ignored server-side
-- `linkedSignal()` value resets when source signal changes; use computation form to preserve previous
-- `afterRenderEffect()` without phase specification defaults to `mixedReadWrite` which can cause layout thrashing
-
-See [reference.md](reference.md) for complete decision frameworks, anti-patterns with code examples, and quick reference tables.
+- `standalone: true` is the default from 19, so writing it is harmless noise while writing nothing is correct — the two look identical in review
+- `@defer` renders its `@placeholder` during server rendering and ignores every trigger there
+- `linkedSignal()` resets to its computed value whenever the source changes; preserving a user's choice needs the computation form that receives the previous value
+- `allowSignalWrites` was removed in 19 and writing a signal inside an `effect()` is now allowed — which makes an effect-maintained derived value compile quietly where it used to complain
+- `afterRenderEffect()` defaults to the `mixedReadWrite` phase, the one that thrashes layout; name `earlyRead` and `write` instead
+- `signal()` compares with `Object.is`, so two structurally equal objects count as a change unless a custom `equal` is supplied
+- Effects run during change detection from 19, not as microtasks, so ordering assumptions from earlier versions no longer hold
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST write standalone components (the default in Angular 19) - only specify `standalone: false` when intentionally using NgModules)**
-
-**(You MUST use `input()`, `output()`, `model()` functions instead of `@Input()`, `@Output()` decorators)**
-
-**(You MUST use `inject()` function for dependency injection, NOT constructor injection)**
-
-**(You MUST use `@if`, `@for`, `@switch` control flow blocks, NOT `*ngIf`, `*ngFor`, `*ngSwitch`)**
-
-**(You MUST use `track` expression in ALL `@for` loops)**
-
-**(You MUST use `linkedSignal()` instead of manual signal synchronization for dependent writable state)**
-
-**Failure to follow these rules will produce legacy Angular code that misses performance optimizations and modern reactivity benefits.**
-
-</critical_reminders>

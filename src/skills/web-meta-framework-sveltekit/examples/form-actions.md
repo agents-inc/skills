@@ -1,12 +1,13 @@
-# SvelteKit Form Actions Examples
+# SvelteKit — Form Actions
 
-> Complete code examples for SvelteKit form action patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Default and named actions, `fail()`, `use:enhance`, and redirect ordering. The form-action checklist
+> is in [reference.md](../reference.md).
 
 ---
 
-## Pattern 1: Complete Form Action with Validation
+## Pattern 1: A Complete Action
 
-### Good Example — Full CRUD Pattern
+### Good Example — the five steps in order
 
 ```typescript
 // src/routes/posts/new/+page.server.ts
@@ -143,13 +144,16 @@ export const actions: Actions = {
 </form>
 ```
 
-**Why good:** Server-side validation with `fail()` preserves form input, auth check before mutation, redirect OUTSIDE try/catch, `use:enhance` for progressive enhancement, aria attributes for accessibility, named constants for limits
+**Why good:** The order is the point — a failed auth check never reaches the parse, a failed parse
+never reaches the database, and the redirect sits outside the `try` so the `catch` cannot swallow it.
+`fail` carries `title` and `content` back, which is what refills the form; a thrown `error` would
+have unmounted it and lost them.
 
 ---
 
 ## Pattern 2: Named Actions
 
-### Good Example — Multiple Actions on One Page
+### Good Example — several actions on one page
 
 ```typescript
 // src/routes/settings/+page.server.ts
@@ -274,13 +278,16 @@ export const actions: Actions = {
 </section>
 ```
 
-**Why good:** Named actions separate concerns, each form targets its specific action with `action="?/actionName"`, form data preserved on validation error, success messages per action
+**Why good:** `action="?/updateProfile"` routes the POST to one named handler, so three forms on one
+page need no `intent` field and no dispatch. Keying the messages by action (`profileError`,
+`emailError`) is what stops the email form showing the profile form's result. A page with named
+actions cannot also have a `default` one.
 
 ---
 
 ## Pattern 3: Custom use:enhance
 
-### Good Example — Custom Enhancement with Loading State
+### Good Example — a loading state
 
 ```svelte
 <script lang="ts">
@@ -310,9 +317,11 @@ export const actions: Actions = {
 </form>
 ```
 
-**Why good:** Custom `use:enhance` callback for loading state, `update()` applies default behavior, button disabled during submission
+**Why good:** The callback runs before the submission and its return value runs after, which is the
+window the pending flag needs. Calling `update()` inside it keeps the default behaviour — setting the
+`form` prop and rerunning the loads — that a custom callback otherwise replaces.
 
-### Good Example — Confirmation Before Delete
+### Good Example — confirming before a delete
 
 ```svelte
 <script lang="ts">
@@ -337,13 +346,15 @@ export const actions: Actions = {
 </form>
 ```
 
-**Why good:** `cancel()` prevents submission, confirmation dialog before destructive action, clean abort pattern
+**Why good:** `cancel()` stops the submission before it leaves the browser, so a declined confirmation
+costs no request. Note what it does not do: without JavaScript there is no confirmation at all, so
+the action itself still has to be safe to call.
 
 ---
 
 ## Pattern 4: Progressive Enhancement
 
-### Good Example — Form Works Without JavaScript
+### Good Example — the same form, with and without JavaScript
 
 ```svelte
 <!-- This form works with AND without JavaScript -->
@@ -371,13 +382,15 @@ export const actions: Actions = {
 -->
 ```
 
-**Why good:** `method="POST"` works natively in browsers, `use:enhance` adds AJAX on top, input validation with `required` and `type="email"` works without JS
+**Why good:** The markup is a real form, so it submits during the window before hydration finishes as
+well as when scripting is off. `use:enhance` is an upgrade rather than a requirement, which is why
+removing it degrades rather than breaks.
 
 ---
 
-## Pattern 5: Delete with Hidden Inputs
+## Pattern 5: A Delete Button
 
-### Good Example — Delete Button as Form
+### Good Example — a button that is a form
 
 ```typescript
 // src/routes/posts/+page.server.ts
@@ -429,13 +442,15 @@ export const actions: Actions = {
 {/each}
 ```
 
-**Why good:** Hidden input passes post ID, auth + ownership check, works without JavaScript, `use:enhance` prevents page reload
+**Why good:** The hidden input is client-supplied, which is exactly why the action re-reads the post
+and checks ownership rather than trusting it. Three distinct statuses — 401, 404, 403 — let the page
+say what went wrong.
 
 ---
 
-## Pattern 6: Redirect After Action
+## Pattern 6: Redirect Placement
 
-### Good Example — Correct Redirect Pattern
+### Good Example — the redirect outside the try
 
 ```typescript
 // CORRECT: redirect OUTSIDE try/catch
@@ -456,7 +471,7 @@ export const actions: Actions = {
 };
 ```
 
-### Bad Example — Redirect Inside Try/Catch
+### Bad Example — the redirect inside it
 
 ```typescript
 // BAD: redirect() throws — catch block intercepts it
@@ -472,8 +487,11 @@ export const actions: Actions = {
 };
 ```
 
-**Why bad:** `redirect()` throws a special exception that SvelteKit catches, wrapping it in try/catch prevents the redirect from working, user sees error instead of being redirected
+**Why bad:** `redirect()` signals by throwing, so the `catch` treats a successful save as a failure —
+the record is written and the user is told it was not. The failure mode is silent in the worst
+direction: the more successful the operation, the more reliably it reports an error.
 
 ---
 
-_For hooks patterns, see [hooks.md](hooks.md). For API routes, see [api-routes.md](api-routes.md)._
+_Request-wide concerns are in [hooks.md](hooks.md); endpoints in
+[api-routes.md](api-routes.md)._

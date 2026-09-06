@@ -1,121 +1,116 @@
 # Server vs Client Components
 
-> Server Components are the default in App Router. This guide covers the boundary decision, composition patterns, and streaming. See [core.md](core.md) for more foundational patterns.
+> The boundary decision, composition patterns, and streaming. Routing, layouts, error handling and
+> server-only code are in [core.md](core.md).
 
 ---
 
-## When to Use Server Components (Default)
+## Choosing the side
 
-- Fetching data from databases or APIs
-- Accessing backend resources (file system, environment variables)
-- Keeping sensitive information on the server (API keys, tokens)
-- Reducing client-side JavaScript bundle
-- Rendering static content
-
-## When to Use Client Components (`"use client"`)
-
-- Adding interactivity with event handlers (`onClick`, `onChange`)
-- Using React state (`useState`, `useReducer`)
-- Using lifecycle effects (`useEffect`, `useLayoutEffect`)
-- Using browser-only APIs (`localStorage`, `window`, `navigator`)
-- Using custom hooks that depend on state or effects
+| Server Component (default)                         | Client Component (`"use client"`)       |
+| -------------------------------------------------- | --------------------------------------- |
+| Reading from a database or API                     | Event handlers (`onClick`, `onChange`)  |
+| Reaching backend resources and environment values  | React state (`useState`, `useReducer`)  |
+| Holding API keys and tokens                        | Lifecycle effects (`useEffect`)         |
+| Rendering static content with no client cost       | Browser APIs (`localStorage`, `window`) |
+| Anything that does not need the three on the right | Custom hooks built on state or effects  |
 
 ---
 
-## Pattern: Composition - Server Wrapping Client
-
-The key pattern is Server Components at the top fetching data, passing it as props to small Client Components at the leaves.
-
-### Good Example - Server parent, Client child
+## Pattern 1: Server parent, Client child
 
 ```tsx
-// app/dashboard/page.tsx (Server Component - default)
-import { getUser } from "@/lib/data";
-import { UserProfile } from "./user-profile";
+// app/products/page.tsx — Server Component, the default
+import { ProductCard } from "./product-card";
 
-export default async function DashboardPage() {
-  const user = await getUser(); // Server-side data fetch
+export default async function ProductsPage() {
+  const products = await getProducts(); // direct data access, no client JavaScript
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      {/* Pass data as props to Client Component */}
-      <UserProfile user={user} />
+    <div className="grid grid-cols-3 gap-4">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 }
 ```
 
 ```tsx
-// app/dashboard/user-profile.tsx (Client Component)
+// app/products/product-card.tsx
 "use client";
 
 import { useState } from "react";
-import type { User } from "@/lib/types";
+import type { Product } from "./types";
 
-interface UserProfileProps {
-  user: User;
-}
-
-export function UserProfile({ user }: UserProfileProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export function ProductCard({ product }: { product: Product }) {
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div>
-      <p>{user.name}</p>
-      <button onClick={() => setIsEditing(!isEditing)}>
-        {isEditing ? "Cancel" : "Edit"}
-      </button>
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={isHovered ? "scale-105" : "scale-100"}
+    >
+      <h3>{product.name}</h3>
+      <p>${product.price}</p>
     </div>
   );
 }
 ```
 
-**Why good:** Server Component fetches data without client-side JavaScript, Client Component handles only the interactive parts, minimal JavaScript shipped to browser
+**Why good:** The page ships no JavaScript for the fetch or the list; only the hover behaviour
+crosses to the browser.
 
-### Bad Example - Everything as Client Component
+### Bad Example — the whole page as a Client Component
 
 ```tsx
-// app/dashboard/page.tsx
-"use client"; // BAD: Entire page is client-side
+// app/products/page.tsx
+"use client"; // BAD: the entire page is now client-side
 
 import { useEffect, useState } from "react";
+import type { Product } from "./types";
 
-export default function DashboardPage() {
-  const [user, setUser] = useState(null);
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/user")
+    fetch("/api/products")
       .then((res) => res.json())
-      .then(setUser);
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      });
   }, []);
 
-  if (!user) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div>
-      <h1>Dashboard</h1>
-      <p>{user.name}</p>
+      {products.map((product) => (
+        <div key={product.id}>{product.name}</div>
+      ))}
     </div>
   );
 }
 ```
 
-**Why bad:** Ships unnecessary JavaScript to client, causes loading waterfall (HTML -> JS -> fetch -> render), poor SEO, no streaming benefits
+**Why bad:** Three round trips before anything renders (HTML, then JS, then the fetch), the content
+is invisible to crawlers, and none of it can stream.
 
 ---
 
-## Pattern: Passing Server Components as Children
+## Pattern 2: Passing Server Components as children
 
-Client Components can receive Server Components as `children` props. This allows Server Components to render inside Client Component wrappers.
-
-### Good Example - Provider wrapping Server content
+A Client Component may wrap Server Components, as long as they arrive through `children` rather than
+being imported inside it.
 
 ```tsx
 // app/providers.tsx
 "use client";
 
-import { ThemeProvider } from "@/lib/theme";
+import { ThemeProvider } from "./theme";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return <ThemeProvider>{children}</ThemeProvider>;
@@ -123,7 +118,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ```
 
 ```tsx
-// app/layout.tsx (Server Component)
+// app/layout.tsx — a Server Component
 import { Providers } from "./providers";
 
 export default function RootLayout({
@@ -134,98 +129,102 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>
-          {/* children can be Server Components */}
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
 ```
 
-**Why good:** Client Component wrapper (Providers) doesn't force children to be Client Components, Server Components passed as `children` retain server-side rendering
+**Why good:** The provider is the only thing that becomes client-side. `children` is already rendered
+when it arrives, so the subtree keeps its server rendering.
 
 ---
 
-## Pattern: Streaming with Suspense
-
-Streaming allows progressive rendering by sending HTML chunks as they become available. Use `loading.tsx` for route-level loading and `<Suspense>` for granular streaming.
-
-### Good Example - Route-Level Loading with loading.tsx
-
-```tsx
-// app/dashboard/loading.tsx
-export default function DashboardLoading() {
-  return (
-    <div className="animate-pulse">
-      <div className="h-8 w-48 bg-gray-200 rounded mb-4" />
-      <div className="h-64 bg-gray-200 rounded" />
-    </div>
-  );
-}
-```
-
-**Why good:** Automatically wraps page in Suspense boundary, shows loading state immediately while data fetches, no manual Suspense setup needed
-
-### Good Example - Granular Streaming with Suspense
+## Pattern 3: Streaming with Suspense
 
 ```tsx
 // app/dashboard/page.tsx
 import { Suspense } from "react";
-import { RevenueChart, RevenueChartSkeleton } from "./revenue-chart";
-import { LatestInvoices, InvoicesSkeleton } from "./latest-invoices";
+import { RevenueChart } from "./revenue-chart";
+import { LatestInvoices } from "./latest-invoices";
+import { CardsSkeleton, ChartSkeleton, InvoicesSkeleton } from "./skeletons";
 
 export default function DashboardPage() {
   return (
-    <div>
+    <main>
       <h1>Dashboard</h1>
 
-      {/* Each section streams independently */}
-      <Suspense fallback={<RevenueChartSkeleton />}>
-        <RevenueChart />
+      <Suspense fallback={<CardsSkeleton />}>
+        <StatsCards />
       </Suspense>
 
-      <Suspense fallback={<InvoicesSkeleton />}>
-        <LatestInvoices />
-      </Suspense>
+      <div className="grid grid-cols-2 gap-6 mt-6">
+        {/* Chart and invoices resolve independently of each other */}
+        <Suspense fallback={<ChartSkeleton />}>
+          <RevenueChart />
+        </Suspense>
+
+        <Suspense fallback={<InvoicesSkeleton />}>
+          <LatestInvoices />
+        </Suspense>
+      </div>
+    </main>
+  );
+}
+```
+
+```tsx
+// app/dashboard/revenue-chart.tsx
+export async function RevenueChart() {
+  const revenue = await getRevenue(); // slow, and blocks nothing else
+  return <div>{/* chart */}</div>;
+}
+```
+
+```tsx
+// app/dashboard/skeletons.tsx
+export function ChartSkeleton() {
+  return <div className="h-64 bg-gray-200 animate-pulse rounded-lg" />;
+}
+
+export function InvoicesSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="h-12 bg-gray-200 animate-pulse rounded" />
+      ))}
     </div>
   );
 }
 ```
 
-**Why good:** Slow data fetches don't block fast ones, users see content progressively, each section loads independently improving perceived performance
+**Why good:** A three-second query and a one-second query no longer take four seconds between them,
+and each section shows a placeholder shaped like its final content.
 
-### When to Use loading.tsx vs Suspense
-
-| Granularity                            | Solution                                             |
-| -------------------------------------- | ---------------------------------------------------- |
-| Entire route should show loading state | `loading.tsx`                                        |
-| Multiple independent sections          | `<Suspense>` around each                             |
-| Single slow component                  | `<Suspense>` around that component                   |
-| Mix of both                            | `loading.tsx` for initial, `<Suspense>` for granular |
-
----
-
-## Pattern: Server-Only Code Protection
-
-Use the `server-only` package to guarantee code with secrets never reaches the client bundle.
+### Route-level loading state
 
 ```tsx
-// lib/data.ts
-import "server-only"; // Build error if imported in Client Component
+// app/dashboard/loading.tsx
+import { CardsSkeleton, ChartSkeleton, InvoicesSkeleton } from "./skeletons";
 
-export async function getUsers() {
-  // Safe to use secrets here - guaranteed server-only
-  const response = await fetch("https://api.example.com", {
-    headers: { Authorization: `Bearer ${process.env.API_KEY}` },
-  });
-  return response.json();
+export default function DashboardLoading() {
+  return (
+    <main>
+      <CardsSkeleton />
+      <div className="grid grid-cols-2 gap-6 mt-6">
+        <ChartSkeleton />
+        <InvoicesSkeleton />
+      </div>
+    </main>
+  );
 }
 ```
 
-**Why good:** Build-time guarantee that secrets never reach client bundle, clear separation of server/client code
+**Why good:** Next.js wraps `page.tsx` in a Suspense boundary for you, so the whole route has a
+loading state without a boundary written by hand. The decision tree for picking between the two is in
+[reference.md](../reference.md).
 
 ---
 
-_See [core.md](core.md) for more patterns including layouts, error handling, and dynamic routes._
+_Routing, layouts, error handling and `server-only` are in [core.md](core.md)._

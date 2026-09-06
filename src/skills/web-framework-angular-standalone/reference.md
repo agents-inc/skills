@@ -1,10 +1,10 @@
 # Angular Standalone Reference
 
-> Decision frameworks, anti-patterns, and red flags for Angular 17-19 standalone development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision trees, anti-patterns with the corrected code beside them, API and syntax tables, and the component checklist. See [SKILL.md](SKILL.md) for the patterns and red flags, and [examples/](examples/) for full code.
 
 ---
 
-## Decision Frameworks
+## Decision trees
 
 ### When to Use signal() vs computed() vs linkedSignal()
 
@@ -101,59 +101,9 @@ Do items have unique IDs?
 
 ---
 
-## RED FLAGS
+## Anti-patterns
 
-### High Priority Issues
-
-- **Using NgModule components without explicit `standalone: false`** - In Angular 19+, components are standalone by default; only add `standalone: false` for legacy NgModule components
-- **Using @Input/@Output decorators** - Legacy pattern without signal reactivity
-- **Using *ngIf/*ngFor/\*ngSwitch** - Legacy directives require CommonModule, worse type narrowing
-- **Missing `track` in @for** - Poor performance, unnecessary DOM recreation
-- **Constructor injection instead of inject()** - More boilerplate, less flexible
-- **Mutating signal values directly** - `signal().push(item)` doesn't trigger updates, use `.update()`
-- **Manual signal synchronization instead of linkedSignal()** - Use `linkedSignal()` for writable derived state (Angular 19+)
-- **Using resource() for mutations** - `resource()`/`rxResource()` are read-only; use HttpClient for POST/PUT/DELETE
-
-### Medium Priority Issues
-
-- **@defer above the fold** - Hurts Core Web Vitals (LCP, CLS)
-- **Not using @empty with @for** - Missing empty state handling
-- **Nested @defer with same trigger** - Causes cascading requests
-- **effect() for derived state** - Use computed() or linkedSignal() instead for better performance
-- **toSignal() without initialValue** - Can cause runtime errors if observable hasn't emitted
-- **Forgetting `as` in @if** - Repeating signal calls: `@if (user(); as user)` is cleaner
-- **Using effect() instead of afterRenderEffect() for DOM** - DOM operations should use afterRenderEffect() with proper phases
-- **Not checking resource hasValue()** - Use `hasValue()` as type guard before accessing resource value
-
-### Common Mistakes
-
-- Using `new EventEmitter()` instead of `output()`
-- Using `@ViewChild` instead of template reference variables with signals
-- Importing CommonModule for control flow (not needed with @if/@for/@switch)
-- Not providing `{ initialValue: [] }` to `toSignal()` for lists
-- Using `ngOnChanges` instead of `effect()` to react to input changes
-- Calling `this.cdr.detectChanges()` manually with signals (not needed)
-- Using `allowSignalWrites` flag (removed in Angular 19)
-- Using `effect()` for DOM operations instead of `afterRenderEffect()`
-
-### Gotchas & Edge Cases
-
-- **signal() equality**: By default uses `Object.is()`, provide custom equality for objects
-- **computed() laziness**: Not evaluated until first read, then memoized
-- **effect() cleanup**: Use `onCleanup` parameter for cleanup, not return value
-- **effect() timing (Angular 19)**: Effects now run during change detection, not as microtasks
-- **@defer in SSR**: Always renders @placeholder on server, triggers ignored
-- **model() vs input()**: model() creates two-way binding, input() is read-only
-- **inject() context**: Must be called in constructor or field initializer, not in methods
-- **@for $index**: Zero-based, use `{{ $index + 1 }}` for 1-based display
-- **withComponentInputBinding()**: Route params become `undefined` if not present, include in type
-- **linkedSignal() resets**: Value resets when source signal changes; use computation to preserve previous
-- **resource() status**: Check `hasValue()` before accessing `value()` for type safety
-- **afterRenderEffect() phases**: Specify `earlyRead`/`write`/`read` phases to avoid layout thrashing
-
----
-
-## Anti-Patterns
+> The one-line statement of each of these is in [SKILL.md](SKILL.md)'s `<red_flags>`; what this section adds is the corrected code.
 
 ### Mutating Signal Values Directly
 
@@ -173,22 +123,21 @@ addItem(item: string): void {
 }
 ```
 
-### Writing Signals Inside Effects
+### Deriving state inside an effect
 
-Effects should not modify signals they don't own. This can cause infinite loops.
+Angular 19 removed `allowSignalWrites`, so a signal write inside an `effect()` is permitted — and an effect that writes back to the signal it reads still re-triggers itself. Derived state belongs in `computed()`, or `linkedSignal()` where it must also be writable.
 
 ```typescript
-// WRONG - Signal write in effect
+// WRONG - the effect reads count and writes count
 constructor() {
   effect(() => {
-    const count = this.count();
-    if (count > 10) {
-      this.count.set(10); // Causes re-run of effect!
+    if (this.count() > 10) {
+      this.count.set(10);
     }
   });
 }
 
-// CORRECT - Use computed for derived values
+// CORRECT - derived read-only value
 maxCount = computed(() => Math.min(this.count(), 10));
 ```
 
@@ -313,9 +262,9 @@ export class UserCardComponent {
 
 ---
 
-## Quick Reference
+## API and syntax tables
 
-### Signal Methods
+### Signal methods
 
 | Method                  | Purpose                       | Example                                     |
 | ----------------------- | ----------------------------- | ------------------------------------------- |
@@ -414,7 +363,6 @@ Each phase receives the previous phase's return value wrapped in a `Signal`. Pre
 - [ ] Uses `inject()` for dependency injection
 - [ ] Uses `@if`, `@for`, `@switch` control flow
 - [ ] Uses `track` in all `@for` loops
-- [ ] Uses named constants for magic numbers
 - [ ] Uses `computed()` for derived read-only values
 - [ ] Uses `linkedSignal()` for writable derived values (Angular 19+)
 - [ ] Uses `effect()` only for side effects (not DOM ops)

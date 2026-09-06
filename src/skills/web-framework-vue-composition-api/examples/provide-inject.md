@@ -40,7 +40,7 @@ import {
   THEME_INJECTION_KEY,
   type Theme,
   type ThemeContext,
-} from "@/contexts/theme";
+} from "./theme-context";
 
 const STORAGE_KEY = "app-theme";
 
@@ -120,7 +120,7 @@ provide(THEME_INJECTION_KEY, context);
 <!-- ThemeToggle.vue -->
 <script setup lang="ts">
 import { inject } from "vue";
-import { THEME_INJECTION_KEY } from "@/contexts/theme";
+import { THEME_INJECTION_KEY } from "./theme-context";
 
 const themeContext = inject(THEME_INJECTION_KEY);
 
@@ -149,9 +149,9 @@ const { resolvedTheme, toggleTheme } = themeContext;
 ```vue
 <!-- App.vue -->
 <script setup lang="ts">
-import ThemeProvider from "@/components/ThemeProvider.vue";
-import AppHeader from "@/components/AppHeader.vue";
-import AppMain from "@/components/AppMain.vue";
+import ThemeProvider from "./ThemeProvider.vue";
+import AppHeader from "./AppHeader.vue";
+import AppMain from "./AppMain.vue";
 </script>
 
 <template>

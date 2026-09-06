@@ -1,14 +1,38 @@
 # Next.js Server Actions Examples
 
-> Complete code examples for Server Actions patterns. See [SKILL.md](../SKILL.md) for core concepts.
-
-**Advanced patterns:** See other files in this folder for optimistic updates, cookies, non-form handlers, and streaming.
+> Defining, invoking, validating and authorizing Server Actions. Optimistic updates, cookies,
+> non-form handlers and streaming each have their own file in this folder.
 
 ---
 
 ## Pattern 1: Server Action Definition
 
-### Good Example - File-level directive with full pattern
+Two places the directive can go. File level marks every export as an action, which is what allows a
+Client Component to import one:
+
+```typescript
+// app/actions/posts.ts
+"use server";
+export async function createPost(formData: FormData) {
+  /* ... */
+}
+```
+
+Function level keeps a one-off action next to the Server Component that uses it:
+
+```tsx
+// app/page.tsx — a Server Component
+export default function Page() {
+  async function createPost(formData: FormData) {
+    "use server";
+    // ...
+  }
+
+  return <form action={createPost}>...</form>;
+}
+```
+
+### Good Example — the full shape of a create action
 
 ```typescript
 // app/actions/posts.ts
@@ -16,15 +40,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
-
-const MAX_TITLE_LENGTH = 200;
-const MAX_CONTENT_LENGTH = 10000;
-
-const CreatePostSchema = z.object({
-  title: z.string().min(1, "Title is required").max(MAX_TITLE_LENGTH),
-  content: z.string().min(1, "Content is required").max(MAX_CONTENT_LENGTH),
-});
+// CreatePostSchema is defined with your schema validation library; toFieldErrors
+// reshapes that library's error into { [field]: string[] }.
+import { CreatePostSchema, toFieldErrors } from "./schemas";
 
 export type CreatePostState = {
   success: boolean;
@@ -46,13 +64,10 @@ export async function createPost(
   });
 
   if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return { success: false, errors: toFieldErrors(validatedFields.error) };
   }
 
-  // 2. Authorization check (defer to your auth solution)
+  // 2. Authorization — the action is a public endpoint until this line runs
   const user = await getCurrentUser();
   if (!user) {
     return {
@@ -62,16 +77,10 @@ export async function createPost(
   }
 
   try {
-    // 3. Perform mutation (defer to your database solution)
-    await db.post.create({
-      data: {
-        title: validatedFields.data.title,
-        content: validatedFields.data.content,
-        authorId: user.id,
-      },
-    });
+    // 3. Mutate
+    await createPostRecord({ ...validatedFields.data, authorId: user.id });
 
-    // 4. Revalidate cache
+    // 4. Revalidate
     revalidatePath("/posts");
   } catch (error) {
     return {
@@ -80,14 +89,16 @@ export async function createPost(
     };
   }
 
-  // 5. Redirect (must be outside try/catch as it throws)
+  // 5. Redirect, outside the try — it signals by throwing
   redirect("/posts");
 }
 ```
 
-**Why good:** Complete pattern with validation, auth, mutation, revalidation, and redirect. Named constants for limits. Type-safe state with proper error structure. Auth check before mutation. Redirect outside try/catch.
+**Why good:** The five steps run in the only order that works: a failed parse never reaches the auth
+check, a failed auth check never reaches the database, and the redirect sits outside the `try` so the
+`catch` cannot swallow it. Errors come back as values, so the form keeps the user's input.
 
-### Bad Example - Missing critical patterns
+### Bad Example — the same action with each step missing
 
 ```typescript
 // app/actions.ts
@@ -99,23 +110,25 @@ export async function createPost(formData: FormData) {
 
   // No validation
   // No auth check
-  await db.post.create({ data: { title, content } });
+  await createPostRecord({ title, content });
 
-  // No revalidation - UI shows stale data
+  // No revalidation — the list keeps rendering the pre-mutation cache
 }
 ```
 
-**Why bad:** No input validation allows malformed data. No auth check means anyone can create posts. No revalidation causes stale UI. No error handling crashes on failure.
+**Why bad:** Untyped `FormData` reaches the database, any anonymous caller who finds the action ID can
+write a row, the list page shows stale data afterwards, and a database failure escapes to the error
+boundary instead of coming back as a message.
 
 ---
 
 ## Pattern 2: Progressive Enhancement Form
 
-### Good Example - Basic form with Server Action
+### Good Example — a plain form
 
 ```typescript
 // app/posts/new/page.tsx
-import { createPost } from '@/app/actions/posts'
+import { createPost } from '../../actions/posts'
 
 export default function NewPostPage() {
   return (
@@ -147,16 +160,17 @@ export default function NewPostPage() {
 }
 ```
 
-**Why good:** Works without JavaScript (progressive enhancement). Native validation with `required` and `maxLength`. Semantic form structure with labels.
+**Why good:** No JavaScript is involved, so the form submits from a browser that has not hydrated yet
+or has scripting disabled. `required` and `maxLength` give first-pass validation for free.
 
-### Good Example - Form with useActionState for validation errors
+### Good Example — useActionState for validation errors
 
 ```typescript
 // components/post-form.tsx
 'use client'
 
 import { useActionState } from 'react'
-import { createPost, type CreatePostState } from '@/app/actions/posts'
+import { createPost, type CreatePostState } from '../app/actions/posts'
 
 const initialState: CreatePostState = { success: false }
 
@@ -208,13 +222,15 @@ export function PostForm() {
 }
 ```
 
-**Why good:** `useActionState` manages form state and pending state. Displays server validation errors. Accessible error associations with `aria-describedby`. Submit button disabled during pending.
+**Why good:** `useActionState` returns the action's own return value, so server-side validation errors
+render inline; `aria-describedby` ties each message to its field for a screen reader; and the pending
+flag comes from the same hook rather than a second piece of state to keep in sync.
 
 ---
 
 ## Pattern 3: Pending State with useFormStatus
 
-### Good Example - useFormStatus in separate component
+### Good Example — useFormStatus in a nested component
 
 ```typescript
 // components/submit-button.tsx
@@ -242,8 +258,8 @@ export function SubmitButton({ children, pendingText = 'Submitting...' }: Submit
 
 ```typescript
 // Usage in form
-import { createPost } from '@/app/actions/posts'
-import { SubmitButton } from '@/components/submit-button'
+import { createPost } from '../app/actions/posts'
+import { SubmitButton } from './submit-button'
 
 export function PostForm() {
   return (
@@ -257,9 +273,11 @@ export function PostForm() {
 }
 ```
 
-**Why good:** `useFormStatus` must be in a component nested within the form. Reusable submit button with customizable pending text. Clean separation of concerns.
+**Why good:** `useFormStatus` reads the nearest form above it in the tree, so a nested button gets the
+pending state without the form passing anything down — and the button is reusable across every form
+in the app.
 
-### Bad Example - useFormStatus in same component as form
+### Bad Example — useFormStatus beside the form it describes
 
 ```typescript
 // WRONG - useFormStatus won't work here
@@ -278,13 +296,15 @@ export function PostForm() {
 }
 ```
 
-**Why bad:** `useFormStatus` only works in components NESTED within the form, not in the component rendering the form. `pending` will always be `false` here.
+**Why bad:** The hook looks upward for a form, and there is none above this component — the `<form>`
+is below it. `pending` stays `false` for the life of the component, so the button never disables and
+nothing reports the failure.
 
 ---
 
 ## Pattern 4: Delete Actions with bind()
 
-### Good Example - Delete with bind() for ID
+### Good Example — passing an ID with bind()
 
 ```typescript
 // app/actions/posts.ts
@@ -293,7 +313,6 @@ export function PostForm() {
 import { revalidatePath } from "next/cache";
 
 export async function deletePost(postId: string) {
-  // Authorization check
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("Unauthorized");
@@ -301,15 +320,14 @@ export async function deletePost(postId: string) {
 
   const post = await getPost(postId);
   if (!post) {
-    throw new Error("Post not found");
+    throw new Error("Not found");
   }
 
   if (post.authorId !== user.id) {
     throw new Error("Forbidden: Not the author");
   }
 
-  // Perform deletion
-  await db.post.delete({ where: { id: postId } });
+  await deletePostRecord(postId);
 
   revalidatePath("/posts");
 }
@@ -319,7 +337,7 @@ export async function deletePost(postId: string) {
 // components/delete-post-button.tsx
 'use client'
 
-import { deletePost } from '@/app/actions/posts'
+import { deletePost } from '../app/actions/posts'
 
 export function DeletePostButton({ postId }: { postId: string }) {
   const deletePostWithId = deletePost.bind(null, postId)
@@ -332,17 +350,18 @@ export function DeletePostButton({ postId }: { postId: string }) {
 }
 ```
 
-**Why good:** `bind()` passes postId to Server Action. Authorization verifies ownership before deletion. Works with progressive enhancement.
+**Why good:** `bind()` supplies the ID without a hidden input, so the client cannot substitute another
+post's — and the form still works unenhanced. Ownership is checked server-side regardless.
 
 ---
 
 ## Pattern 5: Multiple Actions in One Form
 
-### Good Example - Nested formAction
+### Good Example — formAction per button
 
 ```typescript
 // components/post-editor.tsx
-import { saveAsDraft, publishPost } from '@/app/actions/posts'
+import { saveAsDraft, publishPost } from '../app/actions/posts'
 
 export function PostEditor() {
   return (
@@ -364,31 +383,22 @@ export function PostEditor() {
 }
 ```
 
-**Why good:** Multiple submit buttons with different actions. `formAction` attribute overrides form's `action`. Same form data goes to different handlers.
+**Why good:** `formAction` on a button overrides the form's own `action`, so one set of fields reaches
+two handlers — and the native attribute means it works before hydration too.
 
 ---
 
 ## Pattern 6: Structured Error Handling
 
-### Good Example - Type-safe error responses
+### Good Example — type-safe error responses
 
 ```typescript
 // app/actions/users.ts
 "use server";
 
-import { z } from "zod";
-
-const MIN_PASSWORD_LENGTH = 8;
-
-const SignupSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(
-      MIN_PASSWORD_LENGTH,
-      `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
-    ),
-});
+// Same stand-ins as Pattern 1: the schema comes from your validation library, and
+// toFieldErrors reshapes its error into { [field]: string[] }.
+import { SignupSchema, toFieldErrors } from "./schemas";
 
 export type SignupState = {
   success: boolean;
@@ -409,23 +419,15 @@ export async function signup(
   });
 
   if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return { success: false, errors: toFieldErrors(validatedFields.error) };
   }
 
   try {
-    // Check if user exists
     const existingUser = await getUserByEmail(validatedFields.data.email);
     if (existingUser) {
-      return {
-        success: false,
-        errors: { email: ["Email already in use"] },
-      };
+      return { success: false, errors: { email: ["Email already in use"] } };
     }
 
-    // Create user (defer to your auth solution)
     await createUser(validatedFields.data);
 
     return { success: true };
@@ -438,23 +440,26 @@ export async function signup(
 }
 ```
 
-**Why good:** Typed state object for consistent structure. Field-level errors for inline display. Form-level errors (`_form`) for general issues. Named constant for password length.
+**Why good:** One state shape covers every outcome, so the form component has a single thing to
+render. Field errors key by field name for inline display; `_form` carries what belongs to no single
+field, such as an unavailable database.
 
-### Bad Example - Throwing errors for validation
+### Bad Example — throwing for a validation failure
 
 ```typescript
-// WRONG - Don't throw for validation errors
+// WRONG
 "use server";
 
 export async function signup(formData: FormData) {
   const email = formData.get("email") as string;
 
   if (!email.includes("@")) {
-    throw new Error("Invalid email"); // Bad - loses form state
+    throw new Error("Invalid email");
   }
 
   // ...
 }
 ```
 
-**Why bad:** Throwing errors clears form state and shows error boundary. User loses their input. Use return values for validation errors instead.
+**Why bad:** The throw reaches the nearest error boundary, which unmounts the form — so the user is
+told what is wrong and loses everything they typed at the same moment. Return the errors instead.

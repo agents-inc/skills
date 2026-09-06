@@ -1,6 +1,6 @@
-# Remix - Optimistic UI Examples
+# Remix — Optimistic UI
 
-> Patterns for useFetcher with optimistic updates and debounced search.
+> `useFetcher` for updates that do not navigate, and for a search box that does not flood the server.
 
 ---
 
@@ -77,7 +77,10 @@ export default function Todos() {
 }
 ```
 
-**Why good:** Checkbox triggers form submission immediately, optimistic UI shows expected state before server responds, no navigation on toggle, each todo has its own fetcher instance
+**Why good:** `fetcher.formData` holds the submission that is still in flight, so the checkbox can
+render what the user just asked for rather than what the server last confirmed — and when the loader
+revalidates, `formData` clears and the real value takes over, with no rollback code. Each item has its
+own fetcher, so ticking one does not put every other row into a pending state.
 
 ---
 
@@ -160,34 +163,24 @@ export default function SearchPage() {
 }
 ```
 
-**Why good:** Debounced search prevents excessive requests, minimum query length avoids useless searches, loading state feedback, typed fetcher data, no results message
+**Why good:** `fetcher.load` calls a loader without navigating, so the URL and the history stay put
+while results stream in. The cleanup returning `clearTimeout` is what makes it a debounce rather than
+a delay — without it every keystroke still fires, just later.
 
 ---
 
-## useFetcher Key Concepts
+## Fetcher States
 
-### Fetcher States
+| State        | Meaning                                   |
+| ------------ | ----------------------------------------- |
+| `idle`       | Nothing in flight                         |
+| `submitting` | A non-GET submission is running           |
+| `loading`    | A GET load, or a post-action revalidation |
 
-| State        | Description             |
-| ------------ | ----------------------- |
-| `idle`       | No active submission    |
-| `submitting` | Form is being submitted |
-| `loading`    | Data is being loaded    |
-
-### Optimistic Update Pattern
+The optimistic read, in one line:
 
 ```typescript
-// Read from formData if submitting, otherwise use server data
 const optimisticValue = fetcher.formData
   ? fetcher.formData.get("fieldName")
   : serverValue;
 ```
-
-### When to Use useFetcher vs Form
-
-| Use Case                   | Component               |
-| -------------------------- | ----------------------- |
-| Navigation after submit    | `<Form>`                |
-| Stay on same page          | `<fetcher.Form>`        |
-| Multiple independent forms | `useFetcher()` per form |
-| Inline editing             | `useFetcher()`          |

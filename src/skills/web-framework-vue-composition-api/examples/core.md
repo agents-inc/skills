@@ -11,7 +11,7 @@
 ```vue
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { User } from "@/types";
+import type { User } from "./types";
 
 // Props with TypeScript
 const props = defineProps<{

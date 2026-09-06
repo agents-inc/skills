@@ -1,6 +1,6 @@
-# Remix - Error Handling Examples
+# Remix — Error Boundaries
 
-> Patterns for error boundaries with multi-status handling.
+> Boundaries that tell a thrown Response from an unexpected exception, and branch on status.
 
 ---
 
@@ -52,7 +52,9 @@ export function ErrorBoundary() {
 }
 ```
 
-**Why good:** Distinguishes between Response errors and JS errors, accessible with role="alert", dev-only error details, provides recovery actions
+**Why good:** `isRouteErrorResponse` separates the failures the app threw deliberately from the ones it
+did not, and only the second kind hides its message in production — an internal error message is an
+information leak, a 404 is not.
 
 ---
 
@@ -147,4 +149,7 @@ export function ErrorBoundary() {
 }
 ```
 
-**Why good:** Different UI for different error types, helpful actions (links, retry buttons), accessible with role="alert", dev-only stack trace, named constants for status codes
+**Why good:** Each status gets the recovery that actually helps — a 401 offers a login link, a 403
+offers the list the user can see, a 500 offers a retry. A single generic error page offers none of
+them. `aria-live="assertive"` announces the change to a screen reader, since nothing else on the page
+signals that the content was replaced.

@@ -389,7 +389,7 @@ const EditableText: Component<{ initialValue: string; onSave: (value: string) =>
 export { EditableText };
 ```
 
-**Why good:** No forwardRef needed, ref assignment is simple, keyboard handling for accessibility
+**Why good:** a ref is an ordinary prop, so no wrapper component sits between the parent and the element. Focus is requested after the `<Show>` has rendered the input, and Enter and Escape both have a handler.
 
 ---
 

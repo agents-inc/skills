@@ -1,6 +1,6 @@
-# Remix - SEO Meta Examples
+# Remix — Meta and SEO
 
-> Patterns for dynamic meta tags, Open Graph, and Twitter cards.
+> Head tags built from loader data: titles, Open Graph, Twitter cards, canonical URLs.
 
 ---
 
@@ -71,13 +71,14 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 ```
 
-**Why good:** Title and description from loader data, canonical URL prevents duplicate content, Open Graph and Twitter cards for social sharing, noindex for missing products, named constants for site config
+**Why good:** The `!data` branch is not defensive padding — `meta` runs with `undefined` data whenever
+the loader threw, so without it the 404 page crashes while rendering its own head. `noindex` on that
+branch keeps deleted products out of the search index, and the canonical URL keeps the same product
+reached by two paths from competing with itself.
 
 ---
 
-## Key Concepts
-
-### Meta Function Signature
+## The Function
 
 ```typescript
 export const meta: MetaFunction<typeof loader> = ({
@@ -85,47 +86,24 @@ export const meta: MetaFunction<typeof loader> = ({
   params,
   location,
 }) => {
-  // data - loader response
-  // params - URL params
-  // location - current URL info
+  // data     — what the loader returned, or undefined if it threw
+  // params   — URL parameters
+  // location — the current URL
   return [{ title: "Page Title" }, { name: "description", content: "..." }];
 };
 ```
 
-### Common Meta Tags
-
-| Tag           | Purpose               |
-| ------------- | --------------------- |
-| `title`       | Browser tab title     |
-| `description` | Search engine snippet |
-| `robots`      | Indexing instructions |
-| `canonical`   | Preferred URL         |
-
-### Open Graph Tags
-
-| Property         | Purpose                                  |
-| ---------------- | ---------------------------------------- |
-| `og:title`       | Social share title                       |
-| `og:description` | Social share description                 |
-| `og:image`       | Social share image                       |
-| `og:type`        | Content type (website, article, product) |
-| `og:url`         | Canonical URL for sharing                |
-
-### Twitter Card Tags
-
-| Name                  | Purpose                                  |
-| --------------------- | ---------------------------------------- |
-| `twitter:card`        | Card type (summary, summary_large_image) |
-| `twitter:title`       | Twitter-specific title                   |
-| `twitter:description` | Twitter-specific description             |
-| `twitter:image`       | Twitter-specific image                   |
-
-### Link Tags in Meta
+A descriptor's key decides the tag it becomes: `title` becomes `<title>`, `name` and `property`
+become `<meta>`, and `tagName: "link"` becomes `<link>` — which is the only way to emit a dynamic
+`<link>`, since the `links` export cannot see loader data.
 
 ```typescript
-// Canonical URL
 { tagName: "link", rel: "canonical", href: url }
-
-// Alternate language
 { tagName: "link", rel: "alternate", hreflang: "es", href: "/es/page" }
 ```
+
+| Group        | The ones worth setting                                                |
+| ------------ | --------------------------------------------------------------------- |
+| Core         | `title`, `description`, `robots`, canonical link                      |
+| Open Graph   | `og:title`, `og:description`, `og:image`, `og:type`, `og:url`         |
+| Twitter card | `twitter:card`, and title/description/image where they differ from OG |

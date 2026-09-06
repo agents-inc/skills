@@ -192,7 +192,7 @@ export function useAutoFocus(refName: string) {
 ```vue
 <!-- Component.vue -->
 <script setup lang="ts">
-import { useAutoFocus } from "@/composables/use-auto-focus";
+import { useAutoFocus } from "./use-auto-focus";
 
 // Will auto-focus on mount
 const inputRef = useAutoFocus("searchInput");

@@ -272,6 +272,28 @@ import BlogLayout from "../../layouts/BlogLayout.astro";
 
 **Why good:** Default scripts are bundled and tree-shaken, `is:inline` preserves script behavior across navigations, named constants for storage keys
 
+### Bad Example - Fetching in a Script Instead of the Frontmatter
+
+```astro
+<div id="data"></div>
+<script>
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  document.getElementById("data").innerHTML = data.title;
+</script>
+```
+
+**Why bad:** The browser loads the page, then waits for a second round trip before anything renders. Frontmatter runs server-side, so the same fetch costs nothing at runtime:
+
+```astro
+---
+const res = await fetch("https://api.example.com/data");
+const data = await res.json();
+---
+
+<div>{data.title}</div>
+```
+
 ---
 
 _See [islands.md](islands.md) for interactive component patterns and [content.md](content.md) for content collection examples._

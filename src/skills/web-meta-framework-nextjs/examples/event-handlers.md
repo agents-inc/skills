@@ -1,19 +1,20 @@
 # Non-Form Event Handlers
 
-> Calling Server Actions from click handlers and other events. See [server-actions.md](server-actions.md) for form-based patterns.
+> Invoking Server Actions from click handlers. See [server-actions.md](server-actions.md) for the
+> form-based route.
 
 ---
 
 ## Pattern: Server Action with useTransition
 
-### Good Example - Toggle button with optimistic update
+### Good Example — a toggle button
 
 ```typescript
 // components/bookmark-button.tsx
 'use client'
 
 import { useState, useTransition } from 'react'
-import { toggleBookmark } from '@/app/actions/bookmarks'
+import { toggleBookmark } from '../app/actions/bookmarks'
 
 export function BookmarkButton({
   postId,
@@ -48,15 +49,20 @@ export function BookmarkButton({
 }
 ```
 
-**Why good:** `startTransition` keeps UI responsive. Optimistic update for instant feedback. Error handling reverts state on failure.
+**Why good:** `startTransition` marks the update non-urgent, so the click still feels instant while
+the request is in flight, and `isPending` disables the button against a double-fire. The `catch`
+restores the previous value, which is the work `useOptimistic` would do for you inside a form.
 
 ---
 
 ## When to Use Forms vs Event Handlers
 
-| Use Form + action              | Use onClick + useTransition  |
-| ------------------------------ | ---------------------------- |
-| Creating/updating data         | Toggle actions               |
-| Multi-field submissions        | Single-value mutations       |
-| Progressive enhancement needed | Complex UI interactions      |
-| Native validation helpful      | Non-form UI (buttons, icons) |
+A form buys progressive enhancement; a click handler is what remains when there is no form to
+enhance.
+
+| Use Form + action                  | Use onClick + useTransition         |
+| ---------------------------------- | ----------------------------------- |
+| Creating or updating a record      | Toggles                             |
+| Multi-field submissions            | Single-value mutations              |
+| Working without JavaScript matters | Interactions with no form to submit |
+| Native validation helps            | Buttons and icons                   |

@@ -3,29 +3,42 @@ name: web-meta-framework-vitepress
 description: VitePress 1.x — Vue-powered static site generator for documentation sites, built on Vite
 ---
 
-# VitePress
+# VitePress Patterns
 
-> **Quick Guide:** VitePress is a Vue-powered static site generator built on Vite, designed for documentation. All config lives in `.vitepress/config.ts`. Use `defineConfig()` for type safety. Sidebar accepts arrays (single) or objects keyed by path prefix (multi-sidebar). Data loaders (`*.data.ts`) run at build time and ship only serialized results to the client. Vue components work directly in Markdown via `<script setup>`. Extend the default theme through layout slots and CSS variables rather than forking it.
+> **Quick Guide:** VitePress is a Vue-powered static site generator for documentation, configured
+> entirely in `.vitepress/config.ts`. The sidebar is either an array (one sidebar everywhere) or an
+> object keyed by URL path prefix (a sidebar per section). Data loaders — files ending `.data.ts` — run
+> at build time and ship only their serialized result to the client. Vue components work directly inside
+> Markdown through `<script setup>`. Every page is pre-rendered at build time, which is the constraint
+> behind most of the red flags below.
 >
-> **Current stable version:** VitePress 1.6.x (2026). Uses Vite 6+ and Vue 3.5+.
+> **Version:** VitePress 1.6.x, on Vite 6+ and Vue 3.5+.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — full config, multi-sidebar, content and custom data loaders, theme extension and CSS variables, Vue in Markdown, markdown extensions, build hooks, home page, i18n, markdown-it plugins, dynamic routes, rewrites, deployment
+- [reference.md](reference.md) — CLI commands, site and theme config tables, frontmatter fields, runtime API, CSS variable categories, layout slots, markdown syntax
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing VitePress code
 
-> **All code must follow project conventions in CLAUDE.md**
+**Put site configuration in `.vitepress/config.ts` and wrap it in `defineConfig()`.** That path is where
+the build looks, and the wrapper is what gives the option names type checking.
 
-**(You MUST use `.vitepress/config.ts` with `defineConfig()` for all site configuration — VitePress does not support config outside `.vitepress/`)**
+**Load data through a `*.data.ts` loader rather than fetching in a component.** The loader runs at build
+time and the client receives only the serialized result, which is both faster and SSR-safe.
 
-**(You MUST use data loader files (`*.data.ts`) for build-time data — never fetch data at runtime in SSR-unsafe ways)**
+**Guard browser APIs with `<ClientOnly>` or `onMounted`.** Every page is pre-rendered at build time, so a
+bare `window` or `document` reference crashes the build rather than the browser.
 
-**(You MUST handle SSR compatibility — no bare `window`, `document`, or browser APIs outside `onMounted` or `<ClientOnly>`)**
+**Extend the default theme with `extends: DefaultTheme` plus layout slots.** A fork is a copy that stops
+tracking upstream, and the slot list is broad enough that forking is rarely the shorter route.
 
-**(You MUST extend the default theme via `extends: DefaultTheme` and layout slots — do not fork the entire theme)**
-
-**(You MUST use `createContentLoader()` for markdown collection pages — it handles caching, watching, and frontmatter extraction)**
+**Build Markdown collection pages with `createContentLoader()`.** It already handles the glob, the
+frontmatter extraction, mtime caching and dev-mode watching.
 
 </critical_requirements>
 
@@ -33,113 +46,82 @@ description: VitePress 1.x — Vue-powered static site generator for documentati
 
 **Auto-detection:** VitePress, vitepress, .vitepress/config, defineConfig vitepress, createContentLoader, vitepress/theme, DefaultTheme, useData, useSidebar, markdown-it plugin vitepress, vitepress deploy
 
-**When to use:**
+**Applies to:**
 
-- Building documentation sites from Markdown files
-- Creating blog index/archive pages with `createContentLoader`
-- Customizing the default theme (nav, sidebar, layout slots, CSS variables)
-- Adding Vue components to Markdown pages
-- Configuring markdown-it plugins for extended syntax
-- Setting up multi-sidebar navigation by path prefix
-- Generating sitemaps and other build artifacts with build hooks
-- Internationalization (i18n) with multi-locale routing
+- Site and theme configuration in `.vitepress/config.ts`
+- Navigation: nav bar, single and multi-sidebar, outline, edit links
+- Data loaders — `createContentLoader` for Markdown collections, custom `load()` for anything else
+- Vue components in Markdown, page-scoped and globally registered
+- Theme extension through layout slots, custom layouts and CSS variables
+- Markdown extensions: containers, code groups, line highlighting and annotations, snippets, includes
+- Build hooks: `transformPageData`, `transformHead`, `transformHtml`, `buildEnd`
+- markdown-it plugin integration, dynamic routes, URL rewrites, i18n, deployment
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Full web applications with complex client-side routing (use a web framework)
-- Sites requiring server-side runtime logic (VitePress is static output)
-- Projects already using Docusaurus, Nextra, or Starlight (those are separate ecosystems)
-- Content that needs a CMS backend (VitePress reads Markdown files at build time)
-- API documentation from OpenAPI specs (use a dedicated OpenAPI tool)
+- Vue component authoring itself — this skill covers where a component may go and what the SSR boundary demands of it, not the component model.
+- Request-time behaviour — the build emits static files, so anything needing a server at request time lives outside the site.
+- Content from a CMS or database at request time; a loader can read one at build time, which is a different thing.
+- Design decisions behind the CSS variables — those variables are the seam, and what you set them to is not this skill's call.
+- API reference generated from a machine-readable spec — that generation is upstream of the Markdown VitePress reads.
 
 ---
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Site Configuration
+### Pattern 1: Site configuration
 
-All configuration lives in `.vitepress/config.ts`. Use `defineConfig()` for type checking and autocompletion.
+One file, wrapped for type checking. `cleanUrls` drops `.html` from URLs, `sitemap.hostname` generates
+`sitemap.xml`, `lastUpdated` reads git timestamps, and `search.provider: "local"` is search with no
+service to sign up for.
 
 ```ts
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
   title: "My Docs",
-  description: "Documentation site",
   cleanUrls: true,
   lastUpdated: true,
   sitemap: { hostname: "https://docs.example.com" },
-
   themeConfig: {
-    nav: [
-      { text: "Guide", link: "/guide/" },
-      { text: "API", link: "/api/" },
-    ],
+    nav: [{ text: "Guide", link: "/guide/" }],
     sidebar: {
-      /* see Pattern 2 */
+      /* Pattern 2 */
     },
-    socialLinks: [{ icon: "github", link: "https://github.com/org/repo" }],
     search: { provider: "local" },
-    editLink: {
-      pattern: "https://github.com/org/repo/edit/main/docs/:path",
-    },
+    editLink: { pattern: "https://github.com/org/repo/edit/main/docs/:path" },
   },
 });
 ```
 
-**Why good:** `cleanUrls: true` removes `.html` extensions, `sitemap` auto-generates sitemap.xml, `lastUpdated` reads git timestamps, `search.provider: 'local'` enables built-in search with zero config
+Full code: [examples/core.md](examples/core.md)
 
-> **Full examples:** See [examples/core.md](examples/core.md) for complete config, multi-sidebar, i18n, and markdown config.
+### Pattern 2: Multi-sidebar
 
----
-
-### Pattern 2: Multi-Sidebar
-
-Sidebar can be an array (global) or an object keyed by URL path prefix (multi-sidebar). Each section supports `collapsed` for expandable groups.
+An array gives one sidebar for the whole site. An object keyed by path prefix gives a different sidebar
+per section, and the first matching prefix wins.
 
 ```ts
 sidebar: {
-  '/guide/': [
-    {
-      text: 'Getting Started',
-      collapsed: false,
-      items: [
-        { text: 'Introduction', link: '/guide/introduction' },
-        { text: 'Installation', link: '/guide/installation' },
-      ],
-    },
-    {
-      text: 'Advanced',
-      collapsed: true,
-      items: [
-        { text: 'Data Loaders', link: '/guide/data-loading' },
-        { text: 'Deployment', link: '/guide/deploy' },
-      ],
-    },
+  "/guide/": [
+    { text: "Getting Started", collapsed: false, items: [{ text: "Introduction", link: "/guide/introduction" }] },
+    { text: "Advanced", collapsed: true, items: [{ text: "Data Loaders", link: "/guide/data-loading" }] },
   ],
-  '/api/': [
-    {
-      text: 'API Reference',
-      items: [
-        { text: 'Config', link: '/api/config' },
-        { text: 'Runtime API', link: '/api/runtime' },
-      ],
-    },
-  ],
+  "/api/": [{ text: "API Reference", items: [{ text: "Config", link: "/api/config" }] }],
 }
 ```
 
-**Why good:** Each path prefix gets its own sidebar navigation, `collapsed: true` keeps dense sidebars scannable
+The trailing slash matters: `/guide` also matches `/guidelines`. Omitting `collapsed` makes a group
+permanently expanded rather than collapsible.
 
-**Common mistake:** Using `/guide` without trailing slash — VitePress matches path prefixes, so `/guide/` is more precise than `/guide` (which would also match `/guidelines`)
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 3: Data loaders
 
-### Pattern 3: Data Loaders
-
-Data loaders (`*.data.ts` files) execute at build time. Results are serialized and shipped to client components. Use `createContentLoader` for Markdown collections, custom `load()` for arbitrary data.
+A `*.data.ts` file runs at build time and exports `data`. `createContentLoader` covers Markdown
+collections; a plain object with `watch` and `load()` covers everything else.
 
 ```ts
 // posts.data.ts
@@ -147,49 +129,34 @@ import { createContentLoader } from "vitepress";
 
 export default createContentLoader("blog/posts/*.md", {
   excerpt: true,
-  transform(rawData) {
-    return rawData
+  transform: (raw) =>
+    raw
       .sort(
         (a, b) => +new Date(b.frontmatter.date) - +new Date(a.frontmatter.date),
       )
       .map(({ url, frontmatter, excerpt }) => ({
         title: frontmatter.title,
         url,
-        date: frontmatter.date,
         excerpt,
-      }));
-  },
+      })),
 });
 ```
 
 ```vue
-<!-- blog/index.md — consume in Vue -->
 <script setup>
 import { data as posts } from "./posts.data";
 </script>
-
-<template>
-  <article v-for="post in posts" :key="post.url">
-    <h2>
-      <a :href="post.url">{{ post.title }}</a>
-    </h2>
-    <time>{{ post.date }}</time>
-    <div v-html="post.excerpt" />
-  </article>
-</template>
 ```
 
-**Why good:** `createContentLoader` handles file watching in dev, caching by mtime, frontmatter extraction, and optional HTML rendering. The `transform` strips unnecessary data so only what's needed reaches the client bundle.
+`transform` is where you drop what the client does not need, which is why `includeSrc` and `render`
+are opt-in.
 
-**Key options:** `includeSrc` (raw markdown), `render` (full HTML), `excerpt` (content above first `---`). Only enable what you need — `render: true` on hundreds of pages inflates the client bundle.
+Full code: [examples/core.md](examples/core.md)
 
-> **Full examples:** See [examples/core.md](examples/core.md#data-loaders) for custom loaders and `buildEnd` usage.
+### Pattern 4: Vue components in Markdown
 
----
-
-### Pattern 4: Vue Components in Markdown
-
-Vue components work directly in `.md` files. Use `<script setup>` for page-scoped imports. Register global components in the theme for cross-page reuse.
+`<script setup>` at the top of a `.md` file makes its imports available to that page, and page-scoped
+imports code-split. Register a component globally only when many pages use it.
 
 ```markdown
 <script setup>
@@ -203,9 +170,6 @@ import StatusBadge from '../components/StatusBadge.vue'
 
 ```ts
 // .vitepress/theme/index.ts — global registration
-import DefaultTheme from "vitepress/theme";
-import StatusBadge from "../components/StatusBadge.vue";
-
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
@@ -214,80 +178,65 @@ export default {
 };
 ```
 
-**Why good:** Page-scoped imports enable code-splitting (only loaded on pages that use them). Global registration is for components used across many pages.
+Full code: [examples/core.md](examples/core.md)
 
-**SSR rule:** Components that access browser APIs must be wrapped in `<ClientOnly>` or guarded with `onMounted`. VitePress pre-renders all pages at build time.
+### Pattern 5: Theme extension
 
----
-
-### Pattern 5: Theme Extension
-
-Extend the default theme through layout slots and CSS variables. Do not fork the entire layout.
+Wrap `DefaultTheme`'s `Layout` and fill its named slots. The slot list is long enough that most
+customization needs no fork.
 
 ```vue
-<!-- .vitepress/theme/MyLayout.vue -->
 <script setup>
 import DefaultTheme from "vitepress/theme";
-import { useData } from "vitepress";
-
 const { Layout } = DefaultTheme;
-const { frontmatter } = useData();
 </script>
 
 <template>
   <Layout>
-    <template #doc-before>
-      <div v-if="frontmatter.author" class="author-banner">
-        By {{ frontmatter.author }}
-      </div>
-    </template>
-    <template #doc-footer-before>
-      <div class="feedback-widget">Was this page helpful?</div>
-    </template>
+    <template #doc-before><div class="author-banner">...</div></template>
+    <template #doc-footer-before
+      ><div class="feedback-widget">...</div></template
+    >
   </Layout>
 </template>
 ```
 
-**Available layout slots:** `nav-bar-title-before`, `nav-bar-title-after`, `nav-bar-content-before`, `nav-bar-content-after`, `nav-screen-content-before`, `nav-screen-content-after`, `sidebar-nav-before`, `sidebar-nav-after`, `aside-top`, `aside-bottom`, `aside-outline-before`, `aside-outline-after`, `doc-before`, `doc-after`, `doc-footer-before`, `doc-top`, `doc-bottom`, `home-hero-before`, `home-hero-after`, `home-features-before`, `home-features-after`, `not-found`
+The full slot list is in [reference.md](reference.md#layout-slots).
 
-> **Full examples:** See [examples/core.md](examples/core.md#theme-extension) for CSS variable overrides and custom theme setup.
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 6: Build hooks
 
-### Pattern 6: Build Hooks
-
-Build hooks in config transform page data, inject head tags, or generate files at build time.
+Four hooks in config, running in order: `transformPageData` per page during render,
+`transformHead` per page after render, `transformHtml` per page on the final HTML string, and `buildEnd`
+once, for generating extra files into `siteConfig.outDir`.
 
 ```ts
 export default defineConfig({
-  async transformPageData(pageData) {
-    // Add computed data available via useData()
+  transformPageData(pageData) {
     pageData.frontmatter.head ??= [];
     pageData.frontmatter.head.push([
       "meta",
       { property: "og:title", content: pageData.title },
     ]);
   },
-
   async buildEnd(siteConfig) {
-    // Generate files after build — RSS feeds, redirects, etc.
     const posts = await createContentLoader("blog/*.md").load();
-    // write to siteConfig.outDir
+    // write an RSS feed or redirect map into siteConfig.outDir
   },
 });
 ```
 
-**Available hooks:** `transformPageData` (per-page, access frontmatter + route), `transformHead` (per-page, return head tags array), `transformHtml` (per-page, modify rendered HTML string), `buildEnd` (once after build, generate extra files)
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 7: Markdown extensions
 
-### Pattern 7: Markdown Extensions
-
-VitePress extends standard Markdown with containers, code groups, line highlighting, and code snippets.
+Containers, tabbed code groups, line highlighting and annotations, file snippets and partial includes,
+all on top of standard Markdown.
 
 ````markdown
 ::: tip RECOMMENDATION
-Use `createContentLoader` for blog index pages.
+Containers are `info`, `tip`, `warning`, `danger` and `details`; the word after the type is the title.
 :::
 
 ::: code-group
@@ -295,7 +244,6 @@ Use `createContentLoader` for blog index pages.
 ```ts [config.ts]
 export default defineConfig({ title: "Docs" });
 ```
-````
 
 ```js [config.js]
 export default { title: "Docs" };
@@ -303,124 +251,66 @@ export default { title: "Docs" };
 
 :::
 
-<!-- Line highlighting -->
-
-```ts{2-3}
-export default {
-  title: 'Highlighted',    // highlighted
-  description: 'Also',     // highlighted
-}
-```
-
-<!-- Import code from file -->
-
 <<< @/snippets/example.ts
 
-<!-- Include partial markdown -->
 <!--@include: ./shared/header.md-->
-
 ````
 
-**Container types:** `info`, `tip`, `warning`, `danger`, `details` (expandable). Customize labels in `markdown.container` config.
+Line ranges highlight with a brace suffix on the language (`ts{2-3}`), and in-code annotations are
+`// [!code focus]`, `// [!code ++]`, `// [!code --]`, `// [!code warning]` and `// [!code error]`.
 
-**Code annotations:** `// [!code focus]`, `// [!code ++]`, `// [!code --]`, `// [!code warning]`, `// [!code error]`
+Full code: [examples/core.md](examples/core.md)
 
-> **Full reference:** See [examples/core.md](examples/core.md#markdown-extensions) for all code block features and custom container labels.
+### Pattern 8: markdown-it plugins
 
----
-
-### Pattern 8: markdown-it Plugin Integration
-
-VitePress uses markdown-it internally. Add plugins via `markdown.config`.
+`markdown.config` receives the fully-configured markdown-it instance, with VitePress's own plugins
+already registered — which is why plugins go here rather than into an instance of your own.
 
 ```ts
-import { defineConfig } from 'vitepress'
-
 export default defineConfig({
   markdown: {
-    // Built-in options
     lineNumbers: true,
     toc: { level: [1, 2, 3] },
-    // Add custom plugins
     config: (md) => {
-      md.use(require('markdown-it-footnote'))
+      md.use(markdownItFootnote);
     },
   },
-})
-````
+});
+```
 
-**Why this matters:** Plugins added via `markdown.config` get the fully-configured markdown-it instance with VitePress's own plugins already registered. Do not create a separate markdown-it instance.
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
 ---
 
-## Examples
-
-- [Core Patterns](examples/core.md) -- Config, sidebar, data loaders, theme extension, markdown features, frontmatter, deployment
-
-**Other resources:**
-
-- [Quick Reference](reference.md) -- Config options, frontmatter fields, CLI commands, CSS variables, layout slots
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Accessing `window`, `document`, or browser-only APIs outside `onMounted` or `<ClientOnly>` (SSR will crash at build time)
-- Using `render: true` in `createContentLoader` for large collections (inflates client bundle with full HTML of every page)
-- Forking the default theme layout instead of using layout slots (breaks on VitePress upgrades)
-- Placing config outside `.vitepress/config.ts` (VitePress will not find it)
-- Using runtime data fetching (`fetch` in components) for data that should be loaded at build time via data loaders
+- `window`, `document` or a browser-only library reached outside `onMounted` or `<ClientOnly>` — the build pre-renders every page and crashes there.
+- Config anywhere but `.vitepress/config.ts` — it is not found, and nothing reports that it was looked for.
+- `base` without a leading and trailing slash (`"/docs/"`) — VitePress errors.
+- A loader file not ending in `.data.ts`, `.data.js`, `.data.mts` or `.data.mjs` — the `.data` suffix is what makes it a loader.
+- A dead link anywhere — builds fail on them by default, and `ignoreDeadLinks: true` is a migration crutch rather than a setting to keep.
+- `useData()` called outside a Vue setup context — it is a composable, not a global.
+- Frontmatter `outline` given a bare number where the field takes `[2, 3]` or `'deep'`.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Sidebar path prefix without trailing slash (`'/guide'` matches `/guidelines` too)
-- Not enabling `cleanUrls: true` (results in `.html` extensions in all URLs)
-- Forgetting `sitemap.hostname` (sitemap generates with empty URLs)
-- Not setting `lastUpdated: true` in site config AND having git history (feature is opt-in)
-- Importing heavy libraries in global components when they are only used on one page (defeats code-splitting)
-
-**Common Mistakes:**
-
-- Using `themeConfig.sidebar` as a flat array when different sections need different sidebars (use object keyed by path prefix)
-- Not running `vitepress build` with the correct `--base` for subdirectory deployments
-- Expecting dynamic routes to work like a web framework — VitePress generates static pages, dynamic routes are resolved at build time via `paths()` in `[param].paths.ts`
-- Putting `<script setup>` after content in Markdown (must be before any Markdown content for reliable parsing)
-- Using `useData()` outside of Vue setup context (it is a composable, not a global function)
-
-**Gotchas & Edge Cases:**
-
-- `createContentLoader` only processes Markdown files — non-`.md` files matching the glob are silently skipped
-- Data loader files must end in `.data.ts` (or `.data.js`, `.data.mts`, `.data.mjs`) — the `.data` suffix is required
-- Frontmatter `outline` accepts `[2, 3]` (array) or `'deep'` (string) — numbers alone are invalid
-- `base` config must start and end with `/` (e.g., `'/docs/'`) or VitePress will error
-- Dead links cause build failures by default — use `ignoreDeadLinks: true` only temporarily during migration
+- `render: true` on a large `createContentLoader` collection puts every page's full HTML in the client bundle.
+- Forking the default theme layout instead of filling its slots turns every VitePress upgrade into a merge.
+- Fetching at runtime what a data loader could have resolved at build time pays for the same data on every visit.
+- A sidebar path prefix without its trailing slash matches more than intended (`"/guide"` also matches `/guidelines`).
+- Without `cleanUrls: true`, every URL carries `.html`.
+- `sitemap` without `hostname` generates a sitemap of empty URLs, and `lastUpdated` needs both the config flag and real git history — in CI that means an unshallow checkout.
+- A flat sidebar array where sections need different navigation gives every page the same sidebar; the object form is keyed by prefix for that reason.
+- A heavy import in a globally registered component loads on every page, which is what page-scoped imports avoid.
+- `<script setup>` placed after Markdown content parses unreliably — put it first.
+- Dynamic routes are resolved at build time by `paths()` in a `[param].paths.ts` file; they are not request-time routes.
+- Subdirectory deployments need the matching `--base` at build time.
+- `createContentLoader` silently skips non-Markdown files that match its glob.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use `.vitepress/config.ts` with `defineConfig()` for all site configuration)**
-
-**(You MUST use data loader files (`*.data.ts`) for build-time data — never fetch data at runtime in SSR-unsafe ways)**
-
-**(You MUST handle SSR compatibility — no bare `window`, `document`, or browser APIs outside `onMounted` or `<ClientOnly>`)**
-
-**(You MUST extend the default theme via `extends: DefaultTheme` and layout slots — do not fork the entire theme)**
-
-**(You MUST use `createContentLoader()` for markdown collection pages — it handles caching, watching, and frontmatter extraction)**
-
-**Failure to follow these rules will cause SSR build failures, bloated bundles, and broken upgrades.**
-
-</critical_reminders>

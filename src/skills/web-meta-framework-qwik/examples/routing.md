@@ -216,17 +216,20 @@ export const useCreatePost = routeAction$(
       return requestEvent.fail(401, { message: "Not authenticated" });
     }
 
+    let post;
     try {
-      const post = await db.posts.create({
+      post = await db.posts.create({
         title: data.title,
         body: data.body,
         authorId: session.value,
       });
-
-      throw requestEvent.redirect(302, `/posts/${post.id}`);
-    } catch (error) {
+    } catch {
       return requestEvent.fail(500, { message: "Failed to create post" });
     }
+
+    // Outside the try on purpose: redirect() is thrown to halt the action, so a
+    // catch wrapped around it would swallow the redirect and report a failure.
+    throw requestEvent.redirect(302, `/posts/${post.id}`);
   },
   zod$({
     title: z.string().min(3, "Title must be at least 3 characters"),
@@ -276,7 +279,8 @@ export default component$(() => {
 ### Good Example - Action Without a Form
 
 ```tsx
-import { component$, useSignal } from "@builder.io/qwik";
+// src/routes/posts/[postId]/index.tsx — an action only runs from a route file
+import { component$ } from "@builder.io/qwik";
 import { routeAction$ } from "@builder.io/qwik-city";
 
 export const useToggleFavorite = routeAction$(async (data, requestEvent) => {

@@ -1,12 +1,13 @@
-# Next.js App Router - Metadata and SEO
+# Next.js App Router — Metadata and SEO
 
-> Examples for configuring metadata, Open Graph, and SEO optimization. See [core.md](core.md) for foundational patterns.
+> Metadata, Open Graph and static generation of dynamic routes. See [core.md](core.md) for routing
+> and layouts.
 
 ---
 
 ## Pattern: Static Metadata with Template
 
-### Good Example - Root Layout with Metadata Template
+### Good Example — Root Layout with Metadata Template
 
 ```tsx
 // app/layout.tsx
@@ -53,18 +54,19 @@ export default function InvoicesPage() {
 }
 ```
 
-**Why good:** Title template ensures consistent branding, child pages just specify their title, metadataBase handles URL composition
+**Why good:** The template gives every child page consistent branding for the cost of one `title`
+string, and `metadataBase` resolves the relative image paths below it.
 
 ---
 
 ## Pattern: Dynamic Metadata with generateMetadata
 
-### Good Example - Blog Post with Dynamic Metadata
+### Good Example — Blog Post with Dynamic Metadata
 
 ```tsx
 // app/blog/[slug]/page.tsx
 import type { Metadata, ResolvingMetadata } from "next";
-import { getPost, getAllPosts } from "@/lib/data";
+import { getAllPosts, getPost } from "../../../lib/data";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -125,8 +127,11 @@ export default async function BlogPostPage({ params }: PageProps) {
 }
 ```
 
-**Why good:** Fetch request automatically memoized (shared with page), type-safe metadata, Open Graph and Twitter cards configured, static params for build-time generation
+**Why good:** `getPost` runs once even though both functions call it — `fetch` is memoised across
+`generateMetadata` and the page. `generateStaticParams` makes every post static at build time, and
+the missing-post branch keeps the metadata valid for a slug that no longer exists.
 
 ---
 
-_See [core.md](core.md) for Server/Client Components, Streaming, Layouts, and Error Handling patterns._
+_Routing and layouts are in [core.md](core.md); the Server/Client boundary is in
+[server-components.md](server-components.md)._

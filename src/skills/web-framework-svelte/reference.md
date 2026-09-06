@@ -1,10 +1,10 @@
 # Svelte 5 Reference
 
-> Decision frameworks, anti-patterns, and red flags for Svelte 5 development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision trees, the rune cheat sheet, the Svelte 4 → 5 migration table and a component template. See [SKILL.md](SKILL.md) for the patterns and red flags, and [examples/](examples/) for full code.
 
 ---
 
-## Decision Framework
+## Decision trees
 
 ### Which Rune to Use
 
@@ -77,7 +77,7 @@ Does the child need to notify the parent?
 ```
 How many levels deep does data need to go?
 ├─ 1-2 levels → Use props (direct passing)
-├─ 3+ levels → Use context (createContext)
+├─ 3+ levels → Use context (createContext, or a typed pair over setContext/getContext)
 └─ Global/cross-tree → Need shared reactive state?
     ├─ YES → Use .svelte.ts module with $state class fields
     └─ NO → Use plain .ts module with exports
@@ -85,52 +85,7 @@ How many levels deep does data need to go?
 
 ---
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **Using `export let` for props** — Svelte 4 syntax, use `$props()` instead
-- **Using `$:` reactive statements** — Svelte 4 syntax, use `$derived` or `$effect`
-- **Using `<slot>` or `<slot name="x">`** — Deprecated, use `{#snippet}` and `{@render}`
-- **Using `createEventDispatcher`** — Deprecated, use callback props
-- **Using `$effect` to sync state** — Use `$derived` for computed values
-- **Using stores for component state** — Use `$state` rune instead
-- **Destructuring `$state` objects** — Breaks reactivity (values evaluated at destructure time)
-
-### Medium Priority Issues
-
-- **Using `on:click` directive** — Use `onclick` attribute (Svelte 5 syntax)
-- **Not using `$state.raw()` for large API responses** — Unnecessary proxy overhead
-- **Missing TypeScript types on `$props()`** — Lose type safety and IDE support
-- **Using `setContext`/`getContext` with string keys** — Use `createContext` for type safety
-- **Using `<svelte:component this={X}>`** — Use `<X />` directly in Svelte 5
-- **Using `class:name={condition}`** — Use built-in `class` attribute object/array syntax instead (clsx built-in since 5.16)
-
-### Common Mistakes
-
-- **Mutating `$state.raw` objects** — Mutations are not tracked, only reassignment works
-- **Returning cleanup from `$derived`** — Only `$effect` supports cleanup functions
-- **Using async reads in `$effect`** — Dependencies after `await` are not tracked
-- **Exporting `$state` with direct reassignment** — Export object properties instead
-- **Using `$inspect` in production** — It's a no-op in production builds, use for dev only
-- **Calling `$effect` outside component/module init** — Must be called during initialization
-
-### Gotchas & Edge Cases
-
-- **`$state` proxies are not the original object** — `$state.snapshot()` to get plain object
-- **Destructuring `$state` breaks reactivity** — `let { x } = $state({x: 1})` captures value, not reference
-- **`$derived` return values are NOT deeply reactive** — Only `$state` creates deep proxies
-- **Fallback values in `$props` are not reactive proxies** — Default values don't get proxied
-- **`$effect` runs after DOM update** — Use `$effect.pre()` if you need pre-update timing
-- **Context must be set during component init** — Cannot call `setContext` in event handlers or `$effect`
-- **`$effect` does not run during SSR** — Only executes in the browser
-- **Svelte 5 uses event delegation for some events** — Be careful with `stopPropagation()` on delegated events
-
----
-
-## Quick Reference
-
-### Runes Cheat Sheet
+## Runes cheat sheet
 
 | Rune                     | Purpose                            | Example                                    |
 | ------------------------ | ---------------------------------- | ------------------------------------------ |
@@ -149,7 +104,13 @@ How many levels deep does data need to go?
 | `$inspect(values)`       | Dev-only logging                   | `$inspect(count, name)`                    |
 | `$inspect.trace(label?)` | Trace effect dependencies          | `$inspect.trace('my-effect')`              |
 
-### Svelte 4 to Svelte 5 Migration
+## Class attributes
+
+Since 5.16 the `class` attribute accepts an object or an array and resolves it the way `clsx` would, so `class:active={isActive}` has no remaining use. A component that forwards a class prop types it `ClassValue` from `svelte/elements` (5.19+), which accepts the string, object and array forms alike.
+
+---
+
+## Svelte 4 → 5 migration
 
 | Svelte 4                      | Svelte 5                          |
 | ----------------------------- | --------------------------------- |
@@ -164,7 +125,9 @@ How many levels deep does data need to go?
 | `class:active={isActive}`     | `class={{ active: isActive }}`    |
 | Svelte stores                 | `$state` in `.svelte.ts` files    |
 
-### Component Template
+---
+
+## Component template
 
 ```svelte
 <script lang="ts">

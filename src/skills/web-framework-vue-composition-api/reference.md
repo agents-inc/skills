@@ -1,10 +1,10 @@
 # Vue 3 Composition API Reference
 
-> Decision frameworks, anti-patterns, checklists, and TypeScript patterns for Vue 3 Composition API. See [SKILL.md](SKILL.md) for core concepts, red flags, and [examples/](examples/) for code examples.
+> Decision trees, anti-patterns with the corrected code beside them, review checklists and TypeScript patterns. See [SKILL.md](SKILL.md) for the patterns and red flags, and [examples/](examples/) for full code.
 
 ---
 
-## Decision Frameworks
+## Decision trees
 
 ### When to Use ref() vs reactive()
 
@@ -122,9 +122,9 @@ Need unique ID for form element or ARIA attribute?
 
 ---
 
-> For red flags and gotchas, see [SKILL.md](SKILL.md) `<red_flags>` section.
+## Anti-patterns
 
-## Anti-Patterns
+> Most of these are stated in one line in [SKILL.md](SKILL.md)'s `<red_flags>`; what this section adds is the corrected code beside the wrong code.
 
 ### Mutating Props Directly
 
@@ -306,9 +306,9 @@ const user = inject(USER_KEY); // Ref<User> | undefined
 
 ---
 
-## Quick Reference
+## Review checklists
 
-### Composable Checklist
+### Composable
 
 - [ ] Function name starts with `use` prefix
 - [ ] Returns an object with refs and methods (not bare values)
@@ -317,9 +317,8 @@ const user = inject(USER_KEY); // Ref<User> | undefined
 - [ ] Includes cleanup in `onUnmounted` for any side effects
 - [ ] Returns loading and error refs for async operations
 - [ ] Has TypeScript types for parameters and return value
-- [ ] Uses named constants for magic numbers
 
-### Component Checklist
+### Component
 
 - [ ] Uses `<script setup>` syntax
 - [ ] Props defined with TypeScript via `defineProps<T>()`
@@ -328,9 +327,8 @@ const user = inject(USER_KEY); // Ref<User> | undefined
 - [ ] Uses `defineExpose()` if parent needs access
 - [ ] Cleans up side effects in `onUnmounted`
 - [ ] Uses computed for derived state (not inline calculations)
-- [ ] Uses named constants for all magic numbers
 
-### Watch Checklist
+### Watch
 
 - [ ] Uses correct source type (ref, getter for reactive property, or array)
 - [ ] Sets `immediate: true` if callback should run on mount
@@ -338,7 +336,7 @@ const user = inject(USER_KEY); // Ref<User> | undefined
 - [ ] Includes cleanup for async operations
 - [ ] Uses `flush: 'post'` if DOM access needed in callback
 
-### Provide/Inject Checklist
+### Provide/inject
 
 - [ ] Uses `InjectionKey<T>` for type safety
 - [ ] Key is a unique Symbol

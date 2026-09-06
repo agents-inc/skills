@@ -321,24 +321,4 @@ interface DialogProps {
 
 ---
 
-## Serialization Rules Summary
-
-| Value Type                                            | Serializable | How to Handle                      |
-| ----------------------------------------------------- | ------------ | ---------------------------------- |
-| Primitives (string, number, boolean, null, undefined) | Yes          | Use directly                       |
-| Plain objects, arrays                                 | Yes          | Contents must also be serializable |
-| Date, RegExp, Map, Set, BigInt                        | Yes          | Built-in support                   |
-| Promise                                               | Yes          | Qwik serializes pending state      |
-| Signal, Store                                         | Yes          | Framework-managed                  |
-| Error, JSX nodes                                      | Yes          |                                    |
-| Top-level module references                           | Yes\*        | Referenced by path, not serialized |
-| Class instances                                       | **No**       | Use plain objects or noSerialize() |
-| Functions/closures                                    | **No**       | Wrap in $() to create QRL          |
-| DOM elements                                          | **No**       | Use refs + useVisibleTask$         |
-| Symbol                                                | **No**       |                                    |
-
-\*Top-level exports are accessible across $ boundaries even if non-serializable, because the optimizer references them by module import path rather than serializing the value.
-
----
-
-_See [core.md](core.md) for component and state patterns. See [routing.md](routing.md) for server-side data loading._
+_The full serializable-type table is in [reference.md](../reference.md#serializable-types). See [core.md](core.md) for component and state patterns, and [routing.md](routing.md) for server-side data loading._

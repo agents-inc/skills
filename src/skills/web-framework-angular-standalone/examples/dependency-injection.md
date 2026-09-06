@@ -141,4 +141,42 @@ export class NotificationService {
 }
 ```
 
-**Why bad:** constructor injection is more verbose, @Optional/@Inject decorators required for optional deps, no signal reactivity means manual change detection, direct mutation doesn't trigger updates
+**Why bad:** constructor injection needs an `@Optional`/`@Inject` decorator pair for what one options object expresses, `any` loses the config's type, and a plain array with `push` gives no reactivity at all.
+
+---
+
+## Injection Options
+
+`inject(token, options)` takes the four flags of `InjectOptions`. They are the reason `inject()` replaces the decorator stack rather than merely shortening it.
+
+- **`optional`** — return `null` instead of throwing when the token is not provided. Replaces `@Optional()`.
+- **`skipSelf`** — start the lookup at the parent injector. Replaces `@SkipSelf()`.
+- **`self`** — query only the current injector, with no fallback to the parent. Replaces `@Self()`.
+- **`host`** — stop at the host component's injector; a no-op for environment injectors. Replaces `@Host()`.
+
+```typescript
+// notification-badge.component.ts
+import { Component, inject } from "@angular/core";
+import {
+  NOTIFICATION_CONFIG,
+  NotificationService,
+} from "./notification.service";
+
+@Component({
+  selector: "app-notification-badge",
+  standalone: true,
+  template: `<span class="badge"></span>`,
+})
+export class NotificationBadgeComponent {
+  // Read the enclosing instance, never a NotificationService provided here
+  private outerNotifications = inject(NotificationService, { skipSelf: true });
+
+  // Refuse to climb: the config must be provided on this element or not at all
+  private localConfig = inject(NOTIFICATION_CONFIG, {
+    self: true,
+    optional: true,
+  });
+}
+```
+
+**Where `inject()` may run:** an injection context only — a field initialiser, a constructor, a factory, or a function invoked from one. Calling it inside a method throws.

@@ -1,12 +1,13 @@
 # Cookie Manipulation
 
-> Server-side preference storage via Server Actions.
+> Reading and writing cookies inside Server Actions. See [server-actions.md](server-actions.md) for
+> the action shape.
 
 ---
 
 ## Pattern: Setting Cookies in Server Actions
 
-### Good Example - Theme preference cookie
+### Good Example — a theme preference
 
 ```typescript
 // app/actions/preferences.ts
@@ -37,16 +38,18 @@ export async function setTheme(formData: FormData) {
 }
 ```
 
-**Why good:** Named constant for max age. Validates input. Secure cookie settings. Server Action can set cookies that trigger UI updates. Uses async cookies() API (Next.js 15+).
+**Why good:** The theme is validated against the two values the app understands, so a crafted request
+cannot store arbitrary text. Writing the cookie triggers a server re-render, which is how the new
+theme reaches the page without any client state. `cookies()` is a Promise from Next.js 15 onward.
 
 ---
 
-## Cookie Best Practices
+## Cookie Settings
 
-| Setting    | Recommendation                                |
-| ---------- | --------------------------------------------- |
-| `httpOnly` | `true` for server-read cookies (prevents XSS) |
-| `secure`   | `true` in production (HTTPS only)             |
-| `sameSite` | `'lax'` or `'strict'` (CSRF protection)       |
-| `maxAge`   | Named constant, appropriate duration          |
-| `path`     | `'/'` unless scoped to specific routes        |
+| Setting    | Recommendation                                                        |
+| ---------- | --------------------------------------------------------------------- |
+| `httpOnly` | `true` where only the server reads it — no script can reach it (XSS)  |
+| `secure`   | `true` in production, so it never travels over plain HTTP             |
+| `sameSite` | `'lax'` or `'strict'`, so a third-party page cannot trigger it (CSRF) |
+| `maxAge`   | A named constant — the seconds arithmetic is unreadable inline        |
+| `path`     | `'/'` unless the cookie belongs to one route subtree                  |

@@ -1,12 +1,13 @@
-# SvelteKit Hooks Examples
+# SvelteKit — Hooks
 
-> Complete code examples for SvelteKit hook patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> `handle`, `handleFetch`, `handleError`, `init`, `reroute`, `transport` and `sequence` — everything
+> that applies to a request rather than to a route.
 
 ---
 
-## Pattern 1: Authentication with handle Hook
+## Pattern 1: Authentication with the handle Hook
 
-### Good Example — Session-Based Auth
+### Good Example — session-based auth
 
 ```typescript
 // src/hooks.server.ts
@@ -65,13 +66,16 @@ declare global {
 export {};
 ```
 
-**Why good:** Session checked on every request, user attached to `event.locals` (accessible in load functions and actions), expired sessions cleaned up, typed with `App.Locals`
+**Why good:** One place resolves the session, and every load function and action downstream reads
+`locals.user` instead of parsing the cookie again. `event.locals` is request-scoped, so there is no
+risk of one request seeing another's user. The `App.Locals` declaration is what makes it typed rather
+than `any`.
 
 ---
 
 ## Pattern 2: Combining Hooks with sequence
 
-### Good Example — Multiple Hooks
+### Good Example — three concerns, three hooks
 
 ```typescript
 // src/hooks.server.ts
@@ -120,13 +124,15 @@ export const handle = sequence(
 );
 ```
 
-**Why good:** `sequence` composes multiple hooks cleanly, each hook has single responsibility, logging measures actual response time, security headers on all responses
+**Why good:** Each hook does one thing and can be reordered or removed on its own. The order matters:
+auth runs first so the logger and the header hook both see a resolved user, and the timing wraps
+everything inside it.
 
 ---
 
-## Pattern 3: handleError Hook
+## Pattern 3: handleError
 
-### Good Example — Error Logging
+### Good Example — reporting without leaking
 
 ```typescript
 // src/hooks.server.ts
@@ -182,13 +188,15 @@ export const handleError: HandleClientError = async ({
 };
 ```
 
-**Why good:** Unique error ID for tracking, internal details not exposed to user, both server and client error handling, error reporting to external service
+**Why good:** The returned object is what `+error.svelte` renders, so it must not carry a stack trace
+or a query fragment. The generated id is the bridge: the user quotes it, and it matches the log entry
+holding everything that was withheld.
 
 ---
 
-## Pattern 4: handleFetch Hook
+## Pattern 4: handleFetch
 
-### Good Example — API URL Rewriting for SSR
+### Good Example — rewriting an API URL during SSR
 
 ```typescript
 // src/hooks.server.ts
@@ -218,13 +226,15 @@ export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
 };
 ```
 
-**Why good:** Internal API calls skip load balancer during SSR, auth forwarded to API, only modifies requests to known APIs
+**Why good:** A load function writes one public URL and this hook decides how it is reached, so the
+server-side call skips the public hop while the browser's identical call still goes through it. The
+prefix check keeps the rewrite from touching third-party requests.
 
 ---
 
-## Pattern 5: Route Protection with Hooks
+## Pattern 5: Route Protection in a Hook
 
-### Good Example — Path-Based Auth Guard
+### Good Example — guarding by path prefix
 
 ```typescript
 // src/hooks.server.ts
@@ -257,13 +267,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 ```
 
-**Why good:** Centralized auth checks, named constants for protected paths, redirectTo preserves original destination, admin role check, runs before any load function
+**Why good:** The guard runs before any load function, so a protected route's load never executes for
+an anonymous visitor. The trade-off against a layout guard: this one is a path-prefix list that has to
+be maintained, where a layout guards whatever is nested under it automatically.
 
 ---
 
-## Pattern 6: Modifying Response with resolve Options
+## Pattern 6: resolve Options
 
-### Good Example — Custom HTML Transform
+### Good Example — transforming the HTML
 
 ```typescript
 // src/hooks.server.ts
@@ -305,13 +317,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 </html>
 ```
 
-**Why good:** `transformPageChunk` injects theme into HTML, `filterSerializedResponseHeaders` controls which headers are serialized, `preload` optimizes resource loading
+**Why good:** The theme is in the server's first byte, so there is no flash of the wrong one while
+JavaScript loads — which is the failure a client-side theme switch produces.
+`filterSerializedResponseHeaders` matters for correctness rather than speed: headers from a load's
+own `fetch` are otherwise replayed to the client.
 
 ---
 
-## Pattern 7: init Hook
+## Pattern 7: init
 
-### Good Example — Server Startup Initialization
+### Good Example — failing fast at startup
 
 ```typescript
 // src/hooks.server.ts
@@ -334,13 +349,14 @@ export const init: ServerInit = async () => {
 };
 ```
 
-**Why good:** Fails fast on startup if database or env vars are misconfigured, runs once (not per-request), introduced in SvelteKit 2.10
+**Why good:** A throw here stops the server from starting, so a missing environment variable is a
+deploy failure rather than a 500 on whichever request first needs it. Introduced in SvelteKit 2.10.
 
 ---
 
-## Pattern 8: reroute Hook
+## Pattern 8: reroute
 
-### Good Example — i18n URL Rewriting
+### Good Example — stripping a locale prefix
 
 ```typescript
 // src/hooks.ts (universal hooks file)
@@ -360,15 +376,18 @@ export const reroute: Reroute = ({ url }) => {
 };
 ```
 
-**Why good:** Runs before `handle`, rewrites URL before route matching, locale prefix removed without duplicating route files, returns `void` to skip rewriting
+**Why good:** `reroute` runs before route matching, so `/fr/about` and `/about` resolve to the same
+route file — four locales need no duplicated route tree. Returning nothing leaves the URL alone,
+which is why the non-locale case needs no branch.
 
-> **Note:** Since SvelteKit 2.18+, `reroute` also receives `fetch` and can be async (signature: `({ url, fetch }) => MaybePromise<string | void>`). Use the `fetch` parameter when locale detection requires a server call.
+From SvelteKit 2.18, `reroute` also receives `fetch` and may be async:
+`({ url, fetch }) => MaybePromise<string | void>`.
 
 ---
 
-## Pattern 9: transport Hook
+## Pattern 9: transport
 
-### Good Example — Custom Type Serialization
+### Good Example — a class that survives the boundary
 
 ```typescript
 // src/hooks.ts (universal hooks file)
@@ -396,8 +415,11 @@ export const transport: Transport = {
 };
 ```
 
-**Why good:** Custom classes survive the server-to-client boundary, `encode` returns `false` for non-matching values, `decode` reconstructs the instance on the client, methods are preserved
+**Why good:** A server load normally flattens a class to a plain object, losing `format()`. `transport`
+is what lifts that restriction — `encode` returns a falsy value for anything it does not recognise, so
+SvelteKit knows to try the next entry, and `decode` rebuilds the instance with its methods intact.
 
 ---
 
-_For API route patterns, see [api-routes.md](api-routes.md). For form actions, see [form-actions.md](form-actions.md)._
+_Endpoints are in [api-routes.md](api-routes.md); mutations in
+[form-actions.md](form-actions.md)._

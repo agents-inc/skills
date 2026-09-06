@@ -13,21 +13,16 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-const props = defineProps<{
-  label: string;
-  modelValue: string;
-}>();
+defineProps<{ label: string }>();
 
-const emit = defineEmits<{
-  "update:modelValue": [value: string];
-}>();
+const model = defineModel<string>({ required: true });
 
 const inputRef = ref<HTMLInputElement | null>(null);
 const hasError = ref(false);
 const errorMessage = ref("");
 
 function validate(): boolean {
-  if (props.modelValue.length === 0) {
+  if (model.value.length === 0) {
     hasError.value = true;
     errorMessage.value = "Field is required";
     return false;
@@ -42,7 +37,7 @@ function focus() {
 }
 
 function clear() {
-  emit("update:modelValue", "");
+  model.value = "";
   hasError.value = false;
   errorMessage.value = "";
 }
@@ -59,19 +54,13 @@ defineExpose({
 <template>
   <div class="form-field">
     <label>{{ label }}</label>
-    <input
-      ref="inputRef"
-      :value="modelValue"
-      @input="
-        emit('update:modelValue', ($event.target as HTMLInputElement).value)
-      "
-    />
+    <input ref="inputRef" v-model="model" />
     <span v-if="hasError" class="error">{{ errorMessage }}</span>
   </div>
 </template>
 ```
 
-**Why good:** defineExpose creates explicit public API, only exposes what's needed, combines methods and reactive state
+**Why good:** `defineExpose` states the public API explicitly and exposes nothing else, while `defineModel()` (3.4+) covers the v-model half in one line instead of a `modelValue` prop paired with an `update:modelValue` emit.
 
 ---
 
@@ -124,7 +113,7 @@ function resetForm() {
 </template>
 ```
 
-**Why good:** InstanceType provides correct typing, parent can call child methods, focused error handling UX, clear form management
+**Why good:** InstanceType types the exposed surface, the parent calls child methods through it, and the first invalid field takes focus
 
 ---
 
@@ -142,8 +131,8 @@ const childRef = ref<InstanceType<typeof ChildComponent> | null>(null);
 // Call exposed method with autocomplete
 childRef.value?.exposedMethod();
 
-// Access exposed ref
-const isValid = childRef.value?.hasError ?? false;
+// Access an exposed ref — Vue unwraps it, so this is a boolean, not a Ref
+const hasError = childRef.value?.hasError ?? false;
 ```
 
 ### What Gets Exposed

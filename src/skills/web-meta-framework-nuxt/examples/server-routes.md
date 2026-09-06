@@ -1,6 +1,7 @@
-# Nuxt - Server Routes Examples
+# Nuxt — Server Routes
 
-> API routes with defineEventHandler, validation, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
+> Handlers, validation, server middleware and error utilities. The file-to-URL table and the request
+> utilities are in [reference.md](../reference.md).
 
 ---
 
@@ -43,9 +44,10 @@ export default defineEventHandler(
 );
 ```
 
-**Why good:** File suffix `.get.ts` restricts to GET method, named constants for defaults, Math.min/max for safe bounds, typed return value
+**Why good:** The `.get.ts` suffix is what makes any other method a 405 rather than a silent match,
+and clamping `limit` between named bounds means a caller cannot ask for the whole table.
 
-### Bad Example - No Validation
+### Bad Example — no bounds on the query
 
 ```typescript
 // WRONG - No input validation
@@ -57,27 +59,21 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why bad:** No limit cap allows DoS via huge queries, no type safety, no pagination metadata
+**Why bad:** `limit=999999` returns the whole table, `query.limit` is `unknown` so nothing type-checks
+the value it passes on, and the caller gets no total to paginate against.
 
 ---
 
 ## POST Route with Body Validation
 
-### Good Example - Create Resource with Zod
+### Good Example — create a resource
 
 ```typescript
 // server/api/users.post.ts
-import { z } from "zod";
+import { CreateUserSchema } from "~/server/schemas/user"; // your schema validation library
 
 const HTTP_CREATED = 201;
 const HTTP_BAD_REQUEST = 400;
-const MIN_NAME_LENGTH = 1;
-const MAX_NAME_LENGTH = 100;
-
-const CreateUserSchema = z.object({
-  name: z.string().min(MIN_NAME_LENGTH).max(MAX_NAME_LENGTH),
-  email: z.string().email(),
-});
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -88,7 +84,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: HTTP_BAD_REQUEST,
       statusMessage: "Validation failed",
-      data: result.error.flatten(),
+      data: result.error.issues,
     });
   }
 
@@ -101,13 +97,15 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** Zod validates input, safeParse for typed errors, createError for HTTP errors, setResponseStatus for 201 Created
+**Why good:** `readBody` returns `unknown`, and the parse is what turns it into something typed —
+everything after the guard works on `result.data` rather than on the raw body. The failure carries
+the field-level issues, so the client can show them inline.
 
 ---
 
 ## Dynamic Route Parameters
 
-### Good Example - GET Single Resource
+### Good Example — GET a single resource
 
 ```typescript
 // server/api/users/[id].get.ts
@@ -139,31 +137,22 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** getRouterParam extracts dynamic segment, validation before database query, proper HTTP status codes
+**Why good:** The missing-id and missing-row cases get different status codes, so the client can tell
+a malformed request from an absent resource.
 
 ---
 
 ## PUT/PATCH Routes
 
-### Good Example - Update Resource
+### Good Example — update a resource
 
 ```typescript
 // server/api/users/[id].put.ts
-import { z } from "zod";
+// UpdateUserSchema makes every field optional and refuses an empty body
+import { UpdateUserSchema } from "~/server/schemas/user";
 
 const HTTP_BAD_REQUEST = 400;
 const HTTP_NOT_FOUND = 404;
-const MIN_NAME_LENGTH = 1;
-const MAX_NAME_LENGTH = 100;
-
-const UpdateUserSchema = z
-  .object({
-    name: z.string().min(MIN_NAME_LENGTH).max(MAX_NAME_LENGTH).optional(),
-    email: z.string().email().optional(),
-  })
-  .refine((data) => data.name || data.email, {
-    message: "At least one field required",
-  });
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -182,7 +171,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: HTTP_BAD_REQUEST,
       statusMessage: "Validation failed",
-      data: result.error.flatten(),
+      data: result.error.issues,
     });
   }
 
@@ -201,13 +190,14 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** Optional fields with refine ensures at least one, try/catch for database errors, proper file naming for PUT method
+**Why good:** A partial update with every field optional still refuses an empty body, and the `catch`
+turns a missing row into a 404 rather than a 500.
 
 ---
 
 ## DELETE Routes
 
-### Good Example - Delete Resource
+### Good Example — delete a resource
 
 ```typescript
 // server/api/users/[id].delete.ts
@@ -241,13 +231,14 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** 204 No Content for successful delete, returns null (no body), catches not-found case
+**Why good:** 204 is the status for a successful delete with nothing to return, and returning `null`
+keeps the body empty as that status requires.
 
 ---
 
 ## Catch-All Routes
 
-### Good Example - Proxy Route
+### Good Example — a proxy route
 
 ```typescript
 // server/api/proxy/[...path].ts
@@ -277,13 +268,14 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** Catch-all with [...path], forwards method and auth, conditionally includes body
+**Why good:** One handler covers every path under the prefix, and the body is only read for the
+methods that carry one — `readBody` on a GET throws.
 
 ---
 
 ## Server Middleware
 
-### Good Example - Auth Middleware
+### Good Example — auth middleware
 
 ```typescript
 // server/middleware/auth.ts
@@ -327,7 +319,9 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** Middleware runs before all routes, skips public paths, attaches user to context for downstream handlers
+**Why good:** Every route is protected by default and the exceptions are listed in one place, so a new
+endpoint is guarded the moment it exists. `event.context` is request-scoped, which is what makes it
+safe to hang the user off.
 
 ### Usage in Route Handler
 
@@ -415,27 +409,11 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** Consistent error structure, reusable utility, error codes for client handling
+**Why good:** A stable machine-readable `code` alongside the human message means the client can branch
+on the failure without matching on English text. The `never` return type lets the compiler see that
+nothing after the call runs.
 
 ---
 
-## Quick Reference
-
-| File Pattern           | HTTP Method | URL            |
-| ---------------------- | ----------- | -------------- |
-| `users.get.ts`         | GET         | /api/users     |
-| `users.post.ts`        | POST        | /api/users     |
-| `users/[id].get.ts`    | GET         | /api/users/:id |
-| `users/[id].put.ts`    | PUT         | /api/users/:id |
-| `users/[id].delete.ts` | DELETE      | /api/users/:id |
-| `users/[...path].ts`   | ALL         | /api/users/\*  |
-| `users.ts`             | ALL         | /api/users     |
-
-| Utility                            | Purpose                |
-| ---------------------------------- | ---------------------- |
-| `getQuery(event)`                  | Parse query parameters |
-| `readBody(event)`                  | Parse request body     |
-| `getRouterParam(event, 'name')`    | Get route parameter    |
-| `getHeader(event, 'name')`         | Get request header     |
-| `setResponseStatus(event, code)`   | Set response status    |
-| `createError({ statusCode, ... })` | Throw HTTP error       |
+_The file-to-URL table, the request utilities and the server-route checklist are in
+[reference.md](../reference.md)._

@@ -1,12 +1,66 @@
-# Next.js App Router - Parallel Routes and Modals
+# Next.js App Router — Parallel Routes and Modals
 
-> Examples for parallel routes, intercepting routes, and modal patterns. See [core.md](core.md) for foundational patterns.
+> Parallel slots, intercepting routes and the modal pattern. Read [core.md](core.md) for layouts and
+> [server-components.md](server-components.md) for the Server/Client boundary first.
 
-**Prerequisites**: Understand Server/Client Components and Layouts from core examples first.
+---
+
+## Pattern: Dashboard with Multiple Slots
+
+A `@name` folder is a slot: it arrives as a prop on the segment's layout and renders alongside
+`children` rather than instead of it.
+
+```
+app/dashboard/
+├── @analytics/
+│   ├── page.tsx       slot content
+│   └── default.tsx    what renders when the slot has no match
+├── @team/
+│   ├── page.tsx
+│   └── default.tsx
+├── layout.tsx         receives analytics and team as props
+└── page.tsx           becomes children
+```
+
+```tsx
+// app/dashboard/layout.tsx
+export default function DashboardLayout({
+  children,
+  analytics,
+  team,
+}: {
+  children: React.ReactNode;
+  analytics: React.ReactNode;
+  team: React.ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">{children}</div>
+      <div>{analytics}</div>
+      <div>{team}</div>
+    </div>
+  );
+}
+```
+
+**Why good:** Each slot fetches and streams on its own, gets its own `loading.tsx` and `error.tsx`,
+and can be shown or hidden per user role from the layout. Slots do not appear in the URL — a
+`default.tsx` in each one is what stops a hard refresh 404ing, and on Next.js 16 its absence fails
+the build.
 
 ---
 
 ## Pattern: Photo Gallery Modal with Intercepting Routes
+
+Interception matches a route from a different place in the tree, so a soft navigation renders the
+modal while a direct visit renders the full page.
+
+| Convention | Matches        |
+| ---------- | -------------- |
+| `(.)`      | the same level |
+| `(..)`     | one level up   |
+| `(..)(..)` | two levels up  |
+| `(...)`    | the `app` root |
 
 ### File Structure
 
@@ -55,8 +109,8 @@ export default function Default() {
 
 ```tsx
 // app/@modal/(.)photo/[id]/page.tsx
-import { Modal } from "@/components/modal";
-import { getPhoto } from "@/lib/data";
+import { Modal } from "../../../../components/modal";
+import { getPhoto } from "../../../../lib/data";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -79,9 +133,9 @@ export default async function PhotoModal({ params }: PageProps) {
 ### Full Page Route (Direct Navigation)
 
 ```tsx
-// app/photo/[id]/page.tsx (Full page for direct navigation)
-import { getPhoto } from "@/lib/data";
+// app/photo/[id]/page.tsx — full page, rendered on direct navigation
 import Link from "next/link";
+import { getPhoto } from "../../../lib/data";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -164,9 +218,9 @@ export function Modal({ children }: ModalProps) {
 ### Gallery Page
 
 ```tsx
-// app/page.tsx (Gallery)
+// app/page.tsx — the gallery
 import Link from "next/link";
-import { getPhotos } from "@/lib/data";
+import { getPhotos } from "../lib/data";
 
 export default async function GalleryPage() {
   const photos = await getPhotos();
@@ -187,8 +241,10 @@ export default async function GalleryPage() {
 }
 ```
 
-**Why good:** Clicking photo opens modal with URL `/photo/123`, gallery stays visible behind modal, browser back closes modal, direct link to `/photo/123` shows full page, URL is shareable
+**Why good:** Clicking a photo shows the modal at `/photo/123` with the gallery still behind it, the
+back button closes it, and the same URL pasted into a new tab renders the full page. `router.back()`
+rather than `router.push()` is what makes the browser history behave.
 
 ---
 
-_See [core.md](core.md) for Server/Client Components, Streaming, Layouts, and Error Handling patterns._
+_See [core.md](core.md) for layouts, dynamic routes and error handling._

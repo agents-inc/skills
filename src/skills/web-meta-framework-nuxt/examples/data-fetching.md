@@ -1,6 +1,7 @@
-# Nuxt - Data Fetching Examples
+# Nuxt — Data Fetching
 
-> SSR-safe data fetching with useFetch, useAsyncData, and $fetch. See [SKILL.md](../SKILL.md) for core concepts.
+> `useFetch`, `useAsyncData` and the options that shape what reaches the client. The full option
+> table is in [reference.md](../reference.md).
 
 ---
 
@@ -52,9 +53,11 @@ const {
 </template>
 ```
 
-**Why good:** Type-safe response, reactive query params, watch triggers refetch on page change, SSR-safe hydration prevents double-fetching
+**Why good:** `page` is a ref inside `query`, so incrementing it refetches without any explicit call —
+and the server's result is carried into hydration, so the first render costs one request rather than
+two.
 
-### Bad Example - Raw $fetch in Setup
+### Bad Example — a bare $fetch in setup
 
 ```vue
 <script setup lang="ts">
@@ -64,13 +67,14 @@ users.value = await $fetch("/api/users");
 </script>
 ```
 
-**Why bad:** $fetch in setup runs on both server AND client, causing duplicate requests and hydration mismatch, no loading/error states
+**Why bad:** Setup runs on the server and again during hydration, so the endpoint is hit twice for one
+page view — and there is no `pending` or `error` to render in between.
 
 ---
 
 ## useFetch with Transform
 
-### Good Example - Data Transformation
+### Good Example — reshaping the response
 
 ```vue
 <script setup lang="ts">
@@ -117,13 +121,14 @@ const { data: posts } = await useFetch<ApiPost[], TransformedPost[]>(
 </template>
 ```
 
-**Why good:** Transform runs on server reducing client payload, default prevents null checks, typed input/output
+**Why good:** The transform runs on the server, so the full article bodies never travel to the client
+— only the previews do. `default` means the template never has to guard against `undefined`.
 
 ---
 
 ## POST Requests with useFetch
 
-### Good Example - Form Submission
+### Good Example — a form submission
 
 ```vue
 <script setup lang="ts">
@@ -178,13 +183,14 @@ async function handleSubmit() {
 </template>
 ```
 
-**Why good:** immediate: false for user-triggered actions, watch: false prevents unwanted re-execution, status for loading state, navigateTo for client-side redirect
+**Why good:** `immediate: false` stops the POST firing on mount, and `watch: false` stops every
+keystroke in the form re-sending it — both are needed, since `body` is reactive.
 
 ---
 
 ## useAsyncData for Multiple Fetches
 
-### Good Example - Parallel Data Loading
+### Good Example — parallel loading
 
 ```vue
 <script setup lang="ts">
@@ -220,9 +226,10 @@ const { data, pending, error } = await useAsyncData<DashboardData>(
 </template>
 ```
 
-**Why good:** Promise.all for parallel fetches, single cache key for combined data, $fetch inside useAsyncData is SSR-safe
+**Why good:** `$fetch` inside `useAsyncData` is the one place a bare `$fetch` belongs — the composable
+owns the hydration transfer, so the three calls happen once, on the server, at the same time.
 
-### Bad Example - Sequential Fetches
+### Bad Example — sequential fetches
 
 ```vue
 <script setup lang="ts">
@@ -234,13 +241,14 @@ const { data: activity } = await useFetch("/api/activity");
 </script>
 ```
 
-**Why bad:** Sequential await blocks SSR, total time = sum of all request times instead of max
+**Why bad:** Each `await` blocks the next, so the page waits for the sum of the three round trips
+instead of the longest one.
 
 ---
 
 ## Reactive useAsyncData
 
-### Good Example - Dynamic Key with Watch
+### Good Example — a key that tracks the route
 
 ```vue
 <script setup lang="ts">
@@ -279,13 +287,14 @@ if (error.value) {
 </template>
 ```
 
-**Why good:** Dynamic cache key function, watch triggers refetch on route change, createError triggers error page
+**Why good:** The key is a function of the route param, so navigating between two products gets two
+cache entries rather than one stale one — which is the defect a static key produces here.
 
 ---
 
 ## Lazy Data Fetching
 
-### Good Example - Non-Blocking Navigation
+### Good Example — not blocking navigation
 
 ```vue
 <script setup lang="ts">
@@ -313,13 +322,14 @@ const { data: notifications, pending } = await useFetch<Notification[]>(
 </template>
 ```
 
-**Why good:** lazy: true doesn't block navigation, default prevents null during loading, non-critical UI updates gracefully
+**Why good:** A notification badge is not worth delaying the page for. `lazy: true` lets the
+navigation complete and the count arrive afterwards, with `default` covering the gap.
 
 ---
 
 ## Server-Only Data Fetching
 
-### Good Example - Server-Side Only with pick
+### Good Example — server: true plus pick
 
 ```vue
 <script setup lang="ts">
@@ -345,19 +355,9 @@ const { data: user } = await useFetch<SecureUser>("/api/admin/user/123", {
 </template>
 ```
 
-**Why good:** server: true prevents client-side refetch, pick filters sensitive fields from client payload
+**Why good:** `pick` runs before the payload is serialised into the HTML, so `internalNotes` is never
+in the page source — filtering it in the template would leave it there for anyone reading the markup.
 
 ---
 
-## Quick Reference
-
-| Option      | Purpose               | Use When                    |
-| ----------- | --------------------- | --------------------------- |
-| `query`     | Query parameters      | Filtering, pagination       |
-| `watch`     | Auto-refetch triggers | Reactive dependencies       |
-| `lazy`      | Non-blocking fetch    | Non-critical data           |
-| `immediate` | Auto-execute          | false for user-triggered    |
-| `transform` | Shape response        | Reduce payload, format data |
-| `pick`      | Select fields         | Security, payload size      |
-| `default`   | Loading fallback      | Avoid null checks           |
-| `server`    | Server-only fetch     | Sensitive data, SEO-only    |
+_The full option table is in [reference.md](../reference.md)._

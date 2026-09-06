@@ -1,184 +1,97 @@
 # React Reference
 
-> Decision frameworks, anti-patterns, and red flags for React development. See [SKILL.md](SKILL.md) for core concepts and [examples/core.md](examples/core.md) for code examples.
+> Decision trees, the React 18 → 19 migration table, and review checklists. See [SKILL.md](SKILL.md) for the patterns and red flags, and [examples/](examples/) for full code.
 
 ---
 
-## Decision Framework
+## Decision trees
 
-### When to Accept ref as a Prop (React 19)
+### Accepting a ref
 
 ```
-Does component need ref access?
+Does the component need ref access?
 ├─ YES → Does it expose a DOM element?
-│   ├─ YES → Add ref to props and pass to element (no forwardRef needed)
-│   └─ NO → Use useImperativeHandle to expose custom methods
-└─ NO → Don't accept ref prop (unnecessary)
+│   ├─ YES → Add `ref` to props and pass it to the element
+│   └─ NO  → Expose named methods with useImperativeHandle
+└─ NO → Do not accept a ref prop
 ```
 
-> **Note:** React 19 deprecates `forwardRef`. Pass `ref` as a regular prop instead.
-
-### When to Use Variant Props
+### Variant props
 
 ```
-Does component have visual variants?
-├─ YES → Are there 2+ variant dimensions (color, size)?
-│   ├─ YES → Use typed variant props (TypeScript unions)
-│   └─ NO → Consider simple prop with 3+ values
-└─ NO → Skip variant props (no complexity needed)
+Does the component have visual variants?
+├─ YES → Two or more dimensions (colour and size)?
+│   ├─ YES → Typed union props, rendered as data-* attributes
+│   └─ NO  → One prop with three or more values, or nothing
+└─ NO → className alone
 ```
 
-### When to Use useCallback
+### useCallback
 
 ```
-Are you passing handler to child?
-├─ YES → Is child memoized with React.memo?
-│   ├─ YES → Use useCallback
-│   └─ NO → Don't use useCallback (no benefit)
-└─ NO → Don't use useCallback (unnecessary overhead)
+Is the handler passed to a child?
+├─ YES → Is that child wrapped in React.memo?
+│   ├─ YES → useCallback earns its place
+│   └─ NO  → Skip it — identity does not affect a DOM element
+└─ NO → Skip it
 ```
 
-### Custom Hook vs Component
+### Custom hook or component
 
 ```
 Is this reusable logic?
 ├─ YES → Does it render UI?
 │   ├─ YES → Component
-│   └─ NO → Does it use React hooks?
+│   └─ NO  → Does it call hooks?
 │       ├─ YES → Custom hook
-│       └─ NO → Utility function
-└─ NO → Keep inline in component
+│       └─ NO  → Plain function, no `use` prefix
+└─ NO → Leave it inline
 ```
 
-### When to Use React 19 Form Hooks
+### Which form hook
 
 ```
-Handling form submission?
-├─ YES → Need pending/error state?
-│   ├─ YES → Use useActionState
-│   └─ NO → Simple form action on <form action={fn}>
-├─ Need form status in child components?
-│   └─ YES → Use useFormStatus in child component
-├─ Need optimistic UI updates?
-│   └─ YES → Use useOptimistic
-└─ Need to read promise/context conditionally?
-    └─ YES → Use use() API
+Handling a form submission?
+├─ Needs pending or error state → useActionState
+├─ Needs the pending flag in a nested component → useFormStatus, from a child of <form>
+├─ Needs the result on screen before the server replies → useOptimistic
+└─ None of these → <form action={fn}> on its own
 ```
 
 ---
 
-## Anti-Patterns
+## React 18 → 19 migration
 
-### Using forwardRef in React 19
-
-In React 19, `forwardRef` is deprecated. Pass `ref` as a regular prop instead.
-
-```typescript
-// WRONG (React 19) - forwardRef is deprecated
-export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => (
-  <input ref={ref} {...props} />
-));
-Input.displayName = "Input";
-
-// CORRECT (React 19) - ref as a regular prop
-export function Input({ ref, ...props }: InputProps & { ref?: React.Ref<HTMLInputElement> }) {
-  return <input ref={ref} {...props} />;
-}
-```
-
-### Magic Numbers Without Named Constants
-
-All numeric values must be named constants. Magic numbers are unmaintainable, undocumented, and error-prone.
-
-```typescript
-// WRONG - Magic number
-setTimeout(() => {}, 300);
-
-// CORRECT - Named constant
-const DEBOUNCE_DELAY_MS = 300;
-setTimeout(() => {}, DEBOUNCE_DELAY_MS);
-```
-
-### Missing className Prop on Reusable Components
-
-All reusable components must expose a className prop. Without it, consumers cannot apply custom styles or override defaults.
-
-```typescript
-// WRONG - No className prop
-export function Card({ children }: { children: React.ReactNode }) {
-  return <div>{children}</div>;
-}
-
-// CORRECT - className prop exposed
-export function Card({ children, className }: CardProps) {
-  return <div className={className}>{children}</div>;
-}
-```
-
-### Adding Variant Abstractions for Simple Components
-
-Variant props add unnecessary complexity for simple components. Only use when you have 2+ variant dimensions.
-
-```typescript
-// WRONG - Variant system for single-style component
-type CardVariant = "default";
-export function Card({ variant = "default" }: { variant?: CardVariant }) { ... }
-
-// CORRECT - Simple component without variant props
-export function Card({ className, children }: CardProps) {
-  return <div className={className}>{children}</div>;
-}
-```
-
-### useFormStatus in the Form Component
-
-`useFormStatus` must be called from a child component rendered inside `<form>`, not the component that renders it.
-
-```typescript
-// WRONG - useFormStatus in form component (pending always false)
-export function ContactForm({ action }) {
-  const { pending } = useFormStatus(); // Will always be false!
-  return <form action={action}><button disabled={pending}>Send</button></form>;
-}
-
-// CORRECT - useFormStatus in child component
-function SubmitButton() {
-  const { pending } = useFormStatus(); // Works correctly
-  return <button type="submit" disabled={pending}>{pending ? "Sending..." : "Send"}</button>;
-}
-```
+| React 18                                        | React 19                                  | Notes                                                                          |
+| ----------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `forwardRef((props, ref) => …)` + `displayName` | `ref` as a regular prop                   | The wrapper still compiles; nothing flags it                                   |
+| `useState` for pending, error and result        | `useActionState`                          | Also restores submission before hydration, which `onSubmit` cannot             |
+| Pending flag drilled to a submit button         | `useFormStatus` in the button             | Returns `false` if called in the component rendering `<form>`                  |
+| `useRef` + `useEffect` for DOM setup            | Ref callback returning a cleanup function | The callback is no longer called with `null`; TypeScript rejects other returns |
+| `useContext(Ctx)`                               | `use(Ctx)`                                | Legal after an early return; `useContext` still works                          |
+| `<Ctx.Provider value={…}>`                      | `<Ctx value={…}>`                         | The provider form is deprecated                                                |
 
 ---
 
-## Quick Reference
+## Review checklists
 
-### Component Checklist (React 19)
+### Component
 
-- [ ] Accepts `ref` as a regular prop if exposing DOM elements (no forwardRef)
-- [ ] Exposes `className` prop for customization
-- [ ] Uses named exports (no default exports)
-- [ ] Uses named constants for all numbers
-- [ ] Uses typed variant props only when 2+ variant dimensions exist
-- [ ] Has proper accessibility attributes on interactive elements
+- [ ] Accepts `ref` as a regular prop where it exposes a DOM element
+- [ ] Exposes `className`
+- [ ] Variant props only where two or more visual dimensions exist, surfaced as `data-*`
+- [ ] Interactive elements have an accessible name
 
-### React 19 Form Hooks Checklist
+### React 19 form hooks
 
-- [ ] Uses `useActionState` for form submissions with pending/error state
-- [ ] Uses `useFormStatus` in child components (not in the form component itself)
-- [ ] Uses `useOptimistic` for instant UI feedback during async operations
-- [ ] Uses `use()` for reading promises/context conditionally
+- [ ] `useActionState` where a form needs pending or error state
+- [ ] `useFormStatus` called from a child of `<form>`
+- [ ] `useOptimistic` setters inside a transition or a form action
+- [ ] `use()` callers sit under `<Suspense>` and inside an error boundary
 
-### Hook Checklist
+### Hook
 
-- [ ] Follows `use` prefix naming convention
-- [ ] Has proper TypeScript types
-- [ ] Has proper dependency arrays
-- [ ] Cleans up side effects (timers, subscriptions, observers)
-- [ ] Is SSR-safe when accessing browser APIs
-
-### Event Handler Checklist
-
-- [ ] Uses `handle` prefix for internal handlers
-- [ ] Has explicit event types
-- [ ] Uses named constants for magic numbers
-- [ ] Uses `useCallback` only when passing to memoized children
+- [ ] `use` prefix, and it actually calls hooks
+- [ ] Dependency arrays name every reactive value read
+- [ ] Timers, subscriptions and observers are cleaned up
+- [ ] Browser APIs are guarded for server rendering

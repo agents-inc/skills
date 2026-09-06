@@ -1,19 +1,20 @@
 # Optimistic Updates
 
-> Instant UI feedback while server processes. See [server-actions.md](server-actions.md) for foundational patterns.
+> Showing the result before the server confirms it. See [server-actions.md](server-actions.md) for
+> the action shape.
 
 ---
 
 ## Pattern: useOptimistic for Instant Feedback
 
-### Good Example - Optimistic message list
+### Good Example — an optimistic message list
 
 ```typescript
 // components/message-thread.tsx
 'use client'
 
 import { useOptimistic } from 'react'
-import { sendMessage } from '@/app/actions/messages'
+import { sendMessage } from '../app/actions/messages'
 
 type Message = {
   id: string
@@ -63,17 +64,22 @@ export function MessageThread({ messages }: { messages: Message[] }) {
 }
 ```
 
-**Why good:** Instant UI feedback while server processes. Visual indication of pending messages. Proper state management with reducer pattern.
+**Why good:** The message appears the instant it is typed, dimmed until the server confirms it. React
+discards the optimistic entry when the action settles, so a failure needs no rollback code — the list
+reverts to the server's version.
 
 ---
 
 ## When to Use Optimistic Updates
 
-| Scenario                              | Use Optimistic?         |
-| ------------------------------------- | ----------------------- |
-| Adding to a list (messages, comments) | Yes                     |
-| Toggle actions (like, bookmark)       | Yes                     |
-| Delete operations                     | Yes (with confirmation) |
-| Complex forms with validation         | No - wait for server    |
-| Payment/financial operations          | No - wait for server    |
-| Operations with complex side effects  | No - wait for server    |
+The test is the success rate: reach for it where failure is rare, and skip it where a rollback would
+confuse or alarm.
+
+| Scenario                                             | Use Optimistic?          |
+| ---------------------------------------------------- | ------------------------ |
+| Adding to a list (messages, comments)                | Yes                      |
+| Toggle actions (like, bookmark)                      | Yes                      |
+| Delete operations                                    | Yes, with a confirmation |
+| Forms whose validation runs on the server            | No — wait for the answer |
+| Payments and anything financial                      | No — wait for the answer |
+| Operations with side effects the user sees elsewhere | No — wait for the answer |

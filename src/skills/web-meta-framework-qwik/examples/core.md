@@ -479,7 +479,7 @@ export const StyledCard = component$(() => {
 
 **Why good:** `useStylesScoped$` scopes styles to component (no leakage), `:global()` breaks out for styling projected Slot content, lazy-loaded with the component
 
-**Gotcha:** `useStylesScoped$` adds emoji-based class selectors for scoping. If this causes issues with testing tools or CSS parsers, use CSS Modules (`import styles from "./card.module.css"`) as an alternative.
+**Gotcha:** `useStylesScoped$` adds emoji-based class selectors for scoping. Where a CSS parser or test tool mishandles them, switch that component to `useStyles$` — same lazy loading, no scoping, so the class names stay ordinary and you scope them yourself.
 
 ---
 

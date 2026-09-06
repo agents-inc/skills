@@ -179,12 +179,12 @@ import PersonalizedBanner from "../components/PersonalizedBanner.astro";
 
 ## Pattern 5: Sharing State Between Islands
 
-### Good Example - Shared Store with nanostores
+Islands are separate component trees, so nothing passes between them by props or context. They share a module instead: a plain module-scoped value with a subscribe API, imported by every island that needs it. Any framework-agnostic reactive store gives you this shape ready-made — what matters is that the store lives outside all the frameworks, so each island can subscribe with whatever binding its own framework provides.
+
+### Good Example - A Store Outside Every Framework
 
 ```typescript
-// src/stores/cart-store.ts
-import { atom, computed } from "nanostores";
-
+// src/stores/cart-store.ts — plain module, no framework imports
 export interface CartItem {
   id: string;
   name: string;
@@ -192,88 +192,67 @@ export interface CartItem {
   quantity: number;
 }
 
-export const cartItems = atom<CartItem[]>([]);
+let items: CartItem[] = [];
+const listeners = new Set<(items: CartItem[]) => void>();
 
-export const cartTotal = computed(cartItems, (items) =>
-  items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-);
+export function getCart() {
+  return items;
+}
+
+export function subscribeToCart(listener: (items: CartItem[]) => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
 export function addToCart(item: Omit<CartItem, "quantity">) {
-  const current = cartItems.get();
-  const existing = current.find((i) => i.id === item.id);
-
-  if (existing) {
-    cartItems.set(
-      current.map((i) =>
+  const existing = items.find((i) => i.id === item.id);
+  items = existing
+    ? items.map((i) =>
         i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
-      ),
-    );
-  } else {
-    cartItems.set([...current, { ...item, quantity: 1 }]);
-  }
+      )
+    : [...items, { ...item, quantity: 1 }];
+  listeners.forEach((listener) => listener(items));
 }
 ```
 
 ```tsx
-// src/components/AddToCartButton.tsx (React island)
-import { useStore } from "@nanostores/react";
-import { addToCart, cartItems } from "../stores/cart-store";
-
-interface Props {
-  productId: string;
-  productName: string;
-  price: number;
-}
-
-export function AddToCartButton({ productId, productName, price }: Props) {
-  const items = useStore(cartItems);
-  const inCart = items.find((i) => i.id === productId);
-
-  return (
-    <button
-      onClick={() => addToCart({ id: productId, name: productName, price })}
-    >
-      {inCart ? `In cart (${inCart.quantity})` : "Add to cart"}
-    </button>
-  );
-}
-```
-
-```tsx
-// src/components/CartCount.tsx (React island - separate from AddToCartButton)
-import { useStore } from "@nanostores/react";
-import { cartItems } from "../stores/cart-store";
+// src/components/CartCount.tsx — one island reading the store
+// Each UI framework has its own primitive for subscribing to an external store;
+// this one is React's. Vue, Svelte and Solid each have an equivalent.
+import { useSyncExternalStore } from "react";
+import { getCart, subscribeToCart } from "../stores/cart-store";
 
 export function CartCount() {
-  const items = useStore(cartItems);
+  const items = useSyncExternalStore(subscribeToCart, getCart, getCart);
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return <span class="cart-badge">{count}</span>;
 }
 ```
 
-```astro
----
-// src/pages/products/[id].astro
-import AddToCartButton from "../../components/AddToCartButton";
-import CartCount from "../../components/CartCount";
----
+```tsx
+// src/components/AddToCartButton.tsx — a second island writing to it
+import { addToCart, type CartItem } from "../stores/cart-store";
 
-<nav>
-  Cart: <CartCount client:load />
-</nav>
-
-<h1>{product.name}</h1>
-<p>${product.price}</p>
-<AddToCartButton
-  client:load
-  productId={product.id}
-  productName={product.name}
-  price={product.price}
-/>
+export function AddToCartButton(product: Omit<CartItem, "quantity">) {
+  return <button onClick={() => addToCart(product)}>Add to cart</button>;
+}
 ```
 
-**Why good:** nanostores works across frameworks (React, Vue, Svelte), islands share state without being in the same component tree, store logic is framework-agnostic
+```astro
+---
+// src/pages/products/[id].astro — two islands, one store
+import { AddToCartButton } from "../../components/AddToCartButton";
+import { CartCount } from "../../components/CartCount";
+---
+
+<nav>Cart: <CartCount client:load /></nav>
+
+<h1>{product.name}</h1>
+<AddToCartButton client:load id={product.id} name={product.name} price={product.price} />
+```
+
+**Why good:** The store is a module rather than a component, so islands share it without sharing a tree, and islands written in different frameworks can subscribe to the same one. Keeping it free of framework imports is what makes that true. Replacing `items` rather than mutating it also matters: a subscription binding that compares snapshots by identity never re-renders for an array mutated in place.
 
 ---
 

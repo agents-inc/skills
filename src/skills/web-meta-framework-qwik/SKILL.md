@@ -3,29 +3,60 @@ name: web-meta-framework-qwik
 description: Qwik resumable framework - zero hydration, $ lazy boundaries, signals, Qwik City file-based routing, routeLoader$, routeAction$, server$ RPC, serialization rules
 ---
 
-# Qwik Framework Patterns
+# Qwik Patterns
 
-> **Quick Guide:** Qwik is resumable - it serializes application state on the server and resumes on the client without re-executing framework code (no hydration). Every `$` suffix marks a lazy-loading boundary where the optimizer splits code into separate chunks. Only the code for the interaction the user triggers gets downloaded. Use `component$` for all components, `useSignal`/`useStore` for state, `routeLoader$` for server data, `routeAction$` for mutations, and `server$` for ad-hoc server RPC. The critical mental model: anything crossing a `$` boundary must be serializable.
+> **Quick Guide:** Qwik is resumable rather than hydrated — the server serializes application state into
+> the HTML and the client picks it up without re-executing framework code. Every `$` suffix marks a
+> lazy-loading boundary the optimizer splits into its own chunk, so only the code for the interaction a
+> user actually triggers is downloaded. `component$` wraps every component, `useSignal`/`useStore` hold
+> state, `routeLoader$` supplies server data, `routeAction$` handles mutations, and `server$` is ad-hoc
+> RPC. The constraint everything else follows from: anything captured across a `$` boundary must be
+> serializable.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — typed props, signals, stores, tasks, resources, events, scoped styles
+- [examples/routing.md](examples/routing.md) — route files, nested layouts, loaders, actions, `server$`, endpoints, middleware, navigation
+- [examples/serialization.md](examples/serialization.md) — what crosses the `$` boundary, `noSerialize`, lean closures, QRL props
+- [reference.md](reference.md) — project layout, import cheat sheet, serializable-type table
+
+---
+
+## Which path applies
+
+The two packages divide the surface, and mixing up which one an export comes from is the commonest
+import error.
+
+- **Component work** — components, state, lifecycle, events, slots, styles, all from
+  `@builder.io/qwik`. Follow [examples/core.md](examples/core.md).
+- **Route and server work** — routing, layouts, loaders, actions, `server$`, endpoints and middleware,
+  all from `@builder.io/qwik-city`. Follow [examples/routing.md](examples/routing.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Qwik code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap every component in `component$()`.** A plain function cannot be lazy-loaded, cannot call hooks and
+cannot host `<Slot />`.
 
-**(You MUST wrap every component in `component$()` - plain functions cannot be lazy-loaded, cannot use hooks, and cannot use `<Slot />`)**
+**Keep everything captured in a `$` closure serializable.** A non-serializable capture type-checks and
+then fails at runtime, which is why the compiler is no help here.
 
-**(You MUST ensure all values captured in a `$` closure are serializable - non-serializable captures pass type-checking but fail at runtime)**
+**Reach for `routeLoader$` for initial server data rather than fetching in `useTask$` or
+`useResource$`.** Loaders run before render and integrate with SSR streaming, so there is no loading
+state to show.
 
-**(You MUST use `routeLoader$` for initial server data instead of fetching in `useTask$` or `useResource$` - loaders run before render and integrate with SSR streaming)**
+**Cancel default behaviour with the `preventdefault:click` JSX attribute rather than
+`event.preventDefault()`.** Handlers load asynchronously, so the synchronous Event APIs have already
+had their effect by the time the handler runs.
 
-**(You MUST use `preventdefault:click` as a JSX attribute instead of calling `event.preventDefault()` - event handlers load asynchronously so synchronous Event APIs are unavailable)**
+**Export `routeLoader$` and `routeAction$` from a route file** — `index.tsx` or `layout.tsx` under
+`src/routes/`. Anywhere else, or unexported, they silently do nothing.
 
-**(You MUST export `routeLoader$` and `routeAction$` from route files (`index.tsx` or `layout.tsx` in `src/routes/`) - unexported or misplaced loaders/actions silently do nothing)**
-
-**(You MUST NOT destructure store properties at the top level - destructuring breaks reactivity because you lose the Proxy reference)**
+**Read and write store properties through the store reference — `store.name`.** Destructuring extracts
+the value from the Proxy, and reactivity goes with it.
 
 </critical_requirements>
 
@@ -33,469 +64,228 @@ description: Qwik resumable framework - zero hydration, $ lazy boundaries, signa
 
 **Auto-detection:** Qwik, component$, useSignal, useStore, useTask$, useVisibleTask$, useComputed$, useResource$, routeLoader$, routeAction$, server$, sync$, QRL, noSerialize, @builder.io/qwik, @builder.io/qwik-city, Qwik City, $(), onClick$, onInput$, Slot, q:slot, preventdefault, stoppropagation, useStylesScoped$, resumable, resumability
 
-**When to use:**
+**Applies to:**
 
-- Building web apps where instant interactivity matters (zero hydration delay)
-- Apps with complex interactivity that would ship too much JS with traditional hydration
-- Projects needing fine-grained lazy loading without manual code-splitting
-- Full-stack apps with server loaders, actions, and RPC via `server$`
-- Progressive enhancement where forms work without JavaScript
-
-**When NOT to use:**
-
-- Static content sites with minimal interactivity (use a static site generator)
-- Projects where the team is deeply invested in React ecosystem libraries that have no Qwik equivalents
-- Apps that rely heavily on non-serializable runtime state (class instances, closures with side effects)
-
-**Key patterns covered:**
-
-- Resumability mental model and the `$` suffix convention
-- Component definition with `component$`, props, and `<Slot />`
+- Resumability, the `$` suffix, and what the optimizer does with it
+- Components: `component$`, typed props, QRL callback props, `<Slot />` projection
 - Reactive state: `useSignal`, `useStore`, `useComputed$`
 - Lifecycle: `useTask$`, `useVisibleTask$`, `useResource$`
-- Event handling: `onClick$`, `preventdefault:click`, `sync$`
-- Qwik City routing: file-based routes, layouts, dynamic params
-- Server data: `routeLoader$`, `routeAction$`, `server$`
-- Serialization rules and the `$` boundary
+- Events: `on{Event}$`, `preventdefault:`/`stoppropagation:` attributes, `sync$`, global listeners
+- Qwik City routing: file-based routes, nested and named layouts, dynamic params, route groups
+- Server work: `routeLoader$`, `routeAction$`, `server$`, endpoint handlers, `onRequest` middleware
+- Serialization rules and how to work around them
 
-**Detailed Resources:**
+**Handled elsewhere:**
 
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
-
-**Core patterns:**
-
-- [examples/core.md](examples/core.md) - Components, signals, stores, tasks, events, slots
-- [examples/routing.md](examples/routing.md) - File-based routing, routeLoader$, routeAction$, server$, middleware
-- [examples/serialization.md](examples/serialization.md) - Serialization rules, $ boundary, non-serializable patterns
+- Which CSS system fills a scoped style block — Qwik settles how styles attach to a component, not how they are authored.
+- Validation schemas beyond the shape `zod$()` wraps — the action integration is Qwik's, the schema language is not.
+- Databases, mail and other services called from inside `server$` or a loader — those functions are just server code.
+- Statically-generated content sites with little interactivity — resumability buys nothing where there is nothing to resume.
 
 ---
 
 <philosophy>
 
-## Philosophy
+Qwik is built on **resumability**. A hydrating framework renders HTML on the server and then re-executes
+every component on the client to reattach listeners and rebuild the tree. Qwik does not: the server
+serializes the tree, the state and the listeners into the HTML, and the client resumes from there. When a
+user clicks a button, that handler's chunk is what downloads — not the framework, not the tree, not the
+other handlers.
 
-Qwik is built on **resumability** - the idea that the server can serialize the entire application state (component tree, listeners, state) into HTML, and the client can resume exactly where the server left off without re-executing any framework code.
+**The `$` suffix is the mechanism.** Each `$` is a split point the optimizer turns into a separately
+loadable chunk: `component$()` for a render function, `onClick$()` for a handler, `useTask$()` for a
+tracked effect, `routeLoader$()` for server-only code.
 
-**How it differs from hydration frameworks:**
-
-Traditional SSR frameworks render HTML on the server, then **re-execute all component code on the client** to attach event listeners and rebuild the component tree. This is hydration - the client replays the server's work.
-
-Qwik skips this entirely. The server serializes everything into the HTML. When a user clicks a button, only the click handler's code downloads and executes. The framework itself, the component tree, and all other handlers stay unloaded until needed.
-
-**The `$` suffix is the core mechanism.** Every function ending in `$` is a lazy-loading boundary. The Qwik optimizer splits code at each `$` marker into separate chunks. This means:
-
-- `component$()` - the component's render function loads only when needed
-- `onClick$()` - the click handler loads only when the user clicks
-- `routeLoader$()` - the loader runs server-side only
-- `useTask$()` - the task loads when its tracked dependencies change
-
-**The tradeoff:** Because code must be serializable to cross `$` boundaries, you cannot capture non-serializable values (class instances, functions, DOM nodes) in `$` closures. This constraint is the price of instant interactivity.
-
-**When to use Qwik:**
-
-- Interactive apps where time-to-interactive matters
-- Large apps where traditional hydration downloads too much JS upfront
-- Full-stack apps leveraging `routeLoader$`/`routeAction$`/`server$` for server logic
-- Progressive enhancement (Qwik forms work without JS)
-
-**When NOT to use Qwik:**
-
-- Static content sites with little interactivity
-- Projects heavily dependent on React-specific libraries without Qwik equivalents
-- Apps requiring extensive non-serializable runtime state
+**The price is serialization.** A chunk that loads later needs its captured scope restored from the
+HTML, so a `$` closure can only close over values Qwik knows how to write down. Class instances,
+functions and DOM nodes are not among them, and that single constraint explains most of the API's
+unfamiliar corners — `QRL` props, `noSerialize`, the advice to keep closures lean.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+**Which state primitive?** A single primitive is `useSignal`, read and written through `.value`. An
+object or array is `useStore`, mutated property by property with deep tracking on by default. A value
+derived synchronously from others is `useComputed$`. A value derived asynchronously is `useResource$`.
+Data that comes from the server is `routeLoader$`.
+
+**Which lifecycle hook?** `useTask$` is the default; the table in Pattern 4 has the rest.
+`useVisibleTask$` defeats resumability, so it is for DOM measurement, browser-only APIs and canvas
+work and nothing else.
+
+**Where should data loading live?** Needed before the page renders: `routeLoader$`. Reactive to client
+state: `useResource$`, calling `server$` when the work belongs on the server. Triggered by the user:
+`routeAction$` for anything form-shaped, `server$` called from a handler when there is no form.
+
+**Does the handler need a synchronous Event API?** `preventDefault` becomes the
+`preventdefault:eventname` attribute, `stopPropagation` becomes `stoppropagation:eventname`, and
+`currentTarget` becomes the handler's second parameter. Everything else is an ordinary `on{Event}$`,
+extracted with `$()` and typed as `QRL` when it is reused.
+
+**Which styling attachment?** `useStylesScoped$` scopes styles to the component and lazy-loads them with
+it, with `:global()` as the escape hatch for projected `<Slot />` content. `useStyles$` attaches
+unscoped styles the same way. Anything site-wide is imported in the root layout. Runtime CSS-in-JS that
+injects styles during render is incompatible with SSR streaming here; zero-runtime approaches are not.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Components with component$
+### Pattern 1: Components with `component$`
 
-Every Qwik component must be wrapped in `component$()`. This is not optional - it enables lazy loading, hooks, and `<Slot />`.
+Every component is wrapped, and the wrapper is what gives it lazy loading, hooks and `<Slot />`.
 
 ```tsx
-import { component$, useSignal } from "@builder.io/qwik";
-
-interface CounterProps {
-  initial?: number;
-  label: string;
-}
-
-export const Counter = component$<CounterProps>(({ initial = 0, label }) => {
-  const count = useSignal(initial);
-
-  return (
-    <div>
-      <span>
+export const Counter = component$<{ initial?: number; label: string }>(
+  ({ initial = 0, label }) => {
+    const count = useSignal(initial);
+    return (
+      <button onClick$={() => count.value++}>
         {label}: {count.value}
-      </span>
-      <button onClick$={() => count.value++}>+</button>
-    </div>
-  );
-});
+      </button>
+    );
+  },
+);
 ```
 
-**Why good:** `component$` enables the optimizer to split this into a lazy chunk, typed props via generic, `useSignal` for reactive state, `onClick$` handler loads only on click
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 2: `useSignal` and `useStore`
+
+`useSignal` holds one value behind `.value`. `useStore` holds an object and tracks it deeply, mutated in
+place — but only through the store reference.
 
 ```tsx
-// BAD: Plain function component
-export const Counter = (props: { label: string }) => {
-  // Cannot use hooks here - useSignal will throw
-  // Cannot use <Slot /> - only works inside component$
-  return <div>{props.label}</div>;
-};
+const isEditing = useSignal(false);
+const user = useStore({ name: "Alice", preferences: { theme: "dark" } });
+
+user.name = "Bob"; // reactive
+const { name } = user; // plain string — reactivity lost
 ```
 
-**Why bad:** Without `component$` wrapper, hooks throw at runtime, `<Slot />` breaks, optimizer cannot split the code, component is not resumable
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 3: Derived values with `useComputed$`
 
-### Pattern 2: Reactive State - useSignal vs useStore
-
-`useSignal` holds a single reactive value accessed via `.value`. `useStore` holds a reactive object with deep tracking by default.
+Synchronous derivation with automatic dependency tracking and no dependency array. The result is a
+read-only signal.
 
 ```tsx
-import { component$, useSignal, useStore } from "@builder.io/qwik";
-
-export const UserProfile = component$(() => {
-  // useSignal for primitives and flat values
-  const isEditing = useSignal(false);
-  const selectedTab = useSignal<"profile" | "settings">("profile");
-
-  // useStore for objects/arrays - deep reactivity by default
-  const user = useStore({
-    name: "Alice",
-    email: "alice@example.com",
-    preferences: {
-      theme: "dark",
-      notifications: true,
-    },
-  });
-
-  return (
-    <div>
-      <h1>{user.name}</h1>
-      {isEditing.value ? (
-        <input
-          value={user.name}
-          onInput$={(_, el) => {
-            user.name = el.value;
-          }}
-        />
-      ) : (
-        <button
-          onClick$={() => {
-            isEditing.value = true;
-          }}
-        >
-          Edit
-        </button>
-      )}
-    </div>
-  );
-});
+const subtotal = useSignal(85);
+const tax = useComputed$(() => subtotal.value * TAX_RATE);
+const total = useComputed$(() => subtotal.value + tax.value);
 ```
 
-**Why good:** `useSignal` for simple toggles/selections (accessed via `.value`), `useStore` for structured data (mutate properties directly), deep reactivity tracks `user.preferences.theme` changes automatically
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 4: Tasks and lifecycle
+
+`track()` declares what re-runs the task; `cleanup()` runs before each re-run and on teardown.
 
 ```tsx
-// BAD: Destructuring a store
-const { name, email } = useStore({ name: "Alice", email: "a@b.com" });
-// name and email are now plain strings - NOT reactive
-// Changing them does nothing to the UI
-```
-
-**Why bad:** Destructuring extracts primitive values from the Proxy, breaking reactivity - you must keep the store reference intact and access `store.name` directly
-
----
-
-### Pattern 3: Computed Values with useComputed$
-
-`useComputed$` derives values from signals/stores. It re-runs only when dependencies change. Synchronous only.
-
-```tsx
-import { component$, useSignal, useComputed$ } from "@builder.io/qwik";
-
-const TAX_RATE = 0.08;
-const FREE_SHIPPING_THRESHOLD = 100;
-
-export const CartSummary = component$(() => {
-  const subtotal = useSignal(85);
-
-  const tax = useComputed$(() => subtotal.value * TAX_RATE);
-  const shipping = useComputed$(() =>
-    subtotal.value >= FREE_SHIPPING_THRESHOLD ? 0 : 9.99,
-  );
-  const total = useComputed$(() => subtotal.value + tax.value + shipping.value);
-
-  return (
-    <div>
-      <p>Subtotal: ${subtotal.value.toFixed(2)}</p>
-      <p>Tax: ${tax.value.toFixed(2)}</p>
-      <p>Shipping: ${shipping.value.toFixed(2)}</p>
-      <p>Total: ${total.value.toFixed(2)}</p>
-    </div>
-  );
+useTask$(({ track, cleanup }) => {
+  const term = track(() => query.value);
+  const timer = setTimeout(() => search(term), DEBOUNCE_MS);
+  cleanup(() => clearTimeout(timer));
 });
 ```
-
-**Why good:** Automatic dependency tracking (no dependency arrays), read-only signal prevents accidental mutation, recomputes only when `subtotal` changes, named constants for magic numbers
-
----
-
-### Pattern 4: Tasks and Lifecycle
-
-`useTask$` runs before render (server + client). `useVisibleTask$` runs after render (browser only). Use `track()` to declare reactive dependencies.
-
-```tsx
-import {
-  component$,
-  useSignal,
-  useTask$,
-  useVisibleTask$,
-} from "@builder.io/qwik";
-import { server$ } from "@builder.io/qwik-city";
-
-const DEBOUNCE_MS = 300;
-
-export const SearchBox = component$(() => {
-  const query = useSignal("");
-  const results = useSignal<string[]>([]);
-
-  // Runs before render, re-runs when query changes
-  useTask$(({ track, cleanup }) => {
-    const searchTerm = track(() => query.value);
-    if (!searchTerm) {
-      results.value = [];
-      return;
-    }
-
-    const debounceTimer = setTimeout(async () => {
-      const data = await fetchResults(searchTerm);
-      results.value = data;
-    }, DEBOUNCE_MS);
-
-    cleanup(() => clearTimeout(debounceTimer));
-  });
-
-  return (
-    <div>
-      <input
-        value={query.value}
-        onInput$={(_, el) => {
-          query.value = el.value;
-        }}
-      />
-      <ul>
-        {results.value.map((r) => (
-          <li key={r}>{r}</li>
-        ))}
-      </ul>
-    </div>
-  );
-});
-
-const fetchResults = server$(async function (term: string) {
-  // Runs on server only - safe to access DB, env vars, etc.
-  const db = this.env.get("DATABASE_URL");
-  // ... query database
-  return ["result1", "result2"];
-});
-```
-
-**Why good:** `track()` explicitly declares what triggers re-runs, `cleanup()` prevents timer leaks, `server$` keeps the fetch server-side
-
-**When to use each:**
 
 | Hook              | Runs                           | Use for                                    |
 | ----------------- | ------------------------------ | ------------------------------------------ |
 | `useTask$`        | Server + client, before render | Data init, side effects on state change    |
 | `useVisibleTask$` | Browser only, after render     | DOM manipulation, browser APIs, animations |
 | `useComputed$`    | Synchronous, auto-tracked      | Derived values (formatting, filtering)     |
-| `useResource$`    | Server + client, non-blocking  | Async data that shouldn't block render     |
+| `useResource$`    | Server + client, non-blocking  | Async data that should not block render    |
 
----
+A `useTask$` that tracks nothing runs once, as an initialization hook rather than a reactive effect.
 
-### Pattern 5: Event Handling
+Full code: [examples/core.md](examples/core.md)
 
-Event handlers use the `on{Event}$` convention. Because handlers load asynchronously, synchronous Event APIs (`preventDefault`, `stopPropagation`, `currentTarget`) are NOT available - use declarative attributes instead.
+### Pattern 5: Event handling
+
+Handlers are `on{Event}$` and load asynchronously, so default-behaviour control is declarative and the
+element arrives as the second parameter instead of through `currentTarget`.
 
 ```tsx
-import { component$, useSignal, $ } from "@builder.io/qwik";
-
-export const LoginForm = component$(() => {
-  const email = useSignal("");
-
-  // Extracted handler - wrap with $() for reuse
-  const handleSubmit = $((e: SubmitEvent) => {
-    // Submit email.value to server
-  });
-
-  return (
-    <form preventdefault:submit onSubmit$={handleSubmit}>
-      <input
-        type="email"
-        value={email.value}
-        onInput$={(_, el) => {
-          email.value = el.value;
-        }}
-      />
-      <button type="submit">Login</button>
-    </form>
-  );
-});
+<form preventdefault:submit onSubmit$={handleSubmit}>
+  <input value={email.value} onInput$={(_, el) => (email.value = el.value)} />
+</form>
 ```
 
-**Why good:** `preventdefault:submit` replaces `e.preventDefault()` declaratively, second parameter of `onInput$` gives the element directly (avoiding async `currentTarget` issues), extracted handler uses `$()` wrapper
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 6: Content projection with `<Slot />`
+
+`<Slot />` takes children; `q:slot` on a direct child of the usage site routes into a named slot. Both
+work only inside `component$()`.
 
 ```tsx
-// BAD: Calling synchronous Event APIs
-<form onSubmit$={(e) => {
-  e.preventDefault(); // WRONG - handler is async, this is a no-op
-  e.stopPropagation(); // WRONG - same reason
-}}>
+<div class="card">
+  <header>
+    <Slot name="header" />
+  </header>
+  <div class="body">
+    <Slot />
+  </div>
+</div>
 ```
 
-**Why bad:** Event handlers are lazy-loaded asynchronously, so `preventDefault()` and `stopPropagation()` execute too late to have any effect - use `preventdefault:submit` and `stoppropagation:submit` attributes instead
+Wrapping slotted content in an intermediate element breaks the projection — `q:slot` must sit on a
+direct child.
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 6: Content Projection with Slot
+### Pattern 7: `routeLoader$` for server data
 
-`<Slot />` projects child content. Named slots use the `q:slot` attribute. Only works inside `component$()`.
-
-```tsx
-import { component$, Slot } from "@builder.io/qwik";
-
-export const Card = component$<{ variant?: "default" | "outlined" }>(
-  ({ variant = "default" }) => {
-    return (
-      <div class={`card card-${variant}`}>
-        <header class="card-header">
-          <Slot name="header" />
-        </header>
-        <div class="card-body">
-          <Slot /> {/* Default slot */}
-        </div>
-        <footer class="card-footer">
-          <Slot name="footer" />
-        </footer>
-      </div>
-    );
-  },
-);
-
-// Usage
-export const Page = component$(() => {
-  return (
-    <Card variant="outlined">
-      <h2 q:slot="header">Card Title</h2>
-      <p>This goes in the default slot.</p>
-      <div q:slot="footer">
-        <button>Action</button>
-      </div>
-    </Card>
-  );
-});
-```
-
-**Why good:** Named slots via `q:slot` attribute, default slot for main content, parent and child render independently
-
-**Gotcha:** `q:slot` must be on a direct child of the component. Wrapping slotted content in an intermediate element breaks projection.
-
----
-
-### Pattern 7: routeLoader$ for Server Data
-
-`routeLoader$` runs on the server before the page renders. It must be exported from a route file. Returns a read-only signal.
+Exported from a route file, runs server-side before render, and returns a read-only signal. `fail()`
+returns a typed error rather than throwing.
 
 ```tsx
-// src/routes/products/[id]/index.tsx
-import { component$ } from "@builder.io/qwik";
-import { routeLoader$ } from "@builder.io/qwik-city";
-
 export const useProduct = routeLoader$(async (requestEvent) => {
-  const productId = requestEvent.params.id;
-  const product = await db.products.findById(productId);
-
-  if (!product) {
-    return requestEvent.fail(404, {
-      errorMessage: `Product ${productId} not found`,
-    });
-  }
-
-  return product;
+  const product = await db.products.findById(requestEvent.params.id);
+  return product ?? requestEvent.fail(404, { errorMessage: "Not found" });
 });
 
 export default component$(() => {
-  const product = useProduct(); // ReadonlySignal
-
-  return product.value.failed ? (
-    <p>{product.value.errorMessage}</p>
-  ) : (
-    <div>
-      <h1>{product.value.name}</h1>
-      <p>${product.value.price}</p>
-    </div>
-  );
+  const product = useProduct();
+  return <h1>{product.value.name}</h1>;
 });
 ```
 
-**Why good:** Server-only execution, runs before render (no loading states during SSR), type-safe error handling with `fail()`, read-only signal prevents accidental client-side mutation
+Full code: [examples/routing.md](examples/routing.md)
 
----
+### Pattern 8: `routeAction$` for mutations
 
-### Pattern 8: routeAction$ for Mutations
-
-`routeAction$` handles form submissions and mutations. Supports Zod validation. Must be exported from route files.
+Handles form submissions server-side, with `zod$()` for validation and per-field errors. `<Form>` works
+without JavaScript, so the page degrades to a plain POST.
 
 ```tsx
-// src/routes/contact/index.tsx
-import { component$ } from "@builder.io/qwik";
-import { routeAction$, Form, zod$, z } from "@builder.io/qwik-city";
-
 export const useContactAction = routeAction$(
-  async (data, requestEvent) => {
-    // data is validated and typed: { name: string; email: string; message: string }
+  async (data) => {
     await sendEmail(data);
     return { success: true };
   },
-  zod$({
-    name: z.string().min(1),
-    email: z.string().email(),
-    message: z.string().min(10),
-  }),
+  zod$({ email: z.string().email(), message: z.string().min(10) }),
 );
-
-export default component$(() => {
-  const action = useContactAction();
-
-  return (
-    <Form action={action}>
-      <input name="name" />
-      <input name="email" type="email" />
-      <textarea name="message" />
-
-      {action.value?.fieldErrors?.email && (
-        <p class="error">{action.value.fieldErrors.email}</p>
-      )}
-
-      {action.value?.failed && <p class="error">{action.value.message}</p>}
-
-      {action.value?.success && <p>Message sent!</p>}
-
-      <button type="submit" disabled={action.isRunning}>
-        {action.isRunning ? "Sending..." : "Send"}
-      </button>
-    </Form>
-  );
-});
 ```
 
-**Why good:** `<Form>` works without JS (progressive enhancement), Zod validation runs server-side with typed errors, `action.isRunning` for loading state, `action.value.failed` discriminates success/failure
+```tsx
+<Form action={action}>
+  {action.value?.fieldErrors?.email && <p>{action.value.fieldErrors.email}</p>}
+  <button type="submit" disabled={action.isRunning}>
+    Send
+  </button>
+</Form>
+```
+
+Full code: [examples/routing.md](examples/routing.md)
 
 </patterns>
 
@@ -503,64 +293,33 @@ export default component$(() => {
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-### High Priority Issues
+**Breaks at runtime:**
 
-- **Using plain functions instead of `component$()`** - Hooks throw, `<Slot />` breaks, optimizer cannot split code, component is not resumable
-- **Destructuring store properties** - `const { name } = store` extracts a plain value, breaking reactivity. Always access `store.name` directly
-- **Calling `event.preventDefault()` inside `onClick$`** - Handler loads asynchronously, so `preventDefault()` is a no-op. Use `preventdefault:click` attribute
-- **Putting `routeLoader$`/`routeAction$` in non-route files without re-exporting** - They silently do nothing unless exported from `src/routes/**/index.tsx` or `layout.tsx`
-- **Capturing non-serializable values in `$` closures** - Class instances, functions, DOM nodes pass type-checking but fail at runtime with serialization errors
+- A component written as a plain function — hooks throw, `<Slot />` silently fails, and the optimizer cannot split it.
+- A class instance, function or DOM node captured in a `$` closure — type-checks, then throws a serialization error.
+- A destructured store — `const { name } = store` yields a plain value, and every later write is invisible to the UI.
+- `event.preventDefault()` or `event.stopPropagation()` inside a handler — a no-op, because the handler ran too late. Use the `preventdefault:` / `stoppropagation:` attributes.
+- `event.currentTarget` inside a handler — null in an async handler; take the element from the second parameter.
+- `routeLoader$` or `routeAction$` outside `src/routes/**/index.tsx` or `layout.tsx`, or defined but not exported — no error, and no execution either.
+- A plain function type on a callback prop — callback props are `QRL<() => void>` and their values are wrapped in `$()`.
+- An import taken from the wrong package — components, signals and tasks are `@builder.io/qwik`; routing, loaders, actions and `server$` are `@builder.io/qwik-city`.
 
-### Medium Priority Issues
+**Surprising behaviour:**
 
-- **Using `useVisibleTask$` when `useTask$` would work** - `useVisibleTask$` is browser-only and runs after render; prefer `useTask$` by default for better SSR
-- **Fetching data in `useTask$` instead of `routeLoader$`** - Loaders integrate with SSR streaming and run before render; `useTask$` blocks rendering
-- **Using `client:load`-style thinking** - Qwik is not an islands framework. Every component is already lazy-loaded at the interaction level. You do not choose what to hydrate.
-- **Over-capturing in `$` closures** - Closing over an entire store when you only need one property forces Qwik to serialize the whole store
-
-### Common Mistakes
-
-- **Using `useStore({ deep: true })` explicitly** - Deep is already the default. Passing it is redundant. Pass `{ deep: false }` only when you need shallow tracking
-- **Using arrow functions for store methods** - Arrow functions lose `this` binding. Use regular `function(){}` syntax for methods on stores
-- **Confusing `@builder.io/qwik` vs `@builder.io/qwik-city` imports** - Components, signals, tasks from `@builder.io/qwik`. Routing, loaders, actions, `server$` from `@builder.io/qwik-city`
-- **Inline `<style>` tags in components** - Causes double-loading (SSR + client). Use `useStylesScoped$()` or CSS modules instead
-
-### Gotchas & Edge Cases
-
-- **`useTask$` without `track()` runs once on mount** - Without tracking any signal, it behaves like an initialization hook, not a reactive effect
-- **`useTask$` blocks rendering** - Long async operations in `useTask$` delay the component render. Use `useResource$` for non-blocking async
-- **`onInput$` second parameter** - The callback receives `(event, element)` where `element` is the target. Use `el.value` instead of `event.currentTarget.value` (currentTarget is null in async handlers)
-- **Middleware does NOT run for `server$` calls** - Layout-level `onRequest`/`onGet` handlers are skipped for `server$` RPC. Use `plugin.ts` for middleware that must run on `server$` requests
-- **Version skew with `server$`** - Client and server must run the same code version. Stale client deployments cause undefined behavior
-- **`useStylesScoped$` uses emoji-based class hashing** - Scoped styles apply via emoji characters in selectors. Use `:global()` to break out when styling `<Slot />` content
-- **Props are shallowly immutable** - Reassigning a primitive prop from a child does nothing. Pass a `Signal` instead if the child needs to write back
-- **Deep store mutations may not trigger updates** - Tracking `store[key].nested` requires tracking the specific property, not just the key. `useStore` with `{ deep: false }` disables deep tracking
-- **`<Slot />` does not work in inline components** - Only `component$()` functions support `<Slot />`. Arrow functions or plain functions will silently fail
+- `useVisibleTask$` where `useTask$` would do gives up SSR and resumability for that component.
+- `useTask$` blocks the render until it settles, so long async work belongs in `useResource$`.
+- Fetching in `useTask$` instead of `routeLoader$` costs SSR streaming and adds a loading state the user should never have seen.
+- Closing over a whole store to reach one property makes Qwik serialize the whole store.
+- Islands-style thinking does not apply — every component is already lazy at the interaction level, so there is nothing to choose to hydrate.
+- `useStore({ deep: true })` is the default written out; `{ deep: false }` is the option that changes anything.
+- An arrow function as a store method loses `this` — use `function () {}`.
+- An inline `<style>` tag in a component double-loads, once from SSR and once from the client.
+- `useStylesScoped$` scopes through emoji-based class selectors, which some CSS parsers and test tools mishandle; `:global()` is how you reach `<Slot />` content through it.
+- Middleware in `layout.tsx` does not run for `server$` calls — put checks a `server$` call must pass in `plugin.ts` or inside the function.
+- `server$` needs client and server on the same deployed version; a stale client calling a moved function is undefined behaviour.
+- Props are shallowly immutable, so a child reassigning a primitive prop does nothing — pass a `Signal` when the child must write back.
+- Deep store tracking follows the property you read, so tracking `store[key]` does not track `store[key].nested`.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap every component in `component$()` - plain functions cannot be lazy-loaded, cannot use hooks, and cannot use `<Slot />`)**
-
-**(You MUST ensure all values captured in a `$` closure are serializable - non-serializable captures pass type-checking but fail at runtime)**
-
-**(You MUST use `routeLoader$` for initial server data instead of fetching in `useTask$` or `useResource$` - loaders run before render and integrate with SSR streaming)**
-
-**(You MUST use `preventdefault:click` as a JSX attribute instead of calling `event.preventDefault()` - event handlers load asynchronously so synchronous Event APIs are unavailable)**
-
-**(You MUST export `routeLoader$` and `routeAction$` from route files (`index.tsx` or `layout.tsx` in `src/routes/`) - unexported or misplaced loaders/actions silently do nothing)**
-
-**(You MUST NOT destructure store properties at the top level - destructuring breaks reactivity because you lose the Proxy reference)**
-
-**Failure to follow these rules will cause silent runtime failures, broken reactivity, serialization errors, or loaders/actions that never execute.**
-
-</critical_reminders>

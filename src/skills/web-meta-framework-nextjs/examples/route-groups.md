@@ -1,6 +1,7 @@
-# Next.js App Router - Route Groups
+# Next.js App Router — Route Groups
 
-> Examples for organizing routes with different layouts using route groups. See [core.md](core.md) for foundational patterns.
+> Organising routes into sections with their own layouts. See [core.md](core.md) for routing and
+> layouts.
 
 ---
 
@@ -35,8 +36,8 @@ app/
 
 ```tsx
 // app/(marketing)/layout.tsx
-import { MarketingNav } from "@/components/marketing-nav";
-import { Footer } from "@/components/footer";
+import { MarketingNav } from "./marketing-nav";
+import { Footer } from "./footer";
 
 export default function MarketingLayout({
   children,
@@ -57,7 +58,7 @@ export default function MarketingLayout({
 
 ```tsx
 // app/(app)/layout.tsx
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "./app-sidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -86,8 +87,10 @@ export default function AuthLayout({
 }
 ```
 
-**Why good:** Each section has appropriate layout, URLs don't include group name (/about not /marketing/about), clear separation of concerns
+**Why good:** The parenthesised folder never reaches the URL — `/about`, not `/marketing/about` — so
+three sections can carry three different chromes without nesting the paths. A group may also hold its
+own root layout, in which case it acts as a separate root.
 
 ---
 
-_See [core.md](core.md) for Server/Client Components, Streaming, Layouts, and Error Handling patterns._
+_See [core.md](core.md) for layouts, dynamic routes and error handling._

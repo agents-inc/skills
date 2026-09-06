@@ -1,18 +1,15 @@
-# React - Custom Hook Examples
+# React — Custom Hook Examples
 
-> Reusable hook patterns: usePagination, useDebounce, useLocalStorage. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> usePagination, useDebounce, useLocalStorage. See [SKILL.md](../SKILL.md) for the decisions and [reference.md](../reference.md) for the hook vs component decision tree.
 
 **Additional Examples:**
 
-- [core.md](core.md) - Component architecture, variants, event handlers
-- [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
-- [react-19-hooks.md](react-19-hooks.md) - useActionState, useFormStatus, useOptimistic, use()
+- [core.md](core.md) — component shape, variant props, event handlers
+- [react-19-hooks.md](react-19-hooks.md) — useActionState, useFormStatus, useOptimistic, use()
 
 ---
 
-## usePagination Hook
-
-### Hook Implementation
+## usePagination
 
 ```typescript
 import { useState, useMemo } from "react";
@@ -53,26 +50,14 @@ export function usePagination({
     }
   };
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
   return {
     currentPage,
     totalPages,
     startIndex,
     endIndex,
     goToPage,
-    goToNextPage,
-    goToPrevPage,
+    goToNextPage: () => goToPage(currentPage + 1),
+    goToPrevPage: () => goToPage(currentPage - 1),
     goToFirstPage: () => setCurrentPage(1),
     goToLastPage: () => setCurrentPage(totalPages),
     hasNextPage: currentPage < totalPages,
@@ -81,61 +66,11 @@ export function usePagination({
 }
 ```
 
-**Why good:** encapsulates pagination logic for reuse across components, memoized calculations prevent unnecessary re-computation, complete API with all common pagination operations, named constant for default page value
-
-### usePagination Usage
-
-```typescript
-import type { Product } from "./types";
-
-const ITEMS_PER_PAGE = 10;
-
-function ProductList({ products }: { products: Product[] }) {
-  const {
-    currentPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    goToPage,
-    hasNextPage,
-    hasPrevPage
-  } = usePagination({
-    totalItems: products.length,
-    itemsPerPage: ITEMS_PER_PAGE,
-  });
-
-  const visibleProducts = products.slice(startIndex, endIndex);
-
-  return (
-    <div>
-      <ul>
-        {visibleProducts.map((product) => (
-          <li key={product.id}>{product.name}</li>
-        ))}
-      </ul>
-      <div>
-        <button onClick={() => goToPage(currentPage - 1)} disabled={!hasPrevPage}>
-          Previous
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button onClick={() => goToPage(currentPage + 1)} disabled={!hasNextPage}>
-          Next
-        </button>
-      </div>
-    </div>
-  );
-}
-```
-
-**Why good:** hook extracts all pagination complexity from component, named constant for items per page, declarative API makes component code readable
+**Why good:** the hook returns index bounds rather than a sliced list, so the caller decides what to slice and the hook stays independent of the item type. `goToPage` clamps once and the directional helpers route through it, so the bound is enforced in one place.
 
 ---
 
-## useDebounce Hook
-
-### Hook Implementation
+## useDebounce
 
 ```typescript
 import { useEffect, useState } from "react";
@@ -144,26 +79,19 @@ export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
   }, [value, delay]);
 
   return debouncedValue;
 }
 ```
 
-**Why good:** generic type parameter makes hook reusable with any value type, cleanup function prevents memory leaks, proper dependency array ensures correct behavior
+**Why good:** the cleanup cancels the pending timer on every keystroke, so only the last value in a burst is ever committed.
 
-### useDebounce Usage Example
+### Wiring — the effect keys on the debounced value
 
 ```typescript
-import { useState, useEffect } from "react";
-
 const DEBOUNCE_DELAY_MS = 500;
 const MIN_SEARCH_LENGTH = 1;
 
@@ -174,36 +102,24 @@ function SearchComponent() {
 
   useEffect(() => {
     if (debouncedSearchTerm.length >= MIN_SEARCH_LENGTH) {
-      // Perform search when debounced value updates
       performSearch(debouncedSearchTerm).then(setResults);
     }
   }, [debouncedSearchTerm]);
 
   return (
-    <div>
-      <input
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search..."
-      />
-      <ul>
-        {results.map((result, i) => <li key={i}>{result}</li>)}
-      </ul>
-    </div>
+    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
   );
 }
 ```
 
-**Why good:** debounce prevents excessive function calls on rapid input, named constants for delay and minimum length, effect only runs when debounced value changes
+**Why good:** the input stays controlled by the raw value so typing feels immediate, while the effect depends on the debounced one and fires once per pause.
 
 ---
 
-## useLocalStorage Hook
-
-### Hook Implementation
+## useLocalStorage
 
 ```typescript
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -236,20 +152,4 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 }
 ```
 
-**Why good:** SSR-safe with window check, error handling prevents crashes, supports functional updates like useState, generic type provides type safety
-
-### useLocalStorage Usage
-
-```typescript
-function Settings() {
-  const [theme, setTheme] = useLocalStorage("theme", "light");
-
-  return (
-    <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-      Toggle theme: {theme}
-    </button>
-  );
-}
-```
-
-**Why good:** theme persists across page reloads, type-safe theme values, simple API matches useState
+**Why good:** the lazy initialiser reads storage once rather than on every render, the `window` guards keep it usable under server rendering, and the `catch` covers both unparseable stored JSON and a quota-exceeded write. `as const` makes the returned pair a tuple, so destructuring names both halves.

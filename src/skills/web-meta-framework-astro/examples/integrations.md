@@ -9,21 +9,11 @@
 ### Good Example - Adding React Support
 
 ```bash
-# Automatic setup (recommended)
+# Installs the package, adds it to integrations[], and writes any tsconfig changes
 npx astro add react
 
-# Add multiple integrations at once
+# Several at once
 npx astro add react sitemap
-```
-
-```javascript
-// astro.config.mjs (manual setup)
-import { defineConfig } from "astro/config";
-import react from "@astrojs/react";
-
-export default defineConfig({
-  integrations: [react()],
-});
 ```
 
 ```tsx
@@ -59,7 +49,7 @@ import { Counter } from "../components/Counter";
 <Counter initialCount={10} />
 ```
 
-**Why good:** `astro add` handles config automatically, React components work as islands with client directives, same component can render static or interactive
+**Why good:** `astro add` writes the config, and the same component renders either static or interactive depending on whether it carries a directive
 
 ---
 

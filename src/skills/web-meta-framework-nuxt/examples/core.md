@@ -1,12 +1,13 @@
-# Nuxt - Core Examples
+# Nuxt — Core
 
-> Essential patterns for routing, layouts, error handling, and auto-imports. See [SKILL.md](../SKILL.md) for core concepts.
+> Pages, layouts, error handling, SEO composables, plugins and runtime config. Fetching options are
+> in [data-fetching.md](data-fetching.md); guards are in [middleware.md](middleware.md).
 
 ---
 
 ## Pattern 1: Page with Data Fetching
 
-### Good Example - Dynamic Route Page
+### Good Example — a dynamic route
 
 ```vue
 <!-- pages/blog/[slug].vue -->
@@ -32,9 +33,10 @@ if (error.value) {
 </template>
 ```
 
-**Why good:** Dynamic segment via bracket syntax, useFetch for SSR-safe data, createError triggers error page
+**Why good:** The 404 is decided during SSR, so a crawler and a user both get a real 404 status rather
+than a page that renders empty.
 
-### Bad Example - Raw $fetch in Setup
+### Bad Example — a bare $fetch in setup
 
 ```vue
 <script setup lang="ts">
@@ -44,13 +46,14 @@ post.value = await $fetch(`/api/posts/${route.params.slug}`);
 </script>
 ```
 
-**Why bad:** $fetch in setup causes duplicate requests, no loading/error states, hydration mismatch
+**Why bad:** Setup runs on the server and again during hydration, so the endpoint is hit twice — and
+there is no `pending` or `error` to render in the gap.
 
 ---
 
 ## Pattern 2: Catch-All Route
 
-### Good Example - Documentation Hierarchy
+### Good Example — a documentation hierarchy
 
 ```vue
 <!-- pages/docs/[...slug].vue -->
@@ -71,13 +74,14 @@ const { data: doc } = await useFetch(`/api/docs/${path}`);
 </template>
 ```
 
-**Why good:** Catch-all with `[...slug]` handles nested paths, slug is array of segments
+**Why good:** One file serves every depth under `/docs`, and `params.slug` arrives as an array of
+segments rather than a string to split.
 
 ---
 
 ## Pattern 3: Layout with Auth-Aware Navigation
 
-### Good Example - Default Layout
+### Good Example — the default layout
 
 ```vue
 <!-- layouts/default.vue -->
@@ -110,13 +114,15 @@ const { isLoggedIn, user } = useUser();
 </template>
 ```
 
-**Why good:** `<slot />` renders page content, composables work in layouts, NuxtLink provides prefetching
+**Why good:** Composables work in a layout exactly as in a page, so the navigation reads the auth
+state directly rather than being passed it. `NuxtLink` prefetches the destination when it scrolls into
+view.
 
 ---
 
 ## Pattern 4: Custom Layout with definePageMeta
 
-### Good Example - Admin Layout
+### Good Example — an admin layout
 
 ```vue
 <!-- layouts/admin.vue -->
@@ -148,13 +154,14 @@ definePageMeta({
 </template>
 ```
 
-**Why good:** definePageMeta selects layout and attaches middleware in one place
+**Why good:** Layout and guard are declared together at the top of the page, so what protects a route
+and what wraps it are visible in one place.
 
 ---
 
 ## Pattern 5: Dynamic Layout Switching
 
-### Good Example - Conditional Layout
+### Good Example — choosing a layout at runtime
 
 ```vue
 <!-- app.vue -->
@@ -172,13 +179,14 @@ const layout = computed(() => {
 </template>
 ```
 
-**Why good:** `NuxtLayout` with dynamic `:name`, reactive layout switching based on query params
+**Why good:** `definePageMeta` is static, so a layout that depends on the URL has to be chosen through
+`<NuxtLayout :name>` in `app.vue` instead.
 
 ---
 
 ## Pattern 6: Error Page
 
-### Good Example - Global Error Handler
+### Good Example — the root error handler
 
 ```vue
 <!-- error.vue (root level, NOT in pages/) -->
@@ -205,13 +213,15 @@ const HTTP_NOT_FOUND = 404;
 </template>
 ```
 
-**Why good:** Root-level error.vue catches all unhandled errors, clearError for recovery with redirect, typed error props
+**Why good:** `error.vue` sits beside `app.vue` rather than inside `pages/`, because it replaces the
+whole app rather than rendering as a route. `clearError` is the only way back — navigating alone
+leaves the error state in place.
 
 ---
 
 ## Pattern 7: NuxtErrorBoundary
 
-### Good Example - Component-Level Error Isolation
+### Good Example — isolating one component's failure
 
 ```vue
 <template>
@@ -234,13 +244,14 @@ function handleError(error: Error) {
 </script>
 ```
 
-**Why good:** Component-level isolation prevents full-page errors, clearError enables retry, @error for logging
+**Why good:** One failing widget renders its own fallback instead of taking the page to `error.vue`,
+and the slot's own `clearError` retries just that subtree.
 
 ---
 
 ## Pattern 8: SEO with useSeoMeta
 
-### Good Example - Dynamic SEO for Blog Posts
+### Good Example — metadata that tracks the post
 
 ```vue
 <script setup lang="ts">
@@ -267,13 +278,15 @@ useSeoMeta({
 </template>
 ```
 
-**Why good:** Reactive getter functions, type-safe property names, automatic Open Graph and Twitter cards, SSR-rendered
+**Why good:** The getters mean the tags update when `post` resolves rather than freezing at whatever
+was there on the first render, and the flat property names are type-checked against the Open Graph
+and Twitter vocabularies.
 
 ---
 
 ## Pattern 9: useHead with Title Template
 
-### Good Example - Consistent Page Titles
+### Good Example — consistent page titles
 
 ```vue
 <script setup lang="ts">
@@ -288,13 +301,15 @@ useHead({
 </script>
 ```
 
-**Why good:** titleTemplate for consistent formatting across all pages, composable API, SSR-rendered
+**Why good:** `titleTemplate` set once in a layout gives every page the suffix for the cost of its own
+bare title. `useHead` is the escape hatch for anything `useSeoMeta` has no flat name for, such as
+`link`.
 
 ---
 
 ## Pattern 10: Plugins
 
-### Good Example - Configured API Client Plugin
+### Good Example — a configured client
 
 ```typescript
 // plugins/api.ts
@@ -325,9 +340,10 @@ const { data } = await useAsyncData("users", () => $api("/users"));
 </script>
 ```
 
-**Why good:** $fetch.create for configured client, useRuntimeConfig for environment values, useCookie for auth tokens, provide/inject pattern
+**Why good:** The base URL and the auth header are attached once, at startup, so no call site repeats
+them — and `onRequest` reads the cookie per request rather than capturing whatever it held at boot.
 
-### Good Example - Client-Only Plugin
+### Good Example — a browser-only plugin
 
 ```typescript
 // plugins/analytics.client.ts
@@ -338,13 +354,14 @@ export default defineNuxtPlugin(() => {
 });
 ```
 
-**Why good:** `.client.ts` suffix restricts to browser, `.server.ts` for server-only
+**Why good:** The suffix keeps browser-only code out of the server bundle entirely, rather than
+guarding it with a runtime check that still ships.
 
 ---
 
 ## Pattern 11: Runtime Config for Secrets
 
-### Good Example - Separating Public and Private Config
+### Good Example — separating public and private config
 
 ```typescript
 // nuxt.config.ts
@@ -374,4 +391,10 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-**Why good:** Private keys never reach client, public keys available everywhere, environment variable mapping
+**Why good:** Everything outside `public` is stripped from the client bundle, so the split is the
+security boundary — a secret that ends up under `public` is a secret in the browser.
+
+---
+
+_Fetching options are in [data-fetching.md](data-fetching.md); guards are in
+[middleware.md](middleware.md); shared state is in [state-management.md](state-management.md)._

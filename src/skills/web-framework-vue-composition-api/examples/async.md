@@ -16,12 +16,12 @@ const LOADING_DELAY_MS = 200;
 
 // Lazy load heavy components
 const Dashboard = defineAsyncComponent({
-  loader: () => import("@/views/Dashboard.vue"),
+  loader: () => import("./views/Dashboard.vue"),
   delay: LOADING_DELAY_MS,
 });
 
 const Analytics = defineAsyncComponent({
-  loader: () => import("@/views/Analytics.vue"),
+  loader: () => import("./views/Analytics.vue"),
   delay: LOADING_DELAY_MS,
 });
 ```
@@ -38,14 +38,14 @@ const Analytics = defineAsyncComponent({
 <!-- App.vue -->
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import LoadingSpinner from "@/components/LoadingSpinner.vue";
-import ErrorBoundary from "@/components/ErrorBoundary.vue";
+import LoadingSpinner from "./LoadingSpinner.vue";
+import ErrorBoundary from "./ErrorBoundary.vue";
 
 const LOADING_DELAY_MS = 200;
 const LOAD_TIMEOUT_MS = 10000;
 
 const HeavyChart = defineAsyncComponent({
-  loader: () => import("@/components/HeavyChart.vue"),
+  loader: () => import("./components/HeavyChart.vue"),
   loadingComponent: LoadingSpinner,
   errorComponent: ErrorBoundary,
   delay: LOADING_DELAY_MS,
@@ -74,7 +74,7 @@ const showChart = ref(false);
 ```vue
 <!-- AsyncUserList.vue -->
 <script setup lang="ts">
-import type { User } from "@/types";
+import type { User } from "./types";
 
 const props = defineProps<{
   teamId: string;
@@ -110,7 +110,7 @@ const users: User[] = await response.json();
 <script setup lang="ts">
 import { ref, onErrorCaptured } from "vue";
 import AsyncUserList from "./AsyncUserList.vue";
-import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 const props = defineProps<{
   teamId: string;

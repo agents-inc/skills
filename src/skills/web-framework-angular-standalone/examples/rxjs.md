@@ -12,6 +12,7 @@
 // search.component.ts
 import { Component, signal, computed, inject } from "@angular/core";
 import { toSignal, toObservable } from "@angular/core/rxjs-interop";
+import { of } from "rxjs";
 import {
   debounceTime,
   distinctUntilChanged,
@@ -64,7 +65,8 @@ export class SearchComponent {
       debounceTime(DEBOUNCE_MS),
       distinctUntilChanged(),
       switchMap((query) => {
-        if (!query) return [];
+        // of([]) emits once; a bare [] emits nothing and leaves stale results
+        if (!query) return of([]);
         this.isSearching.set(true);
         return this.searchService.search(query);
       }),
@@ -80,7 +82,7 @@ export class SearchComponent {
 }
 ```
 
-**Why good:** toObservable converts signal to observable for RxJS operators, toSignal converts observable back for template reactivity, debounce/switchMap handled in RxJS, named constant for debounce delay
+**Why good:** `toObservable` hands the query to RxJS where `debounceTime` and `switchMap` live, `toSignal` hands the results back for template reactivity, and `initialValue` keeps the signal's type free of `undefined` so a read before the first emission cannot throw.
 
 ---
 
