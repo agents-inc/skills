@@ -1,82 +1,11 @@
-# SWR Data Fetching - Reference
+# SWR — Reference
 
-> Decision frameworks and configuration reference. See [SKILL.md](SKILL.md) for core concepts and red flags.
-
----
-
-<decision_framework>
-
-## Decision Framework
-
-### Choosing Revalidation Strategy
-
-```
-How fresh does data need to be?
-├─ Real-time (< 10s stale)?
-│   └─ Use refreshInterval with polling
-├─ Fresh when user returns?
-│   └─ Use revalidateOnFocus: true (default)
-├─ Fresh when reconnected?
-│   └─ Use revalidateOnReconnect: true (default)
-├─ Static/config data?
-│   └─ Use useSWRImmutable or disable all revalidation
-└─ Manual refresh only?
-    └─ Disable auto-revalidation, use mutate()
-```
-
-### Choosing Mutation Approach
-
-```
-Need to modify server data?
-├─ Simple POST/PUT/DELETE?
-│   └─ useSWRMutation with trigger() ✓
-├─ Need optimistic UI?
-│   └─ useSWRMutation with optimisticData + rollbackOnError ✓
-├─ Need to update related cache after mutation?
-│   └─ Use global mutate() to invalidate related keys
-├─ Want to skip revalidation after mutation?
-│   └─ Use populateCache + revalidate: false
-└─ Need to update list after item mutation?
-    └─ Invalidate list key in onSuccess callback
-```
-
-### Key Pattern Selection
-
-```
-What should the cache key be?
-├─ Simple GET with path params?
-│   └─ `/api/users/${userId}` ✓
-├─ GET with query params?
-│   └─ `/api/users?status=${status}&page=${page}` ✓
-├─ Need multiple arguments?
-│   └─ Use array key: ['/api/users', userId, filter]
-├─ POST body affects response?
-│   └─ Use array key: ['/api/search', searchBody]
-└─ Need to skip request?
-    └─ Return null from key
-```
-
-### Pagination Pattern Selection
-
-```
-What kind of pagination?
-├─ Infinite scroll / "load more"?
-│   └─ useSWRInfinite with getKey function
-├─ Traditional page numbers?
-│   └─ useSWR with page in key + keepPreviousData: true
-├─ Cursor-based API?
-│   └─ useSWRInfinite with cursor in getKey
-└─ Offset-based API?
-    └─ useSWRInfinite with offset calculation
-```
-
-</decision_framework>
+> Every option with its default, and the hook return shapes. See [SKILL.md](SKILL.md) for the
+> decisions and the red flags, and [examples/](examples/) for full code.
 
 ---
 
-## Configuration Reference
-
-### SWRConfig Options
+## SWRConfig options
 
 | Option                  | Default | Description                                    |
 | ----------------------- | ------- | ---------------------------------------------- |
@@ -108,7 +37,7 @@ What kind of pagination?
 | `compare`               | -       | Custom comparison function for data            |
 | `use`                   | -       | Middleware array                               |
 
-### useSWR Return Values
+## useSWR return values
 
 | Value          | Type                 | Description                       |
 | -------------- | -------------------- | --------------------------------- |
@@ -118,7 +47,7 @@ What kind of pagination?
 | `isValidating` | `boolean`            | True when any request in-flight   |
 | `mutate`       | `function`           | Bound mutate for this key         |
 
-### useSWRMutation Return Values
+## useSWRMutation return values
 
 | Value        | Type                 | Description                  |
 | ------------ | -------------------- | ---------------------------- |
@@ -128,7 +57,7 @@ What kind of pagination?
 | `trigger`    | `function`           | Function to trigger mutation |
 | `reset`      | `function`           | Reset data and error state   |
 
-### useSWRMutation Options
+## useSWRMutation options
 
 | Option            | Default | Description                              |
 | ----------------- | ------- | ---------------------------------------- |
@@ -140,12 +69,12 @@ What kind of pagination?
 | `onSuccess`       | -       | Callback on success                      |
 | `onError`         | -       | Callback on error                        |
 
-### useSWRInfinite Options
+## useSWRInfinite options
 
 | Option                | Default | Description                              |
 | --------------------- | ------- | ---------------------------------------- |
 | `initialSize`         | `1`     | Number of pages to load initially        |
-| `revalidateAll`       | `false` | Revalidate all pages on trigger          |
+| `revalidateAll`       | `false` | Revalidate every loaded page on trigger  |
 | `revalidateFirstPage` | `true`  | Revalidate first page on focus/reconnect |
 | `persistSize`         | `false` | Persist page count across unmounts       |
 | `parallel`            | `false` | Fetch pages in parallel                  |
@@ -154,7 +83,7 @@ What kind of pagination?
 
 ## Sources
 
-- [SWR Documentation](https://swr.vercel.app/)
-- [SWR 2.0 Announcement](https://swr.vercel.app/blog/swr-v2)
-- [SWR GitHub Repository](https://github.com/vercel/swr)
+- [SWR documentation](https://swr.vercel.app/)
+- [SWR 2.0 announcement](https://swr.vercel.app/blog/swr-v2)
+- [SWR repository](https://github.com/vercel/swr)
 - [SWR DevTools](https://swr-devtools.vercel.app/)

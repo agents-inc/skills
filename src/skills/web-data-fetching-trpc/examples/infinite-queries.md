@@ -1,12 +1,12 @@
-# tRPC Infinite Query Pagination
+# tRPC — Infinite Query Examples
 
-> Cursor-based pagination with infinite scroll. See [core.md](core.md) for setup patterns.
+> Cursor pagination, server and client. See [core.md](core.md) for setup.
 
-**Prerequisites**: Understand Pattern 3 (React Query Integration) from core examples first.
+**Prerequisites**: Pattern 3 (the client and provider) from core.
 
 ---
 
-## Server-Side Cursor Pagination
+## The procedure
 
 ```typescript
 // packages/api/src/routers/post.ts
@@ -47,14 +47,17 @@ export const postRouter = router({
       return { posts, nextCursor };
     }),
 });
-
-// Named export
-export { postRouter };
 ```
+
+`take: limit + 1` and the `pop()` are how `nextCursor` is derived: the extra row proves another page
+exists and supplies its starting cursor, without a separate count.
+
+`filter` is part of the input, so it becomes part of the query key — switching filters starts a
+fresh set of pages rather than appending to the previous filter's.
 
 ---
 
-## Client-Side Infinite Query
+## The component
 
 ```typescript
 // apps/client/components/post-feed.tsx
@@ -121,9 +124,11 @@ export function PostFeed() {
     </div>
   );
 }
-
-// Named export
-export { PostFeed };
 ```
 
----
+`infiniteQueryOptions` takes the input first and the infinite-query settings second, so
+`getNextPageParam` reads `lastPage.nextCursor` — the field the procedure above returns — and is
+type-checked against it.
+
+`rootMargin: "100px"` fires the fetch before the sentinel is actually visible, which hides the
+latency behind the last hundred pixels of scrolling.

@@ -1,215 +1,62 @@
-# URQL v6+ Features
+# URQL — Version Migration Examples
 
-> New features and breaking changes in URQL v6+. See [SKILL.md](../SKILL.md) for concepts.
+> The v6 GET default and the v4 → v6 upgrade steps. See [SKILL.md](../SKILL.md) for the red flags
+> these produce.
 
 ---
 
-## v6.0.0 Breaking Change: GET Requests by Default
+## v6: queries go out as GET
 
-**CRITICAL:** URQL v6+ now uses GET requests for queries where query string + variables totals less than 2048 characters.
+From v6 a query whose text plus variables is under 2048 characters is sent as a GET with the query
+in the URL. Mutations are unaffected and always POST.
 
-### Impact
-
-- Your GraphQL server **MUST support GET requests** or you must opt out
-- HTTP caching benefits (CDN, browser cache)
-- Some servers may reject GET for GraphQL
-
-### Configuration Options
+That buys HTTP caching — a CDN or the browser can serve a repeat query — and costs three things: the
+server has to accept GET for GraphQL, the query text lands in access logs and proxy logs, and any
+CDN or CORS configuration in front of the endpoint has to tolerate the query string.
 
 ```typescript
-// lib/urql-client.ts
 import { Client, cacheExchange, fetchExchange } from "urql";
 
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_URL || "";
+const exchanges = [cacheExchange, fetchExchange];
 
-// Option 1: Disable GET requests (use POST for everything)
-const client = new Client({
+// POST for everything — the pre-v6 behaviour, and what a POST-only server needs
+const postOnly = new Client({
   url: GRAPHQL_ENDPOINT,
-  exchanges: [cacheExchange, fetchExchange],
-  preferGetMethod: false, // Force POST for all requests
-});
-
-// Option 2: Use GET within URL limit (default v6+ behavior)
-const clientDefault = new Client({
-  url: GRAPHQL_ENDPOINT,
-  exchanges: [cacheExchange, fetchExchange],
-  // preferGetMethod: true, // or 'within-url-limit' - default
-});
-
-// Option 3: Always use GET (ignore 2048 character limit)
-const clientForceGet = new Client({
-  url: GRAPHQL_ENDPOINT,
-  exchanges: [cacheExchange, fetchExchange],
-  preferGetMethod: "force", // Always GET, even if URL exceeds limit
-});
-
-export { client };
-```
-
-**Why good:** Explicit configuration prevents runtime errors when server doesn't support GET, `false` properly handled in v6.0.1+
-
----
-
-## Pattern 1: preferGetMethod Configuration
-
-### When to Use Each Option
-
-```typescript
-// Use preferGetMethod: false when:
-// - GraphQL server doesn't support GET
-// - Server requires all operations via POST
-// - Using mutation-heavy API
-const NO_GET_CONFIG = {
-  url: "/graphql",
+  exchanges,
   preferGetMethod: false,
-};
+});
 
-// Use preferGetMethod: true or 'within-url-limit' when:
-// - Want HTTP caching benefits
-// - Server supports GET
-// - Queries are typically small
-const DEFAULT_CONFIG = {
-  url: "/graphql",
-  preferGetMethod: "within-url-limit", // or true (same behavior)
-};
+// The v6 default: GET under the 2048-character limit, POST above it
+const withinLimit = new Client({
+  url: GRAPHQL_ENDPOINT,
+  exchanges,
+  preferGetMethod: "within-url-limit", // same as true, and the default
+});
 
-// Use preferGetMethod: 'force' when:
-// - Server has no URL length restrictions
-// - Want all queries as GET for caching
-// - Working with CDN that caches GET
-const FORCE_GET_CONFIG = {
-  url: "/graphql",
+// GET regardless of length — for a server and CDN with no URL length restriction
+const alwaysGet = new Client({
+  url: GRAPHQL_ENDPOINT,
+  exchanges,
   preferGetMethod: "force",
-};
-```
-
----
-
-## Pattern 2: Testing GET vs POST Behavior
-
-```typescript
-// lib/urql-client.test.ts
-import { describe, expect, it, vi } from "vitest";
-import { Client, cacheExchange, fetchExchange } from "urql";
-
-const SHORT_QUERY = `query { user { id } }`; // Under 2048 chars
-const LONG_QUERY = `query { ${"user { id } ".repeat(300)} }`; // Over 2048 chars
-
-describe("URQL v6 GET behavior", () => {
-  it("uses GET for short queries by default", async () => {
-    const mockFetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: { user: { id: "1" } } }),
-      }),
-    );
-    global.fetch = mockFetch as any;
-
-    const client = new Client({
-      url: "/graphql",
-      exchanges: [cacheExchange, fetchExchange],
-      // Default: preferGetMethod is true
-    });
-
-    await client.query(SHORT_QUERY, {}).toPromise();
-
-    // First argument to fetch is the URL
-    expect(mockFetch.mock.calls[0][0]).toMatch(/^\/graphql\?/);
-    // Second argument is options - should have method: 'GET'
-    expect(mockFetch.mock.calls[0][1]?.method).toBe("GET");
-  });
-
-  it("uses POST for long queries by default", async () => {
-    const mockFetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: {} }),
-      }),
-    );
-    global.fetch = mockFetch as any;
-
-    const client = new Client({
-      url: "/graphql",
-      exchanges: [cacheExchange, fetchExchange],
-    });
-
-    await client.query(LONG_QUERY, {}).toPromise();
-
-    expect(mockFetch.mock.calls[0][1]?.method).toBe("POST");
-  });
-
-  it("uses POST for all queries when preferGetMethod: false", async () => {
-    const mockFetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ data: { user: { id: "1" } } }),
-      }),
-    );
-    global.fetch = mockFetch as any;
-
-    const client = new Client({
-      url: "/graphql",
-      exchanges: [cacheExchange, fetchExchange],
-      preferGetMethod: false,
-    });
-
-    await client.query(SHORT_QUERY, {}).toPromise();
-
-    expect(mockFetch.mock.calls[0][1]?.method).toBe("POST");
-  });
 });
 ```
 
-**Why good:** Tests verify GET/POST behavior based on query length and configuration, mocks fetch to inspect actual HTTP method used
+The default splits by query length, so a server that rejects GET fails on short queries and succeeds
+on long ones — which presents as an intermittent fault rather than a configuration error.
 
----
-
-## Pattern 3: Migration from v5 to v6
-
-### Breaking Changes Checklist
-
-```typescript
-// Before v6 (v5 and earlier)
-const client = new Client({
-  url: "/graphql",
-  exchanges: [cacheExchange, fetchExchange],
-  // All queries used POST by default
-});
-
-// After v6 - Option A: Keep old behavior (POST only)
-const client = new Client({
-  url: "/graphql",
-  exchanges: [cacheExchange, fetchExchange],
-  preferGetMethod: false, // Opt out of GET requests
-});
-
-// After v6 - Option B: Use new behavior (GET for small queries)
-const client = new Client({
-  url: "/graphql",
-  exchanges: [cacheExchange, fetchExchange],
-  // No change needed - GET is default for queries < 2048 chars
-});
-```
-
-### Server Compatibility Check
+### Checking what the server accepts
 
 ```typescript
 // utils/check-graphql-get-support.ts
-/**
- * Check if GraphQL server supports GET requests
- * Run this during setup/migration to v6
- */
 async function checkGraphQLGetSupport(graphqlUrl: string): Promise<boolean> {
   try {
-    const testQuery = `query { __typename }`;
     const url = new URL(graphqlUrl);
-    url.searchParams.set("query", testQuery);
+    url.searchParams.set("query", `query { __typename }`);
 
     const response = await fetch(url.toString(), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
 
     return response.ok;
@@ -219,81 +66,43 @@ async function checkGraphQLGetSupport(graphqlUrl: string): Promise<boolean> {
   }
 }
 
-// Usage during migration
-const supportsGet = await checkGraphQLGetSupport(process.env.GRAPHQL_URL!);
 const client = new Client({
-  url: process.env.GRAPHQL_URL!,
-  exchanges: [cacheExchange, fetchExchange],
-  preferGetMethod: supportsGet, // Only enable if server supports it
+  url: GRAPHQL_ENDPOINT,
+  exchanges,
+  preferGetMethod: await checkGraphQLGetSupport(GRAPHQL_ENDPOINT),
 });
-
-export { checkGraphQLGetSupport };
 ```
 
-**Why good:** Migration path is explicit, compatibility check prevents runtime errors, documents both options
+Run this once during the upgrade rather than on every start — a probe on every boot costs a round
+trip before the first query and answers the same thing each time.
+
+> On 6.0.0, `preferGetMethod: false` was ignored; 6.0.1 fixed it. Below 6.0.1 the opt-out does not
+> take effect.
 
 ---
 
-## v6 RED FLAGS
+## v5: dedupExchange removed
 
-**High Priority:**
-
-- ❌ **Server doesn't support GET requests** - Set `preferGetMethod: false` or queries will fail
-- ❌ **Assuming POST is still default** - v6 changed to GET for small queries
-- ❌ **Not testing GET behavior** - Integration tests may fail if server rejects GET
-
-**Common Mistakes:**
-
-- Forgetting to check if your GraphQL server supports GET requests
-- Not updating server logs/monitoring to handle GET query strings
-- CDN/proxy configuration doesn't support query strings with special characters
-- CORS policy may need updating for GET requests with query parameters
-
-**Gotchas:**
-
-- Mutations always use POST (unchanged)
-- GET requests include query in URL - may expose sensitive data in logs
-- URL encoding may cause issues with special characters in queries
-- Some GraphQL servers require POST by specification adherence
-- v6.0.1 fixed a bug where `preferGetMethod: false` was ignored
-
----
-
-## v5 Changes (Already in Documentation)
-
-**v5.0.0 Breaking Changes:**
-
-1. **dedupExchange removed** - Deduplication is now built into core client
-2. **maskTypename utility removed** - Use custom transforms instead
-
-### Migration from v4 to v5
+Deduplication moved into the core client. Delete the exchange rather than replacing it.
 
 ```typescript
-// v4 - dedupExchange explicitly included
+// v4
 import { Client, dedupExchange, cacheExchange, fetchExchange } from "urql";
-
 const client = new Client({
-  url: "/graphql",
+  url,
   exchanges: [dedupExchange, cacheExchange, fetchExchange],
 });
 
-// v5 - dedupExchange removed (now built-in)
+// v5+
 import { Client, cacheExchange, fetchExchange } from "urql";
-
-const client = new Client({
-  url: "/graphql",
-  exchanges: [cacheExchange, fetchExchange], // dedupExchange removed
-});
+const client = new Client({ url, exchanges: [cacheExchange, fetchExchange] });
 ```
 
-**Why good:** Deduplication happens automatically in v5+, no manual exchange needed, smaller exchange array
+The `maskTypename` utility was removed in the same release; a custom transform replaces it.
 
 ---
 
 ## Sources
 
-All information verified against official URQL documentation and changelog:
-
-- [URQL v6.0.0 Changelog](https://github.com/urql-graphql/urql/blob/main/packages/core/CHANGELOG.md)
-- [URQL Official Documentation](https://nearform.com/open-source/urql/docs/)
-- [URQL GitHub Repository](https://github.com/urql-graphql/urql)
+- [Core changelog](https://github.com/urql-graphql/urql/blob/main/packages/core/CHANGELOG.md)
+- [URQL documentation](https://nearform.com/open-source/urql/docs/)

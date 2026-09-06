@@ -59,8 +59,7 @@ function DashboardLayout() {
 ## Passing Data to Children with useOutletContext
 
 ```typescript
-import { Outlet, useOutletContext } from "react-router";
-import type { ReactNode } from "react";
+import { Outlet, useLoaderData, useOutletContext } from "react-router";
 
 interface DashboardContext {
   user: User;
@@ -126,7 +125,7 @@ Pathless routes wrap children without adding a URL segment. Useful for auth guar
 
 ```typescript
 // The auth guard loader
-import { redirect } from "react-router";
+import { Outlet, redirect, useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 
 export async function authGuardLoader({ request }: LoaderFunctionArgs) {
@@ -209,7 +208,7 @@ export function LoginPage() {
 }
 ```
 
-**Why:** `returnTo` search param preserves the user's intended destination through the login flow. The auth guard sets it when redirecting to login. The login action reads it and redirects back after successful auth. Default fallback ensures login works even without a `returnTo` param.
+**Why:** the guard writes `returnTo` when it redirects, the login action reads it back after authenticating, and the default covers a visitor who arrived at `/login` directly.
 
 ---
 
@@ -291,7 +290,9 @@ function EditForm() {
 }
 ```
 
-**Why:** `useBlocker(shouldBlock)` intercepts navigations when `shouldBlock` is `true`. `blocker.state` is `"blocked"` when a navigation was intercepted. `blocker.proceed()` allows the navigation. `blocker.reset()` cancels it and stays on the page.
+**Why:** `useBlocker(shouldBlock)` intercepts a navigation while `shouldBlock` is true and sets `blocker.state` to `"blocked"`; `proceed()` lets it through, `reset()` cancels it and stays put.
+
+**What it does not cover:** a reload, a tab close or a link out of the app — those never reach the router. `useBeforeUnload` handles that half, and the browser shows its own wording rather than yours.
 
 ---
 
@@ -310,7 +311,7 @@ function DashboardPage() {
 }
 ```
 
-**Why bad:** The component mounts and renders (briefly showing dashboard content or a flash) before the `<Navigate>` triggers a redirect. Loaders in child routes may have already fired with an unauthenticated user. Use a pathless layout with a loader that throws `redirect()` — the component never mounts if the user is not authenticated.
+**Why bad:** the component mounts and paints before `<Navigate>` fires, so the dashboard flashes, and child loaders have already run for an unauthenticated user. A pathless layout whose loader throws `redirect()` never mounts the component at all.
 
 ---
 
@@ -330,4 +331,4 @@ function DashboardLayout() {
 }
 ```
 
-**Why bad:** Without `<Outlet />`, matched child routes have nowhere to render. No error is thrown — the child content simply does not appear. This is one of the most common and confusing React Router bugs.
+**Why bad:** matched child routes have nowhere to render and nothing throws — the content simply does not appear.

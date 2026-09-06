@@ -4,6 +4,20 @@
 
 ---
 
+## Packages
+
+| Package                           | Purpose                                      |
+| --------------------------------- | -------------------------------------------- |
+| `@tanstack/react-router`          | The router itself                            |
+| `@tanstack/router-plugin`         | Bundler plugin that generates the route tree |
+| `@tanstack/react-router-devtools` | Devtools panel                               |
+| `@tanstack/zod-adapter`           | Zod validation for search params             |
+| `@tanstack/valibot-adapter`       | Valibot validation for search params         |
+
+The plugin ships a separate entry point per bundler — `@tanstack/router-plugin/vite` is the one used in [examples/core.md](examples/core.md).
+
+---
+
 ## Route Options
 
 Options passed to `createFileRoute`, `createRootRoute`, or `createRootRouteWithContext`.

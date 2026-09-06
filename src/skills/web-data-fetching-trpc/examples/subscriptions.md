@@ -1,12 +1,12 @@
-# tRPC Subscriptions with Server-Sent Events
+# tRPC — Subscription Examples
 
-> Real-time updates using async generator subscriptions (v11). See [core.md](core.md) for setup patterns.
+> Async generator subscriptions over server-sent events (v11). See [core.md](core.md) for setup.
 
-**Prerequisites**: Understand Pattern 1 (Router Setup) from core examples first.
+**Prerequisites**: Pattern 1 (initialization and context) from core.
 
 ---
 
-## Server-Side Subscription (v11 Async Generator)
+## The procedure
 
 ```typescript
 // packages/api/src/routers/notification.ts
@@ -68,14 +68,16 @@ export const notificationRouter = router({
       return { sent: true };
     }),
 });
-
-// Named export
-export { notificationRouter };
 ```
+
+Three things carry the weight. `signal` is passed into `on()`, so a disconnected client tears the
+listener down instead of leaking it. The `userId` check happens before the yield, so one emitter
+serves every subscriber without leaking another user's events. And `tracked()` attaches the event
+id that `lastEventId` resumes from, which is why that field is in the input schema.
 
 ---
 
-## Client-Side Subscription
+## The component
 
 ```typescript
 // apps/client/components/notification-listener.tsx
@@ -97,19 +99,13 @@ export function NotificationListener() {
     }),
   );
 
-  return null; // Renderless component
+  return null; // renders nothing; it exists to hold the subscription
 }
-
-// Named export
-export { NotificationListener };
 ```
 
----
-
-## Bad Example - Using observable() (v10 Pattern)
+## Bad example — the v10 observable
 
 ```typescript
-// BAD: v10 observable pattern -- deprecated in v11
 import { observable } from "@trpc/server/observable";
 
 onNotification: protectedProcedure.subscription(({ ctx }) => {
@@ -121,6 +117,6 @@ onNotification: protectedProcedure.subscription(({ ctx }) => {
 });
 ```
 
-**Why bad:** `observable()` is the v10 pattern; v11 uses async generators with `signal` for cleanup and `tracked()` for automatic reconnection -- provides better resilience and type safety
-
----
+The generator form replaced this in v11. It also gets two things this shape cannot: cleanup driven
+by the abort signal rather than by a returned teardown function, and `tracked()` event ids for
+resuming after a dropped connection.

@@ -1,10 +1,10 @@
-# Apollo Client GraphQL - Fragment Patterns
+# Apollo Client — Fragment Examples
 
-> Reusable field selections with fragments. See [core.md](core.md) for basic patterns.
+> Reusable field selections. See [core.md](core.md) for client setup and queries.
 
 ---
 
-## Defining and Using Fragments
+## Defining and composing
 
 ```typescript
 // graphql/fragments.ts
@@ -44,9 +44,12 @@ const POST_WITH_AUTHOR = gql`
 export { USER_FIELDS, POST_FIELDS, POST_WITH_AUTHOR };
 ```
 
+A composed fragment interpolates the fragments it spreads. Interpolate each one exactly once per
+document — a duplicate definition is a GraphQL validation error at parse time.
+
 ---
 
-## Using Fragments in Queries
+## Using them in a query
 
 ```typescript
 // components/post-detail.tsx
@@ -96,4 +99,6 @@ function PostDetail({ postId }: { postId: string }) {
 export { PostDetail, GET_POST };
 ```
 
-**Why good:** Fragments ensure consistent field selection across queries, reduce duplication, and make cache normalization reliable. Compose fragments for nested selections.
+Every query spreading `UserFields` selects the same fields, so the cache holds one complete `User`
+rather than several partial ones — which is what keeps a component reading from the cache from
+finding a field missing.

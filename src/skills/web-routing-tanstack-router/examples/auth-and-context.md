@@ -12,57 +12,25 @@
 
 ## Setting Up Router Context
 
+The root route declares the shape; [core.md](core.md) has the matching entry point that supplies it and registers the router.
+
 ```typescript
 // src/routes/__root.tsx
-import {
-  createRootRouteWithContext,
-  Outlet,
-} from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
-// Define the shape of your router context
-// Include any services or clients you need in loaders/beforeLoad
+// `AuthService` and `ApiClient` are your own service types — the router only
+// requires that the context object matches whatever shape you declare here
 export interface RouterContext {
   auth: AuthService;
   apiClient: ApiClient;
-  // Add other services as needed
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootLayout,
+  component: () => <Outlet />,
 });
-
-function RootLayout() {
-  return <Outlet />;
-}
 ```
 
-```typescript
-// src/main.tsx - Provide context when creating the router
-import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-import { authService } from "./services/auth";
-import { apiClient } from "./services/api";
-
-const router = createRouter({
-  routeTree,
-  context: {
-    auth: authService,
-    apiClient,
-  },
-});
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
-
-function App() {
-  return <RouterProvider router={router} />;
-}
-```
-
-**Why:** `createRootRouteWithContext<RouterContext>()` enforces that `context` is passed to `createRouter`. TypeScript errors if required context properties are missing. All loaders/beforeLoad hooks receive fully typed `context`. Avoids global imports in loaders making them testable.
+**Why:** The generic makes `context` mandatory on `createRouter` — a missing service is a type error at the entry point rather than `undefined` inside a loader. Every loader and `beforeLoad` then receives it fully typed, so nothing has to import a service globally and loaders stay testable.
 
 ---
 

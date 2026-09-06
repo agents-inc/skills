@@ -1,23 +1,15 @@
-# React Query + hey-api - Error Handling Examples
+# React Query — Error Handling Examples
 
-> Error handling patterns for React Query. See [core.md](core.md) for foundational patterns.
+> Full code for error handling. See [core.md](core.md) for setup and query options.
 
-**Prerequisites**: Understand [Pattern 2: Client Configuration](core.md#pattern-2-client-configuration) from core examples first.
+**Prerequisites**: [Pattern 2: Client and cache configuration](core.md#pattern-2-client-and-cache-configuration).
 
 ---
 
-## Pattern 5: Component-Level Error Handling
+## Pattern 5: Component-level states
 
-### Constants
-
-```typescript
-const MAX_RETRY_ATTEMPTS = 3;
-const INITIAL_RETRY_DELAY_MS = 1_000;
-const MAX_RETRY_DELAY_MS = 30_000;
-const EXPONENTIAL_BASE = 2;
-```
-
-### Good Example - Complete State Handling
+`isPending`, `error` and an explicit empty case are four renders, not two — a successful response
+with nothing in it is not a loading state.
 
 ```typescript
 import { useQuery } from "@tanstack/react-query";
@@ -27,14 +19,8 @@ export function FeaturesPage() {
   const { data, isPending, error, isSuccess } = useQuery(getFeaturesOptions());
 
   if (isPending) return <LoadingSkeleton />;
-
-  if (error) {
-    return <ErrorMessage message={`Failed to load features: ${error.message}`} />;
-  }
-
-  if (isSuccess && !data?.features?.length) {
-    return <EmptyState message="No features found" />;
-  }
+  if (error) return <ErrorMessage message={`Failed to load features: ${error.message}`} />;
+  if (isSuccess && !data?.features?.length) return <EmptyState message="No features found" />;
 
   return (
     <ul>
@@ -48,13 +34,12 @@ export function FeaturesPage() {
 
 ---
 
-## Pattern 6: Global Error Handling
+## Pattern 6: Global handlers
 
-> **v5 Pattern:** Use `QueryCache` and `MutationCache` for global error handling. The `onError` callback on queries was removed in v5, but mutations still support it.
+`QueryCache` and `MutationCache` are the v5 home for cross-cutting failure handling, since
+`useQuery` no longer takes `onError`.
 
 ```typescript
-"use client"; // Required in RSC frameworks (Next.js, etc.) -- omit for SPA
-
 import { useState } from "react";
 import {
   QueryClient,
@@ -62,7 +47,6 @@ import {
   QueryCache,
   MutationCache,
 } from "@tanstack/react-query";
-import { client } from "../api-client/client.gen";
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const isDevelopment = process.env.NODE_ENV === "development";
@@ -73,8 +57,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         queryCache: new QueryCache({
           onError: (error, query) => {
-            // Only show notification for queries that already had data
-            // Prevents notifications for initial load failures (handled by component)
+            // Only when the query already held data: a first-load failure is the component's
+            // to render, and notifying as well shows the user the same error twice.
             if (query.state.data !== undefined) {
               showNotification(`Something went wrong: ${error.message}`);
             }
@@ -87,37 +71,20 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           },
         }),
         defaultOptions: {
-          queries: {
-            retry: !isDevelopment,
-            staleTime: FIVE_MINUTES_MS,
-          },
+          queries: { retry: !isDevelopment, staleTime: FIVE_MINUTES_MS },
         },
       })
   );
 
-  client.setConfig({
-    baseUrl: process.env.API_BASE_URL ?? "",
-  });
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 ```
 
 ---
 
-## Pattern 7: Per-Query Retry with Exponential Backoff
-
-> **Note:** In React Query v5, `onError`, `onSuccess`, and `onSettled` callbacks were **removed** from `useQuery`. Use `useEffect` for component-level side effects or `QueryCache.onError` for global handling.
+## Pattern 7: Retry with exponential backoff
 
 ```typescript
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getFeaturesOptions } from "../api-client/@tanstack/react-query.gen";
-
 const MAX_RETRY_ATTEMPTS = 3;
 const INITIAL_RETRY_DELAY_MS = 1_000;
 const MAX_RETRY_DELAY_MS = 30_000;
@@ -128,13 +95,10 @@ export function Features() {
     ...getFeaturesOptions(),
     retry: MAX_RETRY_ATTEMPTS,
     retryDelay: (attemptIndex) =>
-      Math.min(
-        INITIAL_RETRY_DELAY_MS * EXPONENTIAL_BASE ** attemptIndex,
-        MAX_RETRY_DELAY_MS,
-      ),
+      Math.min(INITIAL_RETRY_DELAY_MS * EXPONENTIAL_BASE ** attemptIndex, MAX_RETRY_DELAY_MS),
   });
 
-  // v5 pattern: Use useEffect for error side effects
+  // v5 has no onError on useQuery — side effects run from the rendered error
   useEffect(() => {
     if (error) {
       console.error("Failed to load features:", error);
@@ -146,37 +110,30 @@ export function Features() {
 }
 ```
 
-### Bad Example - v4 Callbacks and Magic Numbers
+### Bad example
 
 ```typescript
-// BAD: Magic numbers in retry logic
-retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000);
+retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000); // policy is unreadable
 
-// BAD: Using onError callback (REMOVED in v5)
-// This will cause a TypeScript error in React Query v5
 useQuery({
   ...getFeaturesOptions(),
-  onError: (error) => {
-    // This option no longer exists!
-    toast.error(error.message);
-  },
+  onError: (error) => toast.error(error.message), // removed in v5 — a type error, and never fires
 });
 
-// BAD: Swallowing errors silently
 useEffect(() => {
-  if (error) {
-    console.log(error); // Logging without user feedback
-  }
+  if (error) console.log(error); // logged for a developer, invisible to the user
 }, [error]);
 ```
 
-**Why bad:** Magic numbers obscure retry policy, `onError` was removed in v5 and will not compile, logging without user feedback leaves users confused
-
-**When not to use:** For global error handling across all queries, use `QueryCache.onError` instead of per-component `useEffect`.
+**When not to use:** for every query at once, `QueryCache.onError` costs one handler instead of a
+`useEffect` per component.
 
 ---
 
-## Pattern 8: Error Boundaries with QueryErrorResetBoundary
+## Pattern 8: Resetting after a thrown error
+
+`QueryErrorResetBoundary` clears the failed queries when the boundary resets, so "Try again"
+refetches instead of re-rendering the same error.
 
 ```typescript
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
@@ -203,8 +160,6 @@ export function QueryErrorBoundaryWrapper({ children }: { children: ReactNode })
   );
 }
 ```
-
-**Why good:** `QueryErrorResetBoundary` resets failed queries when the error boundary resets, giving users a clean retry experience without stale error state
 
 ---
 

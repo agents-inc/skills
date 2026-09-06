@@ -125,24 +125,9 @@ const router = createRouter({
 
 ## Code Splitting: Automatic (Recommended)
 
-```typescript
-// vite.config.ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
+Set `autoCodeSplitting: true` on the router plugin — the config block is in [core.md](core.md).
 
-export default defineConfig({
-  plugins: [
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true, // Splits component + loader per route
-    }),
-    react(),
-  ],
-});
-```
-
-**Why:** No manual `lazy()` calls needed. The plugin automatically extracts `component`, `loader`, `pendingComponent`, and `errorComponent` into separate chunks. Each route only loads its code when navigated to.
+**Why:** No manual `lazy()` calls needed. The plugin extracts `component`, `loader`, `pendingComponent` and `errorComponent` into separate chunks, so each route only loads its code when navigated to.
 
 ---
 

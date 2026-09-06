@@ -118,7 +118,7 @@ export async function postLoader({ params }: LoaderFunctionArgs) {
 }
 ```
 
-**Why:** Thrown `Response` objects become `ErrorResponse` instances accessible via `useRouteError()`. `isRouteErrorResponse(error)` returns `true` for these, giving access to `error.status`, `error.statusText`, and `error.data`. Regular thrown `Error` objects do not have these properties.
+**Why:** a thrown `Response` becomes an `ErrorResponse` that `useRouteError()` returns and `isRouteErrorResponse` narrows, giving `error.status`, `error.statusText` and `error.data`. A plain `Error` has none of those.
 
 ---
 
@@ -238,7 +238,7 @@ export function ErrorBoundary() {
 }
 ```
 
-**Why:** `route.lazy` keeps the admin code out of the initial bundle. The module must export named properties matching route options: `Component` (not `element`), `loader`, `action`, `ErrorBoundary`, etc. The `path`, `index`, and `children` properties CANNOT be lazy — they must be in the static config.
+**Why:** `route.lazy` keeps the admin code out of the initial bundle. The module exports named properties matching route options — `Component` (not `element`), `loader`, `action`, `ErrorBoundary`. What it cannot supply is `path`, `index`, `children` or `id`: the router needs those to match the URL before it has anything to load, so they stay in the static config.
 
 ---
 
@@ -255,7 +255,7 @@ export function ErrorBoundary() {
 }
 ```
 
-**Why:** Object-based lazy splits each property into its own chunk. Loader and component download in parallel. More granular than function-based lazy which loads everything in one chunk. Available in v7.5+.
+**Why:** each property becomes its own chunk, so the loader and the component download in parallel instead of arriving in one bundle. v7.5+.
 
 ---
 
@@ -304,4 +304,4 @@ const router = createBrowserRouter([
 ]);
 ```
 
-**Why bad:** If `postsLoader` throws and no route in the tree has `errorElement`, the error is unhandled. React Router renders its internal default error UI — a plain text dump. In production this is a white screen with an error message. Always add `errorElement` at minimum on the root route.
+**Why bad:** with no `errorElement` anywhere in the tree, a `postsLoader` failure replaces the whole app with React Router's built-in error dump. One on the root route is the minimum.

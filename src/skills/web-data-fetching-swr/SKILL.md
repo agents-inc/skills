@@ -1,67 +1,84 @@
 ---
 name: web-data-fetching-swr
-description: SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll
+description: SWR data fetching patterns — keys and fetchers, isLoading vs isValidating, revalidation strategy, useSWRMutation, useSWRInfinite, conditional fetching
 ---
 
-# SWR Data Fetching Patterns
+# SWR Patterns
 
-> **Quick Guide:** SWR implements the stale-while-revalidate caching strategy: show cached data instantly, revalidate in the background. Keys must be stable (strings or stable arrays), `isLoading` is for initial fetches only (use `isValidating` for background refreshes), and all write operations go through `useSWRMutation`. The null key pattern is how you do conditional fetching -- never call hooks conditionally.
+> **Quick Guide:** SWR renders the cached value immediately and revalidates behind it, so the cache
+> key is the whole identity of a request and an unstable key is the single most expensive mistake
+> here. `isLoading` covers the first fetch only and `isValidating` covers every fetch, which is why
+> using the second as a spinner hides the data SWR exists to show. Reads are `useSWR`, writes are
+> `useSWRMutation`, and a `null` key is how a request is skipped without breaking the rules of hooks.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — fetchers, key shapes, state handling, `SWRConfig`
+- [examples/mutations.md](examples/mutations.md) — `useSWRMutation`, optimistic updates, `populateCache`, global `mutate`
+- [examples/caching.md](examples/caching.md) — revalidation strategies, prefetching, cache persistence
+- [examples/pagination.md](examples/pagination.md) — `useSWRInfinite`, infinite scroll, offset and filtered paging
+- [examples/conditional.md](examples/conditional.md) — the null key, dependent queries, function keys
+- [examples/error-handling.md](examples/error-handling.md) — retry policy, status-specific handling, offline
+- [examples/suspense.md](examples/suspense.md) — suspense mode and server-rendered fallback data
+- [reference.md](reference.md) — every config option with its default, and the hook return shapes
+
+---
+
+## Which path applies
+
+- **Reading a resource** — `useSWR`, which fetches on mount and keeps the value fresh. Patterns 1–3.
+- **Writing** — `useSWRMutation`, which does nothing until `trigger()` is called. Pattern 4.
+- **A list that grows** — `useSWRInfinite`, whose `getKey(pageIndex, previousPage)` both builds each
+  page's key and signals the end by returning `null`. Pattern 7.
+- **Suspense instead of loading branches** — `suspense: true` makes the component suspend and `data`
+  non-null; see [examples/suspense.md](examples/suspense.md). Everything else here still applies.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing SWR code
 
-**(You MUST use a stable key -- keys should NOT change on every render or you'll trigger infinite requests)**
+**Give each request a key that is stable across renders — a string, or an array of primitives.** The
+key is the cache identity and the dependency: an object or array literal is a new reference every
+render, so SWR sees a new key, fetches again, re-renders, and repeats.
 
-**(You MUST handle isLoading vs isValidating correctly -- isLoading is true only on initial fetch with no data)**
+**Throw from the fetcher on a non-OK response.** SWR's error state is driven by a rejected promise,
+so a fetcher that returns `res.json()` unconditionally hands the error body over as `data` and no
+error branch ever runs.
 
-**(You MUST wrap mutations in `useSWRMutation` for write operations -- NOT useSWR)**
+**Branch on `isLoading` for the first fetch and `isValidating` for a refresh in progress.**
+`isLoading` is true only when there is no data yet, which is exactly when a skeleton is right;
+`isValidating` is true during background revalidation, when there is data on screen to keep.
 
-**(You MUST use named constants for ALL timeout, retry, and interval values -- NO magic numbers)**
-
-**(You MUST use named exports only -- NO default exports)**
+**Reach for `useSWRMutation` for anything that writes.** `useSWR` fires on mount, so a POST written
+as a `useSWR` fetcher sends itself as soon as the component renders.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** SWR, useSWR, useSWRMutation, useSWRInfinite, useSWRImmutable, SWRConfig, mutate, revalidate, fetcher, stale-while-revalidate, preload
+**Auto-detection:** `useSWR`, `useSWRMutation`, `useSWRInfinite`, `useSWRImmutable`, `SWRConfig`,
+`useSWRConfig`, `mutate`, `trigger`, `isValidating`, `revalidateOnFocus`, `dedupingInterval`,
+`keepPreviousData`, `fallbackData`, `optimisticData`, `rollbackOnError`, `populateCache`, `preload`,
+`swr/mutation`, `swr/infinite`, `swr/immutable`
 
-**When to use:**
+**Applies to:**
 
-- Read-heavy applications with infrequent mutations
-- Need lightweight bundle (~5KB gzipped)
-- Simple caching with automatic revalidation
-- Applications where stale-while-revalidate pattern is desired
+- Cache keys, fetchers and the shape of what a hook returns
+- Revalidation policy: focus, reconnect, interval, stale, and disabling all of it
+- Writes, optimistic updates and cache invalidation after them
+- Cursor and offset pagination that accumulates pages
+- Conditional and dependent fetching
+- Retry policy and hydrating from server-rendered data
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Complex mutation workflows requiring many lifecycle callbacks
-- Need built-in request cancellation (SWR requires manual AbortController)
-- Complex dependent queries needing fine-grained invalidation control
-
-**Key patterns covered:**
-
-- useSWR hook with typed fetchers and state handling
-- isLoading vs isValidating distinction (the most common mistake)
-- Revalidation strategies (focus, reconnect, interval, manual)
-- useSWRMutation for write operations with optimistic updates
-- useSWRInfinite for cursor and offset pagination
-- Null key pattern for conditional fetching
-- SWRConfig for global defaults and SSR fallback
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) -- Fetchers, return values, SWRConfig, key patterns
-- [examples/mutations.md](examples/mutations.md) -- useSWRMutation, optimistic updates, cache invalidation
-- [examples/caching.md](examples/caching.md) -- Revalidation strategies, prefetching, persistence
-- [examples/pagination.md](examples/pagination.md) -- useSWRInfinite, infinite scroll, offset pagination
-- [examples/conditional.md](examples/conditional.md) -- Dependent queries, auth-gated fetching
-- [examples/error-handling.md](examples/error-handling.md) -- Retry config, error boundaries, network detection
-- [examples/suspense.md](examples/suspense.md) -- Suspense integration, SSR fallback patterns
-- [reference.md](reference.md) -- Decision frameworks, configuration tables
+- Client state that never came from a server — this skill caches responses
+- The transport itself; a fetcher is any function returning a promise, and what it uses is open
+- How an error boundary is built — this skill settles which option throws an error into one
+- APIs addressed through a graph query language, whose clients cache normalised entities rather than
+  whole responses under a key
 
 ---
 
@@ -69,21 +86,14 @@ description: SWR data fetching patterns - useSWR, useSWRMutation, caching, reval
 
 ## Philosophy
 
-SWR (stale-while-revalidate) returns cached data first, then revalidates in the background. This creates fast, responsive UIs while ensuring data freshness.
+The name is the algorithm: return what is cached, revalidate behind it, re-render if the answer
+changed. A component therefore has data at nearly every moment of its life, and the interesting
+states are not "loading or loaded" but "is this being checked" and "is this out of date".
 
-**Core principles:**
-
-- **Stale-While-Revalidate**: Show cached data immediately, update in background
-- **Deduplication**: Multiple components using same key share one request
-- **Focus Revalidation**: Refetch when user returns to tab
-- **Optimistic UI**: Update UI immediately, rollback on error
-- **Minimal API**: Simple hooks, less configuration than alternatives
-
-**Trade-offs:**
-
-- Simpler API means less control over complex mutation scenarios
-- Request cancellation requires manual AbortController setup
-- Less opinionated about mutations (fewer lifecycle callbacks)
+Everything else follows. The key is a global identity, so two components asking for the same key
+share one request and one cache entry with no coordination between them. Revalidation is triggered
+by events the user causes — refocusing the tab, reconnecting — rather than by timers, because those
+are the moments the data on screen is most likely to be stale.
 
 </philosophy>
 
@@ -91,14 +101,11 @@ SWR (stale-while-revalidate) returns cached data first, then revalidates in the 
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Typed Fetcher
-
-The fetcher must throw on non-OK responses. If it doesn't throw, SWR treats error bodies as valid data.
+### Pattern 1: The fetcher
 
 ```typescript
-// lib/fetcher.ts
 interface FetchError extends Error {
   info: unknown;
   status: number;
@@ -114,81 +121,73 @@ const fetcher = async <T>(url: string): Promise<T> => {
   }
   return response.json();
 };
-
-export { fetcher };
-export type { FetchError };
 ```
 
-**Why good:** Throws on error (required for SWR error state to work), attaches status for conditional handling, typed error enables downstream type narrowing
+Attaching `status` is what lets a component tell a 404 from a 500, and lets a retry policy decline
+to retry either. Define the fetcher at module scope — one created inside a component is a new
+reference on every render.
 
-See [examples/core.md](examples/core.md) for axios, GraphQL, and multi-argument fetcher variants.
+Full code: [examples/core.md](examples/core.md) — client-based and multi-argument fetchers
 
 ---
 
 ### Pattern 2: isLoading vs isValidating
 
-The most common SWR mistake. `isLoading` is true only on initial fetch with no data. `isValidating` is true during any in-flight request.
-
 ```typescript
-// State combinations:
-// Initial load:     { data: undefined, isLoading: true,  isValidating: true }
-// Success:          { data: T,         isLoading: false, isValidating: false }
-// Revalidating:     { data: T,         isLoading: false, isValidating: true }
-// Error (no data):  { error: Error,    isLoading: false, isValidating: false }
-// Error (has data): { data: T, error: Error, isLoading: false }
+// data: undefined, isLoading: true,  isValidating: true   — first fetch
+// data: T,         isLoading: false, isValidating: false  — settled
+// data: T,         isLoading: false, isValidating: true   — revalidating behind the value
+// error: Error,    isLoading: false, isValidating: false  — failed with nothing cached
+// data: T, error: Error, isLoading: false                 — failed with a cached value to show
 ```
 
 ```typescript
-// BAD: Using isValidating as loading indicator hides cached data
-if (isValidating) return <Spinner />;
+if (isLoading) return <Skeleton />;
 
-// GOOD: isLoading for initial, isValidating for refresh indicator
-if (isLoading) return <Spinner />;
 return (
   <div>
     {isValidating && <RefreshIndicator />}
-    {error && data && <Banner>Data may be outdated</Banner>}
+    {error && data && <Banner>Showing cached data; the last refresh failed</Banner>}
     <Content data={data} />
   </div>
 );
 ```
 
-**Why bad:** Showing spinner during background revalidation hides perfectly valid cached data, defeating the purpose of stale-while-revalidate
+The last row is the one to design for: a failed refresh over good data is a banner, not an error
+page.
 
-See [examples/core.md](examples/core.md) for full state handling with error + stale data combinations.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: SWRConfig Global Defaults
-
-Centralize fetcher, retry, and revalidation settings. Nested SWRConfig overrides parent config.
+### Pattern 3: Global configuration
 
 ```typescript
 const ERROR_RETRY_COUNT = 3;
-const ERROR_RETRY_INTERVAL_MS = 5000;
 const DEDUP_INTERVAL_MS = 2000;
 
-<SWRConfig value={{
-  fetcher,
-  errorRetryCount: ERROR_RETRY_COUNT,
-  errorRetryInterval: ERROR_RETRY_INTERVAL_MS,
-  dedupingInterval: DEDUP_INTERVAL_MS,
-  keepPreviousData: true,
-  fallback, // Pre-fetched data for SSR hydration
-}}>
+<SWRConfig
+  value={{
+    fetcher,
+    errorRetryCount: ERROR_RETRY_COUNT,
+    dedupingInterval: DEDUP_INTERVAL_MS,
+    keepPreviousData: true,
+    fallback, // keys pre-filled from a server render
+  }}
+>
   {children}
-</SWRConfig>
+</SWRConfig>;
 ```
 
-**Why good:** Eliminates config duplication across components, `fallback` prop enables SSR data hydration, nested configs allow per-section overrides
+A nested `SWRConfig` overrides its parent, which is how one static section opts out of revalidation
+without every hook in it repeating the options. Every option and its default is in
+[reference.md](reference.md).
 
-See [examples/core.md](examples/core.md) for full provider setup and nested config override patterns.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: useSWRMutation for Writes
-
-Never use `useSWR` for mutations. `useSWR` fires on mount -- `useSWRMutation` fires on demand via `trigger()`.
+### Pattern 4: Writes
 
 ```typescript
 import useSWRMutation from "swr/mutation";
@@ -213,120 +212,102 @@ const { trigger, isMutating, error, reset } = useSWRMutation(
 await trigger({ title, content });
 ```
 
-**Why good:** `trigger()` gives explicit control over when mutation fires, `isMutating` provides loading state, `reset` clears error state, separate from useSWR keeps read/write concerns apart
+The mutation fetcher's second parameter is `{ arg }` — whatever `trigger()` was called with.
+`trigger` returns a promise, so the success path stays in the handler that called it.
 
-See [examples/mutations.md](examples/mutations.md) for optimistic updates, cache invalidation, and `populateCache` patterns.
+Full code: [examples/mutations.md](examples/mutations.md)
 
 ---
 
-### Pattern 5: Optimistic Updates with Rollback
-
-Update UI immediately while mutation is in-flight. Rollback on error.
+### Pattern 5: Optimistic updates
 
 ```typescript
 const { trigger } = useSWRMutation(`/api/todos/${todo.id}`, toggleTodo, {
-  optimisticData: (currentData: Todo) => ({
-    ...currentData,
-    completed: !currentData.completed,
+  optimisticData: (current: Todo) => ({
+    ...current,
+    completed: !current.completed,
   }),
   rollbackOnError: true,
   revalidate: true,
 });
 ```
 
-**Why good:** `optimisticData` shows instant feedback, `rollbackOnError` ensures consistency on failure, `revalidate: true` syncs with server after success
+`optimisticData` writes to the cache before the request leaves; `rollbackOnError` puts the previous
+value back when it fails. Where the response already contains the new state, `populateCache` writes
+it directly and `revalidate: false` skips the confirming round trip.
 
-See [examples/mutations.md](examples/mutations.md) for list-level optimistic updates and `populateCache` for skipping revalidation.
+Full code: [examples/mutations.md](examples/mutations.md)
 
 ---
 
-### Pattern 6: Null Key for Conditional Fetching
-
-Pass `null` as the key to skip the request. Never call hooks conditionally.
+### Pattern 6: Conditional fetching with a null key
 
 ```typescript
-// BAD: Conditional hook call (breaks Rules of Hooks)
-if (!userId) return <SelectUser />;
-const { data } = useSWR(`/api/users/${userId}`, fetcher);
-
-// GOOD: Null key prevents request without conditional hook
+// null key: the hook runs, the request does not
 const { data } = useSWR(userId ? `/api/users/${userId}` : null, fetcher);
 
-// GOOD: Dependent queries -- second waits for first
+// dependent: the second key does not exist until the first resolves
 const { data: user } = useSWR(`/api/users/${userId}`, fetcher);
-const { data: posts } = useSWR(user ? `/api/users/${user.id}/posts` : null, fetcher);
+const { data: posts } = useSWR(
+  user ? `/api/users/${user.id}/posts` : null,
+  fetcher,
+);
 ```
 
-**Why good:** Hook always called (no Rules of Hooks violation), null key is idiomatic SWR pattern, enables data cascades for dependent queries
+A key can also be a function returning `null`, which suits several conditions at once. What it must
+never be is a conditionally called hook.
 
-See [examples/conditional.md](examples/conditional.md) for auth-gated, feature-flag, and complex multi-condition patterns.
+Full code: [examples/conditional.md](examples/conditional.md)
 
 ---
 
-### Pattern 7: useSWRInfinite for Pagination
-
-The `getKey` function receives page index and previous page data. Return `null` to stop.
+### Pattern 7: Pagination
 
 ```typescript
 import useSWRInfinite from "swr/infinite";
 
-const PAGE_SIZE = 20;
-
 const getKey = (pageIndex: number, previousPageData: PostsResponse | null) => {
-  if (previousPageData && !previousPageData.hasMore) return null; // End
+  if (previousPageData && !previousPageData.hasMore) return null; // stop
   if (pageIndex === 0) return `/api/posts?limit=${PAGE_SIZE}`;
   return `/api/posts?limit=${PAGE_SIZE}&cursor=${previousPageData?.nextCursor}`;
 };
 
-const { data, size, setSize, isLoading } = useSWRInfinite<PostsResponse>(
-  getKey,
-  fetcher,
-  {
-    revalidateFirstPage: false,
-  },
-);
+const { data, size, setSize } = useSWRInfinite<PostsResponse>(getKey, fetcher, {
+  revalidateFirstPage: false,
+});
 
 const posts = data?.flatMap((page) => page.posts) ?? [];
-const isReachingEnd = data?.[data.length - 1]?.hasMore === false;
 ```
 
-**Why good:** `getKey` returning null stops fetching, `flatMap` flattens pages, `revalidateFirstPage: false` prevents refetching all pages on focus
+`data` is an array of pages, so `flatMap` rather than `map`. `getKey` returning `null` is the only
+thing that ends the list — without it `setSize` keeps requesting.
 
-See [examples/pagination.md](examples/pagination.md) for IntersectionObserver infinite scroll, offset pagination, and filtered pagination with reset.
+Full code: [examples/pagination.md](examples/pagination.md)
 
 ---
 
-### Pattern 8: Revalidation Strategies
-
-Choose strategy based on data freshness requirements.
+### Pattern 8: Revalidation strategy
 
 ```typescript
 const POLL_INTERVAL_MS = 10 * 1000;
 
-// Real-time: polling
+// live: poll, but not into a hidden tab
 useSWR(key, fetcher, {
   refreshInterval: POLL_INTERVAL_MS,
   refreshWhenHidden: false,
 });
 
-// Default: revalidate on focus/reconnect (enabled by default)
-useSWR(key, fetcher, { revalidateOnFocus: true, revalidateOnReconnect: true });
+// default: on focus and on reconnect, both already true
+useSWR(key, fetcher);
 
-// Static: disable all revalidation
-useSWR(key, fetcher, {
-  revalidateOnFocus: false,
-  revalidateOnReconnect: false,
-  revalidateIfStale: false,
-});
-
-// Shorthand for static: useSWRImmutable
+// static: fetch once and leave it
 import useSWRImmutable from "swr/immutable";
 useSWRImmutable(key, fetcher);
 ```
 
-**Why good:** Different strategies for different freshness needs, `useSWRImmutable` is cleaner than disabling all options manually, `refreshWhenHidden: false` prevents polling when tab is hidden
+`useSWRImmutable` is the three revalidation options turned off, under one name.
 
-See [examples/caching.md](examples/caching.md) for prefetching with `preload()`, cache persistence with localStorage, and deduplication.
+Full code: [examples/caching.md](examples/caching.md) — plus `preload()` and cache persistence
 
 </patterns>
 
@@ -334,54 +315,38 @@ See [examples/caching.md](examples/caching.md) for prefetching with `preload()`,
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Unstable key causing infinite requests** -- Object/array keys create new references each render. Use string keys or stable arrays of primitives.
-- **isValidating used as loading state** -- Shows spinner during background refresh, hiding cached data. Use `isLoading` for initial load only.
-- **useSWR for mutations** -- `useSWR` fires on mount. Use `useSWRMutation` for POST/PUT/DELETE.
-- **Fetcher doesn't throw on error** -- Non-throwing fetcher returns error body as `data`, error state never triggers.
-- **Conditional hook call** -- `if (!userId) return; const { data } = useSWR(...)` breaks Rules of Hooks. Use null key pattern.
+- An object or array literal as the key — a new reference each render means a new key each render,
+  and the fetch loop never settles.
+- A fetcher that does not throw — the error body is stored as `data`, `error` stays undefined, and
+  the failure renders as content.
+- `useSWR` used for a write — it fires on mount, so the request is sent before any user acts.
+- A hook called inside a condition — use a `null` key instead; the hook must run every render.
+- `suspense: true` with no `Suspense` boundary above it — the thrown promise reaches the error
+  boundary or the top of the tree.
+- `optimisticData` without `rollbackOnError` — a failed write leaves the invented value in the cache
+  until something else revalidates.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Missing `rollbackOnError` with `optimisticData`** -- Without rollback, failed mutations leave stale optimistic data in cache.
-- **`keepPreviousData: true` for search** -- Shows stale search results for a different query. Set to `false` for search.
-- **`revalidateAll: true` with useSWRInfinite** -- Refetches all loaded pages on every focus event. Disable for performance.
-- **Missing error retry configuration** -- Default retry may not be appropriate (retries 404s, retries auth errors).
-- **Creating fetcher inside component** -- Creates new function reference each render, breaking deduplication.
-
-**Gotchas & Edge Cases:**
-
-- `null` key stops fetching, but `undefined` key still fetches (gets coerced to string `"undefined"`)
-- `mutate()` without arguments revalidates the bound key only, but global `mutate()` without a key filter revalidates everything
-- `refreshInterval: 0` disables polling (same as omitting the option)
-- `revalidateOnFocus` fires on every tab focus even if data is fresh (use `focusThrottleInterval` to limit)
-- Multiple `useSWR` with same key share cache and deduplicate requests automatically
-- `fallback` in `SWRConfig` must match exact key strings -- `/api/users/1` and `/api/users/1/` are different keys
-- `useSWRInfinite` revalidates all pages by default (set `revalidateAll: false`)
-- Error objects don't serialize well for cache persistence -- use structured error types
-- `useSWRImmutable` in v2.4+ properly overrides global `refreshInterval` settings (fixed from earlier versions)
+- `null` skips the request but `undefined` does not — it is interpolated, and the request goes to
+  `/api/users/undefined`.
+- A bound `mutate()` revalidates its own key; the global `mutate()` with no filter revalidates the
+  entire cache.
+- `revalidateOnFocus` fires on every tab focus regardless of freshness — `focusThrottleInterval`
+  bounds it.
+- `keepPreviousData: true` on a search box shows the previous query's results under the new query.
+- `fallback` keys are matched exactly, so `/api/users/1` and `/api/users/1/` hydrate separately.
+- `revalidateAll: true` on `useSWRInfinite` refetches every loaded page on each revalidation.
+- `refreshInterval: 0` disables polling, which is what omitting it does.
+- Default retry does not know which failures are worth retrying — it will retry a 404 and a 401
+  unless `onErrorRetry` says otherwise.
+- `Error` objects do not survive JSON serialization, so a persisted cache needs a structured error
+  shape.
+- Nothing cancels an in-flight request. A response that is no longer wanted is discarded rather than
+  aborted — a fetcher that must actually stop work in flight has to carry its own `AbortController`.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST use a stable key -- keys should NOT change on every render or you'll trigger infinite requests)**
-
-**(You MUST handle isLoading vs isValidating correctly -- isLoading is true only on initial fetch with no data)**
-
-**(You MUST wrap mutations in `useSWRMutation` for write operations -- NOT useSWR)**
-
-**(You MUST use named constants for ALL timeout, retry, and interval values -- NO magic numbers)**
-
-**(You MUST use named exports only -- NO default exports)**
-
-**Failure to follow these rules will cause infinite request loops, incorrect loading states, and unmaintainable code.**
-
-</critical_reminders>

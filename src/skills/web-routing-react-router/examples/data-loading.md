@@ -44,7 +44,7 @@ export function PostDetailPage() {
 }
 ```
 
-**Why:** Loader runs before the component mounts — no loading state needed in the component. The route's `errorElement` catches thrown responses. `params` is always `Record<string, string | undefined>` — always a string, never a number.
+**Why:** the loader runs before the component mounts, so the component carries no loading state, and the route's `errorElement` catches what it throws. `params` is `Record<string, string | undefined>` — parse anything numeric here rather than in the component.
 
 ---
 
@@ -79,7 +79,7 @@ export async function productsLoader({ request }: LoaderFunctionArgs) {
 
 ## Action with Form Component
 
-`<Form>` submits to the route's action. After the action completes, all active loaders revalidate automatically.
+`<Form>` submits to the route's action. Every active loader revalidates afterwards — but only when the action finished on a non-error status.
 
 ```typescript
 import type { ActionFunctionArgs } from "react-router";
@@ -145,25 +145,28 @@ export function CreatePostPage() {
 
 ## Prefer `throw redirect()` in Shared Helpers
 
-Both `return redirect()` and `throw redirect()` work — the router processes the `Response` either way. However, `throw` is preferred because it stops execution up the entire call stack, which matters in helper functions.
+Returned directly from a loader or action the two are identical — the router processes the `Response` either way. They diverge inside a helper.
 
 ```typescript
-// Helper function — throw ensures execution stops here
+// GOOD: throw unwinds the whole call stack, so the caller never resumes
 async function requireAuth(request: Request) {
   const user = await getUser(request);
-  if (!user) throw redirect("/login"); // Stops everything — loader never continues
-  return user;
-}
-
-// If you used return instead:
-async function requireAuth(request: Request) {
-  const user = await getUser(request);
-  if (!user) return redirect("/login"); // PROBLEM: caller must check the return value
+  if (!user) throw redirect("/login");
   return user;
 }
 ```
 
-**Why:** `throw redirect()` short-circuits the entire call stack. `return redirect()` only exits the current function — the caller continues executing with a `Response` object as the return value. In actions and loaders called directly by the router, both work identically. In helper functions, `throw` is safer.
+```typescript
+// BAD: return only exits requireAuth. The loader carries on with a Response
+// sitting in `user`, and the redirect never happens.
+async function requireAuthByReturn(request: Request) {
+  const user = await getUser(request);
+  if (!user) return redirect("/login");
+  return user;
+}
+```
+
+**Why:** the difference only shows up one frame up. `throw` short-circuits every caller; `return` hands a `Response` back as an ordinary value, and the loader that called it reads properties off it as though it were a user.
 
 ---
 
@@ -188,7 +191,7 @@ function LikeButton({ postId }: { postId: string }) {
 }
 ```
 
-**Why:** `fetcher.Form` does not trigger navigation or URL change. Each fetcher has independent `state` and `data`. Multiple fetchers can run concurrently. After the action completes, all active loaders revalidate.
+**Why:** `fetcher.Form` changes no URL and moves no `useNavigation` state. Each fetcher carries its own `state` and `data`, several can be in flight at once, and each one that succeeds revalidates the active loaders.
 
 ---
 
@@ -295,7 +298,7 @@ export function PostDetailPage() {
 
 ## shouldRevalidate: Control Loader Re-Runs
 
-By default, all active loaders revalidate after every action. Use `shouldRevalidate` to skip unnecessary re-fetches.
+By default every active loader revalidates after an action that returned a non-error status; after an action _error_ none of them do. `shouldRevalidate` adjusts both halves.
 
 ```typescript
 {

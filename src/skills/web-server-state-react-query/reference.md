@@ -1,168 +1,56 @@
-# React Query + hey-api - Reference
+# React Query — Reference
 
-> Decision frameworks and anti-patterns. See [SKILL.md](SKILL.md) for core concepts.
+> Lookup for configuration and error strategy, plus the v4 → v5 map. See [SKILL.md](SKILL.md) for
+> the decisions and the red flags.
 
 ---
 
 <decision_framework>
 
-## Decision Framework
+## Configuration strategy
 
-### When to Use Generated vs Custom
+| Need                                  | Where it goes                                         |
+| ------------------------------------- | ----------------------------------------------------- |
+| Base URL, default headers             | `client.setConfig()` in the provider                  |
+| Static token                          | `client.setConfig({ auth: () => token })`             |
+| Token that changes during the session | `useEffect` on the token, calling `setConfig()` again |
+| One request differing from the rest   | Options passed to the service function                |
+| Request timeout                       | A custom `fetch` on `setConfig({ fetch })`            |
+| Freshness and eviction                | `staleTime` and `gcTime` in `defaultOptions.queries`  |
 
-```
-Need API integration?
-├─ Is OpenAPI spec available?
-│   ├─ YES → Use hey-api code generation
-│   │   └─ Use generated query options (getFeaturesOptions)
-│   └─ NO → Do you control the backend?
-│       ├─ YES → Write OpenAPI spec, then use hey-api
-│       └─ NO → Manual fetch with Zod validation at parse boundary
-└─ Is it GraphQL?
-    └─ Use a GraphQL client (not this skill)
-```
+## Error strategy
 
-### Configuration Strategy
-
-```
-Need to configure client?
-├─ Global config (base URL, default headers)?
-│   └─ Use client.setConfig() in provider
-├─ Authentication?
-│   ├─ Static token → client.setConfig({ auth: () => token })
-│   └─ Dynamic token → useEffect + client.setConfig() or interceptors
-├─ Per-request override?
-│   └─ Pass options directly to SDK functions
-└─ Custom timeout?
-    └─ Pass custom fetch to client.setConfig({ fetch: ... })
-```
-
-### Error Handling Strategy
-
-```
-How to handle errors?
-├─ Component-level?
-│   └─ Use isPending, error states from useQuery
-├─ Error side effects (toast, logging)?
-│   └─ useEffect watching error (v5 removed onError from useQuery)
-├─ Global query errors?
-│   └─ QueryCache.onError in QueryClient constructor
-├─ Global mutation errors?
-│   └─ MutationCache.onError in QueryClient constructor
-└─ Crash recovery?
-    └─ QueryErrorResetBoundary + ErrorBoundary
-```
+| Need                                   | Where it goes                                                 |
+| -------------------------------------- | ------------------------------------------------------------- |
+| Loading and failure UI for one query   | `isPending` and `error` from the hook                         |
+| A side effect on failure (toast, log)  | `useEffect` on `error` — v5 removed `onError` from `useQuery` |
+| Every query's failures in one place    | `QueryCache.onError` in the QueryClient constructor           |
+| Every mutation's failures in one place | `MutationCache.onError` in the QueryClient constructor        |
+| Recovery from a thrown render          | `QueryErrorResetBoundary` wrapping an error boundary          |
 
 </decision_framework>
 
 ---
 
-<anti_patterns>
+<migration_notice>
 
-## Anti-Patterns
+## v4 → v5
 
-### Manual Type Definitions
-
-Do not write manual TypeScript interfaces for API responses. They drift from the backend schema and cause runtime errors.
-
-```typescript
-// BAD - Manual types drift from backend
-interface Feature {
-  id: string;
-  name: string;
-  // Missing fields = runtime errors!
-}
-
-// GOOD - Use generated types
-import type { Feature } from "./api-client/types.gen";
-```
-
-### Custom React Query Hooks
-
-Do not write custom useQuery wrappers for API calls. Use generated query options from hey-api.
-
-```typescript
-// BAD - Custom hook duplicates generated code
-function useFeatures() {
-  return useQuery({
-    queryKey: ["features"],
-    queryFn: () => fetch("/api/v1/features"),
-  });
-}
-
-// GOOD - Use generated query options
-import { getFeaturesOptions } from "./api-client/@tanstack/react-query.gen";
-const { data } = useQuery(getFeaturesOptions());
-```
-
-### Hardcoded API URLs
-
-Do not hardcode API URLs. Use environment variables.
-
-```typescript
-// BAD - Hardcoded URL
-client.setConfig({ baseUrl: "http://localhost:3000" });
-
-// GOOD - Environment variable
-client.setConfig({ baseUrl: process.env.API_BASE_URL });
-```
-
-### Magic Numbers for Timeouts
-
-Do not use raw numbers for timeouts, retries, or intervals.
-
-```typescript
-// BAD - Magic number
-staleTime: 300000,
-
-// GOOD - Named constant
-const STALE_TIME_MS = 5 * 60 * 1000;
-staleTime: STALE_TIME_MS,
-```
-
-### Mutating Global Config in Query Functions
-
-Do not call `client.setConfig()` inside query functions -- it mutates global state and causes race conditions.
-
-```typescript
-// BAD - Race condition
-queryFn: async () => {
-  client.setConfig({ baseUrl: "https://other.com" }); // Affects ALL requests!
-  return client.get({ url: "/data" });
-},
-
-// GOOD - Per-request via SDK function options or separate client instance
-```
-
-</anti_patterns>
-
----
-
-<react_query_v5>
-
-## React Query v5 Breaking Changes
-
-**Removed:**
-
-- `onSuccess`, `onError`, `onSettled` callbacks from `useQuery` (still available on `useMutation`)
+**Removed:** `onSuccess`, `onError`, `onSettled` on `useQuery`. They remain on `useMutation`.
 
 **Renamed:**
 
-- `cacheTime` -> `gcTime` (garbage collection time)
-- `isLoading` -> `isPending` for queries
-- `keepPreviousData` -> `placeholderData: (prev) => prev`
+| v4                 | v5                                |
+| ------------------ | --------------------------------- |
+| `cacheTime`        | `gcTime`                          |
+| `isLoading`        | `isPending`                       |
+| `keepPreviousData` | `placeholderData: (prev) => prev` |
 
-**New Requirements:**
+**New requirements:** `useInfiniteQuery` takes `initialPageParam`; server-side retry defaults to `0`
+(was `3`); React 18.0+.
 
-- `useInfiniteQuery` requires `initialPageParam` option
-- Server-side retry defaults to 0 (was 3 in v4)
-- Requires React 18.0+
+**Added:** `useSuspenseQuery`, `useSuspenseInfiniteQuery`, `useSuspenseQueries`, `useMutationState`,
+the `queryOptions` helper for sharing a typed definition, and `maxPages` to cap what an infinite
+query keeps.
 
-**New Features:**
-
-- `useSuspenseQuery`, `useSuspenseInfiniteQuery`, `useSuspenseQueries` hooks
-- `useMutationState` hook for accessing mutation state across components
-- `queryOptions` helper for type-safe shared query definitions
-- `maxPages` option for infinite queries to limit cached pages
-
-</react_query_v5>
+</migration_notice>

@@ -1,12 +1,13 @@
-# SWR - Mutation Examples
+# SWR — Mutation Examples
 
-> mutate, useSWRMutation, and optimistic updates. See [core.md](core.md) for basic patterns.
+> `useSWRMutation`, optimistic updates and cache invalidation. See [core.md](core.md) for the
+> fetcher and key shapes.
 
 ---
 
-## useSWRMutation Basics
+## useSWRMutation
 
-### Simple Mutation
+The mutation fetcher takes the key and `{ arg }` — whatever `trigger()` was called with.
 
 ```typescript
 // components/create-post-form.tsx
@@ -14,30 +15,27 @@ import useSWRMutation from "swr/mutation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-interface CreatePostInput {
-  title: string;
-  content: string;
-}
-
 interface Post {
   id: string;
   title: string;
   content: string;
   createdAt: string;
+  likes: number;
+  likedByMe: boolean;
 }
 
-// Mutation fetcher - receives key and { arg }
+interface CreatePostInput {
+  title: string;
+  content: string;
+}
+
 async function createPost(url: string, { arg }: { arg: CreatePostInput }): Promise<Post> {
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(arg),
   });
-
-  if (!response.ok) {
-    throw new Error("Failed to create post");
-  }
-
+  if (!response.ok) throw new Error("Failed to create post");
   return response.json();
 }
 
@@ -45,24 +43,16 @@ function CreatePostForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  const { trigger, isMutating, error, reset } = useSWRMutation(
-    "/api/posts",
-    createPost
-  );
+  const { trigger, isMutating, error, reset } = useSWRMutation("/api/posts", createPost);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    try {
-      const newPost = await trigger({ title, content });
-      console.log("Created post:", newPost);
-      setTitle("");
-      setContent("");
-    } catch (err) {
-      // Error is also available via `error` return value
-      console.error("Failed:", err);
-    }
+    // trigger rejects on failure as well as populating `error`, so either style works
+    await trigger({ title, content });
+    setTitle("");
+    setContent("");
   };
 
   return (
@@ -70,42 +60,35 @@ function CreatePostForm() {
       {error && (
         <div className="error">
           <span>{error.message}</span>
-          <button type="button" onClick={reset}>Dismiss</button>
+          <button type="button" onClick={reset}>
+            Dismiss
+          </button>
         </div>
       )}
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        disabled={isMutating}
-        placeholder="Title"
-      />
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        disabled={isMutating}
-        placeholder="Content..."
-      />
+      <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={isMutating} />
+      <textarea value={content} onChange={(e) => setContent(e.target.value)} disabled={isMutating} />
       <button type="submit" disabled={isMutating || !title.trim()}>
         {isMutating ? "Creating..." : "Create Post"}
       </button>
     </form>
   );
 }
-
-export { CreatePostForm };
 ```
 
-**Why good:** trigger returns promise for await, isMutating provides loading state, error state for display, reset clears error state
+`reset()` clears `data` and `error`, which is what a dismissable failure banner needs — without it
+the error stays until the next successful trigger.
 
----
+### Other methods
 
-## Mutation Types
-
-### Update (PUT/PATCH)
+The shape is the same; only the request differs. A mutation with no argument omits `{ arg }`.
 
 ```typescript
-// components/edit-profile.tsx
-import useSWRMutation from "swr/mutation";
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+}
 
 interface UpdateUserInput {
   name?: string;
@@ -123,85 +106,32 @@ async function updateUser(url: string, { arg }: { arg: UpdateUserInput }) {
   return response.json();
 }
 
-function EditProfile({ userId }: { userId: string }) {
-  const { trigger, isMutating } = useSWRMutation(
-    `/api/users/${userId}`,
-    updateUser
-  );
-
-  const handleSave = async (data: UpdateUserInput) => {
-    await trigger(data);
-  };
-
-  return (
-    <ProfileForm
-      onSave={handleSave}
-      isLoading={isMutating}
-    />
-  );
-}
-
-export { EditProfile };
-```
-
-### Delete
-
-```typescript
-// components/delete-post-button.tsx
-import useSWRMutation from "swr/mutation";
-
 async function deletePost(url: string) {
   const response = await fetch(url, { method: "DELETE" });
   if (!response.ok) throw new Error("Delete failed");
   return response.json();
 }
 
-function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted?: () => void }) {
-  const { trigger, isMutating } = useSWRMutation(
-    `/api/posts/${postId}`,
-    deletePost,
-    {
-      onSuccess: () => {
-        onDeleted?.();
-      },
-    }
-  );
-
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      await trigger();
-    }
-  };
-
-  return (
-    <button onClick={handleDelete} disabled={isMutating}>
-      {isMutating ? "Deleting..." : "Delete"}
-    </button>
-  );
-}
-
-export { DeletePostButton };
+const { trigger, isMutating } = useSWRMutation(
+  `/api/posts/${postId}`,
+  deletePost,
+  {
+    onSuccess: () => onDeleted?.(),
+  },
+);
 ```
-
-**Why good:** Separate mutation functions for different HTTP methods, onSuccess callback for side effects, confirmation before destructive action
 
 ---
 
-## Optimistic Updates
+## Optimistic updates
 
-### Basic Optimistic Update
+`Post` here is the one declared above.
 
 ```typescript
 // components/like-button.tsx
-import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
-
-interface Post {
-  id: string;
-  title: string;
-  likes: number;
-  likedByMe: boolean;
-}
+import useSWRMutation from "swr/mutation";
+import { fetcher } from "../lib/fetcher";
 
 async function toggleLike(url: string) {
   const response = await fetch(url, { method: "POST" });
@@ -212,391 +142,134 @@ async function toggleLike(url: string) {
 function LikeButton({ postId }: { postId: string }) {
   const { data: post } = useSWR<Post>(`/api/posts/${postId}`, fetcher);
 
-  const { trigger, isMutating } = useSWRMutation(
-    `/api/posts/${postId}/like`,
-    toggleLike,
-    {
-      // Optimistic update
-      optimisticData: (currentData: Post) => ({
-        ...currentData,
-        likes: currentData.likedByMe ? currentData.likes - 1 : currentData.likes + 1,
-        likedByMe: !currentData.likedByMe,
-      }),
-      // Rollback on error
-      rollbackOnError: true,
-      // Revalidate after success
-      revalidate: true,
-    }
-  );
+  const { trigger, isMutating } = useSWRMutation(`/api/posts/${postId}/like`, toggleLike, {
+    optimisticData: (current: Post) => ({
+      ...current,
+      likes: current.likedByMe ? current.likes - 1 : current.likes + 1,
+      likedByMe: !current.likedByMe,
+    }),
+    rollbackOnError: true,
+    revalidate: true,
+  });
 
   if (!post) return null;
 
   return (
-    <button
-      onClick={() => trigger()}
-      disabled={isMutating}
-      className={post.likedByMe ? "liked" : ""}
-    >
+    <button onClick={() => trigger()} disabled={isMutating}>
       {post.likedByMe ? "Unlike" : "Like"} ({post.likes})
     </button>
   );
 }
-
-export { LikeButton };
 ```
 
-### Optimistic Update with List
+The optimistic value has to move both fields together — writing `likedByMe` without `likes` shows a
+filled heart above an unchanged count, which reads as a bug rather than as latency.
+
+### Also updating the list the item belongs to
+
+`optimisticData` applies to the mutation's own key. Anything else that changed is invalidated
+separately.
 
 ```typescript
-// components/todo-list.tsx
-import useSWR, { useSWRConfig } from "swr";
-import useSWRMutation from "swr/mutation";
+const { mutate } = useSWRConfig();
 
-interface Todo {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
-async function toggleTodo(url: string, { arg }: { arg: { completed: boolean } }) {
-  const response = await fetch(url, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(arg),
-  });
-  return response.json();
-}
-
-function TodoItem({ todo }: { todo: Todo }) {
-  const { mutate } = useSWRConfig();
-
-  const { trigger } = useSWRMutation(
-    `/api/todos/${todo.id}`,
-    toggleTodo,
-    {
-      optimisticData: () => ({
-        ...todo,
-        completed: !todo.completed,
-      }),
-      rollbackOnError: true,
-      // Also update the list cache
-      onSuccess: () => {
-        mutate("/api/todos");
-      },
-    }
-  );
-
-  return (
-    <label className="todo-item">
-      <input
-        type="checkbox"
-        checked={todo.completed}
-        onChange={() => trigger({ completed: !todo.completed })}
-      />
-      <span className={todo.completed ? "completed" : ""}>
-        {todo.title}
-      </span>
-    </label>
-  );
-}
-
-export { TodoItem };
+const { trigger } = useSWRMutation(`/api/todos/${todo.id}`, toggleTodo, {
+  optimisticData: () => ({ ...todo, completed: !todo.completed }),
+  rollbackOnError: true,
+  onSuccess: () => mutate("/api/todos"),
+});
 ```
-
-**Why good:** optimisticData shows immediate feedback, rollbackOnError ensures data consistency, list cache updated after item mutation
 
 ---
 
-## Cache Updates After Mutation
+## Cache updates after a write
 
-### Invalidate Related Data
-
-```typescript
-// components/create-comment.tsx
-import useSWRMutation from "swr/mutation";
-import { useSWRConfig } from "swr";
-
-async function createComment(url: string, { arg }: { arg: { content: string } }) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(arg),
-  });
-  return response.json();
-}
-
-function CreateComment({ postId }: { postId: string }) {
-  const { mutate } = useSWRConfig();
-  const [content, setContent] = useState("");
-
-  const { trigger, isMutating } = useSWRMutation(
-    `/api/posts/${postId}/comments`,
-    createComment,
-    {
-      onSuccess: () => {
-        // Invalidate comments list
-        mutate(`/api/posts/${postId}/comments`);
-        // Invalidate post (comment count may have changed)
-        mutate(`/api/posts/${postId}`);
-        // Clear form
-        setContent("");
-      },
-    }
-  );
-
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); trigger({ content }); }}>
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        disabled={isMutating}
-      />
-      <button type="submit" disabled={isMutating || !content.trim()}>
-        {isMutating ? "Posting..." : "Post Comment"}
-      </button>
-    </form>
-  );
-}
-
-export { CreateComment };
-```
-
-### Direct Cache Update (Without Refetch)
+### Invalidating what the write affected
 
 ```typescript
-// components/update-user-name.tsx
-import useSWRMutation from "swr/mutation";
-import { useSWRConfig } from "swr";
+const { mutate } = useSWRConfig();
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-async function updateUser(url: string, { arg }: { arg: { name: string } }) {
-  const response = await fetch(url, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(arg),
-  });
-  return response.json();
-}
-
-function UpdateUserName({ userId }: { userId: string }) {
-  const { mutate } = useSWRConfig();
-
-  const { trigger } = useSWRMutation(
-    `/api/users/${userId}`,
-    updateUser,
-    {
-      // populateCache updates cache with mutation response
-      populateCache: (result: User, currentData: User) => ({
-        ...currentData,
-        ...result,
-      }),
-      // Don't revalidate since we're updating cache directly
-      revalidate: false,
-    }
-  );
-
-  return (
-    <button onClick={() => trigger({ name: "New Name" })}>
-      Update Name
-    </button>
-  );
-}
-
-export { UpdateUserName };
+const { trigger, isMutating } = useSWRMutation(
+  `/api/posts/${postId}/comments`,
+  createComment,
+  {
+    onSuccess: () => {
+      mutate(`/api/posts/${postId}/comments`); // the list itself
+      mutate(`/api/posts/${postId}`); // and the comment count on the post
+      setContent("");
+    },
+  },
+);
 ```
 
-**Why good:** onSuccess allows invalidating related queries, populateCache updates cache without refetch, revalidate: false prevents unnecessary network request
+### Writing the response into the cache instead
+
+```typescript
+const { trigger } = useSWRMutation(`/api/users/${userId}`, updateUser, {
+  // the response already holds the new state, so merge it in
+  populateCache: (result: User, current: User) => ({ ...current, ...result }),
+  // and skip the confirming round trip
+  revalidate: false,
+});
+```
+
+This trades a request for trust in the response. Keep `revalidate: true` where the server derives
+fields the client cannot predict.
 
 ---
 
-## Using Bound mutate
+## mutate
 
-### mutate for Revalidation
+### Bound to one key
 
 ```typescript
-// components/refresh-data.tsx
-import useSWR from "swr";
+const { data, mutate, isValidating } = useSWR("/api/data", fetcher);
 
-function RefreshableData() {
-  const { data, mutate, isValidating } = useSWR("/api/data", fetcher);
-
-  // Simple revalidation
-  const refresh = () => mutate();
-
-  return (
-    <div>
-      <DataView data={data} />
-      <button onClick={refresh} disabled={isValidating}>
-        {isValidating ? "Refreshing..." : "Refresh"}
-      </button>
-    </div>
-  );
-}
-
-export { RefreshableData };
+<button onClick={() => mutate()} disabled={isValidating}>
+  Refresh
+</button>;
 ```
 
-### mutate with Data
+### With an updater, for an optimistic write outside useSWRMutation
 
 ```typescript
-// components/optimistic-update.tsx
-import useSWR from "swr";
-
 interface Counter {
   value: number;
 }
 
-function OptimisticCounter() {
-  const { data, mutate } = useSWR<Counter>("/api/counter", fetcher);
+const { data, mutate } = useSWR<Counter>("/api/counter", fetcher);
 
-  const increment = async () => {
-    // Optimistic update with async function
-    await mutate(
-      async (currentData) => {
-        // Make API call
-        const response = await fetch("/api/counter/increment", { method: "POST" });
-        return response.json();
-      },
-      {
-        // Show optimistic value immediately
-        optimisticData: (current) => ({
-          value: (current?.value ?? 0) + 1,
-        }),
-        // Rollback on error
-        rollbackOnError: true,
-        // Revalidate after
-        revalidate: true,
-      }
-    );
-  };
-
-  return (
-    <div>
-      <span>Count: {data?.value ?? 0}</span>
-      <button onClick={increment}>Increment</button>
-    </div>
+const increment = () =>
+  mutate(
+    async () =>
+      (await fetch("/api/counter/increment", { method: "POST" })).json(),
+    {
+      optimisticData: (current) => ({ value: (current?.value ?? 0) + 1 }),
+      rollbackOnError: true,
+      revalidate: true,
+    },
   );
-}
-
-export { OptimisticCounter };
 ```
 
-**Why good:** Bound mutate is simpler for single-key operations, async function pattern enables optimistic updates with API call, rollback handles errors gracefully
-
----
-
-## Global mutate Patterns
-
-### Invalidate by Pattern
+### Global, by pattern
 
 ```typescript
 // lib/cache-utils.ts
 import { mutate } from "swr";
 
-// Invalidate all user-related queries
-const invalidateUserQueries = () => {
+// Everything under one prefix
+const invalidateUserQueries = () =>
   mutate(
     (key) => typeof key === "string" && key.startsWith("/api/users"),
     undefined,
-    { revalidate: true },
+    {
+      revalidate: true,
+    },
   );
-};
 
-// Invalidate specific keys
-const invalidateKeys = (keys: string[]) => {
-  keys.forEach((key) => mutate(key));
-};
-
-// Clear entire cache
-const clearCache = () => {
-  mutate(() => true, undefined, { revalidate: false });
-};
-
-export { invalidateUserQueries, invalidateKeys, clearCache };
+// Everything, without refetching — the shape to use on logout, so the next user
+// never sees the previous one's cached data
+const clearCache = () => mutate(() => true, undefined, { revalidate: false });
 ```
 
-### After Logout
-
-```typescript
-// hooks/use-logout.ts
-import { useSWRConfig } from "swr";
-
-function useLogout() {
-  const { mutate } = useSWRConfig();
-
-  const logout = async () => {
-    // Call logout API
-    await fetch("/api/auth/logout", { method: "POST" });
-
-    // Clear all cached data
-    mutate(() => true, undefined, { revalidate: false });
-
-    // Redirect to login
-    window.location.href = "/login";
-  };
-
-  return { logout };
-}
-
-export { useLogout };
-```
-
-**Why good:** Pattern-based invalidation enables batch updates, cache clearing on logout prevents data leaks, global mutate handles cross-component cache updates
-
----
-
-## Anti-Pattern Examples
-
-```typescript
-// BAD: Using useSWR for mutations
-const { data, mutate } = useSWR("/api/posts", async () => {
-  return fetch("/api/posts", {
-    method: "POST",
-    body: JSON.stringify({ title: "New Post" }),
-  }).then((r) => r.json());
-}); // This fires immediately on mount!
-
-// BAD: Not using optimisticData for responsive UI
-const { trigger } = useSWRMutation("/api/like", toggleLike);
-// UI waits for server response before updating
-
-// BAD: Missing rollbackOnError
-const { trigger } = useSWRMutation("/api/update", updateFn, {
-  optimisticData: (data) => ({ ...data, updated: true }),
-  // Missing rollbackOnError: true - data stays wrong on error!
-});
-
-// BAD: Invalidating everything
-const { mutate } = useSWRConfig();
-mutate(); // Invalidates ALL cached data!
-```
-
-```typescript
-// GOOD: useSWRMutation for write operations
-const { trigger } = useSWRMutation("/api/posts", createPost);
-await trigger({ title: "New Post" }); // Fires on demand
-
-// GOOD: Optimistic update for instant feedback
-const { trigger } = useSWRMutation("/api/like", toggleLike, {
-  optimisticData: (data) => ({ ...data, liked: !data.liked }),
-  rollbackOnError: true,
-});
-
-// GOOD: Full optimistic pattern
-const { trigger } = useSWRMutation("/api/update", updateFn, {
-  optimisticData: (data) => ({ ...data, updated: true }),
-  rollbackOnError: true,
-  revalidate: true,
-});
-
-// GOOD: Invalidate specific keys
-const { mutate } = useSWRConfig();
-mutate("/api/posts"); // Only invalidates posts
-```
-
-**Why bad examples fail:** useSWR fires immediately on mount (wrong for mutations), missing optimisticData makes UI feel slow, missing rollback leaves incorrect data on error, global mutate without key invalidates everything
+The filter form is the reason keys are worth designing as paths: a prefix is then a group.

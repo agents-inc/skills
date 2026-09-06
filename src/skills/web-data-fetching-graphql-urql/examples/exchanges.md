@@ -1,34 +1,34 @@
-# URQL GraphQL Client - Exchange Examples
+# URQL — Exchange Examples
 
-> Exchange architecture, custom exchanges, authentication patterns. See [SKILL.md](../SKILL.md) for concepts.
-
----
-
-## Exchange Architecture Overview
-
-Exchanges are middleware-style plugins that process operations and results:
-
-```
-Request Flow:    Component → Cache → Auth → Retry → Fetch → Server
-Response Flow:   Server → Fetch → Retry → Auth → Cache → Component
-```
-
-**Default Exchange Stack (v4+):**
-
-1. `cacheExchange` - Document caching (query + variables hash)
-2. `fetchExchange` - HTTP requests to GraphQL API
-
-> **Note:** Deduplication is built into the core client since v5. The `dedupExchange` was removed in v5.0.0.
+> The pipeline, Graphcache, auth, retry and custom exchanges. See [SKILL.md](../SKILL.md) for the
+> decisions and [reference.md](../reference.md) for the exchange catalogue.
 
 ---
 
-## Pattern 1: Advanced Client with Multiple Exchanges
+## How an operation travels
+
+```
+Out:  Component → mapExchange → cacheExchange → authExchange → retryExchange → fetchExchange → server
+Back: server → fetchExchange → retryExchange → authExchange → cacheExchange → mapExchange → component
+```
+
+Each exchange sees the operation on the way out and the result on the way back, and can answer,
+rewrite or forward either. An exchange can only act on what has already reached it, which is the
+whole reason order matters.
+
+The default stack is `[cacheExchange, fetchExchange]`. Deduplication needs no exchange — it moved
+into the core client in v5, when `dedupExchange` was removed.
+
+---
+
+## Pattern 1: A full pipeline
 
 ```typescript
 // lib/urql-client.ts
 import { Client, cacheExchange, fetchExchange, mapExchange } from "urql";
 import { authExchange } from "@urql/exchange-auth";
 import { retryExchange } from "@urql/exchange-retry";
+import { authConfig } from "./exchanges/auth-exchange"; // Pattern 4
 
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_URL || "";
 const MAX_RETRY_ATTEMPTS = 3;
@@ -36,95 +36,46 @@ const INITIAL_RETRY_DELAY_MS = 1000;
 const TOKEN_STORAGE_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
-const REFRESH_TOKEN_MUTATION = `
-  mutation RefreshToken($refreshToken: String!) {
-    refreshToken(refreshToken: $refreshToken) {
-      token
-      refreshToken
-    }
-  }
-`;
-
 const client = new Client({
   url: GRAPHQL_ENDPOINT,
   exchanges: [
-    // Error handling (must be before authExchange to catch unrecoverable errors)
+    // First, so it sees failures from every exchange after it — including a refresh that failed
     mapExchange({
       onError(error) {
-        const isAuthError = error.graphQLErrors.some(
+        const refreshAlreadyFailed = error.graphQLErrors.some(
           (e) => e.extensions?.code === "FORBIDDEN",
         );
-        if (isAuthError) {
-          // Auth refresh already failed - force logout
+        if (refreshAlreadyFailed) {
           localStorage.removeItem(TOKEN_STORAGE_KEY);
           localStorage.removeItem(REFRESH_TOKEN_KEY);
           window.location.href = "/login";
         }
       },
     }),
-    // Document cache (synchronous - must come before async exchanges)
-    cacheExchange,
-    // Authentication
-    authExchange(async (utils) => {
-      let token = localStorage.getItem(TOKEN_STORAGE_KEY);
-      let refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-      return {
-        addAuthToOperation(operation) {
-          if (!token) return operation;
-          return utils.appendHeaders(operation, {
-            Authorization: `Bearer ${token}`,
-          });
-        },
-        didAuthError(error) {
-          return error.graphQLErrors.some(
-            (e) => e.extensions?.code === "UNAUTHORIZED",
-          );
-        },
-        async refreshAuth() {
-          if (!refreshToken) {
-            localStorage.clear();
-            window.location.href = "/login";
-            return;
-          }
-
-          const result = await utils.mutate(REFRESH_TOKEN_MUTATION, {
-            refreshToken,
-          });
-
-          if (result.data?.refreshToken) {
-            token = result.data.refreshToken.token;
-            refreshToken = result.data.refreshToken.refreshToken;
-            localStorage.setItem(TOKEN_STORAGE_KEY, token);
-            localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-          } else {
-            localStorage.clear();
-            window.location.href = "/login";
-          }
-        },
-      };
-    }),
-    // Retry failed requests (network errors only)
+    cacheExchange, // synchronous: answers without ever reaching the exchanges below
+    authExchange(authConfig),
     retryExchange({
       maxNumberAttempts: MAX_RETRY_ATTEMPTS,
       initialDelayMs: INITIAL_RETRY_DELAY_MS,
       retryIf: (error) => !!error.networkError,
     }),
-    // HTTP requests (must be last)
-    fetchExchange,
+    fetchExchange, // last, always
   ],
 });
 
 export { client };
 ```
 
-**Why good:** Exchange order is correct (mapExchange → cacheExchange → authExchange → retryExchange → fetchExchange), named constants for configuration, retry only on network errors not GraphQL errors
+`retryIf` tests `networkError` alone: a GraphQL error is a considered answer from the server, and
+sending the same request again produces the same answer.
 
 ---
 
-## Pattern 2: Normalized Caching with Graphcache
+## Pattern 2: Graphcache
 
-Document caching (default) treats each query+variables as a unique cached document. Graphcache provides normalized caching where entities are stored once and referenced everywhere.
+The document cache treats each query plus its variables as one opaque result. Graphcache splits
+responses into entities stored once and referenced everywhere, which is what makes precise cache
+edits and optimistic updates possible.
 
 ```typescript
 // lib/urql-client-graphcache.ts
@@ -213,13 +164,26 @@ const client = new Client({
 export { client };
 ```
 
-**Why good:** Normalized cache prevents data duplication, optimistic updates include `__typename` for proper normalization, computed fields derived from cached data, cache invalidation for deletions
+### Preserving fields in an optimistic response
+
+An optimistic object replaces the entity wholesale, so a field it omits is a field every watching
+query loses until the server answers. Read the current entity and spread it:
+
+```typescript
+optimistic: {
+  updateTodo: (args, cache) => {
+    const existing = cache.readFragment(TODO_FRAGMENT, { id: args.id });
+    return { __typename: "Todo", ...existing, ...args.input };
+  },
+}
+```
 
 ---
 
-## Pattern 3: Custom Logging Exchange
+## Pattern 3: A custom exchange
 
-Create custom exchanges to inspect or modify operations and results.
+An exchange is a function over the operation stream. This one logs both directions and changes
+nothing.
 
 ```typescript
 // lib/exchanges/logging-exchange.ts
@@ -261,7 +225,7 @@ const loggingExchange: Exchange = ({ forward }) => {
 export { loggingExchange };
 ```
 
-### Using the Custom Exchange
+### Installing it
 
 ```typescript
 // lib/urql-client.ts
@@ -283,11 +247,12 @@ const client = new Client({
 export { client };
 ```
 
-**Why good:** Custom exchanges follow the exchange interface, conditional inclusion based on environment, type-safe with proper imports
+Spreading a conditional array keeps the exchange out of the production bundle's array entirely,
+rather than installing a no-op.
 
 ---
 
-## Pattern 4: Authentication Exchange with Token Refresh
+## Pattern 4: Authentication with token refresh
 
 ```typescript
 // lib/exchanges/auth-exchange.ts
@@ -321,7 +286,7 @@ function logout() {
   window.location.href = "/login";
 }
 
-const auth = authExchange(async (utils) => {
+const authConfig = async (utils) => {
   let token = localStorage.getItem(TOKEN_STORAGE_KEY);
   let refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
@@ -368,16 +333,18 @@ const auth = authExchange(async (utils) => {
       }
     },
   };
-});
+};
 
-export { auth as authExchangeConfig };
+export { authConfig };
 ```
 
-**Why good:** Token expiry check prevents unnecessary refresh attempts, logout helper centralizes cleanup, named constants for storage keys
+`willAuthError` is the optimization: it inspects the token before the request leaves, so an expired
+token is refreshed once rather than costing a failed request first. `didAuthError` is still needed —
+a token can be revoked while it still looks valid.
 
 ---
 
-## Pattern 5: Retry Exchange Configuration
+## Pattern 5: Retry
 
 ```typescript
 // lib/urql-client.ts
@@ -417,11 +384,12 @@ const client = new Client({
 export { client };
 ```
 
-**Why good:** Only retries network errors (not GraphQL errors which won't succeed), exponential backoff with jitter prevents thundering herd, all timing values as named constants
+`randomDelay` spreads the retries out: without it, every client that failed on the same outage
+retries at the same instant and the recovering server takes a second wave.
 
 ---
 
-## Pattern 6: Request Policy Exchange (TTL-Based Cache Upgrades)
+## Pattern 6: TTL-based policy upgrades
 
 ```typescript
 // lib/urql-client.ts
@@ -447,54 +415,8 @@ const client = new Client({
 export { client };
 ```
 
-**Why good:** Automatic stale-while-revalidate behavior, TTL as named constant, only upgrades queries
+This buys stale-while-revalidate without changing any query: entries older than the TTL are served
+from cache and refreshed behind the render, and anything newer is served from cache alone.
 
----
-
-## Exchange Quick Reference
-
-| Exchange                        | Package  | Purpose                               |
-| ------------------------------- | -------- | ------------------------------------- |
-| `cacheExchange`                 | `urql`   | Document caching (default)            |
-| `fetchExchange`                 | `urql`   | HTTP requests (default)               |
-| `@urql/exchange-graphcache`     | Separate | Normalized caching                    |
-| `@urql/exchange-auth`           | Separate | Authentication flow                   |
-| `@urql/exchange-retry`          | Separate | Retry failed requests                 |
-| `@urql/exchange-persisted`      | Separate | Persisted queries/APQ                 |
-| `@urql/exchange-request-policy` | Separate | TTL-based policy upgrades             |
-| `mapExchange`                   | `urql`   | Inspect/modify operations and results |
-| `ssrExchange`                   | `urql`   | Server-side rendering support         |
-| `subscriptionExchange`          | `urql`   | WebSocket subscriptions               |
-
----
-
-## Exchange Order Rules
-
-**CRITICAL: Exchange order matters!**
-
-```typescript
-// CORRECT ORDER
-exchanges: [
-  mapExchange, // 1. Error handling (catches all errors)
-  cacheExchange, // 2. Sync cache (fast path)
-  authExchange, // 3. Auth headers
-  retryExchange, // 4. Retry logic
-  fetchExchange, // 5. Network requests (always last)
-];
-
-// WRONG ORDER - cacheExchange after async exchange
-exchanges: [
-  fetchExchange, // Network first = cache never used!
-  cacheExchange,
-];
-
-// WRONG ORDER - mapExchange after authExchange
-exchanges: [
-  cacheExchange,
-  authExchange,
-  mapExchange, // Won't catch auth refresh failures!
-  fetchExchange,
-];
-```
-
-**Rule:** Synchronous exchanges (cacheExchange) before asynchronous exchanges (fetchExchange). Error handlers (mapExchange) before the exchanges whose errors they need to catch.
+The exchanges available and the packages they come from are catalogued in
+[reference.md](../reference.md).

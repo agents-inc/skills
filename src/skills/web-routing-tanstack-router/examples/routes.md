@@ -4,9 +4,11 @@
 
 **Related examples:**
 
-- [Core Setup & Configuration](core.md) -- Vite plugin, root route, entry point
+- [Core Setup & Configuration](core.md) -- router plugin, root route, entry point
 - [Navigation](navigation.md) -- Link, useNavigate, redirect
 - [Auth & Context](auth-and-context.md) -- auth guards, route context, dependency injection
+
+The convention-to-URL table lives in [reference.md](../reference.md) under "File Naming Quick Reference".
 
 ---
 
@@ -31,45 +33,7 @@ src/routes/
 
 ---
 
-## Naming Conventions
-
-| Convention   | Example              | Purpose                                  |
-| ------------ | -------------------- | ---------------------------------------- |
-| `__root.tsx` | `__root.tsx`         | Root layout, wraps entire app            |
-| `index.tsx`  | `posts/index.tsx`    | Index route for directory (`/posts`)     |
-| `$param`     | `$postId/index.tsx`  | Dynamic path parameter                   |
-| `$`          | `$.tsx`              | Splat/catch-all route                    |
-| `_prefix`    | `_authenticated.tsx` | Pathless layout route (no URL segment)   |
-| `route.tsx`  | `posts/route.tsx`    | Layout for directory children            |
-| `-prefix`    | `-components.tsx`    | Ignored by router (not a route)          |
-| `(group)`    | `(admin)/`           | Organizational grouping (no URL effect)  |
-| `suffix_`    | `posts_.detail.tsx`  | Non-nested route (escapes parent layout) |
-
----
-
-## Basic File Route (Index)
-
-```typescript
-// src/routes/index.tsx
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/")({
-  component: HomePage,
-});
-
-function HomePage() {
-  return (
-    <div>
-      <h1>Welcome</h1>
-      <p>This is the home page.</p>
-    </div>
-  );
-}
-```
-
----
-
-## Directory File Route
+## Basic File Route
 
 ```typescript
 // src/routes/posts/index.tsx

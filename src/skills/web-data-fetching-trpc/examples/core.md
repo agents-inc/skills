@@ -1,20 +1,20 @@
-# tRPC Type-Safe API - Core Examples
+# tRPC — Core Examples
 
-> Essential patterns for tRPC setup and usage. See [SKILL.md](../SKILL.md) for core concepts.
+> Full code for the core patterns. See [SKILL.md](../SKILL.md) for the decisions.
 
-**Extended Examples:**
+**Extended examples:**
 
-- [middleware.md](middleware.md) - Logging, Rate Limiting, Org-Scoped Access
-- [infinite-queries.md](infinite-queries.md) - Cursor Pagination, Infinite Scroll
-- [optimistic-updates.md](optimistic-updates.md) - Optimistic Updates with Rollback
-- [subscriptions.md](subscriptions.md) - Server-Sent Events
-- [file-uploads.md](file-uploads.md) - FormData File Uploads (tRPC v11+)
+- [middleware.md](middleware.md) — logging, rate limiting, resource-scoped access
+- [infinite-queries.md](infinite-queries.md) — cursor pagination and infinite scroll
+- [optimistic-updates.md](optimistic-updates.md) — snapshot and rollback
+- [subscriptions.md](subscriptions.md) — async generator subscriptions over SSE
+- [file-uploads.md](file-uploads.md) — `File` inputs (v11+)
 
 ---
 
-## Pattern 1: Complete Router Setup
+## Pattern 1: Initialization and context
 
-### Server-Side Initialization
+### Initialization
 
 ```typescript
 // packages/api/src/trpc/index.ts
@@ -43,7 +43,7 @@ export const publicProcedure = t.procedure;
 export const middleware = t.middleware;
 ```
 
-### Context Factory
+### The context factory
 
 ```typescript
 // packages/api/src/trpc/context.ts
@@ -63,26 +63,12 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
 export type Context = Awaited<ReturnType<typeof createContext>>;
 ```
 
-### Bad Example - Missing Type Export
-
-```typescript
-// packages/api/src/root.ts
-
-// BAD: AppRouter type not exported - clients have no type safety
-const appRouter = router({
-  user: userRouter,
-});
-
-// Missing: export type AppRouter = typeof appRouter;
-```
-
-**Why bad:** Without AppRouter type export, client has no type inference, autocomplete, or compile-time safety - defeats the entire purpose of tRPC
+`Context` is derived from the factory's return type, so adding a field to the factory makes it
+available in every procedure without a second declaration to keep in step.
 
 ---
 
-## Pattern 2: CRUD Router with Full Validation
-
-### Complete User Router
+## Pattern 2: A CRUD router
 
 ```typescript
 // packages/api/src/routers/user.ts
@@ -208,41 +194,37 @@ export const userRouter = router({
       return { success: true };
     }),
 });
-
-// Named export
-export { userRouter };
 ```
 
-### Bad Example - No Validation
+Two things worth copying. The list procedure takes `limit + 1` rows and pops the extra to derive
+`nextCursor`, which answers "is there another page" without a second count query. And ownership is
+checked after the existence check, so a missing row is a 404 rather than a 403 that tells the caller
+the row exists.
+
+### Bad example — no validator
 
 ```typescript
-// BAD: No input validation
 const userRouter = router({
   create: publicProcedure.mutation(async ({ input, ctx }) => {
-    // input is 'unknown' - no type safety
-    return ctx.db.user.create({ data: input as any }); // Dangerous!
+    // input is `unknown`, so the cast below is the only way this compiles —
+    // and it writes whatever the caller sent straight to the database
+    return ctx.db.user.create({ data: input as any });
   }),
 });
 ```
 
-**Why bad:** Without Zod validation, input is unknown type, no runtime validation, SQL injection and invalid data risks, any cast defeats TypeScript safety
-
 ---
 
-## Pattern 3: React Query Integration (tRPC v11)
-
-### Provider Setup (New TanStack Integration - Recommended)
+## Pattern 3: The client and provider
 
 ```typescript
 // apps/client/lib/trpc.ts
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "../../api"; // Your shared API package
 
-// v11: Create typed context providers and hooks
+// One call yields the provider and the typed hooks for the whole router
 export const { TRPCProvider, useTRPC, useTRPCClient } =
   createTRPCContext<AppRouter>();
-
-export { TRPCProvider, useTRPC, useTRPCClient };
 ```
 
 ```typescript
@@ -261,8 +243,8 @@ const DEFAULT_RETRY_ATTEMPTS = 3;
 const isDevelopment = process.env.NODE_ENV === "development";
 
 function getBaseUrl() {
-  if (typeof window !== "undefined") return ""; // Browser - relative URL
-  // Use your deployment URL env var (e.g., VERCEL_URL, RAILWAY_URL, etc.)
+  if (typeof window !== "undefined") return ""; // in the browser, a relative URL is enough
+  // On the server, whatever variable the host publishes its own URL in
   if (process.env.DEPLOY_URL) return `https://${process.env.DEPLOY_URL}`;
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
@@ -304,7 +286,7 @@ export function AppTRPCProvider({ children }: { children: React.ReactNode }) {
         // Batch HTTP requests
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
-          // v11 CRITICAL: transformer goes INSIDE the link
+          // v11: the transformer goes inside the link, not on the client
           transformer: superjson,
           headers() {
             return {
@@ -324,61 +306,35 @@ export function AppTRPCProvider({ children }: { children: React.ReactNode }) {
     </QueryClientProvider>
   );
 }
-
-// Named export
-export { AppTRPCProvider };
 ```
 
-### Bad Example - Transformer in Wrong Location
+`getQueryClient` returns a fresh client on the server and a singleton in the browser: a server
+render must not share a cache between two users' requests, and a browser navigation must not throw
+its cache away.
+
+### Bad example — transformer in the v10 position
 
 ```typescript
-// BAD: v11 error - transformer at client level
 const trpcClient = createTRPCClient<AppRouter>({
-  transformer: superjson, // WRONG - causes error in v11
+  transformer: superjson, // v11 throws: the transformer belongs on the link
   links: [httpBatchLink({ url: "/api/trpc" })],
 });
 ```
 
-**Why bad:** tRPC v11 moved transformer to links - placing it at client level causes "The transformer property has moved to httpLink/httpBatchLink/wsLink" error
-
-### Bad Example - Magic Numbers
-
-```typescript
-// BAD: Magic numbers obscure configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 300000, // What's this? 5 minutes? 3 minutes?
-      retry: 3, // Why 3?
-    },
-  },
-});
-```
-
-**Why bad:** Magic numbers require code archaeology to understand, makes policy changes difficult, violates project conventions
-
 ---
 
-## Pattern 4: TypeScript Inference Utilities
-
-### Extracting Types from Router
+## Pattern 4: Inferred types
 
 ```typescript
 // packages/api/src/types.ts
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "./root";
 
-// Infer all input types
 export type RouterInputs = inferRouterInputs<AppRouter>;
-
-// Infer all output types
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
-
-// Named exports for type definitions
-export type { RouterInputs, RouterOutputs };
 ```
 
-### Using Inferred Types in Components
+### In a component
 
 ```typescript
 // apps/client/components/user-card.tsx
@@ -400,57 +356,33 @@ export function UserCard({ user }: UserCardProps) {
     </div>
   );
 }
-
-// Named export
-export { UserCard };
 ```
 
-### Bad Example - Manual Type Definitions
-
-```typescript
-// BAD: Manual types drift from backend
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  // Missing createdAt! Runtime error when accessed
-}
-
-function UserCard({ user }: { user: User }) {
-  // TypeScript won't catch this - createdAt doesn't exist in manual type
-  return <span>{user.createdAt.toLocaleDateString()}</span>;
-}
-```
-
-**Why bad:** Manual types diverge from backend causing runtime errors, defeats tRPC's automatic type inference, double maintenance burden
+`user.createdAt` is a `Date` here because the transformer preserved it — the same code against a
+hand-written interface would have a `string` and `toLocaleDateString` would not exist on it.
 
 ---
 
-## Pattern 5: v11 queryOptions/mutationOptions Pattern
-
-### Using New v11 TanStack Integration API
+## Pattern 5: queryOptions and mutationOptions
 
 ```typescript
 // apps/client/components/user-list.tsx
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "../lib/trpc";
 
+const PAGE_SIZE = 10;
+
 export function UserList() {
-  // useTRPC from createTRPCContext provides typed procedure access
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  // v11: queryOptions factory creates React Query compatible options
-  const usersQuery = useQuery(trpc.user.list.queryOptions({ limit: 10 }));
+  const usersQuery = useQuery(trpc.user.list.queryOptions({ limit: PAGE_SIZE }));
 
-  // v11: mutationOptions factory with custom onSuccess
   const createUser = useMutation({
     ...trpc.user.create.mutationOptions(),
     onSuccess: () => {
-      // v11: queryKey for type-safe invalidation
-      queryClient.invalidateQueries({
-        queryKey: trpc.user.list.queryKey(),
-      });
+      // the same key the query above registered under
+      queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() });
     },
   });
 
@@ -465,19 +397,11 @@ export function UserList() {
     </div>
   );
 }
-
-// Named export
-export { UserList };
 ```
 
-### Benefits of v11 TanStack Integration
+`mutate`'s argument is typed from the procedure's input schema, and `usersQuery.data` from its
+return type — so a field renamed on the server reddens both ends of this component.
 
-- **Direct React Query hook usage** (`useQuery`, `useMutation` from TanStack)
-- **`queryOptions()`** returns complete query configuration
-- **`mutationOptions()`** returns complete mutation configuration
-- **`queryKey()`** provides type-safe query keys for invalidation
-- **Easier prefetching** with `queryClient.prefetchQuery(trpc.x.queryOptions())`
-- **React Compiler compatible** - follows hooks rules properly
-- **Lower learning curve** - use standard TanStack Query patterns
-
----
+Because these are plain options objects rather than bespoke hooks, anything the query client can do
+to an options object works unchanged: prefetching, suspense variants, `select`, and passing the same
+object to more than one call site.

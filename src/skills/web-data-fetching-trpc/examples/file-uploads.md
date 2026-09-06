@@ -1,14 +1,12 @@
-# tRPC File Uploads with FormData
+# tRPC — File Upload Examples
 
-> Native file upload support in tRPC v11+. See [core.md](core.md) for setup patterns.
+> `File` as a procedure input, which v11 accepts natively. See [core.md](core.md) for setup.
 
-**Prerequisites**: Understand Pattern 1 (Router Setup) and Pattern 2 (CRUD Router) from core examples first.
-
-> **Note:** File upload support requires tRPC v11+. This pattern is self-contained and can be added to any tRPC setup.
+**Prerequisites**: Pattern 1 (initialization) and Pattern 2 (a CRUD router) from core.
 
 ---
 
-## Server-Side File Handler (tRPC v11+)
+## The procedure
 
 ```typescript
 // packages/api/src/routers/upload.ts
@@ -58,22 +56,21 @@ export const uploadRouter = router({
       return { url };
     }),
 });
-
-// Named export
-export { uploadRouter };
 ```
+
+Size and type are checked in the handler rather than only in the schema, because both need an error
+the client can render — and because a client-side `accept` attribute is a hint rather than a
+constraint.
 
 ---
 
-## Client-Side File Upload
+## The component
 
 ```typescript
 // apps/client/components/avatar-upload.tsx
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "../lib/trpc";
 import { useState } from "react";
-
-const MAX_FILE_SIZE_MB = 5;
 
 export function AvatarUpload() {
   const trpc = useTRPC();
@@ -117,9 +114,11 @@ export function AvatarUpload() {
     </div>
   );
 }
-
-// Named export
-export { AvatarUpload };
 ```
 
----
+The `File` goes into `mutate` as an ordinary input field — no `FormData` assembly and no separate
+upload endpoint, because the link serializes it. The preview renders before the upload resolves, so
+a slow connection still gives immediate feedback.
+
+The size limit is not restated here: the server's is the one that decides, and a second copy on the
+client is a number that drifts. `onError` shows the server's own message instead.

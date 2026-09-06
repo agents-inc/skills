@@ -1,12 +1,12 @@
-# tRPC Optimistic Updates with Rollback
+# tRPC — Optimistic Update Examples
 
-> Instant UI feedback with automatic rollback on failure. See [core.md](core.md) for setup patterns.
+> The full snapshot-and-rollback cycle. See [core.md](core.md) for client setup.
 
-**Prerequisites**: Understand Pattern 3 (React Query Integration) from core examples first.
+**Prerequisites**: Pattern 3 (the client and provider) from core.
 
 ---
 
-## Complete Optimistic Pattern
+## The whole cycle
 
 ```typescript
 // apps/client/components/like-button.tsx
@@ -87,31 +87,30 @@ export function LikeButton({ postId, initialLiked, initialCount }: LikeButtonPro
     </button>
   );
 }
-
-// Named export
-export { LikeButton };
 ```
 
----
+Each callback earns its place. `cancelQueries` stops an in-flight refetch from landing on top of the
+optimistic write with pre-mutation data. The snapshot returned from `onMutate` is what `onError`
+receives as `context`, which is the only route back to the previous value. `onSettled` invalidates
+on both outcomes, so the cache ends up holding the server's version rather than the guess.
 
-## Bad Example - No Rollback
+## Bad example — no rollback
 
 ```typescript
-// BAD: Optimistic update without rollback
 const toggleLike = useMutation({
   ...trpc.post.toggleLike.mutationOptions(),
   onMutate: async ({ postId }) => {
-    // Updates cache but no snapshot for rollback!
     queryClient.setQueryData(
       trpc.post.getById.queryKey({ id: postId }),
-      (old: any) => ({ ...old!, liked: !old!.liked }),
+      (old) => ({
+        ...old!,
+        liked: !old!.liked,
+      }),
     );
-    // Missing: return { previousPost }
+    // nothing returned, so onError has nothing to restore from — and there is no onError
   },
-  // Missing: onError rollback
 });
 ```
 
-**Why bad:** If server fails, UI shows incorrect state, no way to restore previous data, user sees inconsistent information
-
----
+A failed request leaves the button showing "Unlike" for a like that never happened, and the UI stays
+wrong until something else refetches.

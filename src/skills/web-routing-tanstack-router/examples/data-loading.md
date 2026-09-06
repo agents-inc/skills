@@ -100,27 +100,21 @@ export const Route = createFileRoute("/dashboard/")({
 
 **Why:** Separation of concerns: `beforeLoad` handles auth/redirects, `loader` handles data. `beforeLoad` return value automatically merges into context for the loader and child routes. Parallel execution of sibling loaders prevents waterfalls.
 
-### Decision: Where to Put Logic
-
-```
-What does the logic do?
-  +-- Auth check / permission guard?
-  |   -> beforeLoad (blocks everything, runs first)
-  +-- Redirect based on conditions?
-  |   -> beforeLoad (throw redirect())
-  +-- Add data to context for children?
-  |   -> beforeLoad (return value merges into context)
-  +-- Fetch data for the component?
-  |   -> loader (runs in parallel with siblings)
-  +-- Prefetch data for an external cache?
-  |   -> loader (prefetch via context-injected client, runs in parallel)
-```
-
 ---
 
 ## External Data Fetching Integration: Prefetch in Loader
 
 When using an external data fetching library with a cache, prefetch in the loader so data is cached before the component renders. Inject the client via router context.
+
+`dataClient` below is a **stand-in for whichever cache client you inject**. `prefetchData`, `fetchData` and the `use*FromCache()` hooks are placeholder names, not an API this router provides — substitute your library's real calls. The one part that is not optional is declaring the field on `RouterContext`: a loader reading a field the context type does not carry is a compile error, which is the whole point of injecting it.
+
+```typescript
+// src/routes/__root.tsx — the field has to exist on the context type
+export interface RouterContext {
+  auth: AuthService;
+  dataClient: DataClient; // your cache client's own type
+}
+```
 
 ```typescript
 // src/routes/posts/index.tsx
@@ -129,16 +123,13 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/posts/")({
   loader: async ({ context }) => {
     // Prefetch ensures data is in cache before component renders
-    // Use your data fetching library's prefetch method via context
     await context.dataClient.prefetchData(postsQueryOptions);
   },
   component: PostsPage,
 });
 
 function PostsPage() {
-  // Component reads from the external cache (prefetched in loader)
-  // Use your data fetching library's hook to read cached data
-  // The data was already prefetched by the loader above
+  // Reads from the external cache the loader already filled — no loading branch
   const posts = usePostsFromCache();
 
   return (
@@ -206,22 +197,6 @@ function PostDetailPage() {
 ```
 
 **Why:** Critical data blocks render via `await` ensuring it is available immediately via `useLoaderData`. Non-critical data starts fetching in parallel without blocking. The component can show a loading state for non-critical data while critical data is immediate.
-
----
-
-## Data Loading Strategy Decision
-
-```
-How to load data?
-  +-- Simple app, no shared cache needs?
-  |   -> Built-in route loaders with staleTime
-  +-- Complex app with shared server state cache?
-  |   -> External data fetching library + prefetch in loaders
-  +-- Data needed only for this component?
-  |   -> Route loader (useLoaderData)
-  +-- Data shared across many components?
-  |   -> External data fetching library (client in context)
-```
 
 ---
 

@@ -1,10 +1,10 @@
-# Apollo Client GraphQL - Subscription Patterns
+# Apollo Client — Subscription Examples
 
-> Real-time data with WebSocket subscriptions. See [core.md](core.md) for basic patterns.
+> Real-time data over a websocket link. See [core.md](core.md) for client setup.
 
 ---
 
-## Setting Up WebSocket Link
+## The split link
 
 ```typescript
 // lib/apollo-subscriptions.ts
@@ -57,9 +57,13 @@ const subscriptionClient = new ApolloClient({
 export { subscriptionClient };
 ```
 
+`wsLink` is `null` where there is no `window`, and the split collapses to `httpLink` — a server
+render then issues queries normally instead of trying to open a socket. `connectionParams` is a
+function so the token is read at connect time rather than at module load.
+
 ---
 
-## Using useSubscription Hook
+## useSubscription writing to the cache
 
 ```typescript
 // components/live-comments.tsx
@@ -136,4 +140,6 @@ function LiveComments({ postId }: { postId: string }) {
 export { LiveComments };
 ```
 
-**Why good:** Split link routes subscriptions to WebSocket while queries/mutations use HTTP. Cache updates on subscription data keep UI in sync. Connection params handle auth for WebSocket.
+The list is rendered from the query, never from the subscription — `onData` writes the new comment
+into the cache and the query re-renders from there. A component that renders subscription payloads
+directly holds two sources of truth, and they disagree after the first refetch.

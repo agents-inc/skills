@@ -5,118 +5,121 @@ description: Client-side routing with data APIs — loaders, actions, error boun
 
 # React Router Patterns
 
-> **Quick Guide:** React Router v7 has three modes: Declarative (`<BrowserRouter>`), Data (`createBrowserRouter`), and Framework (Vite plugin). This skill covers **Data Mode** — the sweet spot for SPAs needing loaders, actions, and pending states without a full framework. All imports come from `"react-router"` (the `react-router-dom` package is removed). `defer()` and `json()` are removed in v7 — return plain objects from loaders. Form method values are now uppercase (`"POST"`, not `"post"`).
+> **Quick Guide:** This skill covers React Router v7 **Data Mode** — `createBrowserRouter` plus loaders, actions, fetchers and pending states, without a full framework. Four v7 facts change the answer: every export comes from `"react-router"`, with the DOM-only ones — `RouterProvider` included — also on `"react-router/dom"`, while `react-router-dom` survives v7 as a deprecated re-export and is deleted in v8; `json()` and `defer()` are removed so loaders return plain objects; form method values are uppercase (`"POST"`); and loaders skip revalidation after an action error unless `shouldRevalidate` opts back in.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — router setup, root layout, root error boundary, and the two v7 migration traps
+- [examples/data-loading.md](examples/data-loading.md) — loaders, actions, `<Form>`, `useFetcher`, optimistic UI, `shouldRevalidate`, deferred data
+- [examples/navigation.md](examples/navigation.md) — `Link`, `NavLink`, `useNavigate`, `redirect`, `useSearchParams` wired to loaders
+- [examples/error-handling.md](examples/error-handling.md) — error bubbling, thrown responses, pending UI, `route.lazy`
+- [examples/layouts.md](examples/layouts.md) — `Outlet`, `useOutletContext`, pathless auth layouts, `useBlocker`
+- [reference.md](reference.md) — route options, hook and component tables, `createBrowserRouter` options
+
+---
+
+## Which path applies
+
+React Router ships three modes, and only one of them has the data APIs.
+
+- **Data Mode** — `createBrowserRouter` + `<RouterProvider>`. Loaders, actions, fetchers and `errorElement` all work. This is the skill; start at [examples/core.md](examples/core.md).
+- **Declarative Mode** — `<BrowserRouter>` + `<Routes>`. URL matching and `<Link>` only. A `loader` prop here is silently ignored, so reach for it when there is no data to load and nothing in this skill's patterns applies.
+- **Framework Mode** — file-based routes, SSR and streaming through the router's own bundler plugin. A separate surface with its own conventions, not covered here.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing React Router code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Import everything from `"react-router"`, and `RouterProvider` from `"react-router/dom"`** — that copy wires up `react-dom`'s `flushSync`. `react-router-dom` still installs in v7 as a re-export, so a stale import fails no build and nothing tells you; v8 deletes the package.
 
-**(You MUST use `createBrowserRouter` + `<RouterProvider>` for Data Mode — NEVER use `<BrowserRouter>` with `<Routes>` if you need loaders, actions, or fetchers)**
+**Reach for `createBrowserRouter` + `<RouterProvider>` whenever a loader, action or fetcher is involved.** Those are Data Mode features; under `<BrowserRouter>` the props are accepted and ignored, with no error to tell you.
 
-**(You MUST import from `"react-router"` — the `react-router-dom` package is removed in v7. All exports, including `RouterProvider` and `createBrowserRouter`, come from `"react-router"`)**
+**Return plain objects from loaders**, or a `Response` you built yourself. `json()` and `defer()` were removed in v7.
 
-**(You MUST return plain objects from loaders — `json()` and `defer()` are removed in v7. Return `{ data }` directly or use `Response.json()`)**
+**Use `throw redirect()` rather than `return redirect()`.** Throwing unwinds the whole call stack, which is what makes a shared `requireAuth()` helper stop the loader that called it.
 
-**(You MUST use `throw redirect()` in loaders and shared helpers to short-circuit execution — `return redirect()` also works but does not stop execution in helper function call stacks)**
-
-**(You MUST use `errorElement` or `ErrorBoundary` on routes — unhandled loader/action errors crash the entire router)**
+**Give the root route an `errorElement` or `ErrorBoundary`.** It is the last catch in the tree; without one, a single loader failure replaces the app with the router's built-in error dump.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** React Router, createBrowserRouter, RouterProvider, useLoaderData, useActionData, useNavigation, useSearchParams, useFetcher, useRouteError, useParams, useNavigate, Outlet, NavLink, Form, loader, action, errorElement, ErrorBoundary, redirect, isRouteErrorResponse, route.lazy, useOutletContext, shouldRevalidate, useRevalidator
+**Auto-detection:** createBrowserRouter, RouterProvider, useLoaderData, useActionData, useNavigation, useSearchParams, useFetcher, useRouteError, isRouteErrorResponse, useOutletContext, useRevalidator, useBlocker, Outlet, NavLink, errorElement, shouldRevalidate, route.lazy, HydrateFallback
 
-**When to use:**
+**Applies to:**
 
-- Building React SPAs that need data loading, form actions, or pending states
-- Apps requiring nested layouts with shared UI (sidebars, headers)
+- Route trees with data loading, form actions and pending states
+- Nested layouts with persistent shared UI
 - Route-level error boundaries and not-found handling
-- URL search param state management
-- Code splitting at the route level
-- Non-navigating mutations (fetchers for inline forms, buttons)
+- URL search params as application state
+- Non-navigating mutations — inline forms, toggles, auto-save
+- Route-level code splitting
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Data Mode setup with `createBrowserRouter` and `RouterProvider`
-- Route loaders and actions for data fetching and mutations
-- Nested layouts with `<Outlet />` and `useOutletContext`
-- Type-safe navigation with `Link`, `NavLink`, `useNavigate`, `redirect`
-- Error handling with `errorElement`, `useRouteError`, `isRouteErrorResponse`
-- Search params with `useSearchParams`
-- Non-navigating mutations with `useFetcher`
-- Code splitting with `route.lazy`
-- Navigation state with `useNavigation`
-- Protected routes and auth guard patterns
-
-**When NOT to use:**
-
-- Simple apps with 1-2 pages and no data loading (Declarative Mode with `<BrowserRouter>` is sufficient)
-- Full-stack SSR apps (use Framework Mode or an SSR framework instead)
-- Static sites without client-side navigation
-
----
-
-## Examples
-
-- [Core Setup & Route Config](examples/core.md) -- createBrowserRouter, RouterProvider, route objects, basic loaders
-- [Data Loading & Actions](examples/data-loading.md) -- loaders, actions, Form, useFetcher, revalidation
-- [Navigation & Search Params](examples/navigation.md) -- Link, NavLink, useNavigate, redirect, useSearchParams
-- [Error Handling & Code Splitting](examples/error-handling.md) -- errorElement, useRouteError, route.lazy, pending UI
-- [Layouts & Auth Guards](examples/layouts.md) -- Outlet, useOutletContext, protected routes, nested layouts
-
-For quick API reference (hooks, components, route options), see [reference.md](reference.md).
+- Caching and deduplicating server data across routes — a loader fetches per navigation, and whatever owns data fetching decides what is cached between them.
+- Client state that has no business in the URL — this skill settles URL-shaped state only.
+- Styling active and pending links — `NavLink` hands its state to a `className` or `style` function, and what those return is not its concern.
+- Server rendering, streaming HTML and file-based route generation.
 
 ---
 
 <philosophy>
 
-## Philosophy
+React Router v7 treats the router as a data layer rather than a URL matcher. A route declares what to load (`loader`), what mutations it accepts (`action`), and what catches failures (`errorElement`) — all before its component renders. That moves orchestration out of components and removes the fetch-on-mount waterfall.
 
-React Router v7 treats the router as a data layer, not just a URL matcher. Routes define what data to load (`loader`), what mutations to handle (`action`), and what errors to catch (`errorElement`) — all before the component renders. This moves data orchestration out of components and into the route tree, eliminating loading waterfalls and duplicated error handling.
-
-**Core principles:**
-
-- **Routes own their data** — Loaders fetch before render, actions handle mutations. Components receive data, they do not fetch it.
-- **URL is the source of truth** — Search params, path params, and navigation state all live in the URL. No hidden state.
-- **Errors bubble up** — Like React error boundaries, `errorElement` catches errors at the nearest route. Unhandled errors bubble to the parent.
-- **Revalidation is automatic** — After a successful action, all active loaders re-run. No manual cache invalidation needed. (In v7, loaders skip revalidation after action errors unless `shouldRevalidate` opts in.)
-- **Fetchers are for mutations without navigation** — `useFetcher` handles inline forms, buttons, and background saves without changing the URL.
-
-**When to use Data Mode:**
-
-- SPAs with data loading needs and client-side routing
-- Apps where you want route-level loaders/actions but control your own bundling
-- Projects not ready for Framework Mode but outgrowing Declarative Mode
-
-**When NOT to use:**
-
-- If you only need URL matching and `<Link>` — Declarative Mode is simpler
-- If you want SSR, streaming, or file-based routing — Framework Mode or an SSR framework is better
-- If your app has no data loading — the overhead of Data Mode is not justified
+- **Routes own their data.** Components receive it; they do not fetch it.
+- **The URL is the source of truth.** Path params, search params and navigation state all live there.
+- **Errors bubble.** An error rises to the nearest `errorElement`, leaving parent layouts on screen.
+- **Revalidation is automatic.** A successful action re-runs every active loader, so there is no cache to invalidate by hand.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Where the logic goes
+
+```
+What does this code do?
+  +-- Fetch data the component needs?      -> loader (parallel with sibling loaders)
+  +-- Handle a form submission?            -> action (reads FormData, returns errors or redirects)
+  +-- Mutate without changing the URL?     -> useFetcher (independent state, runs concurrently)
+  +-- Gate access to a subtree?            -> pathless layout route whose loader throws redirect()
+```
+
+## How to navigate
+
+```
+Where are you?
+  +-- In JSX, on something clickable?      -> <Link> or <NavLink>
+  +-- In a handler, after a side effect?   -> useNavigate()
+  +-- In a loader or action?               -> throw redirect()
+  +-- Outside the React tree entirely?     -> router.navigate() on the router object
+```
+
+The last one is the only route out of a module that never renders — a fetch wrapper redirecting on a 401, for instance. The hooks all need a component.
+
+## Where to catch errors
+
+Put `errorElement` on the root for a guaranteed catch, and on individual routes where the failure has its own UI — a missing post reads differently from a failed dashboard. Throw a `Response` from a loader (`throw new Response("Not Found", { status: 404 })`) to make the failure an HTTP error that `isRouteErrorResponse` can narrow.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Data Mode Setup
+### Pattern 1: Data Mode setup
 
-Define routes as objects with `createBrowserRouter`. Pass the router to `<RouterProvider>`. This is the entry point for all Data Mode features.
+Routes are objects, defined outside React so the router can run loaders before anything mounts.
 
 ```typescript
-import { createBrowserRouter, RouterProvider } from "react-router";
-import { RootLayout } from "./layouts/root-layout";
-import { HomePage } from "./pages/home";
-import { PostsPage, postsLoader } from "./pages/posts";
-
 const router = createBrowserRouter([
   {
     path: "/",
@@ -124,204 +127,117 @@ const router = createBrowserRouter([
     errorElement: <RootError />,
     children: [
       { index: true, element: <HomePage /> },
-      {
-        path: "posts",
-        element: <PostsPage />,
-        loader: postsLoader,
-      },
+      { path: "posts", element: <PostsPage />, loader: postsLoader },
     ],
   },
 ]);
-
-function App() {
-  return <RouterProvider router={router} />;
-}
 ```
 
-**Why:** Route config lives outside React rendering, enabling the router to call loaders before components mount. `errorElement` at the root catches any unhandled error in the tree.
-
-See [examples/core.md](examples/core.md) for complete setup with nested routes and error handling.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Loaders and Actions
+### Pattern 2: Loaders and actions
 
-Loaders fetch data before the route renders. Actions handle form mutations. Both receive `{ request, params }`. After an action completes, all active loaders automatically revalidate.
+A loader runs before render; an action handles submissions. Both receive `{ request, params }`, where `request` is a standard Web `Request`. Sibling loaders run in parallel, parent before child.
 
 ```typescript
-// Loader: runs before render
-export async function postsLoader() {
+export async function postsLoader({ request }: LoaderFunctionArgs) {
   const response = await fetch("/api/posts");
   if (!response.ok) throw new Response("Failed to load", { status: 500 });
-  return response.json(); // or return { posts: await response.json() }
+  return { posts: await response.json() };
 }
 
-// Action: handles Form submissions
 export async function createPostAction({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const title = formData.get("title") as string;
-  const post = await createPost({ title });
-  return redirect(`/posts/${post.id}`);
-}
-
-// Route config
-{
-  path: "posts",
-  element: <PostsPage />,
-  loader: postsLoader,
-  action: createPostAction,
+  const post = await createPost({ title: formData.get("title") });
+  throw redirect(`/posts/${post.id}`);
 }
 ```
 
-**Why:** Loaders run in parallel for sibling routes — no waterfall. Actions revalidate all active loaders automatically, keeping the UI in sync. Throwing a `Response` from a loader triggers `errorElement`.
-
-See [examples/data-loading.md](examples/data-loading.md) for actions, `useFetcher`, and revalidation patterns.
+Full code: [examples/data-loading.md](examples/data-loading.md)
 
 ---
 
-### Pattern 3: Error Boundaries with errorElement
+### Pattern 3: Error boundaries with errorElement
 
-Every route can define `errorElement` to catch errors from its loader, action, or component. Use `useRouteError()` to access the error and `isRouteErrorResponse()` to distinguish HTTP errors from unexpected exceptions.
+`errorElement` catches failures from the route's loader, action and component alike. `isRouteErrorResponse` separates a thrown `Response` from an unexpected exception.
 
 ```typescript
-import { useRouteError, isRouteErrorResponse } from "react-router";
-
 function RouteError() {
   const error = useRouteError();
-
   if (isRouteErrorResponse(error)) {
-    return (
-      <div role="alert">
-        <h2>{error.status}: {error.statusText}</h2>
-        <p>{error.data}</p>
-      </div>
-    );
+    return <p role="alert">{error.status}: {error.statusText}</p>;
   }
-
-  return (
-    <div role="alert">
-      <h2>Unexpected Error</h2>
-      <pre>{error instanceof Error ? error.message : "Unknown error"}</pre>
-    </div>
-  );
+  return <p role="alert">{error instanceof Error ? error.message : "Unknown error"}</p>;
 }
 ```
 
-**Why:** `isRouteErrorResponse` distinguishes thrown `Response` objects (4xx/5xx from loaders) from unexpected exceptions. Without `errorElement`, a single loader failure crashes the entire router.
-
-See [examples/error-handling.md](examples/error-handling.md) for nested error boundaries and retry patterns.
+Full code: [examples/error-handling.md](examples/error-handling.md)
 
 ---
 
-### Pattern 4: Nested Layouts with Outlet
+### Pattern 4: Nested layouts with Outlet
 
-Parent routes render `<Outlet />` where child routes appear. This creates persistent layouts (sidebars, headers) that do not unmount on child navigation.
+A parent route renders `<Outlet />` where its matched child goes. The layout survives child navigation, so sidebars and their state persist.
 
 ```typescript
-import { Outlet, NavLink } from "react-router";
-
 function DashboardLayout() {
   return (
-    <div className="dashboard">
-      <nav>
-        <NavLink to="/dashboard" end>Overview</NavLink>
-        <NavLink to="/dashboard/analytics">Analytics</NavLink>
-      </nav>
-      <main>
-        <Outlet />
-      </main>
+    <div>
+      <nav><NavLink to="/dashboard" end>Overview</NavLink></nav>
+      <main><Outlet /></main>
     </div>
   );
 }
-
-// Route config
-{
-  path: "dashboard",
-  element: <DashboardLayout />,
-  children: [
-    { index: true, element: <DashboardOverview /> },
-    { path: "analytics", element: <AnalyticsPage />, loader: analyticsLoader },
-  ],
-}
 ```
 
-**Why:** Layout routes share UI across child routes without re-rendering. `<Outlet />` is the slot where the matched child renders. Forgetting `<Outlet />` means child routes render nothing.
-
-See [examples/layouts.md](examples/layouts.md) for `useOutletContext`, pathless layouts, and auth guards.
+Full code: [examples/layouts.md](examples/layouts.md)
 
 ---
 
-### Pattern 5: Navigation State with useNavigation
+### Pattern 5: Navigation state with useNavigation
 
-`useNavigation()` exposes the current navigation state. Use it for global loading indicators and optimistic UI during form submissions.
+`navigation.state` is `"idle"`, `"loading"` (a loader is running) or `"submitting"` (an action is). One indicator in the root layout covers the whole app.
 
 ```typescript
-import { useNavigation } from "react-router";
-
 function GlobalSpinner() {
   const navigation = useNavigation();
-  const isNavigating = navigation.state !== "idle";
-
-  if (!isNavigating) return null;
-
-  return <div className="global-spinner" aria-busy="true">Loading...</div>;
+  if (navigation.state === "idle") return null;
+  return <div role="progressbar" aria-busy="true" />;
 }
 ```
 
-**Why:** `navigation.state` is `"idle"`, `"loading"` (loader running), or `"submitting"` (action running). Place the spinner in your root layout for app-wide pending indication.
+Full code: [examples/error-handling.md](examples/error-handling.md)
 
 ---
 
-### Pattern 6: Non-Navigating Mutations with useFetcher
+### Pattern 6: Non-navigating mutations with useFetcher
 
-`useFetcher` handles mutations that should not trigger a full page navigation — inline forms, toggle buttons, auto-save, "add to cart" actions.
+`fetcher.Form` submits to an action without changing the URL. Fetchers carry independent `state` and `data`, several can be in flight at once, and active loaders still revalidate when each one finishes.
 
 ```typescript
-import { useFetcher } from "react-router";
-
 function DeleteButton({ postId }: { postId: string }) {
   const fetcher = useFetcher();
-  const isDeleting = fetcher.state !== "idle";
-
   return (
     <fetcher.Form method="POST" action={`/posts/${postId}/delete`}>
-      <button type="submit" disabled={isDeleting}>
-        {isDeleting ? "Deleting..." : "Delete"}
-      </button>
+      <button type="submit" disabled={fetcher.state !== "idle"}>Delete</button>
     </fetcher.Form>
   );
 }
 ```
 
-**Why:** Unlike `<Form>`, `fetcher.Form` does not change the URL. Multiple fetchers can be active simultaneously. Each fetcher has independent `state` and `data`. After the action completes, active loaders revalidate.
-
-See [examples/data-loading.md](examples/data-loading.md) for `useFetcher` patterns including optimistic UI.
+Full code: [examples/data-loading.md](examples/data-loading.md)
 
 ---
 
-### Pattern 7: Code Splitting with route.lazy
+### Pattern 7: Code splitting with route.lazy
 
-Use `route.lazy` to defer loading route modules until navigation. In v7.5+, the object-based API allows granular splitting of individual properties.
-
-```typescript
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <RootLayout />,
-    children: [
-      { index: true, element: <HomePage /> },
-      {
-        path: "admin",
-        lazy: () => import("./pages/admin"),
-        // The module must export: Component, loader, action, errorElement, etc.
-      },
-    ],
-  },
-]);
-```
+`route.lazy` defers a route module until navigation. The function form ships one chunk; the v7.5+ object form splits each property so the loader and the component download in parallel.
 
 ```typescript
-// v7.5+ granular lazy loading
+{ path: "admin", lazy: () => import("./pages/admin") }
+
 {
   path: "admin",
   lazy: {
@@ -331,147 +247,35 @@ const router = createBrowserRouter([
 }
 ```
 
-**Why:** `route.lazy` keeps the initial bundle small. The function-based API loads everything at once. The v7.5+ object-based API lets you split loader, component, and action into separate chunks for parallel downloads.
-
-See [examples/error-handling.md](examples/error-handling.md) for lazy loading patterns and preloading.
+Full code: [examples/error-handling.md](examples/error-handling.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Which Mode to Use
-
-```
-What do you need from routing?
-  +-- Just URL matching and Links?
-  |   -> Declarative Mode (<BrowserRouter>)
-  +-- Data loading, actions, pending states?
-  |   -> Data Mode (createBrowserRouter) - this skill
-  +-- SSR, file-based routing, full framework?
-  |   -> Framework Mode (Vite plugin)
-```
-
-### Where to Put Data Logic
-
-```
-What does the logic do?
-  +-- Fetch data for the component?
-  |   -> loader (runs before render, parallel with siblings)
-  +-- Handle a form submission or mutation?
-  |   -> action (processes FormData, returns result or redirects)
-  +-- Mutation without navigation (inline form, button)?
-  |   -> useFetcher (independent state, no URL change)
-  +-- Check auth and redirect?
-  |   -> loader (throw redirect() if unauthorized)
-```
-
-### When to Use Each Navigation Method
-
-```
-Need to navigate?
-  +-- Clickable element in JSX?
-  |   +-- YES -> <Link> or <NavLink>
-  |   +-- NO -> After side effect (form submit, mutation)?
-  |       +-- YES -> useNavigate() or redirect() in action
-  |       +-- NO -> In a loader?
-  |           +-- YES -> throw redirect()
-  |           +-- NO -> router.navigate()
-```
-
-### Error Handling Strategy
-
-```
-Where to put error handling?
-  +-- Root-level catch-all?
-  |   -> errorElement on the root route (catches everything)
-  +-- Per-page error UI?
-  |   -> errorElement on each route (fine-grained)
-  +-- Data-level not-found?
-  |   -> throw new Response("Not Found", { status: 404 }) in loader
-  +-- Distinguish HTTP errors from exceptions?
-  |   -> isRouteErrorResponse(error) in errorElement component
-```
-
-### Layout Strategy
-
-```
-Need shared UI across routes?
-  +-- Persistent layout (sidebar, header)?
-  |   -> Parent route with <Outlet />
-  +-- Pass data from layout to children?
-  |   -> <Outlet context={...} /> + useOutletContext()
-  +-- Auth guard wrapping multiple routes?
-  |   -> Pathless layout route with loader that redirects
-  +-- Route should escape parent layout?
-  |   -> Move route outside the parent in the config
-```
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `<BrowserRouter>` with `<Routes>` and expecting loaders/actions to work (they are Data Mode features requiring `createBrowserRouter`)
-- Importing from `"react-router-dom"` in v7 (package is removed, use `"react-router"` for all imports)
-- Using `json()` or `defer()` in v7 (removed, return plain objects from loaders)
-- Using `return redirect()` inside shared helper functions (execution continues after the return — use `throw redirect()` to stop the entire call stack)
-- Forgetting `errorElement` on the root route (unhandled loader errors crash the entire router with a white screen)
+- Importing from `"react-router-dom"` — deprecated in v7 and deleted in v8, and it still resolves today so nothing tells you — import from `"react-router"`, or `"react-router/dom"` for `RouterProvider`.
+- Calling `json()` or `defer()` — removed in v7 — return a plain object, or a promise for the deferred half and read it with `<Await>`.
+- `loader` or `action` on a `<Route>` under `<BrowserRouter>` — accepted and ignored with no warning — switch the tree to `createBrowserRouter`.
+- No `errorElement` anywhere in the tree — one loader failure replaces the app with the router's default error dump — put one on the root.
+- `return redirect()` inside a shared helper — the caller carries on with a `Response` as its return value — `throw` it instead.
+- A layout that renders no `<Outlet />` — matched children render nowhere, silently.
+- `useLoaderData()` in a component whose route has no loader — returns `undefined` well away from the cause.
+- `navigation.formMethod === "post"` — v7 uppercases form methods — compare against `"POST"`.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Forgetting `<Outlet />` in layout routes (child routes render nothing, no error shown)
-- Using `useLoaderData()` in a component that does not belong to a route with a loader (returns `undefined`, hard to debug)
-- Fetching data inside components with `useEffect` when a loader would eliminate the waterfall
-- Using `navigation.formMethod === "post"` (v7 uppercases form methods: use `"POST"`)
-- Creating multiple `<Form>` components when only one should navigate (use `useFetcher` for the others)
-
-**Common Mistakes:**
-
-- Returning data from an action without redirecting (users see stale UI on refresh because the action result is not a URL)
-- Putting auth checks in components instead of loaders (the component renders briefly before the redirect)
-- Using `navigate(-1)` for "back" without considering what "back" means when the user deep-linked (there is no history entry)
-- Accessing `params` as numbers without parsing (`params.id` is always a `string`)
-
-**Gotchas and Edge Cases:**
-
-- Loaders for sibling routes run in parallel, but loaders for parent-child routes run sequentially (parent first, child after)
-- After a successful action, ALL active loaders revalidate by default, not just the action's route — but in v7, loaders do NOT revalidate after action errors (4xx/5xx status) unless `shouldRevalidate` opts back in
-- `useFetcher` does not trigger `useNavigation` state changes (fetcher state is independent)
-- `shouldRevalidate` can suppress revalidation per-route, but defaults to revalidating everything after actions
-- `useSearchParams` setter does NOT support React's setState queueing — multiple calls in the same tick do not build on previous values
-- `route.lazy` cannot define `path`, `index`, `children`, or `id` — those must be statically defined in the route config
-- The `request` in loaders and actions is a standard Web `Request` — use `request.formData()`, `request.json()`, etc.
-- Throwing a `Response` object in a loader makes it available as an `ErrorResponse` via `useRouteError` — use `isRouteErrorResponse()` to type-narrow
+- After a successful action every active loader revalidates, not just the acting route's. After an action _error_ none of them do, unless `shouldRevalidate` opts back in.
+- `useFetcher` never moves `useNavigation` state; the two are independent.
+- The `useSearchParams` setter does not queue like `setState` — two calls in one tick do not build on each other, so use the callback form.
+- `route.lazy` cannot supply `path`, `index`, `children` or `id`; those stay in the static config.
+- `params` values are always strings — parse in the loader rather than in the component.
+- Returning data from an action instead of redirecting leaves the result unaddressable, so a refresh shows the pre-mutation UI.
+- `navigate(-1)` assumes a history entry that a deep-linked visitor does not have.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST use `createBrowserRouter` + `<RouterProvider>` for Data Mode — NEVER use `<BrowserRouter>` with `<Routes>` if you need loaders, actions, or fetchers)**
-
-**(You MUST import from `"react-router"` — the `react-router-dom` package is removed in v7. All exports, including `RouterProvider` and `createBrowserRouter`, come from `"react-router"`)**
-
-**(You MUST return plain objects from loaders — `json()` and `defer()` are removed in v7. Return `{ data }` directly or use `Response.json()`)**
-
-**(You MUST use `throw redirect()` in loaders and shared helpers to short-circuit execution — `return redirect()` also works but does not stop execution in helper function call stacks)**
-
-**(You MUST use `errorElement` or `ErrorBoundary` on routes — unhandled loader/action errors crash the entire router)**
-
-**Failure to follow these rules will cause white screens from unhandled errors, broken data loading from wrong imports, and missed redirects in helper functions.**
-
-</critical_reminders>

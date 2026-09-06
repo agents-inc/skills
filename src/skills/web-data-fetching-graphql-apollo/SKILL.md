@@ -1,67 +1,83 @@
 ---
 name: web-data-fetching-graphql-apollo
-description: Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions
+description: Apollo Client GraphQL patterns — normalized cache and type policies, queries, mutations with optimistic updates, pagination, fragments, subscriptions, and Suspense hooks
 ---
 
-# Apollo Client GraphQL Patterns
+# Apollo Client Patterns
 
-> **Quick Guide:** Use Apollo Client for GraphQL APIs. Provides automatic normalized caching, optimistic updates, and real-time subscriptions. Always use GraphQL Codegen for type safety. Configure `keyFields` on every entity type for proper cache normalization. Use `errorPolicy: "all"` for graceful degradation. **v3.9+** adds Suspense hooks; **v4.0** moves React imports to `@apollo/client/react` and adds `dataState` for type-safe query state.
+> **Quick Guide:** Apollo stores every entity once, keyed by `__typename` plus its `keyFields`, and
+> re-renders everything watching it. Most of the difficulty is in the cache rather than the hooks:
+> `keyFields` decides identity, `keyArgs` decides how many cache entries a paginated field gets, and
+> an optimistic response missing `__typename` fails to normalize without saying so. v3.9 added the
+> Suspense hooks; v4 moved the React hooks to `@apollo/client/react` and typed the error classes.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — codegen config, client and link chain, `useQuery`, `useLazyQuery`, mutations with cache updates
+- [examples/pagination.md](examples/pagination.md) — `fetchMore` with an observer, relay and offset type policies
+- [examples/fragments.md](examples/fragments.md) — fragment definition, composition and use in queries
+- [examples/error-handling.md](examples/error-handling.md) — partial data rendering, global error link
+- [examples/subscriptions.md](examples/subscriptions.md) — split link over `graphql-ws`, `useSubscription` writing to cache
+- [examples/suspense.md](examples/suspense.md) — `useSuspenseQuery`, `useLoadableQuery`, `useBackgroundQuery`, `createQueryPreloader`
+- [examples/testing.md](examples/testing.md) — `MockedProvider`, mock shapes, asserting cache updates, schema-based testing
+- [reference.md](reference.md) — fetch/error policy, network status and cache method tables, v3 → v4 migration
+
+---
+
+## Which path applies
+
+- **Apollo Client v4** — React hooks come from `@apollo/client/react`, links are constructed with
+  `new HttpLink()`, `uri` on the client is gone, and errors are `CombinedGraphQLErrors` /
+  `ServerError` rather than one `ApolloError`. The full map is in
+  [reference.md](reference.md); `npx @apollo/client-codemod-migrate-3-to-4` does the mechanical part.
+- **Suspense loading** — the component suspends instead of returning `loading`, and errors throw to
+  the nearest error boundary. Pattern 9, then [examples/suspense.md](examples/suspense.md).
+- **Classic hooks** — `useQuery` returns `loading`, `error` and `data`, and the component renders
+  each state itself. Patterns 2 onward.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Apollo code
 
-**(You MUST use GraphQL Codegen for type generation - NEVER write manual TypeScript types for GraphQL)**
+**Generate the operation types from the schema.** A hand-written response type is a second copy of
+the schema that nothing keeps in step, and it goes wrong silently — the field the backend added is
+absent from the type and absent from every render that needed it.
 
-**(You MUST include `__typename` and `id` in all optimistic responses for cache normalization)**
+**Put `__typename` and the identifying field in every optimistic response.** Without them the entry
+cannot be normalized, so the optimistic write lands nowhere and the UI does not move until the
+server answers.
 
-**(You MUST configure type policies with appropriate `keyFields` for every entity type)**
-
-**(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
+**Give every entity type a `keyFields` policy.** It is what decides whether two responses are the
+same entity, and the default `["id"]` is wrong for anything keyed on `sku`, a slug, or a pair.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Apollo Client, useQuery, useMutation, useSubscription, useSuspenseQuery, useLoadableQuery, useBackgroundQuery, useFragment, ApolloClient, InMemoryCache, gql, GraphQL, optimistic updates, cache policies, createQueryPreloader
+**Auto-detection:** `ApolloClient`, `InMemoryCache`, `ApolloProvider`, `useQuery`, `useLazyQuery`,
+`useMutation`, `useSubscription`, `useFragment`, `useSuspenseQuery`, `useLoadableQuery`,
+`useBackgroundQuery`, `useReadQuery`, `createQueryPreloader`, `typePolicies`, `keyFields`,
+`keyArgs`, `cache.modify`, `cache.evict`, `relayStylePagination`, `makeVar`, `gql`
 
-**When to use:**
+**Applies to:**
 
-- Fetching data from GraphQL APIs
-- Real-time updates with GraphQL subscriptions
-- Complex cache management with normalized data
-- Optimistic UI updates for mutations
-- Applications already using a GraphQL server
+- Normalized caching, type policies and cache identity
+- Queries, mutations, optimistic responses and cache updates after a write
+- Cursor and offset pagination through `fetchMore`
+- Fragment colocation and reading a fragment straight from the cache
+- Real-time data over a subscription link
+- Suspense-based loading and route preloading
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- REST APIs (use your data fetching solution instead)
-- Simple APIs without caching needs (consider fetch directly)
-- When GraphQL Codegen cannot be integrated
-
-**Key patterns covered:**
-
-- Client setup with InMemoryCache and type policies
-- useQuery / useLazyQuery for queries with loading, error, and data states
-- useMutation with optimistic updates, cache.modify, and cache.evict
-- useSubscription for real-time WebSocket data
-- Pagination with fetchMore and relayStylePagination
-- Fragment colocation and useFragment
-- Reactive variables for local client state
-- Suspense hooks: useSuspenseQuery, useLoadableQuery, useBackgroundQuery, createQueryPreloader
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Client setup, useQuery, useMutation with cache updates
-- [examples/pagination.md](examples/pagination.md) - Infinite scroll, relay pagination type policies
-- [examples/fragments.md](examples/fragments.md) - Fragment definitions, composition, colocation
-- [examples/error-handling.md](examples/error-handling.md) - Component-level and global error handling
-- [examples/subscriptions.md](examples/subscriptions.md) - WebSocket link setup, useSubscription with cache updates
-- [examples/testing.md](examples/testing.md) - MockedProvider, component tests, schema-based testing
-- [examples/suspense.md](examples/suspense.md) - v3.9+ Suspense hooks (useSuspenseQuery, useLoadableQuery, useBackgroundQuery)
-- [reference.md](reference.md) - Decision frameworks, API reference tables, anti-patterns
+- APIs addressed over REST — this client speaks one query language
+- Designing the schema and its resolvers; this skill consumes a schema
+- Client state that does not correspond to any server field — reactive variables cover the simple
+  cases here, and anything derived or complex belongs to whatever owns client state
+- Form state and validation
+- Where errors are shipped once the error link has caught them
 
 ---
 
@@ -69,22 +85,14 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 ## Philosophy
 
-Apollo Client is a comprehensive GraphQL client that provides intelligent normalized caching, reducing redundant network requests and keeping your UI consistent across components.
+The cache is the product. A response is not stored as a response — it is split into entities keyed
+by `__typename` plus `keyFields`, and every hook watching one of those entities re-renders when it
+changes. So one mutation updates every list, detail view and badge showing that entity, without any
+of them refetching.
 
-**Core Principles:**
-
-1. **Normalized Cache**: Data is stored once by type and ID, referenced everywhere - update in one place, UI reflects everywhere
-2. **Declarative Data Fetching**: Components declare what data they need via GraphQL, Apollo handles caching, deduplication, and network
-3. **Optimistic UI**: Show expected results immediately, rollback automatically on server error
-4. **Type Safety**: GraphQL Codegen generates TypeScript types from your schema - never write response types manually
-
-**Data Flow:**
-
-1. Component requests data via useQuery/useMutation
-2. Apollo checks InMemoryCache (normalized by `__typename` + `keyFields`)
-3. If cache miss or stale, fetches from network
-4. Response is normalized and stored in cache
-5. All components watching that data re-render automatically
+The corollary is that everything which can go wrong with Apollo is an identity question: two
+responses that should have been one entry, one entry that should have been two, or a write the cache
+could not place because it did not know what it was.
 
 </philosophy>
 
@@ -92,45 +100,38 @@ Apollo Client is a comprehensive GraphQL client that provides intelligent normal
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Client Setup and Configuration
+### Pattern 1: Client setup and type policies
 
-Configure ApolloClient with InMemoryCache, type policies for cache normalization, and link chain for error handling and auth. Environment variables should use your framework's convention for the GraphQL endpoint.
+Build the cache with a type policy per entity, and compose the link chain so auth and error handling
+sit in front of the transport.
 
 ```typescript
 const cache = new InMemoryCache({
   typePolicies: {
     User: { keyFields: ["id"] },
-    Product: { keyFields: ["sku"] }, // Non-default identifier
-    CartItem: { keyFields: false }, // Embed in parent, don't normalize
-    Query: {
-      fields: {
-        usersConnection: relayStylePagination(["filter"]),
-      },
-    },
+    Product: { keyFields: ["sku"] }, // identity is not always "id"
+    CartItem: { keyFields: false }, // embed in the parent, never its own entry
+    Query: { fields: { usersConnection: relayStylePagination(["filter"]) } },
   },
 });
 ```
 
-**Key decisions:** `keyFields` determines how entities are identified in cache. Use `["id"]` (default), custom field like `["sku"]`, composite `["authorId", "postId"]`, or `false` for embedded types.
+`keyFields` takes `["id"]`, another single field, a composite like `["authorId", "postId"]`, `[]` for
+a singleton, or `false` to embed.
 
-See [examples/core.md](examples/core.md) Pattern 1 for complete client setup with auth link, error link, and codegen configuration.
+Full code: [examples/core.md](examples/core.md) — codegen config, auth link, error link, client
+singleton
 
 ---
 
-### Pattern 2: useQuery for Data Fetching
-
-Declare data requirements with `useQuery`. Always handle loading, error, and empty states. Use `cache-and-network` for stale-while-revalidate behavior.
+### Pattern 2: Queries
 
 ```typescript
 const { data, loading, error, refetch } = useQuery<GetUsersQuery, GetUsersQueryVariables>(
   GET_USERS,
-  {
-    variables: { limit: DEFAULT_PAGE_SIZE },
-    fetchPolicy: "cache-and-network",
-    skip: !shouldFetch,
-  }
+  { variables: { limit: DEFAULT_PAGE_SIZE }, fetchPolicy: "cache-and-network", skip: !shouldFetch },
 );
 
 if (loading && !data) return <Skeleton />;
@@ -138,22 +139,25 @@ if (error) return <Error message={error.message} onRetry={() => refetch()} />;
 if (!data?.users?.length) return <EmptyState />;
 ```
 
-**Why this pattern:** `loading && !data` shows skeleton only on initial load (not background refetch). `cache-and-network` shows cached data immediately while refreshing from network.
+`loading && !data` shows the skeleton on first load only, so a background refetch does not blank the
+screen. `cache-and-network` renders the cached value immediately and revalidates behind it.
 
-See [examples/core.md](examples/core.md) Pattern 2 for complete useQuery and useLazyQuery examples.
+Full code: [examples/core.md](examples/core.md) — also `useLazyQuery` for user-triggered fetches
 
 ---
 
-### Pattern 3: useMutation with Optimistic Updates and Cache Updates
+### Pattern 3: Mutations and cache updates
 
-For mutations, decide between three cache update strategies: optimistic response (instant UI), `update` callback with `cache.modify` (manual cache update), or `refetchQueries` (simple but costs a network request).
+Three ways to make the cache agree with a write, in ascending cost: an optimistic response that
+normalizes on its own, an `update` callback using `cache.modify`, or `refetchQueries`, which is the
+simplest and costs a round trip.
 
 ```typescript
 const [createPost] = useMutation(CREATE_POST, {
   optimisticResponse: {
     createPost: {
-      __typename: "Post", // REQUIRED for normalization
-      id: `temp-${Date.now()}`, // Temporary ID, replaced by server response
+      __typename: "Post",
+      id: `temp-${Date.now()}`,
       title,
       content,
     },
@@ -161,54 +165,51 @@ const [createPost] = useMutation(CREATE_POST, {
   update(cache, { data }) {
     cache.modify({
       fields: {
-        posts(existing = [], { toReference }) {
-          return [toReference(data.createPost), ...existing];
-        },
+        posts: (existing = [], { toReference }) => [
+          toReference(data.createPost),
+          ...existing,
+        ],
       },
     });
   },
 });
 ```
 
-**Critical:** Always include `__typename` and `id` in optimistic responses. For deletes, use `cache.evict()` + `cache.gc()`. For simple cases, `refetchQueries` is fine.
+An optimistic response carries every field the mutation returns — a partial one writes holes into the
+cache. It needs no rollback code: Apollo keeps optimistic writes in a separate layer and discards
+that layer when the mutation fails. Deleting takes `cache.evict()` followed by `cache.gc()`; the
+evict alone leaves dangling references behind. `refetchQueries` earns its round trip on a large paginated list, where a local
+edit cannot know where the new row sorts, and on a write that changes several queries at once.
 
-See [examples/core.md](examples/core.md) Pattern 3 for create, update, and delete mutation examples.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Cache Type Policies
+### Pattern 4: Computed and local fields
 
-Type policies control how Apollo normalizes and retrieves cached data. This is where you configure cache identifiers, computed fields, pagination merging, and local state.
+A field policy's `read` function invents a field that no server returns, from other cached fields or
+from a reactive variable.
 
 ```typescript
-typePolicies: {
-  User: {
-    keyFields: ["id"],
-    fields: {
-      fullName: {
-        read(_, { readField }) {
-          return `${readField("firstName")} ${readField("lastName")}`;
-        },
-      },
+User: {
+  fields: {
+    fullName: {
+      read: (_, { readField }) => `${readField("firstName")} ${readField("lastName")}`,
     },
   },
-  Query: {
-    fields: {
-      isLoggedIn: { read() { return isLoggedInVar(); } },
-    },
-  },
-}
+},
+Query: { fields: { isLoggedIn: { read: () => isLoggedInVar() } } },
 ```
 
-**Key patterns:** `keyFields` for identification, `merge` for pagination, `read` for computed/local fields, `keyArgs` for separating cache entries per filter.
-
-See [examples/core.md](examples/core.md) Pattern 1 and [examples/pagination.md](examples/pagination.md) for type policy examples.
+Use `readField` rather than property access — a cached field may hold a `Reference` rather than a
+value.
 
 ---
 
-### Pattern 5: Pagination with fetchMore
+### Pattern 5: Pagination
 
-Two approaches: **Relay-style** (cursor-based, use `relayStylePagination`) and **offset-based** (custom merge/read functions). Both require type policies for merging.
+Cursor pages go through `relayStylePagination`; offset pages need a `merge` and a `read` written by
+hand. Both live in the type policy, not in the component.
 
 ```typescript
 const { data, fetchMore } = useQuery(GET_USERS_CONNECTION, {
@@ -216,49 +217,47 @@ const { data, fetchMore } = useQuery(GET_USERS_CONNECTION, {
 });
 
 const loadMore = () =>
-  fetchMore({
-    variables: { after: data.usersConnection.pageInfo.endCursor },
-  });
+  fetchMore({ variables: { after: data.usersConnection.pageInfo.endCursor } });
 ```
 
-**Key requirement:** `keyArgs` must be set to separate cache entries per filter. Without it, different filtered queries overwrite each other.
+`keyArgs` is what separates one filter's pages from another's. Without it every filter merges into
+one entry and the list shows the wrong rows.
 
-See [examples/pagination.md](examples/pagination.md) for infinite scroll with IntersectionObserver and custom offset pagination type policies.
+Full code: [examples/pagination.md](examples/pagination.md)
 
 ---
 
-### Pattern 6: Fragment Colocation
+### Pattern 6: Fragment colocation
 
-Colocate data requirements with components using fragments. Parent queries include child fragments, so component changes don't require updating parent queries.
+A component declares the fields it needs; the parent query spreads that fragment. Changing what the
+child renders then changes one file rather than every query that contains it.
 
 ```typescript
 const USER_CARD_FRAGMENT = gql`
   fragment UserCard on User {
     id
     name
-    email
     avatar
   }
 `;
 
-// Parent query includes child fragment
 const GET_USERS = gql`
   query GetUsers {
     users {
       ...UserCard
     }
   }
-  ${UserCard.fragments.user}
+  ${USER_CARD_FRAGMENT}
 `;
 ```
 
-See [examples/fragments.md](examples/fragments.md) for fragment composition and [examples/core.md](examples/core.md) Pattern 2 for fragments in queries.
+Full code: [examples/fragments.md](examples/fragments.md)
 
 ---
 
-### Pattern 7: Subscriptions for Real-Time Data
+### Pattern 7: Subscriptions
 
-Requires split link configuration: WebSocket for subscriptions, HTTP for queries/mutations. Use `graphql-ws` (not the deprecated `subscriptions-transport-ws`).
+Route subscriptions to a websocket link and everything else to HTTP, with `split`.
 
 ```typescript
 const splitLink = split(
@@ -273,180 +272,91 @@ const splitLink = split(
 );
 ```
 
-**Important:** Only create `wsLink` on the client side (`typeof window !== "undefined"`). Update cache in `onData` callback.
+Construct `wsLink` only where `window` exists, or a server render opens a socket. Write the payload
+into the cache from `onData`, or the subscription updates nothing.
 
-See [examples/subscriptions.md](examples/subscriptions.md) for complete WebSocket setup and useSubscription with cache updates.
+Full code: [examples/subscriptions.md](examples/subscriptions.md)
 
 ---
 
-### Pattern 8: Local State with Reactive Variables
-
-Use `makeVar` for simple client-side state that integrates with Apollo's reactivity system. Suitable for theme, auth status, cart items - not complex state.
+### Pattern 8: Reactive variables for local state
 
 ```typescript
 const cartItemsVar = makeVar<string[]>([]);
 const addToCart = (id: string) => cartItemsVar([...cartItemsVar(), id]);
 
-// Component reacts automatically
 const cartItems = useReactiveVar(cartItemsVar);
 ```
 
-**When to use reactive vars vs external state management:** Reactive vars for simple Apollo-integrated state. For complex non-GraphQL state, use your client state management solution.
+A reactive variable is readable from a field policy's `read`, which is what lets local state be
+queried alongside server data. It holds a value and notifies — anything needing derivation,
+middleware or history belongs to a state solution instead.
 
 ---
 
-### Pattern 9: Suspense Hooks (v3.9+)
+### Pattern 9: Suspense hooks
 
-Four Suspense-enabled hooks for different loading patterns:
-
-| Hook                   | Trigger          | Use Case                     |
+| Hook                   | Fetch starts on  | For                          |
 | ---------------------- | ---------------- | ---------------------------- |
-| `useSuspenseQuery`     | Component mount  | Standard data loading        |
-| `useLoadableQuery`     | User interaction | Hover/click prefetch         |
-| `useBackgroundQuery`   | Parent mount     | Parent triggers, child reads |
-| `createQueryPreloader` | Route transition | Router loader integration    |
+| `useSuspenseQuery`     | component mount  | ordinary loading             |
+| `useLoadableQuery`     | user interaction | hover or click prefetch      |
+| `useBackgroundQuery`   | parent mount     | parent triggers, child reads |
+| `createQueryPreloader` | route transition | router loaders               |
 
-**Key difference from useQuery:** No `loading` state - component suspends instead. Errors throw to Error Boundary.
+None of them return `loading` — the component suspends, and errors throw to the error boundary. The
+last three hand back a `queryRef` that `useReadQuery` consumes inside a `Suspense` boundary.
 
-See [examples/suspense.md](examples/suspense.md) for complete examples of all four patterns.
+Full code: [examples/suspense.md](examples/suspense.md)
 
 ---
 
-### Pattern 10: useFragment for Data Masking (v3.8+)
-
-Read fragment data directly from cache with automatic updates. Useful for components that only need a subset of cached entity data.
+### Pattern 10: Reading a fragment from the cache
 
 ```typescript
-const { data: user, complete } = useFragment({
-  fragment: USER_CARD_FRAGMENT,
-  from: userRef,
-});
+const { data: user, complete } = useFragment({ fragment: USER_CARD_FRAGMENT, from: userRef });
 if (!complete) return <Skeleton />;
 ```
 
-**Why useful:** Reads directly from cache without additional queries, `complete` flag indicates if all fragment fields are available.
+No query is issued: the fields are read from the cache and re-read whenever they change. `complete`
+is false when some fragment field was never cached.
 
 </patterns>
 
 ---
 
-<version_migration>
-
-## Apollo Client v4 Migration Notes
-
-**Apollo Client v4** (released September 2025, latest v4.1.6) introduces significant breaking changes. A codemod handles most mechanical changes: `npx @apollo/client-codemod-migrate-3-to-4`
-
-### Breaking Changes Summary
-
-| Change                        | v3                    | v4                                                         |
-| ----------------------------- | --------------------- | ---------------------------------------------------------- |
-| React hook imports            | `@apollo/client`      | `@apollo/client/react`                                     |
-| Client `uri` option           | Allowed directly      | Must use explicit `HttpLink`                               |
-| `name`/`version`              | Top-level on client   | `clientAwareness: { name, version }`                       |
-| `notifyOnNetworkStatusChange` | Default `false`       | Default `true`                                             |
-| Error classes                 | `ApolloError`         | `CombinedGraphQLErrors`, `ServerError`, `ServerParseError` |
-| Observable library            | `zen-observable`      | `rxjs` (peer dependency)                                   |
-| Link creation                 | `createHttpLink()`    | `new HttpLink()` (class-based)                             |
-| `from()`/`concat()`/`split()` | Standalone functions  | `ApolloLink.from()` static methods                         |
-| `connectToDevTools`           | Client option         | Replaced by `devtools: { enabled: true }`                  |
-| Local resolvers               | `resolvers` on client | Explicit `LocalState` class                                |
-
-### New: `dataState` Property (v4)
-
-```typescript
-const { data, dataState } = useQuery(GET_USER);
-// dataState: "empty" | "partial" | "streaming" | "complete"
-if (dataState === "complete") {
-  // TypeScript knows data is fully populated
-}
-```
-
-### New: Error Type Guards (v4)
-
-```typescript
-import { CombinedGraphQLErrors, ServerError } from "@apollo/client";
-
-if (CombinedGraphQLErrors.is(error)) {
-  error.errors.forEach(({ message }) => console.error(message));
-}
-if (ServerError.is(error)) {
-  console.error(`Server responded with ${error.statusCode}`);
-}
-```
-
-See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration) for complete details.
-
-</version_migration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Manual GraphQL type definitions** - Use GraphQL Codegen; manual types drift from schema causing runtime errors
-- **Missing `__typename` in optimistic responses** - Cache normalization fails silently
-- **Missing `id` in query responses** - Apollo cannot normalize data without identifiers
-- **Missing `keyArgs` in paginated type policies** - Different filters overwrite each other in cache
-- **(v4) Importing React hooks from `@apollo/client`** - Must use `@apollo/client/react` in v4
-- **(v4) Using `uri` option directly on ApolloClient** - Must use explicit `HttpLink` in v4
+- An optimistic response without `__typename`, or missing a field the mutation returns —
+  normalization fails silently and the cache holds a hole.
+- A paginated field policy with no `keyArgs` — every filter shares one entry, so switching filters
+  shows the previous filter's rows.
+- A paginated field with no `merge` — `fetchMore` replaces the list instead of extending it.
+- A query that does not select the entity's key field — the response cannot be normalized, so it
+  lands under the parent field and a mutation updating that entity leaves this query untouched.
+- `cache.evict()` without `cache.gc()` — the entity is gone but references to it are not.
+- (v4) React hooks imported from `@apollo/client` — they live at `@apollo/client/react`.
+- (v4) `uri` passed to `ApolloClient` — construct an `HttpLink` and pass `link`.
+- (v4) `rxjs` not installed — it is a required peer dependency, replacing `zen-observable`.
+- Rendering `data` with no `loading` or `error` branch — the first render has neither.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Not using `errorPolicy: "all"`** - Partial data is often better UX than complete failure
-- **`refetchQueries` for simple updates** - Direct cache updates with `cache.modify` are more efficient
-- **`network-only` for all queries** - `cache-and-network` provides better UX (stale-while-revalidate)
-- **Not typing `useQuery`/`useMutation` generics** - Loses type safety benefits
-- **Missing loading/error state handling** - Causes crashes when data is undefined and poor UX
-
-**Common Mistakes:**
-
-- Forgetting to run `graphql-codegen` after schema changes
-- Not including all required fields in optimistic responses (every field the mutation returns must be present)
-- Using `cache.writeQuery` when `cache.modify` is more appropriate (writeQuery replaces entire query result)
-- Mixing up `update` callback (for cache updates) with `onCompleted` callback (for side effects like navigation)
-- Not using `notifyOnNetworkStatusChange` when showing refetch/fetchMore loading states
-
-**Gotchas & Edge Cases:**
-
-- `fetchMore` pagination requires type policy merge functions - without them, new data replaces old
-- `cache.evict` must be followed by `cache.gc()` to clean up orphaned references
-- `readField` in type policies is safer than direct property access (handles References)
-- Optimistic responses are discarded automatically on error - no manual rollback needed
-- `refetchQueries` runs after `update` callback, not before
-- `pollInterval: 0` disables polling; omit the option entirely for no polling
-- Type policies with `keyFields: false` embed objects in parent (no separate cache entry)
-- Subscriptions require separate WebSocket link with `split` - queries/mutations stay on HTTP
-- `useSuspenseQuery` has no `loading` state - it suspends; errors throw to Error Boundary
-- `queryRef` from `useLoadableQuery` must be passed to `useReadQuery` inside a Suspense boundary
-- `createQueryPreloader` must be called outside the React tree (e.g., router loaders)
-- (v4) `notifyOnNetworkStatusChange` defaults to `true` - may cause unexpected re-renders
-- (v4) `rxjs` is a required peer dependency - must install explicitly
-- (v4) `ApolloError` class removed - use `CombinedGraphQLErrors.is()` and `ServerError.is()` for type-checking
-- (v4) `from()`, `concat()`, `split()` are static methods on `ApolloLink`, not standalone functions
-- (v4) `createHttpLink()` removed - use `new HttpLink()` constructor instead
-- (v4) `useMutation` types now enforce required variables at the call site
+- `refetchQueries` runs after the `update` callback, not before.
+- `cache.writeQuery` replaces the whole query result, where `cache.modify` edits one field — reach
+  for `writeQuery` and a list becomes exactly what you just wrote.
+- `update` fires for cache changes and `onCompleted` for side effects; navigating from `update`
+  fires it again on every optimistic pass.
+- `errorPolicy` defaults to `none`, which discards partial data — `"all"` keeps it and reports the
+  errors alongside.
+- Loading states for `refetch` and `fetchMore` need `notifyOnNetworkStatusChange`, which defaults to
+  `false` in v3 and `true` in v4.
+- `pollInterval: 0` disables polling; omitting the option is the same thing and reads better.
+- A `queryRef` is bound to the variables it was loaded with — new variables need a new
+  `loadQuery` call.
+- `createQueryPreloader` runs outside the React tree, so it cannot be called from a component.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST use GraphQL Codegen for type generation - NEVER write manual TypeScript types for GraphQL)**
-
-**(You MUST include `__typename` and `id` in all optimistic responses for cache normalization)**
-
-**(You MUST configure type policies with appropriate `keyFields` for every entity type)**
-
-**(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
-
-**(For v4: You MUST import React hooks from `@apollo/client/react` - NOT from `@apollo/client`)**
-
-**Failure to follow these rules will cause cache inconsistencies, type drift, and production bugs.**
-
-</critical_reminders>

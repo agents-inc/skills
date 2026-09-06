@@ -187,18 +187,3 @@ export const Route = createFileRoute("/admin/")({
 **Why:** `redirect()` accepts the same typed options as `navigate`. Throwing it from `beforeLoad` prevents the component from ever rendering. Search params on redirect are validated against the target route's schema.
 
 **Critical:** `redirect()` must be **thrown**, not returned. `throw redirect(...)` is correct.
-
----
-
-## Navigation Decision Quick Reference
-
-```
-Need to navigate?
-  +-- Is it a clickable element in JSX?
-  |   +-- YES -> Use <Link to="..." />
-  |   +-- NO -> Is it after a side effect (form submit, mutation)?
-  |       +-- YES -> Use useNavigate()
-  |       +-- NO -> Is it in a loader/beforeLoad?
-  |           +-- YES -> throw redirect()
-  |           +-- NO -> Use router.navigate()
-```

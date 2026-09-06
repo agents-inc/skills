@@ -36,7 +36,10 @@ export const router = createBrowserRouter([
 // src/main.tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider } from "react-router";
+// RouterProvider ships from both entry points. The react-router/dom one wires
+// up react-dom's flushSync; take the bare "react-router" one only in a
+// non-DOM environment such as a Node test.
+import { RouterProvider } from "react-router/dom";
 import { router } from "./router";
 
 const ROOT_ELEMENT_ID = "root";
@@ -50,7 +53,9 @@ createRoot(rootElement).render(
 );
 ```
 
-**Why:** Route config lives outside React rendering. All imports come from `"react-router"` in v7 — the `react-router-dom` package is removed.
+**Why:** Route config lives outside React rendering, so the router can match and run loaders before anything mounts.
+
+**On the package name:** in v7 everything collapsed into `react-router`, with the DOM-only exports also available from `react-router/dom`. `react-router-dom` is still published as a deprecated re-export, so a stale import keeps working and gives no signal that it is wrong — v8 deletes the package, and that is when it breaks. Move the imports while nothing is on fire.
 
 ---
 
@@ -233,28 +238,41 @@ function App() {
 ## BAD: Using json() or defer() in v7
 
 ```typescript
-// BAD: json() and defer() are removed in React Router v7
-import { json, defer } from "react-router"; // IMPORT ERROR in v7
+// BAD: neither export exists in v7 — this line fails to resolve
+import { json, defer } from "react-router";
 
-async function loader() {
-  // WRONG in v7
+async function badPostsLoader() {
   return json({ posts: await fetchPosts() });
-  return defer({ posts: fetchPosts() }); // Also removed
 }
 
-// CORRECT in v7: return plain objects
-async function loader() {
+async function badPostsWithCommentsLoader() {
+  return defer({ posts: fetchPosts() });
+}
+```
+
+```typescript
+// CORRECT in v7: a plain object
+import { data } from "react-router";
+import type { ActionFunctionArgs } from "react-router";
+
+async function postsLoader() {
   const posts = await fetchPosts();
   return { posts };
 }
 
-// For streaming/deferred data in v7, return promises directly:
-async function loader() {
+// Deferred data: return the unresolved promise, read it with <Await>
+async function postsWithCommentsLoader() {
   return {
     critical: await fetchCriticalData(),
     deferred: fetchNonCriticalData(), // Promise, not awaited
   };
 }
+
+// Custom status or headers: data(), the one thing a plain object cannot carry
+async function createPostAction({ request }: ActionFunctionArgs) {
+  const post = await createPost(await request.formData());
+  return data({ post }, { status: 201 });
+}
 ```
 
-**Why bad:** `json()` was a convenience wrapper for `Response.json()`. `defer()` was the streaming data API. Both are removed in v7. Return plain objects from loaders. For deferred data, return unresolved promises and use `<Await>` in the component.
+**Why bad:** `json()` wrapped `Response.json()` and `defer()` was the streaming API; v7's single-fetch format made both unnecessary and removed them. A plain object covers the common case, an unresolved promise plus `<Await>` covers streaming, and `data()` covers the remaining one — a status code or a header, without forcing serialisation into a real `Response`.
