@@ -1,432 +1,159 @@
-# Cypress Custom Commands with TypeScript
+# Cypress — Custom Commands
 
-> Custom commands and TypeScript type declarations. See [core.md](core.md) for foundational patterns.
+> Command kinds, TypeScript declarations, `cy.task()` and `cy.origin()`. See [core.md](core.md) for
+> the foundations.
 
-**Prerequisites**: Understand basic Cypress commands and TypeScript fundamentals.
+A command is registered once in `cypress/support/commands.ts` (loaded by `cypress/support/e2e.ts`)
+and declared once in `cypress/support/index.d.ts` so editors and `tsc` see it.
 
 ---
 
-## Pattern 1: Selector Commands
-
-### Basic Selector Commands
+## Pattern 1: Selector commands, and how declarations work
 
 ```typescript
 // cypress/support/commands.ts
-export function registerCommands() {
-  /**
-   * Get element by data-cy attribute (exact match)
-   */
-  Cypress.Commands.add("getBySel", (selector: string, ...args) => {
-    return cy.get(`[data-cy=${selector}]`, ...args);
-  });
+Cypress.Commands.add("getBySel", (selector: string, ...args) =>
+  cy.get(`[data-cy=${selector}]`, ...args),
+);
 
-  /**
-   * Get element by partial data-cy attribute match
-   */
-  Cypress.Commands.add("getBySelLike", (selector: string, ...args) => {
-    return cy.get(`[data-cy*=${selector}]`, ...args);
-  });
-
-  /**
-   * Get element by data-testid attribute (alternative convention)
-   */
-  Cypress.Commands.add("getByTestId", (testId: string, ...args) => {
-    return cy.get(`[data-testid=${testId}]`, ...args);
-  });
-}
-
-// cypress/support/e2e.ts
-import { registerCommands } from "./commands";
-registerCommands();
+Cypress.Commands.add("getBySelLike", (selector: string, ...args) =>
+  cy.get(`[data-cy*=${selector}]`, ...args),
+);
 ```
-
-### Type Declarations
 
 ```typescript
 // cypress/support/index.d.ts
 /// <reference types="cypress" />
 
 declare namespace Cypress {
-  interface Chainable<Subject = any> {
+  interface Chainable {
     /**
-     * Get element by data-cy attribute
+     * Get an element by its data-cy attribute.
      * @example cy.getBySel('submit-button')
      */
     getBySel(
       selector: string,
-      options?: Partial<
-        Cypress.Loggable &
-          Cypress.Timeoutable &
-          Cypress.Withinable &
-          Cypress.Shadow
-      >,
+      options?: Partial<Loggable & Timeoutable & Withinable & Shadow>,
     ): Chainable<JQuery<HTMLElement>>;
 
-    /**
-     * Get element by partial data-cy attribute match
-     * @example cy.getBySelLike('error') // matches data-cy="error-message"
-     */
+    /** Partial data-cy match: 'error' matches data-cy="error-message". */
     getBySelLike(
       selector: string,
-      options?: Partial<
-        Cypress.Loggable &
-          Cypress.Timeoutable &
-          Cypress.Withinable &
-          Cypress.Shadow
-      >,
-    ): Chainable<JQuery<HTMLElement>>;
-
-    /**
-     * Get element by data-testid attribute
-     * @example cy.getByTestId('user-avatar')
-     */
-    getByTestId(
-      testId: string,
-      options?: Partial<
-        Cypress.Loggable &
-          Cypress.Timeoutable &
-          Cypress.Withinable &
-          Cypress.Shadow
-      >,
+      options?: Partial<Loggable & Timeoutable & Withinable & Shadow>,
     ): Chainable<JQuery<HTMLElement>>;
   }
 }
 ```
 
+**Why good:** the `options` parameter is forwarded, so `cy.getBySel("row", { timeout: 10_000 })`
+behaves like `cy.get`. Every command below adds one more entry to this same `Chainable` interface —
+the declaration file is the single place they are all typed.
+
 ---
 
-## Pattern 2: Authentication Commands
-
-### Login Command with Session Caching
+## Pattern 2: Authentication commands
 
 ```typescript
 // cypress/support/commands.ts
 const LOGIN_URL = "/login";
 const DASHBOARD_URL = "/dashboard";
 
-export function registerAuthCommands() {
-  /**
-   * Log in a user via UI with session caching
-   * Uses cacheAcrossSpecs for performance across spec files
-   */
-  Cypress.Commands.add("login", (email: string, password: string) => {
-    cy.session(
-      [email, password],
-      () => {
-        cy.visit(LOGIN_URL);
-        cy.getBySel("email-input").type(email);
-        cy.getBySel("password-input").type(password);
-        cy.getBySel("submit-button").click();
-        // GUARDING ASSERTION - ensures session is cached after auth flow completes
-        cy.url().should("include", DASHBOARD_URL);
-      },
-      {
-        validate: () => {
-          cy.getCookie("session").should("exist");
-        },
-        // Cache session across spec files for faster test runs (Cypress 12.4+)
-        cacheAcrossSpecs: true,
-      },
-    );
-  });
+// Through the UI, cached across spec files.
+Cypress.Commands.add("login", (email: string, password: string) => {
+  cy.session(
+    [email, password],
+    () => {
+      cy.visit(LOGIN_URL);
+      cy.getBySel("email-input").type(email);
+      cy.getBySel("password-input").type(password);
+      cy.getBySel("submit-button").click();
+      // Guarding assertion: the session is captured only after this passes.
+      cy.url().should("include", DASHBOARD_URL);
+    },
+    {
+      validate: () => cy.getCookie("session").should("exist"),
+      cacheAcrossSpecs: true, // without it the cache is cleared per spec file
+    },
+  );
+});
 
-  /**
-   * Log in programmatically via API (faster)
-   */
-  Cypress.Commands.add("loginViaApi", (email: string, password: string) => {
-    cy.session(
-      [email, password],
-      () => {
-        cy.request({
-          method: "POST",
-          url: "/api/auth/login",
-          body: { email, password },
-        }).then((response) => {
+// Skipping the UI entirely — faster, and does not re-test the login form in every spec.
+Cypress.Commands.add("loginViaApi", (email: string, password: string) => {
+  cy.session(
+    [email, password],
+    () => {
+      cy.request("POST", "/api/auth/login", { email, password }).then(
+        (response) => {
           window.localStorage.setItem("authToken", response.body.token);
-        });
-      },
-      {
-        validate: () => {
-          cy.window().its("localStorage.authToken").should("exist");
         },
-      },
-    );
-  });
-
-  /**
-   * Log out the current user
-   */
-  Cypress.Commands.add("logout", () => {
-    cy.clearCookies();
-    cy.clearLocalStorage();
-    cy.visit("/login");
-  });
-}
-```
-
-### Type Declarations for Auth
-
-```typescript
-// cypress/support/index.d.ts
-declare namespace Cypress {
-  interface Chainable<Subject = any> {
-    /**
-     * Log in a user via UI with session caching
-     * @param email - User email address
-     * @param password - User password
-     * @example cy.login('user@example.com', 'password123')
-     */
-    login(email: string, password: string): Chainable<void>;
-
-    /**
-     * Log in a user via API (faster, skips UI)
-     * @param email - User email address
-     * @param password - User password
-     * @example cy.loginViaApi('user@example.com', 'password123')
-     */
-    loginViaApi(email: string, password: string): Chainable<void>;
-
-    /**
-     * Log out the current user
-     * @example cy.logout()
-     */
-    logout(): Chainable<void>;
-  }
-}
-```
-
----
-
-## Pattern 3: Form Commands
-
-### Form Filling Commands
-
-```typescript
-// cypress/support/commands.ts
-interface FormFieldConfig {
-  selector: string;
-  value: string;
-  type?: "input" | "select" | "checkbox" | "radio";
-}
-
-export function registerFormCommands() {
-  /**
-   * Fill multiple form fields at once
-   */
-  Cypress.Commands.add("fillForm", (fields: FormFieldConfig[]) => {
-    fields.forEach(({ selector, value, type = "input" }) => {
-      const element = cy.getBySel(selector);
-
-      switch (type) {
-        case "select":
-          element.select(value);
-          break;
-        case "checkbox":
-          if (value === "true") {
-            element.check();
-          } else {
-            element.uncheck();
-          }
-          break;
-        case "radio":
-          element.check(value);
-          break;
-        default:
-          element.clear().type(value);
-      }
-    });
-  });
-
-  /**
-   * Submit a form and wait for response
-   */
-  Cypress.Commands.add(
-    "submitForm",
-    (submitSelector: string, alias?: string) => {
-      cy.getBySel(submitSelector).click();
-      if (alias) {
-        cy.wait(`@${alias}`);
-      }
+      );
+    },
+    {
+      validate: () => cy.window().its("localStorage.authToken").should("exist"),
     },
   );
+});
 
-  /**
-   * Clear all form fields
-   */
-  Cypress.Commands.add("clearForm", (fieldSelectors: string[]) => {
-    fieldSelectors.forEach((selector) => {
-      cy.getBySel(selector).clear();
-    });
-  });
-}
-
-// Usage example
-describe("Form Commands", () => {
-  it("fills and submits form", () => {
-    cy.intercept("POST", "/api/users").as("createUser");
-
-    cy.visit("/users/new");
-
-    cy.fillForm([
-      { selector: "name-input", value: "John Doe" },
-      { selector: "email-input", value: "john@example.com" },
-      { selector: "role-select", value: "admin", type: "select" },
-      { selector: "active-checkbox", value: "true", type: "checkbox" },
-    ]);
-
-    cy.submitForm("submit-button", "createUser");
-
-    cy.getBySel("success-message").should("be.visible");
-  });
+Cypress.Commands.add("logout", () => {
+  cy.clearCookies();
+  cy.clearLocalStorage();
 });
 ```
 
-### Type Declarations for Form
-
 ```typescript
-// cypress/support/index.d.ts
-interface FormFieldConfig {
-  selector: string;
-  value: string;
-  type?: "input" | "select" | "checkbox" | "radio";
-}
-
-declare namespace Cypress {
-  interface Chainable<Subject = any> {
-    /**
-     * Fill multiple form fields at once
-     * @param fields - Array of field configurations
-     * @example cy.fillForm([{ selector: 'email-input', value: 'test@example.com' }])
-     */
-    fillForm(fields: FormFieldConfig[]): Chainable<void>;
-
-    /**
-     * Submit a form and optionally wait for response
-     * @param submitSelector - data-cy selector for submit button
-     * @param alias - Optional intercept alias to wait for
-     * @example cy.submitForm('submit-button', 'createUser')
-     */
-    submitForm(submitSelector: string, alias?: string): Chainable<void>;
-
-    /**
-     * Clear all form fields
-     * @param fieldSelectors - Array of data-cy selectors
-     * @example cy.clearForm(['email-input', 'name-input'])
-     */
-    clearForm(fieldSelectors: string[]): Chainable<void>;
-  }
-}
+// cypress/support/index.d.ts — added to the same Chainable interface
+login(email: string, password: string): Chainable<void>;
+loginViaApi(email: string, password: string): Chainable<void>;
+logout(): Chainable<void>;
 ```
+
+**Why good:** login happens once per credential pair for the whole run. The API variant is the one
+to reach for in specs that are not about the login form, since it costs a request rather than a page
+load and a form submission.
 
 ---
 
-## Pattern 4: Child and Dual Commands
-
-### Child Command (Requires Previous Subject)
+## Pattern 3: Child and dual commands
 
 ```typescript
-// cypress/support/commands.ts
-export function registerChildCommands() {
-  /**
-   * Scroll element into view and click
-   */
-  Cypress.Commands.add(
-    "scrollAndClick",
-    { prevSubject: "element" },
-    (subject: JQuery<HTMLElement>) => {
-      cy.wrap(subject).scrollIntoView().should("be.visible").click();
-    },
-  );
+// Child: requires a subject, so it chains off a query.
+Cypress.Commands.add(
+  "scrollAndClick",
+  { prevSubject: "element" },
+  (subject: JQuery<HTMLElement>) => {
+    cy.wrap(subject).scrollIntoView().should("be.visible").click();
+  },
+);
 
-  /**
-   * Type text and verify input value
-   */
-  Cypress.Commands.add(
-    "typeAndVerify",
-    { prevSubject: "element" },
-    (subject: JQuery<HTMLElement>, text: string) => {
-      cy.wrap(subject).clear().type(text).should("have.value", text);
-    },
-  );
-}
-
-// Usage
-describe("Child Commands", () => {
-  it("uses child commands", () => {
-    cy.getBySel("hidden-button").scrollAndClick();
-    cy.getBySel("email-input").typeAndVerify("test@example.com");
-  });
-});
+// Dual: works with or without a subject.
+Cypress.Commands.add(
+  "captureScreenshot",
+  { prevSubject: "optional" },
+  (subject: JQuery<HTMLElement> | undefined, name: string) => {
+    if (subject) {
+      cy.wrap(subject).screenshot(name);
+    } else {
+      cy.screenshot(name);
+    }
+  },
+);
 ```
-
-### Dual Command (Works With or Without Subject)
 
 ```typescript
-// cypress/support/commands.ts
-export function registerDualCommands() {
-  /**
-   * Take screenshot with optional element scope
-   */
-  Cypress.Commands.add(
-    "captureScreenshot",
-    { prevSubject: "optional" },
-    (subject: JQuery<HTMLElement> | undefined, name: string) => {
-      if (subject) {
-        cy.wrap(subject).screenshot(name);
-      } else {
-        cy.screenshot(name);
-      }
-    },
-  );
-}
-
-// Usage
-describe("Dual Commands", () => {
-  it("captures full page screenshot", () => {
-    cy.captureScreenshot("full-page");
-  });
-
-  it("captures element screenshot", () => {
-    cy.getBySel("header").captureScreenshot("header-only");
-  });
-});
+cy.getBySel("hidden-button").scrollAndClick();
+cy.captureScreenshot("full-page");
+cy.getBySel("header").captureScreenshot("header-only");
 ```
 
-### Type Declarations for Child/Dual
-
-```typescript
-// cypress/support/index.d.ts
-declare namespace Cypress {
-  interface Chainable<Subject = any> {
-    /**
-     * Scroll element into view and click (child command)
-     * @example cy.getBySel('hidden-button').scrollAndClick()
-     */
-    scrollAndClick(): Chainable<JQuery<HTMLElement>>;
-
-    /**
-     * Type text and verify input value (child command)
-     * @param text - Text to type
-     * @example cy.getBySel('email-input').typeAndVerify('test@example.com')
-     */
-    typeAndVerify(text: string): Chainable<JQuery<HTMLElement>>;
-
-    /**
-     * Take screenshot (dual command - works with or without subject)
-     * @param name - Screenshot filename
-     * @example cy.captureScreenshot('full-page')
-     * @example cy.getBySel('header').captureScreenshot('header')
-     */
-    captureScreenshot(name: string): Chainable<void>;
-  }
-}
-```
+**Why good:** `prevSubject` is what decides whether the command reads as a verb on an element or as
+a statement of its own, and `cy.wrap(subject)` is what puts the subject back into the queue.
 
 ---
 
-## Pattern 5: Database and API Commands
+## Pattern 4: `cy.task()` for work outside the browser
 
-### Task-Based Database Commands
+`setupNodeEvents` runs in Node, so a task can reach a database, the filesystem or any package the
+browser cannot load.
 
 ```typescript
 // cypress.config.ts
@@ -436,318 +163,95 @@ export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
       on("task", {
-        "db:seed": async (data: { users: object[]; products: object[] }) => {
-          // Seed database with test data
-          // This runs in Node.js, so you can use any Node packages
+        "db:seed": async (data: { users?: object[]; products?: object[] }) => {
           const response = await fetch(`${config.env.apiUrl}/test/seed`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
           });
-          return response.json();
+          return response.json(); // a task must return something, or null
         },
-
         "db:reset": async () => {
-          // Reset database to clean state
-          const response = await fetch(`${config.env.apiUrl}/test/reset`, {
-            method: "POST",
-          });
-          return response.json();
-        },
-
-        "db:query": async (query: string) => {
-          // Execute arbitrary query (for verification)
-          const response = await fetch(`${config.env.apiUrl}/test/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query }),
-          });
-          return response.json();
+          await fetch(`${config.env.apiUrl}/test/reset`, { method: "POST" });
+          return null;
         },
       });
     },
   },
 });
+```
 
-// cypress/support/commands.ts
-export function registerDbCommands() {
-  /**
-   * Seed database with test data
-   */
-  Cypress.Commands.add(
-    "seedDatabase",
-    (data: { users?: object[]; products?: object[] }) => {
-      cy.task("db:seed", data);
-    },
-  );
-
-  /**
-   * Reset database to clean state
-   */
-  Cypress.Commands.add("resetDatabase", () => {
-    cy.task("db:reset");
-  });
-}
-
-// Usage
-describe("Database Commands", () => {
+```typescript
+describe("User management", () => {
   beforeEach(() => {
-    cy.resetDatabase();
-    cy.seedDatabase({
-      users: [{ id: "1", name: "Test User", email: "test@example.com" }],
-    });
+    // Cleanup belongs here rather than in an after hook: an interrupted run skips after hooks,
+    // and the final state stays on screen for debugging.
+    cy.task("db:reset");
+    cy.task("db:seed", { users: [{ id: "1", name: "Test User" }] });
   });
 
-  it("displays seeded users", () => {
+  it("lists the seeded users", () => {
     cy.visit("/users");
     cy.getBySel("user-row").should("have.length", 1);
   });
 });
 ```
 
+**Why good:** the test states the data it needs instead of depending on whatever the environment
+happens to contain. Returning `null` matters — a task that returns `undefined` fails the run.
+
 ---
 
-## Pattern 6: Complete Commands File
+## Pattern 5: `cy.origin()` for cross-origin flows
 
-### Full Commands Setup
+Required since Cypress 14 for any navigation to a different scheme, host or port. The callback is
+serialised into the other origin, so it closes over nothing — everything it needs arrives through
+`args`.
 
 ```typescript
 // cypress/support/commands.ts
-
-// ============================================
-// Selector Commands
-// ============================================
-
-function registerSelectorCommands() {
-  Cypress.Commands.add("getBySel", (selector, ...args) => {
-    return cy.get(`[data-cy=${selector}]`, ...args);
-  });
-
-  Cypress.Commands.add("getBySelLike", (selector, ...args) => {
-    return cy.get(`[data-cy*=${selector}]`, ...args);
-  });
-}
-
-// ============================================
-// Authentication Commands
-// ============================================
-
-const LOGIN_URL = "/login";
-
-function registerAuthCommands() {
-  Cypress.Commands.add("login", (email, password) => {
+Cypress.Commands.add(
+  "loginViaIdentityProvider",
+  (email: string, password: string, providerUrl: string) => {
     cy.session(
-      [email, password],
+      ["sso", email],
       () => {
-        cy.visit(LOGIN_URL);
-        cy.getBySel("email-input").type(email);
-        cy.getBySel("password-input").type(password);
-        cy.getBySel("submit-button").click();
-        cy.url().should("include", "/dashboard");
+        cy.visit("/login");
+        cy.getBySel("sso-login-button").click();
+
+        cy.origin(
+          providerUrl,
+          { args: { email, password } },
+          ({ email, password }) => {
+            // Selectors here belong to the provider's page, not to your app.
+            cy.get("#email").type(email);
+            cy.get("#password").type(password);
+            cy.get("#submit").click();
+          },
+        );
+
+        cy.url().should("include", "/dashboard"); // back on the original origin
       },
       {
-        validate: () => {
-          cy.getCookie("session").should("exist");
-        },
+        validate: () => cy.getCookie("session").should("exist"),
+        cacheAcrossSpecs: true,
       },
     );
-  });
-
-  Cypress.Commands.add("logout", () => {
-    cy.clearCookies();
-    cy.clearLocalStorage();
-  });
-}
-
-// ============================================
-// Form Commands
-// ============================================
-
-function registerFormCommands() {
-  Cypress.Commands.add("fillForm", (fields) => {
-    fields.forEach(({ selector, value, type = "input" }) => {
-      const element = cy.getBySel(selector);
-      switch (type) {
-        case "select":
-          element.select(value);
-          break;
-        case "checkbox":
-          value === "true" ? element.check() : element.uncheck();
-          break;
-        default:
-          element.clear().type(value);
-      }
-    });
-  });
-}
-
-// ============================================
-// Export All Commands
-// ============================================
-
-export function registerCommands() {
-  registerSelectorCommands();
-  registerAuthCommands();
-  registerFormCommands();
-}
+  },
+);
 ```
 
-### Complete Type Declarations
-
 ```typescript
-// cypress/support/index.d.ts
-/// <reference types="cypress" />
+// Subdomains count as separate origins too.
+cy.visit("https://app.example.com/settings");
 
-interface FormFieldConfig {
-  selector: string;
-  value: string;
-  type?: "input" | "select" | "checkbox" | "radio";
-}
-
-declare namespace Cypress {
-  interface Chainable<Subject = any> {
-    // Selector commands
-    getBySel(
-      selector: string,
-      options?: Partial<Loggable & Timeoutable & Withinable & Shadow>,
-    ): Chainable<JQuery<HTMLElement>>;
-
-    getBySelLike(
-      selector: string,
-      options?: Partial<Loggable & Timeoutable & Withinable & Shadow>,
-    ): Chainable<JQuery<HTMLElement>>;
-
-    // Auth commands
-    login(email: string, password: string): Chainable<void>;
-    logout(): Chainable<void>;
-
-    // Form commands
-    fillForm(fields: FormFieldConfig[]): Chainable<void>;
-
-    // Database commands
-    seedDatabase(data: {
-      users?: object[];
-      products?: object[];
-    }): Chainable<void>;
-    resetDatabase(): Chainable<void>;
-  }
-}
-```
-
----
-
-## Pattern 7: Multi-Origin Testing with cy.origin() (Cypress 14+)
-
-Cypress 14 requires `cy.origin()` for tests that navigate across different origins (scheme + hostname + port). This is essential for OAuth, SSO, and cross-domain workflows.
-
-### OAuth/SSO Login Pattern
-
-```typescript
-// cypress/support/commands.ts
-const OAUTH_PROVIDER_URL = "https://auth.provider.com";
-
-export function registerOAuthCommands() {
-  /**
-   * Log in via external OAuth provider using cy.origin()
-   * Required in Cypress 14+ for cross-origin interactions
-   */
-  Cypress.Commands.add(
-    "loginViaOAuth",
-    (
-      email: string,
-      password: string,
-      providerUrl: string = OAUTH_PROVIDER_URL,
-    ) => {
-      cy.session(
-        ["oauth", email],
-        () => {
-          cy.visit("/login");
-          cy.getBySel("oauth-login-button").click();
-
-          // Handle external OAuth provider
-          cy.origin(
-            providerUrl,
-            { args: { email, password } },
-            ({ email, password }) => {
-              cy.get("#email").type(email);
-              cy.get("#password").type(password);
-              cy.get("#submit").click();
-            },
-          );
-
-          // Back on original origin after redirect
-          cy.url().should("include", "/dashboard");
-        },
-        {
-          validate: () => {
-            cy.getCookie("session").should("exist");
-          },
-          cacheAcrossSpecs: true,
-        },
-      );
-    },
-  );
-}
-
-// Usage in tests
-describe("OAuth Login", () => {
-  it("logs in via Google OAuth", () => {
-    cy.loginViaOAuth(
-      "user@gmail.com",
-      "password",
-      "https://accounts.google.com",
-    );
-    cy.visit("/profile");
-    cy.getBySel("user-email").should("contain", "user@gmail.com");
-  });
+cy.origin("https://admin.example.com", () => {
+  cy.visit("/admin");
+  cy.get("[data-cy=admin-panel]").should("be.visible");
 });
 ```
 
-### Type Declarations for OAuth
-
-```typescript
-// cypress/support/index.d.ts
-declare namespace Cypress {
-  interface Chainable<Subject = any> {
-    /**
-     * Log in via external OAuth provider
-     * Uses cy.origin() for cross-origin interaction (Cypress 14+)
-     * @param email - User email for OAuth provider
-     * @param password - User password for OAuth provider
-     * @param providerUrl - OAuth provider URL (optional)
-     */
-    loginViaOAuth(
-      email: string,
-      password: string,
-      providerUrl?: string,
-    ): Chainable<void>;
-  }
-}
-```
-
-### Cross-Subdomain Navigation
-
-```typescript
-// When navigating between subdomains (e.g., app.example.com and api.example.com)
-describe("Cross-Subdomain Flow", () => {
-  it("handles subdomain navigation", () => {
-    cy.visit("https://app.example.com/settings");
-
-    // Navigate to different subdomain
-    cy.origin("https://admin.example.com", () => {
-      cy.visit("/admin");
-      cy.getBySel("admin-panel").should("be.visible");
-    });
-
-    // Return to original subdomain
-    cy.visit("https://app.example.com/dashboard");
-    cy.getBySel("dashboard").should("be.visible");
-  });
-});
-```
-
-**Why cy.origin() is required:** Chrome deprecated `document.domain` setting and introduced origin-keyed agent clusters, which Cypress previously relied on for cross-origin testing. In Cypress 14+, `cy.origin()` is mandatory for any test that interacts with multiple origins (scheme + hostname + port).
-
----
-
-_See [core.md](core.md) for foundational patterns and basic test structure._
+**Why good:** wrapping the provider's page in `cy.origin()` keeps the whole journey in one spec, and
+caching the result with `cy.session()` means the external round trip happens once rather than per
+test. The callback uses plain `cy.get` because it runs in the provider's origin, where the support
+file's own commands and constants are not in scope.

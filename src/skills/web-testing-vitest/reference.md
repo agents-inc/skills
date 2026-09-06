@@ -1,204 +1,119 @@
-# Testing Reference
+# Vitest Reference
 
-> Decision frameworks and Vitest v3/v4 migration notes. See [SKILL.md](SKILL.md) for core patterns.
+> Version notes, migration steps and config lookup. See [SKILL.md](SKILL.md) for the patterns and
+> [examples/core.md](examples/core.md) for the code.
+
+**Current stable:** Vitest 4.x — requires Vite 6+ and Node 20+. Browser Mode is stable in this line
+and ships visual regression testing.
 
 ---
 
-## Vitest v3/v4 Notes
+## v4 breaking changes
 
-> **Current Stable:** Vitest 4.x (released October 2025, latest 4.1.0). Requires Vite >= 6.0.0 and Node.js >= 20.0.0. v4 marks Browser Mode as stable and includes visual regression testing.
+| Was                                                          | Now                                                        |
+| ------------------------------------------------------------ | ---------------------------------------------------------- |
+| `poolOptions: { threads: { maxThreads } }`                   | `maxWorkers` at the top level                              |
+| `poolOptions` single-thread flags                            | `maxWorkers: 1, isolate: false`                            |
+| `coverage.all`                                               | removed — `coverage.include` is required                   |
+| `coverage.ignoreEmptyLines`, `experimentalAstAwareRemapping` | removed — the v8 provider is AST-based                     |
+| `vi.restoreAllMocks()` resets everything                     | manual spies only; use `vi.resetAllMocks()` for automocks  |
+| `vi.fn().getMockName()` → `"spy"`                            | `"vi.fn()"` — update snapshots that captured it            |
+| automocked getters call the original                         | return `undefined`                                         |
+| `mock.invocationCallOrder` starts at `0`                     | starts at `1`                                              |
+| `basic` reporter                                             | `['default', { summary: false }]`                          |
+| `verbose` reporter is hierarchical                           | flat — use `tree` for the old output                       |
+| default excludes cover many directories                      | only `node_modules` and `.git` — scope with `test.dir`     |
+| shadow roots omitted from snapshots                          | printed — `printShadowRoot: false` restores the old output |
+| `deps.optimizer.web`                                         | `deps.optimizer.client`                                    |
 
-**Test Options Syntax (v3+ breaking change):**
+## v3 breaking changes still worth knowing
+
+**Test options moved to the second argument**, and combining an options object with a trailing
+timeout is invalid:
 
 ```typescript
-// CORRECT (v3+): Options as second argument
-test("example", { retry: 2 }, () => {
-  /* ... */
-});
-
-// Include timeout in options object (NOT as third argument)
-test("heavy test", { retry: 2, timeout: 10_000 }, () => {
-  /* ... */
-});
-
-// DEPRECATED (v2): Options as third argument - NO LONGER WORKS in v4
-test("example", () => {}, { retry: 2 }); // INVALID
+test("heavy", { retry: 2, timeout: 10_000 }, () => {}); // valid
+test("heavy", () => {}, { retry: 2 }); // invalid since v3
+test("heavy", { skip: true }, () => {}, 10_000); // invalid — timeout belongs in the object
 ```
 
-**CRITICAL:** When using options object, you cannot also pass timeout as third argument:
+**`vitest.workspace.js` was deprecated in v3.2** in favour of `projects` inside the main config:
 
 ```typescript
-// WRONG: Cannot combine options object with third argument
-test("test", { skip: true }, () => {}, 10_000); // INVALID
-
-// CORRECT: Include timeout in options object
-test("test", { skip: true, timeout: 10_000 }, () => {}); // VALID
-```
-
-**Workspace Migration (v3.2+ - workspace deprecated):**
-
-```typescript
-// OLD: vitest.workspace.js file (DEPRECATED in v3.2)
-// OLD: test: { workspace: './vitest.workspace.js' } (DEPRECATED)
-
-// NEW: use `projects` directly in vitest.config.ts
-export default defineConfig({
-  test: {
-    projects: ["./packages/*"],
-  },
-});
-
-// With inline configuration
 export default defineConfig({
   test: {
     projects: [
       "packages/*",
       {
         extends: true,
-        test: {
-          name: "unit",
-          include: ["tests/**/*.unit.test.ts"],
-        },
+        test: { name: "unit", include: ["tests/**/*.unit.test.ts"] },
       },
     ],
   },
 });
 ```
 
-**Pool Configuration (v4 breaking change - poolOptions removed entirely):**
+---
 
-```typescript
-// OLD (v3): nested poolOptions
-export default defineConfig({
-  test: {
-    poolOptions: {
-      threads: { maxThreads: 4 },
-    },
-  },
-});
+## API added in the v3/v4 line
 
-// NEW (v4): poolOptions removed, all options are top-level
-export default defineConfig({
-  test: {
-    maxWorkers: 4, // replaces maxThreads/maxForks
-    // For single-worker mode (replaces singleThread/singleFork):
-    // maxWorkers: 1, isolate: false
-  },
-});
-```
-
-**Coverage Changes (v4):**
-
-```typescript
-// REMOVED in v4: coverage.all option
-// V8 provider now uses AST-based analysis (more accurate)
-
-export default defineConfig({
-  test: {
-    coverage: {
-      provider: "v8",
-      include: ["src/**/*.ts"], // REQUIRED: Must explicitly define
-      // REMOVED: all, ignoreEmptyLines, experimentalAstAwareRemapping
-    },
-  },
-});
-```
-
-**Schema Validation Matcher (v4 - asymmetric matcher):**
-
-```typescript
-import { expect, test } from "vitest";
-import { z } from "zod";
-
-// expect.schemaMatching() is an asymmetric matcher (NOT toMatchSchema)
-// Works with any Standard Schema v1 library: Zod, Valibot, ArkType
-const userSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-});
-
-test("validates user schema fields", () => {
-  const user = { name: "John", email: "john@example.com" };
-
-  // Use inside equality matchers
-  expect(user).toEqual({
-    name: expect.schemaMatching(z.string()),
-    email: expect.schemaMatching(z.string().email()),
-  });
-
-  // Negation
-  expect({ email: "not-an-email" }).toEqual({
-    email: expect.not.schemaMatching(z.string().email()),
-  });
-});
-```
-
-**vi.mockObject (v3.2+):**
-
-```typescript
-import { vi } from "vitest";
-
-// Deep mock an object with all methods as spies
-const mockService = vi.mockObject({
-  getUser: () => ({ id: 1, name: "Test" }),
-  saveUser: (user: User) => user,
-});
-
-// With spy option to preserve implementations while tracking calls
-const trackedService = vi.mockObject(realService, { spy: true });
-```
-
-**vi.mock Factory with importOriginal:**
-
-```typescript
-import { vi } from "vitest";
-
-// Access original module in factory
-vi.mock("./module.js", async (importOriginal) => {
-  const mod = await importOriginal<typeof import("./module.js")>();
-  return {
-    ...mod,
-    namedExport: vi.fn(), // Override specific export
-  };
-});
-
-// For default exports, must use `default` key
-vi.mock("./module.js", () => ({
-  default: vi.fn(),
-  namedExport: vi.fn(),
-}));
-```
-
-**Other v4 Breaking Changes:**
-
-- `vi.fn().getMockName()` returns `"vi.fn()"` instead of `"spy"` - update snapshot assertions
-- `vi.restoreAllMocks()` only affects manual spies, not automocks - use `vi.resetAllMocks()` for full reset
-- Automocked getters return `undefined` by default instead of calling originals
-- `basic` reporter removed - use `['default', { summary: false }]`
-- `verbose` reporter is now flat - use `tree` for hierarchical output
-- Default excludes simplified to only `node_modules` and `.git` - use `test.dir` for scoping
-- Shadow root now printed in snapshots - set `printShadowRoot: false` to restore old behavior
-- `vi.fn().mock.invocationCallOrder` starts at `1` instead of `0`
-- `deps.optimizer.web` renamed to `deps.optimizer.client`
+| API                             | Since | What it does                                                                         |
+| ------------------------------- | ----- | ------------------------------------------------------------------------------------ |
+| `vi.mockObject(obj)`            | 3.2   | Replaces every method on an object with a spy                                        |
+| `vi.mockObject(obj, { spy })`   | 3.2   | Keeps the implementations while recording calls                                      |
+| `expect.schemaMatching(schema)` | 4.0   | Asymmetric matcher for any Standard Schema v1 validator; negatable with `expect.not` |
 
 ---
 
-## Decision Framework
+## Config lookup
 
+| Option              | Effect                                                  | Typical value                      |
+| ------------------- | ------------------------------------------------------- | ---------------------------------- |
+| `environment`       | Globals available to a suite                            | `"node"`, `"jsdom"`, `"happy-dom"` |
+| `setupFiles`        | Runs before each test file                              | `["./tests/setup.ts"]`             |
+| `globalSetup`       | Runs once per run, in Node, before any file             | ports, containers, seed data       |
+| `globals`           | Exposes `describe`/`it`/`expect` without importing them | `false` — explicit imports         |
+| `restoreMocks`      | Restores spies between tests                            | `true`                             |
+| `clearMocks`        | Clears call history between tests                       | `true`                             |
+| `maxWorkers`        | Worker count (v4; replaces the pool-specific options)   | unset locally, pinned in CI        |
+| `isolate`           | Fresh module registry per file                          | `true`                             |
+| `coverage.provider` | Coverage engine                                         | `"v8"`                             |
+| `coverage.include`  | Files to report on — required in v4                     | `["src/**/*.ts"]`                  |
+| `projects`          | Several named configs in one run                        | see above                          |
+
+Per-file override, no config change needed:
+
+```typescript
+// @vitest-environment jsdom
 ```
-What are you testing?
-├─ Pure function (no side effects)?
-│   └─ YES → Write unit test with Vitest (describe/it/expect)
-├─ Component behavior with API integration?
-│   └─ YES → Write integration test with Vitest + network-level mocking
-├─ User-facing workflow?
-│   └─ YES → Use your E2E testing tool (not Vitest's scope)
-└─ Third-party library behavior?
-    └─ NO → Don't test it (library already has tests)
 
-Test organization decision:
-├─ Is it a unit or integration test?
-│   └─ YES → Co-locate with code (direct or __tests__ subdirectory)
-└─ Is it an E2E test?
-    └─ YES → Separate directory (not Vitest's concern)
+---
+
+## Mock API lookup
+
+| Call                                                   | Use for                                                     |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| `vi.fn()`                                              | A double for a collaborator passed in as an argument        |
+| `vi.spyOn(obj, "method")`                              | Wrapping an existing method, restorable                     |
+| `vi.mock(path, factory)`                               | Replacing a module; hoisted above imports                   |
+| `vi.hoisted(() => …)`                                  | Values a `vi.mock` factory needs to close over              |
+| `vi.unmock(path)` / `vi.doMock(path)`                  | Cancelling a mock, and mocking without hoisting             |
+| `vi.mockObject(obj)`                                   | Spying on every method of an object at once                 |
+| `vi.useFakeTimers()` / `vi.useRealTimers()`            | Controlling the clock, and handing it back                  |
+| `vi.advanceTimersByTime(ms)` / `…ByTimeAsync(ms)`      | Ticking; the async form flushes microtasks between ticks    |
+| `vi.setSystemTime(date)`                               | Pinning `Date.now()` for date-dependent output              |
+| `vi.stubEnv(key, value)` / `vi.stubGlobal(key, value)` | Environment and global overrides, undone by `vi.unstubAll…` |
+| `vi.resetAllMocks()`                                   | Full reset, including automocks (v4)                        |
+
+---
+
+## CLI
+
+```bash
+npx vitest              # watch mode
+npx vitest run          # single run
+npx vitest run --coverage
+npx vitest run --project unit
+npx vitest run -t "formats the default currency"
+npx vitest --ui
 ```

@@ -1,138 +1,100 @@
 # React Testing Library - Core Query Examples
 
-> Essential query patterns and hierarchy. Reference from [SKILL.md](../SKILL.md).
+> Query hierarchy and how to choose between role, label, text and test id. See [user-events.md](user-events.md) for interaction, [async-testing.md](async-testing.md) for elements that arrive later, and [custom-render.md](custom-render.md) for provider setup.
+
+> `test`, `describe` and `expect` come from whatever test runner executes these files; DOM matchers such as `toBeInTheDocument` come from the Testing Library matcher package registered in the runner's setup file.
 
 ---
 
-## Query Hierarchy
-
-### Using getByRole (Priority 1 - Best)
+## getByRole — the first query to try
 
 ```typescript
-// Good Example - Role-based queries with accessible names
 import { render, screen } from "@testing-library/react";
 import { LoginForm } from "./login-form";
-
-const SUBMIT_BUTTON_NAME = /sign in/i;
-const EMAIL_INPUT_NAME = /email address/i;
-const PASSWORD_INPUT_NAME = /password/i;
-const REMEMBER_ME_NAME = /remember me/i;
 
 test("renders login form with accessible elements", () => {
   render(<LoginForm />);
 
-  // Buttons - most common role query
-  expect(screen.getByRole("button", { name: SUBMIT_BUTTON_NAME })).toBeInTheDocument();
-
-  // Text inputs - use textbox role
-  expect(screen.getByRole("textbox", { name: EMAIL_INPUT_NAME })).toBeInTheDocument();
-
-  // Password inputs don't have textbox role - use getByLabelText
-  expect(screen.getByLabelText(PASSWORD_INPUT_NAME)).toBeInTheDocument();
-
-  // Checkboxes
-  expect(screen.getByRole("checkbox", { name: REMEMBER_ME_NAME })).toBeInTheDocument();
-
-  // Links
+  expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: /email address/i })).toBeInTheDocument();
+  expect(screen.getByRole("checkbox", { name: /remember me/i })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /forgot password/i })).toBeInTheDocument();
-
-  // Headings with level
   expect(screen.getByRole("heading", { level: 1, name: /welcome back/i })).toBeInTheDocument();
+
+  // A password input has no textbox role - reach it by its label
+  expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
 });
 ```
 
-**Why good:** Uses accessible queries that match how screen readers and assistive technology navigate the page, tests that UI is accessible while verifying functionality, uses named constants for consistent test data
+**Why good:** every assertion goes through the accessibility tree, so a passing test is also evidence that assistive technology can reach the form. The `name` option matches the element's accessible name, which is what a screen reader announces.
 
 ---
 
-### Using getByLabelText (Priority 1 - Forms)
+## getByLabelText — form fields
 
 ```typescript
-// Good Example - Form fields by label
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ContactForm } from "./contact-form";
-
-const EMAIL_LABEL = /email/i;
-const MESSAGE_LABEL = /message/i;
-const PHONE_LABEL = /phone number/i;
 
 test("fills out contact form", async () => {
   const user = userEvent.setup();
   render(<ContactForm />);
 
-  // Input by associated label
-  const emailInput = screen.getByLabelText(EMAIL_LABEL);
-  await user.type(emailInput, "test@example.com");
+  const email = screen.getByLabelText(/email/i);
+  const message = screen.getByLabelText(/message/i);
 
-  // Textarea by label
-  const messageInput = screen.getByLabelText(MESSAGE_LABEL);
-  await user.type(messageInput, "Hello, this is my message");
+  await user.type(email, "test@example.com");
+  await user.type(message, "Hello, this is my message");
 
-  // Input with placeholder (less ideal but sometimes needed)
-  const phoneInput = screen.getByLabelText(PHONE_LABEL);
-  await user.type(phoneInput, "555-1234");
-
-  expect(emailInput).toHaveValue("test@example.com");
-  expect(messageInput).toHaveValue("Hello, this is my message");
+  expect(email).toHaveValue("test@example.com");
+  expect(message).toHaveValue("Hello, this is my message");
 });
 ```
 
-**Why good:** Tests form fields the way users with screen readers navigate them (by label), verifies label-input associations are correct, uses userEvent.setup() before interactions
+**Why good:** finding a field by its label proves the `label`/`for`/`aria-labelledby` wiring is correct — the same wiring a screen-reader user depends on to know what they are typing into.
 
 ---
 
-### Using getByText and getByTestId
+## getByText and getByTestId
 
 ```typescript
-// Good Example - Text content and test IDs appropriately
 import { render, screen } from "@testing-library/react";
 import { ProductCard } from "./product-card";
 
-const PRODUCT_NAME = "Wireless Headphones";
-const PRODUCT_PRICE = "$99.99";
-
 test("renders product information", () => {
-  render(<ProductCard name={PRODUCT_NAME} price={PRODUCT_PRICE} />);
+  render(<ProductCard name="Wireless Headphones" price="$99.99" />);
 
-  // Use getByText for non-interactive content
-  expect(screen.getByText(PRODUCT_NAME)).toBeInTheDocument();
-  expect(screen.getByText(PRODUCT_PRICE)).toBeInTheDocument();
+  // Text for static content
+  expect(screen.getByText("Wireless Headphones")).toBeInTheDocument();
+  expect(screen.getByText("$99.99")).toBeInTheDocument();
 
-  // Use getByRole for interactive elements
+  // Role for anything interactive
   expect(screen.getByRole("button", { name: /add to cart/i })).toBeInTheDocument();
 });
 
-// Example where getByTestId is acceptable
-test("renders dynamic content with test ID", () => {
+test("locates a card by a server-generated id", () => {
   const dynamicId = "abc123";
-  render(<ProductCard id={dynamicId} name={PRODUCT_NAME} price={PRODUCT_PRICE} />);
+  render(<ProductCard id={dynamicId} name="Wireless Headphones" price="$99.99" />);
 
-  // Test ID acceptable for dynamic/generated content
+  // Acceptable: the id is generated, so no stable accessible name exists
   expect(screen.getByTestId(`product-${dynamicId}`)).toBeInTheDocument();
 });
 ```
 
-**Why good:** Uses getByText for static content, getByRole for interactive elements, reserves getByTestId for truly dynamic content where no accessible query works
-
 ```typescript
-// Bad Example - Using test IDs when accessible queries work
+// Bad Example - test ids where accessible queries work
 test("renders product card", () => {
   render(<ProductCard name="Headphones" price="$99" />);
 
-  // BAD: Using test IDs for everything
   expect(screen.getByTestId("product-name")).toBeInTheDocument();
   expect(screen.getByTestId("product-price")).toBeInTheDocument();
   expect(screen.getByTestId("add-to-cart-button")).toBeInTheDocument();
 });
 ```
 
-**Why bad:** Test IDs don't reflect how users interact with the UI, doesn't verify accessibility, harder to maintain when DOM structure changes
+**Why bad:** the test passes whether or not the button is reachable by keyboard, has an accessible name, or is even a `button`. The three assertions prove that three attributes exist in the markup and nothing about the product card working.
 
 ---
 
-_For more patterns, see:_
-
-- [user-events.md](user-events.md) - User interaction patterns
-- [async-testing.md](async-testing.md) - Async utilities
-- [custom-render.md](custom-render.md) - Custom render setup
+_Next: [user-events.md](user-events.md) for interaction, [async-testing.md](async-testing.md) for async content._

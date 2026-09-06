@@ -1,31 +1,22 @@
-# Cypress E2E Testing Examples
+# Cypress E2E Testing — Core Examples
 
-> Core code examples for Cypress E2E patterns. Reference from [SKILL.md](../SKILL.md).
+> Full code for the core patterns. Referenced from [SKILL.md](../SKILL.md).
 
 **Extended examples:**
 
-- [intercept.md](intercept.md) - API mocking with cy.intercept()
-- [custom-commands.md](custom-commands.md) - Custom commands, TypeScript types
-- [fixtures-data.md](fixtures-data.md) - Fixtures and test data management
-- [component-testing.md](component-testing.md) - Component testing with cy.mount()
-- [accessibility.md](accessibility.md) - Accessibility testing with cypress-axe
-- [ci-cd.md](ci-cd.md) - GitHub Actions, Docker integration
+- [intercept.md](intercept.md) — network stubbing in depth
+- [custom-commands.md](custom-commands.md) — commands, types, tasks, `cy.origin()`
+- [fixtures-data.md](fixtures-data.md) — fixtures, factories, shared constants
+- [component-testing.md](component-testing.md) — `cy.mount()`
+- [accessibility.md](accessibility.md) — auditing a page inside a run
+- [ci.md](ci.md) — CI configuration decisions
 
 ---
 
-## Pattern 1: Complete User Flow
-
-### E-Commerce Checkout Flow
+## Pattern 1: Complete user flow
 
 ```typescript
 // cypress/e2e/checkout/checkout-flow.cy.ts
-
-// Test data constants
-const PRODUCT_URL = "/products/wireless-headphones";
-const CART_URL = "/cart";
-const CHECKOUT_URL = "/checkout";
-const ORDER_SUCCESS_URL = "/order/success";
-
 const TEST_USER = {
   email: "customer@example.com",
   name: "John Doe",
@@ -33,148 +24,105 @@ const TEST_USER = {
   city: "San Francisco",
   zip: "94102",
 };
+// Sandbox card numbers the payment provider always accepts / always declines.
+const CARD_ACCEPTED = "4242424242424242";
+const CARD_DECLINED = "4000000000000002";
 
-const TEST_CARD = {
-  number: "4242424242424242",
-  expiry: "12/28",
-  cvc: "123",
-};
+function fillCheckout(cardNumber: string) {
+  cy.getBySel("email-input").type(TEST_USER.email);
+  cy.getBySel("name-input").type(TEST_USER.name);
+  cy.getBySel("address-input").type(TEST_USER.address);
+  cy.getBySel("city-input").type(TEST_USER.city);
+  cy.getBySel("zip-input").type(TEST_USER.zip);
+  cy.getBySel("card-number-input").type(cardNumber);
+}
 
 describe("Checkout Flow", () => {
   beforeEach(() => {
-    // Mock payment API for determinism
+    // Default: payment succeeds. Individual tests override.
     cy.intercept("POST", "/api/payments", {
       statusCode: 200,
       body: { success: true, orderId: "order-123" },
     }).as("processPayment");
   });
 
-  it("completes purchase with valid payment", () => {
-    // Navigate to product
-    cy.visit(PRODUCT_URL);
+  it("completes a purchase with an accepted card", () => {
+    cy.visit("/products/wireless-headphones");
 
-    // Add to cart
     cy.getBySel("add-to-cart-button").click();
     cy.getBySel("cart-notification").should("contain", "Added to cart");
 
-    // Go to cart
     cy.getBySel("cart-link").click();
-    cy.url().should("include", CART_URL);
-
-    // Verify product in cart
     cy.getBySel("cart-item").should("have.length", 1);
-    cy.getBySel("product-name").should("contain", "Wireless Headphones");
-
-    // Proceed to checkout
     cy.getBySel("checkout-button").click();
 
-    // Fill shipping information
-    cy.getBySel("email-input").type(TEST_USER.email);
-    cy.getBySel("name-input").type(TEST_USER.name);
-    cy.getBySel("address-input").type(TEST_USER.address);
-    cy.getBySel("city-input").type(TEST_USER.city);
-    cy.getBySel("zip-input").type(TEST_USER.zip);
-
-    // Fill payment information
-    cy.getBySel("card-number-input").type(TEST_CARD.number);
-    cy.getBySel("card-expiry-input").type(TEST_CARD.expiry);
-    cy.getBySel("card-cvc-input").type(TEST_CARD.cvc);
-
-    // Submit order
+    fillCheckout(CARD_ACCEPTED);
     cy.getBySel("place-order-button").click();
-
-    // Wait for payment processing
     cy.wait("@processPayment");
 
-    // Verify success
-    cy.url().should("include", ORDER_SUCCESS_URL);
+    cy.url().should("include", "/order/success");
     cy.getBySel("order-confirmation").should("contain", "Order confirmed");
-    cy.getBySel("order-id").should("be.visible");
   });
 
-  it("handles payment decline gracefully", () => {
-    // Override mock to simulate decline
+  it("keeps the user on checkout when the card is declined", () => {
     cy.intercept("POST", "/api/payments", {
       statusCode: 400,
       body: { success: false, error: "Card declined" },
     }).as("processPayment");
 
-    cy.visit(CHECKOUT_URL);
-
-    // Fill form (abbreviated)
-    cy.getBySel("email-input").type(TEST_USER.email);
-    cy.getBySel("card-number-input").type("4000000000000002"); // Decline test card
-
+    cy.visit("/checkout");
+    fillCheckout(CARD_DECLINED);
     cy.getBySel("place-order-button").click();
     cy.wait("@processPayment");
 
-    // Verify error handling
     cy.getBySel("error-message").should("contain", "Payment failed");
-    cy.getBySel("retry-button").should("be.visible");
-    cy.url().should("include", CHECKOUT_URL); // Still on checkout
+    cy.url().should("include", "/checkout");
   });
 });
 ```
 
-**Why good:** Tests complete user journey from product to order confirmation, covers happy path and error scenarios, uses named constants for all test data, uses data-cy selectors, mocks payment API for determinism
+**Why good:** the journey is covered end to end in both outcomes, the payment call is stubbed so the
+result is deterministic, and the repeated form filling is a function — a new field is a one-line
+change.
 
 ---
 
-## Pattern 2: Test Structure and Organization
-
-### Grouped Tests with Context
+## Pattern 2: Grouping with `context`
 
 ```typescript
 // cypress/e2e/auth/login-flow.cy.ts
-const LOGIN_URL = "/login";
-const DASHBOARD_URL = "/dashboard";
-
-const VALID_CREDENTIALS = {
-  email: "user@example.com",
-  password: "SecurePassword123!",
-};
-
-const INVALID_EMAIL = "invalid-email";
-const WRONG_PASSWORD = "wrongpassword";
+const VALID = { email: "user@example.com", password: "SecurePassword123!" };
 
 describe("Login Flow", () => {
   beforeEach(() => {
-    cy.visit(LOGIN_URL);
+    cy.visit("/login");
   });
 
   context("with valid credentials", () => {
-    it("redirects to dashboard after successful login", () => {
-      cy.getBySel("email-input").type(VALID_CREDENTIALS.email);
-      cy.getBySel("password-input").type(VALID_CREDENTIALS.password);
+    it("redirects to the dashboard", () => {
+      cy.getBySel("email-input").type(VALID.email);
+      cy.getBySel("password-input").type(VALID.password);
       cy.getBySel("submit-button").click();
 
-      cy.url().should("include", DASHBOARD_URL);
+      cy.url().should("include", "/dashboard");
       cy.getBySel("user-greeting").should("contain", "Welcome");
     });
 
-    it("persists session across page refreshes", () => {
-      cy.getBySel("email-input").type(VALID_CREDENTIALS.email);
-      cy.getBySel("password-input").type(VALID_CREDENTIALS.password);
+    it("survives a reload", () => {
+      cy.getBySel("email-input").type(VALID.email);
+      cy.getBySel("password-input").type(VALID.password);
       cy.getBySel("submit-button").click();
 
-      cy.url().should("include", DASHBOARD_URL);
+      cy.url().should("include", "/dashboard");
       cy.reload();
-      cy.url().should("include", DASHBOARD_URL); // Still logged in
+      cy.url().should("include", "/dashboard");
     });
   });
 
   context("with invalid credentials", () => {
-    it("shows error for invalid email format", () => {
-      cy.getBySel("email-input").type(INVALID_EMAIL);
-      cy.getBySel("password-input").type(VALID_CREDENTIALS.password);
-      cy.getBySel("submit-button").click();
-
-      cy.getBySel("email-error").should("contain", "Invalid email");
-    });
-
-    it("shows error for wrong password", () => {
-      cy.getBySel("email-input").type(VALID_CREDENTIALS.email);
-      cy.getBySel("password-input").type(WRONG_PASSWORD);
+    it("reports a wrong password", () => {
+      cy.getBySel("email-input").type(VALID.email);
+      cy.getBySel("password-input").type("wrongpassword");
       cy.getBySel("submit-button").click();
 
       cy.getBySel("error-alert").should("contain", "Invalid credentials");
@@ -182,22 +130,22 @@ describe("Login Flow", () => {
   });
 
   context("form validation", () => {
-    it("shows required field errors when empty", () => {
+    it("reports required fields", () => {
       cy.getBySel("submit-button").click();
 
       cy.getBySel("email-error").should("contain", "Email is required");
       cy.getBySel("password-error").should("contain", "Password is required");
     });
 
-    it("disables submit button while loading", () => {
+    it("disables submit while the request is in flight", () => {
       cy.intercept("POST", "/api/auth/login", {
         delay: 1000,
         statusCode: 200,
         body: { token: "abc123" },
       }).as("login");
 
-      cy.getBySel("email-input").type(VALID_CREDENTIALS.email);
-      cy.getBySel("password-input").type(VALID_CREDENTIALS.password);
+      cy.getBySel("email-input").type(VALID.email);
+      cy.getBySel("password-input").type(VALID.password);
       cy.getBySel("submit-button").click();
 
       cy.getBySel("submit-button").should("be.disabled");
@@ -207,132 +155,72 @@ describe("Login Flow", () => {
 });
 ```
 
-**Why good:** Uses describe for main feature, context for scenarios, named constants for all test data, beforeEach ensures fresh state, tests are independent
+**Why good:** `context` names the precondition, so a failure reads as "invalid credentials → wrong
+password" without opening the file. The `delay` option is what makes the in-flight state observable
+at all.
 
 ---
 
-## Pattern 3: Selector Strategy Examples
-
-### Data-Cy Selectors
+## Pattern 3: Selectors
 
 ```typescript
-// HTML in your application
+// Markup under test:
 // <button data-cy="submit-button" class="btn btn-primary">Submit</button>
-// <input data-cy="email-input" type="email" />
-// <div data-cy="user-card" data-cy-user-id="123">...</div>
+// <div data-cy="user-card" data-cy-user-id="123">…</div>
 
-describe("Selector Examples", () => {
-  it("uses data-cy selectors correctly", () => {
-    // Exact match
-    cy.get("[data-cy=submit-button]").click();
+cy.get("[data-cy=submit-button]").click();
+cy.getBySel("email-input").type("user@example.com"); // custom command
+cy.getBySelLike("user-card").should("have.length.at.least", 1); // partial match
+cy.get("[data-cy=user-card][data-cy-user-id='123']").should("exist");
 
-    // With custom command
-    cy.getBySel("email-input").type("user@example.com");
+// Text as the subject: a copy change should fail this deliberately.
+cy.contains("button", "Sign In").click();
 
-    // Partial match for multiple elements
-    cy.getBySelLike("user-card").should("have.length.at.least", 1);
-
-    // Combining with other attributes
-    cy.get("[data-cy=user-card][data-cy-user-id='123']").should("exist");
-  });
-
-  it("uses cy.contains appropriately", () => {
-    // Good: Text is critical to the test
-    cy.contains("Welcome to Dashboard").should("be.visible");
-
-    // Good: Button text matters
-    cy.contains("button", "Sign In").click();
-
-    // Good: Error message validation
-    cy.contains(".error", "Invalid email").should("be.visible");
-  });
-
-  it("scopes selectors to regions", () => {
-    // Scope to navigation
-    cy.getBySel("main-navigation").within(() => {
-      cy.getBySel("home-link").click();
-    });
-
-    // Scope to modal
-    cy.getBySel("confirmation-modal").within(() => {
-      cy.getBySel("confirm-button").click();
-    });
-  });
+// Scope to a region so a duplicate elsewhere on the page cannot match.
+cy.getBySel("main-navigation").within(() => {
+  cy.getBySel("home-link").click();
 });
 ```
 
 ---
 
-## Pattern 4: Assertions and Chaining
-
-### Common Assertion Patterns
+## Pattern 4: Assertions
 
 ```typescript
-describe("Assertion Examples", () => {
-  beforeEach(() => {
-    cy.visit("/products");
-  });
+// Chained: one query, several conditions, all retried together.
+cy.getBySel("product-card")
+  .first()
+  .should("be.visible")
+  .and("contain", "Product Name")
+  .and("have.class", "in-stock");
 
-  it("uses chained assertions", () => {
-    cy.getBySel("product-card")
-      .first()
-      .should("be.visible")
-      .and("contain", "Product Name")
-      .and("have.class", "in-stock");
-  });
+// Counts, states and values
+cy.getBySel("product-card").should("have.length", 10);
+cy.getBySel("submit-button").should("be.enabled");
+cy.getBySel("email-input").should("have.value", "test@example.com");
 
-  it("asserts element count", () => {
-    cy.getBySel("product-card").should("have.length", 10);
-    cy.getBySel("product-card").should("have.length.at.least", 5);
-    cy.getBySel("product-card").should("have.length.lessThan", 20);
-  });
+// not.exist (removed from the DOM) is a stronger claim than not.be.visible (still there).
+cy.getBySel("modal").should("not.exist");
+cy.getBySel("dropdown").should("not.be.visible");
 
-  it("asserts element state", () => {
-    cy.getBySel("submit-button").should("be.enabled");
-    cy.getBySel("delete-button").should("be.disabled");
-    cy.getBySel("modal").should("not.exist");
-    cy.getBySel("dropdown").should("not.be.visible");
-  });
-
-  it("asserts input values", () => {
-    cy.getBySel("email-input").should("have.value", "");
-    cy.getBySel("email-input").type("test@example.com");
-    cy.getBySel("email-input").should("have.value", "test@example.com");
-  });
-
-  it("asserts URL and location", () => {
-    cy.url().should("include", "/products");
-    cy.location("pathname").should("eq", "/products");
-    cy.location("search").should("contain", "category=electronics");
-  });
-
-  it("uses negative assertions", () => {
-    cy.getBySel("error-message").should("not.exist");
-    cy.getBySel("loading-spinner").should("not.be.visible");
-    cy.getBySel("submit-button").should("not.be.disabled");
-  });
-});
+// Location
+cy.url().should("include", "/products");
+cy.location("pathname").should("eq", "/products");
 ```
 
 ---
 
-## Pattern 5: Using Aliases
-
-### Storing Values with Aliases
+## Pattern 5: Aliases
 
 ```typescript
-describe("Alias Examples", () => {
-  it("stores element for later use", () => {
+describe("Aliases", () => {
+  it("stores an element for later", () => {
     cy.getBySel("user-name").as("userName");
-
-    // Do other things...
     cy.getBySel("other-element").click();
-
-    // Use stored reference
     cy.get("@userName").should("contain", "John Doe");
   });
 
-  it("stores request data with aliases", () => {
+  it("inspects the request an alias captured", () => {
     cy.intercept("GET", "/api/user").as("getUser");
 
     cy.visit("/profile");
@@ -342,84 +230,104 @@ describe("Alias Examples", () => {
     });
   });
 
-  it("uses aliased fixtures", function () {
+  // `this.users` needs a function(), not an arrow: arrows do not bind the test context.
+  it("reads an aliased fixture", function () {
     cy.fixture("users").as("users");
 
     cy.visit("/login");
-
-    // Access via this context (requires function() not arrow function)
     cy.getBySel("email-input").type(this.users.validUser.email);
-    cy.getBySel("password-input").type(this.users.validUser.password);
   });
 
-  it("chains multiple aliases", () => {
+  it("waits for several requests at once", () => {
     cy.intercept("GET", "/api/products").as("getProducts");
     cy.intercept("GET", "/api/categories").as("getCategories");
 
     cy.visit("/shop");
-
-    // Wait for multiple requests
     cy.wait(["@getProducts", "@getCategories"]);
-
-    cy.getBySel("product-list").should("be.visible");
-    cy.getBySel("category-filter").should("be.visible");
   });
 });
 ```
 
-**Why good:** Aliases solve async value storage, enable waiting for specific requests, work with fixtures for test data
+**Why good:** an alias is the only way to carry a value across commands, because the queue means
+nothing is available at the point it is written.
 
 ---
 
-## Pattern 6: Session Management
-
-### Using cy.session() for Login Caching
+## Pattern 6: `cy.session()`
 
 ```typescript
-const TEST_USER = {
-  email: "user@example.com",
-  password: "SecurePassword123!",
-};
+const TEST_USER = { email: "user@example.com", password: "SecurePassword123!" };
 
-// Reusable login command with session caching
 Cypress.Commands.add("loginViaSession", (email: string, password: string) => {
   cy.session(
-    [email, password],
+    [email, password], // the cache key
     () => {
       cy.visit("/login");
       cy.getBySel("email-input").type(email);
       cy.getBySel("password-input").type(password);
       cy.getBySel("submit-button").click();
+      // Guarding assertion: the session is captured after this passes, not before.
       cy.url().should("include", "/dashboard");
     },
     {
-      validate: () => {
-        // Validate session is still valid
-        cy.getCookie("session").should("exist");
-      },
+      // Runs on every restore; a failure here re-runs the setup instead of using stale state.
+      validate: () => cy.getCookie("session").should("exist"),
     },
   );
 });
 
-describe("Dashboard Tests", () => {
+describe("Dashboard", () => {
   beforeEach(() => {
-    // Login is cached, not repeated every test
     cy.loginViaSession(TEST_USER.email, TEST_USER.password);
     cy.visit("/dashboard");
   });
 
-  it("shows user dashboard", () => {
+  it("shows the dashboard", () => {
     cy.getBySel("dashboard-heading").should("be.visible");
-  });
-
-  it("displays user stats", () => {
-    cy.getBySel("user-stats").should("exist");
   });
 });
 ```
 
-**Why good:** cy.session() caches login state, dramatically speeds up test suites, validate function ensures session is still valid
+**Why good:** the login runs once and every later test restores cookies and storage instead of
+replaying the form. The `validate` callback is what stops an expired session being restored silently.
 
 ---
 
-_Extended examples: [intercept.md](intercept.md) | [custom-commands.md](custom-commands.md) | [fixtures-data.md](fixtures-data.md) | [component-testing.md](component-testing.md) | [accessibility.md](accessibility.md) | [ci-cd.md](ci-cd.md)_
+## Pattern 7: Keys and focus
+
+`cy.focused()` yields whatever currently holds focus, so an assertion about focus is about the
+browser's own state rather than about a class the app happened to add. Special keys go inside braces
+in `cy.type()`.
+
+```typescript
+it("returns focus to the trigger when the dialog closes", () => {
+  cy.visit("/");
+  cy.getBySel("open-modal-button").click();
+  cy.getBySel("modal").should("be.visible");
+  cy.focused().should("have.attr", "data-cy", "modal-close-button");
+
+  cy.get("body").type("{esc}");
+
+  cy.getBySel("modal").should("not.exist");
+  cy.focused().should("have.attr", "data-cy", "open-modal-button");
+});
+
+it("moves through the menu with the arrow keys", () => {
+  cy.visit("/");
+  cy.getBySel("dropdown-trigger").click();
+
+  cy.get("body").type("{downarrow}");
+  cy.focused().should("have.attr", "data-cy", "dropdown-item-1");
+
+  cy.get("body").type("{downarrow}");
+  cy.focused().should("have.attr", "data-cy", "dropdown-item-2");
+
+  cy.get("body").type("{uparrow}");
+  cy.focused().should("have.attr", "data-cy", "dropdown-item-1");
+});
+```
+
+**Tab is the exception.** `cy.type()` does not accept `{tab}`, because the synthetic event it
+dispatches cannot move focus the way the browser does. Tab-order and focus-trap tests therefore need
+a plugin that sends a real key event — a spec calling `.tab()` is using one, and that dependency
+belongs in the spec's own imports rather than assumed.

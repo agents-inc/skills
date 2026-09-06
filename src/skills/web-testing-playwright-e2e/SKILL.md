@@ -5,138 +5,137 @@ description: Playwright E2E testing patterns - test structure, Page Object Model
 
 # Playwright E2E Testing Patterns
 
-> **Quick Guide:** Use Playwright for end-to-end tests that verify complete user workflows through the real browser. Focus on critical user journeys, use accessibility-based locators (`getByRole`), and leverage auto-waiting assertions -- never use manual sleeps. Isolate each test with its own browser context. Mock external APIs via route interception for reliability.
+> **Quick Guide:** Playwright drives a real browser through complete user journeys. Locators are
+> lazy queries re-resolved on every use and `expect(locator)` matchers retry until they pass, so a
+> correct test needs no sleeps and no stale-handle handling. Each test gets its own browser context;
+> shared setup arrives through fixtures rather than module-level variables, because tests run in
+> parallel workers.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — user flows, page objects, network mocking, config, auth
+  fixtures
+- [examples/page-objects.md](examples/page-objects.md) — base-page inheritance and hierarchy
+- [examples/api-mocking.md](examples/api-mocking.md) — intercepting and modifying real responses
+- [examples/visual-testing.md](examples/visual-testing.md) — screenshot comparison, masking, states
+- [examples/fixtures.md](examples/fixtures.md) — fixture composition, seeded data, storage state
+- [examples/advanced-features.md](examples/advanced-features.md) — Clock API, ARIA snapshots,
+  worker-scoped fixtures, polling assertions, accessibility assertions
+- [reference.md](reference.md) — locator and assertion tables, config and CLI lookup, version
+  changes, troubleshooting
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Playwright code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Reach for `getByRole()` first.** It selects the element the way a user and a screen reader find
+it, so it survives markup changes and validates the accessible name as a side effect.
 
-**(You MUST use getByRole() as your primary locator strategy - it mirrors how users interact with the page)**
+**Assert with `expect(locator)` matchers.** They retry until the condition holds or the timeout
+expires, which is what removes the reason to sleep at all — a fixed wait is either too short or too
+slow.
 
-**(You MUST test complete user workflows end-to-end - login flows, checkout processes, form submissions)**
+**Register a route before the navigation that triggers the request.** Routes are attached to the
+context and only affect requests made after they are set, so a `page.route()` after `page.goto()`
+never sees the call it was meant to intercept.
 
-**(You MUST use web-first assertions that auto-wait - toBeVisible(), toHaveText(), not manual sleeps)**
-
-**(You MUST isolate tests - each test runs independently with its own browser context)**
-
-**(You MUST use named constants for test data - no magic strings or numbers in test files)**
+**Give each test its own state through a fixture.** Workers run in parallel and a module-level
+variable is shared inside one worker and absent from the next, so setup that lives in a fixture is
+the only setup that behaves the same in both.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Playwright, E2E testing, end-to-end testing, browser automation, page.goto, test.describe, expect(page), getByRole, getByTestId, toBeVisible, toHaveScreenshot, toMatchAriaSnapshot
+**Auto-detection:** Playwright, @playwright/test, playwright.config, page.goto, test.describe,
+test.extend, expect(page), getByRole, getByLabel, getByTestId, toBeVisible, toHaveURL,
+toHaveScreenshot, toMatchAriaSnapshot, page.route, route.fulfill, page.clock, toPass, devices
 
-**When to use:**
+**Applies to:**
 
-- Testing critical user-facing workflows (login, checkout, form submission)
-- Multi-step user journeys that span multiple pages
-- Cross-browser compatibility testing
-- Testing real integration with backend APIs
-- Visual regression testing with screenshots
-- Accessibility tree validation with ARIA snapshots
+- User journeys through a real browser, across pages and origins
+- Locator strategy, web-first assertions and soft assertions
+- Intercepting, stubbing and modifying network traffic for a test
+- Screenshot comparison and ARIA-tree assertions
+- Fixtures, worker scoping, parallelism and the test config
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Testing pure utility functions (use unit tests)
-- Testing individual component variants in isolation (use component testing tools)
-- API-only testing without UI (use API testing)
-
-**Key patterns covered:**
-
-- Test structure and organization (test.describe, test, hooks)
-- Page Object Model pattern for maintainability
-- Locator strategies prioritizing accessibility (getByRole, getByLabel, chaining, operators)
-- Web-first assertions with auto-waiting (toBeVisible, toHaveText, soft assertions)
-- Network mocking and interception (route.fulfill, route.abort, response modification)
-- Visual regression testing (toHaveScreenshot, masking, thresholds)
-- Custom and worker-scoped fixtures
-- Clock API for time-dependent testing (v1.45+)
-- ARIA snapshot testing for accessibility (v1.49+)
-- Accessibility assertions (v1.44+): toHaveAccessibleName, toHaveRole
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - User flows, page objects, network mocking, config, auth fixtures
-- [examples/page-objects.md](examples/page-objects.md) - Base page inheritance, hierarchy
-- [examples/api-mocking.md](examples/api-mocking.md) - Response interception and modification
-- [examples/visual-testing.md](examples/visual-testing.md) - Screenshot comparison, component visual testing
-- [examples/fixtures.md](examples/fixtures.md) - Combined fixtures, database seeding, IndexedDB state
-- [examples/advanced-features.md](examples/advanced-features.md) - Clock API, ARIA snapshots, worker fixtures, polling assertions, accessibility assertions
-- [reference.md](reference.md) - Decision frameworks, locator/assertion tables, anti-patterns, CLI commands, configuration reference
+- Unit-level checks on pure functions — a browser adds nothing to an input/output assertion
+- Mounting a single component and poking at its props — a different granularity, settled by
+  whatever owns component testing
+- The application's own accessibility remediation — this skill asserts the accessible tree, it does
+  not decide what that tree should be
+- Baseline custody and review workflow for screenshots across a whole suite
 
 ---
 
 <philosophy>
 
-## Philosophy
+A locator is a query, not a handle. `page.getByRole("button")` resolves nothing until it is used,
+and resolves again on every use — so there is no stale element to guard against, and no reason to
+capture one early. Assertions inherit the same model: `expect(locator).toBeVisible()` polls until
+the timeout.
 
-Playwright E2E tests verify that your application works correctly from the user's perspective. They interact with the real browser, navigate through actual pages, and validate user-visible behavior.
-
-**Core Principles:**
-
-1. **Test user-visible behavior** - Focus on what end users see and interact with, not implementation details
-2. **Use accessibility locators** - `getByRole` mirrors how screen readers and users interact with pages
-3. **Isolate tests completely** - Each test has its own browser context, cookies, and storage
-4. **Trust auto-waiting** - Playwright automatically waits for elements; no manual sleeps needed
-5. **Mock external dependencies** - Use route interception for third-party APIs to ensure reliability
-
-**When E2E tests provide the most value:**
-
-- Critical business workflows (authentication, payments, core features)
-- User journeys spanning multiple pages or components
-- Testing real backend integration
-- Cross-browser compatibility verification
-- Catching integration bugs that unit tests miss
-
-**When E2E tests may not be the best choice:**
-
-- Testing pure utility functions (unit tests are faster and more precise)
-- Testing component styling variants (use visual testing tools)
-- Testing every edge case (balance with unit and integration tests)
+Everything else follows: the sleep, the CSS selector and the shared variable each throw away
+something the model already gives for free.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+**Hooks or fixtures for setup:**
+
+- Used by one `describe` block → `beforeEach`, which keeps the setup where it is read.
+- Used across files, or needing teardown → a fixture, which carries both halves and composes.
+- Needed once for the whole run → `globalSetup` in the config. `beforeAll` runs once per _worker_,
+  not once per run.
+- Expensive and safe to share within a worker → a worker-scoped fixture.
+
+**Stub the network or hit it:**
+
+- Third-party API → stub it. Rate limits, cost and their downtime are not your test's subject.
+- Your own API, testing an error path → stub it; some statuses cannot be provoked on demand.
+- Your own API, testing that the integration is correct → let it through, against a test database,
+  and keep one such test per feature.
+- Your own API, testing UI behaviour only → stub it, for speed and determinism.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Test Structure and Organization
+### Pattern 1: Test structure
 
-Group related tests with `test.describe`, use `beforeEach` for common navigation, and name constants for all test data.
+`test.describe` groups, `beforeEach` handles the navigation every test in the group repeats.
 
 ```typescript
-const LOGIN_URL = "/login";
-const VALID_EMAIL = "user@example.com";
-
-test.describe("Login Flow", () => {
+test.describe("Login", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(LOGIN_URL);
+    await page.goto("/login");
   });
 
-  test("successful login redirects to dashboard", async ({ page }) => {
+  test("successful login lands on the dashboard", async ({ page }) => {
     await page.getByLabel(/email/i).fill(VALID_EMAIL);
-    // ... fill password, click sign in
+    await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page).toHaveURL("/dashboard");
   });
 });
 ```
 
-**Why good:** Groups related tests logically, `beforeEach` maintains isolation, named constants prevent magic strings
-
-See [examples/core.md](examples/core.md) Pattern 1 for complete user flow with error scenarios.
-
----
+Full code: [examples/core.md](examples/core.md)
 
 ### Pattern 2: Page Object Model
 
-Encapsulate page structure and interactions in reusable classes. Define locators in the constructor, expose domain-specific methods.
+Locators in the constructor, domain methods on the class. Worth it once several tests touch the same
+page; inline locators stay clearer for a one-off.
 
 ```typescript
 export class LoginPage {
@@ -155,174 +154,96 @@ export class LoginPage {
 }
 ```
 
-**Why good:** Centralizes locators -- UI changes update one place, methods encapsulate interactions
+Full code: [examples/core.md](examples/core.md) — inheritance in
+[examples/page-objects.md](examples/page-objects.md)
 
-**When to use:** Tests spanning multiple interactions on the same page, reusable flows across test files.
+### Pattern 3: Locator strategy
 
-**When not to use:** Simple one-off tests where inline locators are clearer.
-
-See [examples/core.md](examples/core.md) Pattern 2 for full page objects with fixtures, [examples/page-objects.md](examples/page-objects.md) for base page inheritance.
-
----
-
-### Pattern 3: Locator Strategies
-
-Prioritize accessibility-based locators that mirror how users interact with the application.
+Prefer the query that names what the element _is_; fall back to a test id only where no role or
+label exists.
 
 ```typescript
-// BEST: Accessibility-based
 await page.getByRole("button", { name: /submit/i });
 await page.getByLabel(/email address/i);
-await page.getByText(/welcome back/i);
+await page.getByTestId("user-avatar"); // no semantic role available
 
-// ACCEPTABLE: Test IDs for complex cases
-await page.getByTestId("user-avatar"); // When no semantic role exists
-
-// AVOID: Implementation-dependent
-await page.locator("#submit-btn"); // Fragile
-await page.locator(".btn-primary"); // CSS class can change
-```
-
-**Chaining and filtering** narrow down to specific elements without fragile selectors:
-
-```typescript
+// Narrow within a list instead of writing a fragile selector
 await page
   .getByRole("listitem")
   .filter({ hasText: "Product A" })
   .getByRole("button", { name: /add to cart/i })
   .click();
 
-// Exclude elements (v1.33+)
-await page
-  .getByRole("listitem")
-  .filter({ hasNot: page.getByText("Out of stock") })
-  .first()
-  .click();
-
-// Combine conditions (v1.33+)
-const btn = page.getByRole("button").and(page.getByTitle("Subscribe"));
+// Exclude and combine (v1.33+)
+page.getByRole("listitem").filter({ hasNot: page.getByText("Out of stock") });
+page.getByRole("button").and(page.getByTitle("Subscribe"));
 ```
 
-**Why good:** `getByRole` validates accessibility as a side effect, survives UI refactoring, chaining handles dynamic lists
+Priority table and role mappings: [reference.md](reference.md)
 
-See [reference.md](reference.md) for locator priority table and common ARIA role mappings.
+### Pattern 4: Web-first assertions
 
----
-
-### Pattern 4: Web-First Assertions
-
-Use assertions that automatically wait and retry until the condition is met.
+Every `expect(locator)` matcher retries, including negated ones.
 
 ```typescript
-// Auto-waits for element visibility
 await expect(page.getByText("Welcome")).toBeVisible();
-// Auto-waits for URL
 await expect(page).toHaveURL(/\/dashboard/);
-// Negated assertions also auto-wait
 await expect(page.getByRole("progressbar")).not.toBeVisible();
-```
 
-**Why good:** Eliminates flaky tests from race conditions, no manual sleeps needed
-
-```typescript
-// BAD: Manual waiting
-await page.waitForTimeout(2000); // Arbitrary sleep!
-const text = await page.textContent(".result");
-expect(text).toBe("Success"); // Non-waiting assertion
-```
-
-**Why bad:** Fixed timeouts are either too short (flaky) or too long (slow), doesn't adapt to actual page load time
-
-**Soft assertions** collect all failures in one run:
-
-```typescript
+// Soft assertions collect every failure in one run instead of stopping at the first
 await expect.soft(page.getByTestId("avatar")).toBeVisible();
 await expect.soft(page.getByText("Premium")).toBeVisible();
-// Test continues, all failures reported at end
 ```
 
-See [reference.md](reference.md) for complete assertion table, polling assertions, and accessibility assertions (v1.44+).
+Full assertion table: [reference.md](reference.md)
 
----
+### Pattern 5: Network mocking
 
-### Pattern 5: Network Mocking and Interception
-
-Mock external APIs for reliable, isolated tests. Use `page.route()` to intercept and fulfill requests.
+`page.route()` intercepts by URL pattern; `route.fulfill()` answers, `route.abort()` fails the
+request.
 
 ```typescript
-const API_USERS = "**/api/users";
-
-await page.route(API_USERS, (route) =>
+await page.route("**/api/users", (route) =>
   route.fulfill({
     status: 200,
     contentType: "application/json",
-    body: JSON.stringify({ id: "user-123", name: "John Doe" }),
+    body: JSON.stringify({ id: "user-123", name: "Jane Doe" }),
   }),
 );
 
-// Error simulation
-await page.route(API_USERS, (route) => route.abort("failed")); // Network failure
+await page.route("**/api/users", (route) => route.abort("failed")); // network failure
 ```
 
-**Why good:** Eliminates third-party flakiness, enables testing error states, controls exact data
+Full code: [examples/core.md](examples/core.md) — modifying a real response in
+[examples/api-mocking.md](examples/api-mocking.md)
 
-**Modifying real responses** (hybrid approach):
+### Pattern 6: Visual regression
 
-```typescript
-await page.route("**/api/products", async (route) => {
-  const response = await route.fetch();
-  const json = await response.json();
-  json.products = json.products.map((p: { price: number }) => ({
-    ...p,
-    price: p.price * 0.9,
-  }));
-  await route.fulfill({ response, json });
-});
-```
-
-See [examples/core.md](examples/core.md) Pattern 3 for complete mocking with error states, [examples/api-mocking.md](examples/api-mocking.md) for response modification.
-
----
-
-### Pattern 6: Visual Regression Testing
-
-Capture and compare screenshots to detect unintended visual changes.
+`toHaveScreenshot()` writes a baseline on first run and compares afterwards. Mask what changes on
+its own.
 
 ```typescript
-await expect(page).toHaveScreenshot("homepage.png");
-
-// Mask dynamic content
 await expect(page).toHaveScreenshot("dashboard.png", {
-  mask: [page.getByTestId("current-time"), page.getByTestId("random-ad")],
+  mask: [page.getByTestId("current-time")],
+  animations: "disabled",
 });
-
-// Disable animations for deterministic screenshots
-await expect(page).toHaveScreenshot("stable.png", { animations: "disabled" });
 ```
 
-**Why good:** Catches unintended visual changes, masking prevents false positives from timestamps
+Full code: [examples/visual-testing.md](examples/visual-testing.md)
 
-See [examples/visual-testing.md](examples/visual-testing.md) for component visual testing with state variations.
+### Pattern 7: Custom fixtures
 
----
-
-### Pattern 7: Custom Fixtures
-
-Extend the base test with reusable fixtures for page objects, authentication, and shared setup.
+`base.extend` adds fixtures for page objects and setup. An `auto` fixture runs without being named
+by the test.
 
 ```typescript
-export const test = base.extend<{
-  loginPage: LoginPage;
-  authenticatedPage: void;
-}>({
+export const test = base.extend<{ loginPage: LoginPage; authenticated: void }>({
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
   },
-  authenticatedPage: [
+  authenticated: [
     async ({ context }, use) => {
-      await context.addCookies([
-        { name: "session", value: "token", domain: "localhost", path: "/" },
-      ]);
+      await context.addCookies([SESSION_COOKIE]);
       await use();
       await context.clearCookies();
     },
@@ -331,46 +252,35 @@ export const test = base.extend<{
 });
 ```
 
-**Why good:** Encapsulates setup + teardown, auto fixtures eliminate repetitive auth, composable
+Full code: [examples/core.md](examples/core.md) — composition and seeding in
+[examples/fixtures.md](examples/fixtures.md)
 
-See [examples/core.md](examples/core.md) Pattern 5 for auth fixtures, [examples/fixtures.md](examples/fixtures.md) for combined fixtures and database seeding, [examples/advanced-features.md](examples/advanced-features.md) for worker-scoped fixtures.
+### Pattern 8: Clock control (v1.45+)
 
----
-
-### Pattern 8: Clock API (v1.45+)
-
-Control time for testing countdowns, session timeouts, and scheduled events.
+Move time instead of waiting for it. `clock.install()` comes before every other clock call.
 
 ```typescript
 await page.clock.install({ time: new Date("2024-02-02T08:00:00") });
 await page.goto("/dashboard");
-
-await page.clock.fastForward("25:00"); // Jump 25 minutes
+await page.clock.fastForward("25:00");
 await expect(page.getByText(/session expires/i)).toBeVisible();
 ```
 
-**CRITICAL:** `clock.install()` MUST be called before any other clock methods.
+Full code: [examples/advanced-features.md](examples/advanced-features.md)
 
-See [examples/advanced-features.md](examples/advanced-features.md) for countdown testing and session timeout patterns.
+### Pattern 9: ARIA snapshots (v1.49+)
 
----
-
-### Pattern 9: ARIA Snapshot Testing (v1.49+)
-
-Validate accessibility tree structure programmatically.
+Assert the accessible tree as a whole, in one readable block.
 
 ```typescript
 await expect(page.getByRole("navigation")).toMatchAriaSnapshot(`
   - navigation:
     - link "Home"
     - link "Products"
-    - link "About"
 `);
 ```
 
-**Why good:** Catches ARIA issues before production, documents expected accessibility behavior
-
-See [examples/advanced-features.md](examples/advanced-features.md) for complex component ARIA snapshots.
+Full code: [examples/advanced-features.md](examples/advanced-features.md)
 
 </patterns>
 
@@ -378,61 +288,34 @@ See [examples/advanced-features.md](examples/advanced-features.md) for complex c
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `page.waitForTimeout()` with fixed delays -- causes flaky or slow tests, use auto-waiting assertions instead
-- Using CSS selectors like `.btn-primary` or `#submit-btn` -- fragile and break on refactoring, use `getByRole`
-- Not testing error states -- only happy paths leaves error handling untested
-- Tests sharing state or data -- causes flaky failures in parallel execution, isolate each test completely
+- `page.waitForTimeout()` before an assertion — either too short and flaky or too long and slow;
+  the retrying matcher already covers it.
+- A `page.route()` registered after the navigation that fires the request — the route never
+  matches; set it up before `goto`, in `beforeEach` or in a fixture.
+- CSS or id selectors (`.btn-primary`, `#submit-btn`) — they change with styling and markup; a role
+  or label query does not.
+- Module-level variables shared between tests — absent in the next worker, and racy inside one;
+  use a fixture.
+- Glob patterns using `?` or `[]` in `page.route()` — unsupported since v1.52; use a regex.
+- `route.continue()` overriding the `Cookie` header — refused since v1.52; use
+  `context.addCookies()`.
+- `_react` / `_vue` selector engines — removed in v1.58; use a role query or a test id.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using `getByTestId` as primary locator -- misses accessibility validation, prioritize `getByRole`
-- No network mocking for external APIs -- third-party flakiness affects your tests
-- Running E2E tests only on one browser -- cross-browser issues go undetected
-- Screenshots without masking dynamic content -- timestamps and ads cause false positives
-
-**Common Mistakes:**
-
-- Hardcoded test data scattered throughout files -- use named constants
-- Testing implementation details (e.g., Redux state via `window.__REDUX_STATE__`) instead of user behavior
-- Not using `beforeEach` for common setup -- leads to duplicated code
-- Mixing E2E tests with unit tests in the same directory
-
-**Gotchas & Edge Cases:**
-
-- `toBeVisible()` auto-waits for the element; `toBeAttached()` checks DOM presence without visibility -- prefer visibility checks for most cases
-- Screenshots vary by OS and browser -- run visual tests in consistent CI environment
-- `beforeAll` runs once per **worker**, not once globally -- use `globalSetup` in config for true one-time setup
-- Network routes are global to context -- routes set in `beforeEach` override previous; always set up fresh per test
-- Parallel tests cannot share state -- use fixtures for per-test setup, not shared variables
-- `toBeEditable()` throws on non-editable elements (v1.50+) -- verify element type first
-- Glob URL patterns in `page.route()` no longer support `?` and `[]` (v1.52+) -- use regex instead
-- `route.continue()` cannot override Cookie header (v1.52+) -- use `context.addCookies()` instead
-- `_react` and `_vue` selectors removed (v1.58) -- use data-testid or role-based locators
+- `beforeAll` runs once per **worker**, not once per run — one-time setup belongs in `globalSetup`.
+- `toBeVisible()` waits for visibility while `toBeAttached()` only checks the DOM; a hidden element
+  satisfies the second.
+- `toBeEditable()` throws on a non-editable element since v1.50 rather than returning false.
+- Screenshots differ by OS, browser build and font rendering — compare only against baselines
+  produced in the same environment as CI.
+- A screenshot of unmasked dynamic content (timestamps, ads, avatars) fails on content rather than
+  on layout.
+- Assertions inherit `expect.timeout` from the config, not the test timeout — a slow page fails the
+  assertion first.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use getByRole() as your primary locator strategy - it mirrors how users interact with the page)**
-
-**(You MUST test complete user workflows end-to-end - login flows, checkout processes, form submissions)**
-
-**(You MUST use web-first assertions that auto-wait - toBeVisible(), toHaveText(), not manual sleeps)**
-
-**(You MUST isolate tests - each test runs independently with its own browser context)**
-
-**(You MUST use named constants for test data - no magic strings or numbers in test files)**
-
-**Failure to follow these rules will result in flaky tests, false positives, and maintenance nightmares.**
-
-</critical_reminders>

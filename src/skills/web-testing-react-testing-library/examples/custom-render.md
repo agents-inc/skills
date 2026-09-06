@@ -1,105 +1,75 @@
 # React Testing Library - Custom Render Examples
 
-> Custom render setup with providers and configurable state. Reference from [SKILL.md](../SKILL.md).
+> Wrapping the app's providers once, and letting a test state its precondition. See [hooks.md](hooks.md) for the `wrapper` option on `renderHook`.
 
 ---
 
-## Basic Custom Render Setup
+## The wrapper and the shadowed export
 
 ```typescript
-// Good Example - Full custom render with providers
 // test-utils.tsx
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
-// Import your app providers
-// import { ThemeProvider } from "../contexts/theme-context";
-// import { AuthProvider } from "../contexts/auth-context";
+import { ThemeProvider } from "../contexts/theme-context";
+import { AuthProvider } from "../contexts/auth-context";
 
-interface AllProvidersProps {
-  children: ReactNode;
-}
-
-function AllProviders({ children }: AllProvidersProps) {
-  // Wrap with your app's providers in the correct nesting order
-  // return (
-  //   <AuthProvider>
-  //     <ThemeProvider defaultTheme="light">
-  //       {children}
-  //     </ThemeProvider>
-  //   </AuthProvider>
-  // );
-  return <>{children}</>;
-}
-
-interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
-  // Add custom options here if needed
+function AllProviders({ children }: { children: ReactNode }) {
+  // Nest in the same order the application does - a provider that reads another's
+  // context breaks silently if the test tree inverts them
+  return (
+    <AuthProvider>
+      <ThemeProvider defaultTheme="light">{children}</ThemeProvider>
+    </AuthProvider>
+  );
 }
 
 function customRender(
   ui: ReactElement,
-  options?: CustomRenderOptions
+  options?: Omit<RenderOptions, "wrapper">,
 ): RenderResult {
   return render(ui, { wrapper: AllProviders, ...options });
 }
 
-// Re-export everything from @testing-library/react
 export * from "@testing-library/react";
-// Override render with custom render
-export { customRender as render };
+export { customRender as render }; // must come after the star export to shadow it
 ```
 
-**Why good:** Centralizes provider wrapping so tests don't repeat boilerplate, creates consistent test environment matching your app structure
+**Why good:** the re-export means a test changes one import path and keeps every other name. The export order matters — `export *` first, then the override — because the later binding wins.
 
 ---
 
-## Using Custom Render in Tests
+## Using it
 
 ```typescript
-// Good Example - Using custom render
 // components/__tests__/user-profile.test.tsx
-import { screen, waitFor } from "../../test-utils"; // Import from custom utils
-import { render } from "../../test-utils";
+import { render, screen } from "../../test-utils";
 import userEvent from "@testing-library/user-event";
 import { UserProfile } from "../user-profile";
 
-const MOCK_USER_NAME = "John Doe";
-const MOCK_USER_EMAIL = "john@example.com";
+test("displays user information", async () => {
+  render(<UserProfile userId="1" />); // providers already applied
 
-describe("UserProfile", () => {
-  test("displays user information", async () => {
-    // Providers are automatically wrapped
-    render(<UserProfile userId="1" />);
+  expect(await screen.findByText("John Doe")).toBeInTheDocument();
+  expect(screen.getByText("john@example.com")).toBeInTheDocument();
+});
 
-    // Wait for async data
-    expect(await screen.findByText(MOCK_USER_NAME)).toBeInTheDocument();
-    expect(screen.getByText(MOCK_USER_EMAIL)).toBeInTheDocument();
-  });
+test("allows editing profile", async () => {
+  const user = userEvent.setup();
+  render(<UserProfile userId="1" />);
 
-  test("allows editing profile", async () => {
-    const user = userEvent.setup();
-    render(<UserProfile userId="1" />);
+  await screen.findByText("John Doe");
+  await user.click(screen.getByRole("button", { name: /edit/i }));
 
-    // Wait for data to load
-    await screen.findByText(MOCK_USER_NAME);
-
-    // Click edit button
-    await user.click(screen.getByRole("button", { name: /edit/i }));
-
-    // Form should be visible
-    expect(screen.getByRole("form")).toBeInTheDocument();
-  });
+  expect(screen.getByRole("form")).toBeInTheDocument();
 });
 ```
 
-**Why good:** Imports from custom test-utils, automatically has all providers, no boilerplate provider wrapping in each test
-
 ---
 
-## Extended Custom Render with Initial State
+## Per-test initial state
 
 ```typescript
-// Good Example - Custom render with configurable initial state
-// test-utils.tsx (extended version)
+// test-utils.tsx (extended)
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 import { AuthProvider, type AuthState } from "../contexts/auth-context";
@@ -111,21 +81,12 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, "wrapper"> {
 
 function customRender(
   ui: ReactElement,
-  {
-    initialAuthState,
-    route = "/",
-    ...options
-  }: ExtendedRenderOptions = {}
+  { initialAuthState, route = "/", ...options }: ExtendedRenderOptions = {},
 ): RenderResult {
-  // Set initial route if using router
-  window.history.pushState({}, "Test page", route);
+  window.history.pushState({}, "", route); // set before mounting, so the first render sees it
 
   function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <AuthProvider initialState={initialAuthState}>
-        {children}
-      </AuthProvider>
-    );
+    return <AuthProvider initialState={initialAuthState}>{children}</AuthProvider>;
   }
 
   return render(ui, { wrapper: Wrapper, ...options });
@@ -135,44 +96,27 @@ export { customRender as render };
 export type { ExtendedRenderOptions };
 ```
 
----
-
-## Using Custom Render with Options
-
 ```typescript
-// Using custom render with options
-import { render, screen } from "../../test-utils";
-
-test("shows logout button when authenticated", async () => {
+test("shows logout when authenticated", () => {
   render(<Header />, {
-    initialAuthState: {
-      user: { id: "1", name: "Test User" },
-      isAuthenticated: true,
-    },
+    initialAuthState: { user: { id: "1", name: "Test User" }, isAuthenticated: true },
     route: "/dashboard",
   });
 
   expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
 });
 
-test("shows login button when not authenticated", () => {
+test("shows login when not authenticated", () => {
   render(<Header />, {
-    initialAuthState: {
-      user: null,
-      isAuthenticated: false,
-    },
+    initialAuthState: { user: null, isAuthenticated: false },
   });
 
   expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
 });
 ```
 
-**Why good:** Allows configuring initial state per test, sets route for router-dependent components, maintains type safety with TypeScript
+**Why good:** the precondition is an argument rather than three lines of setup, so the two tests differ only in the thing they are actually testing. The history push happens before `render` because a router provider reads the location during its first render and will not re-read it.
 
 ---
 
-_For more patterns, see:_
-
-- [core.md](core.md) - Query hierarchy
-- [hooks.md](hooks.md) - Testing hooks with providers
-- [async-testing.md](async-testing.md) - Async utilities
+_Next: [hooks.md](hooks.md) for `renderHook`._

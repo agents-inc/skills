@@ -1,72 +1,56 @@
 # Vue Test Utils - Core Examples
 
-> Mounting, wrapper API, and queries. Reference from [SKILL.md](../SKILL.md).
+> Mounting, slots, querying and interaction. See [async.md](async.md) for `flushPromises`, [composables.md](composables.md) for composables, and [mocking.md](mocking.md) for the `global` options.
+
+> `test`, `describe` and `expect` come from whatever test runner executes these files.
 
 ---
 
-## Mounting Components
-
-### Basic Mount
+## Mounting
 
 ```typescript
-// Good Example - Basic component mounting
 import { mount } from "@vue/test-utils";
-import { Greeting } from "./greeting.vue";
+import Greeting from "./greeting.vue";
 
-const DEFAULT_NAME = "World";
-const CUSTOM_NAME = "Vue";
-
-test("renders default greeting", () => {
+test("renders the default greeting", () => {
   const wrapper = mount(Greeting);
 
-  expect(wrapper.text()).toContain(`Hello, ${DEFAULT_NAME}!`);
+  expect(wrapper.text()).toContain("Hello, World!");
 });
 
-test("renders greeting with custom name prop", () => {
-  const wrapper = mount(Greeting, {
-    props: {
-      name: CUSTOM_NAME,
-    },
-  });
+test("renders a name passed as a prop", () => {
+  const wrapper = mount(Greeting, { props: { name: "Vue" } });
 
-  expect(wrapper.text()).toContain(`Hello, ${CUSTOM_NAME}!`);
+  expect(wrapper.text()).toContain("Hello, Vue!");
 });
 ```
 
-**Why good:** Uses mount() for realistic testing, passes props via options object, uses named constants for test data
-
 ---
 
-### Mount with Slots
+## Slots
 
 ```typescript
-// Good Example - Testing slots
 import { mount } from "@vue/test-utils";
-import { Card } from "./card.vue";
+import Card from "./card.vue";
+import DataList from "./data-list.vue";
 
-const HEADER_TEXT = "Card Title";
-const BODY_TEXT = "Card content goes here";
-const FOOTER_TEXT = "Card footer";
-
-test("renders slot content", () => {
+test("renders named and default slots", () => {
   const wrapper = mount(Card, {
     slots: {
-      header: `<h2>${HEADER_TEXT}</h2>`,
-      default: `<p>${BODY_TEXT}</p>`,
-      footer: FOOTER_TEXT,
+      header: "<h2>Card Title</h2>",
+      default: "<p>Card content goes here</p>",
+      footer: "Card footer", // a plain string is a valid slot
     },
   });
 
-  expect(wrapper.text()).toContain(HEADER_TEXT);
-  expect(wrapper.text()).toContain(BODY_TEXT);
-  expect(wrapper.text()).toContain(FOOTER_TEXT);
+  expect(wrapper.text()).toContain("Card Title");
+  expect(wrapper.text()).toContain("Card content goes here");
+  expect(wrapper.text()).toContain("Card footer");
 });
 
-test("renders scoped slot with data", () => {
+test("renders a scoped slot with the data it is given", () => {
   const wrapper = mount(DataList, {
-    props: {
-      items: [{ id: 1, name: "Item 1" }],
-    },
+    props: { items: [{ id: 1, name: "Item 1" }] },
     slots: {
       item: `<template #item="{ item }">
         <span data-test="item-name">{{ item.name }}</span>
@@ -78,349 +62,193 @@ test("renders scoped slot with data", () => {
 });
 ```
 
-**Why good:** Tests both simple and scoped slots, uses meaningful slot content, verifies slot rendering through assertions
+**Why good:** the scoped-slot test asserts on the value the component passed _into_ the slot, which is the actual contract. Rendering a static slot proves only that the outlet exists.
 
 ---
 
-### Shallow Mount (Use Sparingly)
+## Selective stubbing beats shallow rendering
 
 ```typescript
-// Example - When shallowMount is appropriate
 import { mount, shallowMount } from "@vue/test-utils";
-import { Dashboard } from "./dashboard.vue";
+import Dashboard from "./dashboard.vue";
+import QuickStats from "./quick-stats.vue";
 
-// Use shallowMount when:
-// 1. Testing component in isolation from heavy children
-// 2. Child components make unwanted side effects (API calls)
-// 3. Performance issues with many nested components
+test("dashboard renders its widgets (shallow)", () => {
+  const wrapper = shallowMount(Dashboard); // every child replaced by a stub
 
-test("dashboard renders widgets (shallow)", () => {
-  // All child components are replaced with stubs
-  const wrapper = shallowMount(Dashboard);
-
-  // Can still check that child components would render
   expect(wrapper.findComponent({ name: "StatsWidget" }).exists()).toBe(true);
-  expect(wrapper.findComponent({ name: "ChartWidget" }).exists()).toBe(true);
 });
 
-// Selective stubbing is often better
-test("dashboard renders with selective stubs", () => {
+test("dashboard renders its widgets (selective stub)", () => {
   const wrapper = mount(Dashboard, {
     global: {
       stubs: {
-        // Only stub the problematic component
-        HeavyChartWidget: { template: "<div>Chart Stub</div>" },
+        HeavyChartWidget: { template: "<div>Chart Stub</div>" }, // the one real problem
       },
     },
   });
 
-  // StatsWidget renders normally
-  expect(wrapper.findComponent({ name: "StatsWidget" }).text()).toContain(
-    "Stats",
-  );
+  // QuickStats renders for real, so this covers the integration too
+  expect(wrapper.getComponent(QuickStats).text()).toContain("Stats");
 });
 ```
 
-**Why this approach:** Selective stubbing is preferred over shallowMount because it maintains more realistic behavior while solving specific problems.
+**Why the second is usually right:** the reason to reach for shallow rendering is almost never depth — it is one child that is slow, draws to a canvas, or calls out to the network. Naming that child keeps every other integration under test.
 
 ---
 
-## Querying Elements
-
-### Using get() for Required Elements
+## get, find and findAll
 
 ```typescript
-// Good Example - get() for elements that must exist
 import { mount } from "@vue/test-utils";
-import { LoginForm } from "./login-form.vue";
+import LoginForm from "./login-form.vue";
+import Alert from "./alert.vue";
+import TodoList from "./todo-list.vue";
 
-const DATA_TEST_EMAIL = '[data-test="email"]';
-const DATA_TEST_PASSWORD = '[data-test="password"]';
-const DATA_TEST_SUBMIT = '[data-test="submit"]';
-const DATA_TEST_FORM = '[data-test="form"]';
-
-test("renders login form elements", () => {
+test("required elements: get()", () => {
   const wrapper = mount(LoginForm);
 
-  // get() throws if element not found - test fails immediately
-  const emailInput = wrapper.get(DATA_TEST_EMAIL);
-  const passwordInput = wrapper.get(DATA_TEST_PASSWORD);
-  const submitButton = wrapper.get(DATA_TEST_SUBMIT);
-
-  expect(emailInput.attributes("type")).toBe("email");
-  expect(passwordInput.attributes("type")).toBe("password");
-  expect(submitButton.text()).toBe("Sign In");
-});
-```
-
-**Why good:** Uses get() because these elements must exist for the component to function. Fails fast with clear error if element missing.
-
----
-
-### Using find() for Conditional Elements
-
-```typescript
-// Good Example - find() for elements that may not exist
-import { mount } from "@vue/test-utils";
-import { Alert } from "./alert.vue";
-
-const DATA_TEST_ALERT = '[data-test="alert"]';
-const DATA_TEST_DISMISS = '[data-test="dismiss"]';
-
-test("alert is hidden by default", () => {
-  const wrapper = mount(Alert);
-
-  // find() returns empty wrapper if not found
-  const alert = wrapper.find(DATA_TEST_ALERT);
-
-  expect(alert.exists()).toBe(false);
+  // Throws with the selector and the rendered HTML if absent
+  expect(wrapper.get('[data-test="email"]').attributes("type")).toBe("email");
+  expect(wrapper.get('[data-test="submit"]').text()).toBe("Sign In");
 });
 
-test("alert is visible when message provided", () => {
-  const wrapper = mount(Alert, {
+test("conditional elements: find() plus exists()", () => {
+  const withoutMessage = mount(Alert);
+  expect(withoutMessage.find('[data-test="alert"]').exists()).toBe(false);
+
+  const withMessage = mount(Alert, {
     props: { message: "Something happened" },
   });
-
-  const alert = wrapper.find(DATA_TEST_ALERT);
-
-  expect(alert.exists()).toBe(true);
-  expect(alert.text()).toContain("Something happened");
+  expect(withMessage.get('[data-test="alert"]').text()).toContain(
+    "Something happened",
+  );
 });
 
-test("dismissible alert has close button", () => {
-  const wrapper = mount(Alert, {
-    props: {
-      message: "Info",
-      dismissible: true,
-    },
-  });
+test("collections: findAll()", () => {
+  const todos = [
+    { id: 1, text: "Learn Vue", done: false },
+    { id: 2, text: "Write tests", done: true },
+  ];
+  const wrapper = mount(TodoList, { props: { todos } });
 
-  // Conditional element based on prop
-  expect(wrapper.find(DATA_TEST_DISMISS).exists()).toBe(true);
-});
-```
-
-**Why good:** Uses find() for conditional elements, checks .exists() before accessing content, tests both present and absent states
-
----
-
-### Using findAll() for Multiple Elements
-
-```typescript
-// Good Example - findAll() for lists
-import { mount } from "@vue/test-utils";
-import { TodoList } from "./todo-list.vue";
-
-const DATA_TEST_ITEM = '[data-test="todo-item"]';
-const DATA_TEST_CHECKBOX = '[data-test="checkbox"]';
-
-const MOCK_TODOS = [
-  { id: 1, text: "Learn Vue", done: false },
-  { id: 2, text: "Write tests", done: true },
-  { id: 3, text: "Build app", done: false },
-];
-
-test("renders all todo items", () => {
-  const wrapper = mount(TodoList, {
-    props: { todos: MOCK_TODOS },
-  });
-
-  const items = wrapper.findAll(DATA_TEST_ITEM);
-
-  expect(items).toHaveLength(MOCK_TODOS.length);
+  expect(wrapper.findAll('[data-test="todo-item"]')).toHaveLength(2);
+  expect(wrapper.findAll('[data-test="checkbox"]')[1].element.checked).toBe(
+    true,
+  );
 });
 
-test("renders completed todos with checked state", () => {
-  const wrapper = mount(TodoList, {
-    props: { todos: MOCK_TODOS },
-  });
+test("the empty case renders a placeholder", () => {
+  const wrapper = mount(TodoList, { props: { todos: [] } });
 
-  const checkboxes = wrapper.findAll(DATA_TEST_CHECKBOX);
-
-  // Second item is completed
-  expect(checkboxes[1].element.checked).toBe(true);
-});
-
-test("empty list shows placeholder", () => {
-  const wrapper = mount(TodoList, {
-    props: { todos: [] },
-  });
-
-  expect(wrapper.findAll(DATA_TEST_ITEM)).toHaveLength(0);
+  expect(wrapper.findAll('[data-test="todo-item"]')).toHaveLength(0);
   expect(wrapper.text()).toContain("No todos yet");
 });
 ```
 
-**Why good:** Uses findAll() for list items, tests both populated and empty states, accesses specific items by index when needed
+**Why good:** each variant is used for the job it exists for. The empty case is tested explicitly because an empty-list bug renders nothing and therefore breaks no assertion that only counts items.
 
 ---
 
-## User Interactions
-
-### Form Input with setValue()
+## setValue and trigger
 
 ```typescript
-// Good Example - Form interactions
 import { mount } from "@vue/test-utils";
-import { RegistrationForm } from "./registration-form.vue";
+import RegistrationForm from "./registration-form.vue";
 
-const DATA_TEST_USERNAME = '[data-test="username"]';
-const DATA_TEST_EMAIL = '[data-test="email"]';
-const DATA_TEST_PASSWORD = '[data-test="password"]';
-const DATA_TEST_TERMS = '[data-test="terms"]';
-const DATA_TEST_COUNTRY = '[data-test="country"]';
-const DATA_TEST_FORM = '[data-test="form"]';
-
-const VALID_USERNAME = "johndoe";
-const VALID_EMAIL = "john@example.com";
-const VALID_PASSWORD = "SecurePass123!";
-
-test("fills out registration form", async () => {
+test("fills and submits the form", async () => {
   const wrapper = mount(RegistrationForm);
 
-  // Text inputs - MUST await
-  await wrapper.get(DATA_TEST_USERNAME).setValue(VALID_USERNAME);
-  await wrapper.get(DATA_TEST_EMAIL).setValue(VALID_EMAIL);
-  await wrapper.get(DATA_TEST_PASSWORD).setValue(VALID_PASSWORD);
+  await wrapper.get('[data-test="username"]').setValue("johndoe");
+  await wrapper.get('[data-test="email"]').setValue("john@example.com");
+  await wrapper.get('[data-test="terms"]').setValue(true); // checkbox: boolean
+  await wrapper.get('[data-test="country"]').setValue("US"); // select: option value
 
-  // Checkbox - setValue(true/false) handles checkboxes
-  await wrapper.get(DATA_TEST_TERMS).setValue(true);
-
-  // Select dropdown
-  await wrapper.get(DATA_TEST_COUNTRY).setValue("US");
-
-  // Verify values
-  expect(wrapper.get(DATA_TEST_USERNAME).element.value).toBe(VALID_USERNAME);
-  expect(wrapper.get(DATA_TEST_EMAIL).element.value).toBe(VALID_EMAIL);
-  expect(wrapper.get(DATA_TEST_TERMS).element.checked).toBe(true);
-});
-
-test("submits form with data", async () => {
-  const wrapper = mount(RegistrationForm);
-
-  await wrapper.get(DATA_TEST_USERNAME).setValue(VALID_USERNAME);
-  await wrapper.get(DATA_TEST_EMAIL).setValue(VALID_EMAIL);
-  await wrapper.get(DATA_TEST_PASSWORD).setValue(VALID_PASSWORD);
-  await wrapper.get(DATA_TEST_TERMS).setValue(true);
-
-  await wrapper.get(DATA_TEST_FORM).trigger("submit.prevent");
+  await wrapper.get('[data-test="form"]').trigger("submit.prevent");
 
   expect(wrapper.emitted("submit")).toBeTruthy();
   expect(wrapper.emitted("submit")![0][0]).toMatchObject({
-    username: VALID_USERNAME,
-    email: VALID_EMAIL,
+    username: "johndoe",
+    email: "john@example.com",
   });
 });
 ```
 
-**Why good:** Awaits all setValue() calls, uses proper selectors, verifies both DOM state and emitted events
+**Why good:** `setValue` covers text inputs, checkboxes and selects with one method, dispatching the `input` or `change` event each element type actually needs. Every call is awaited, so the next line sees the updated DOM.
 
 ---
 
-### Click Events with trigger()
+## Clicks and counted state
 
 ```typescript
-// Good Example - Button and click interactions
 import { mount } from "@vue/test-utils";
-import { Counter } from "./counter.vue";
+import Counter from "./counter.vue";
 
-const DATA_TEST_COUNT = '[data-test="count"]';
-const DATA_TEST_INCREMENT = '[data-test="increment"]';
-const DATA_TEST_DECREMENT = '[data-test="decrement"]';
-const DATA_TEST_RESET = '[data-test="reset"]';
+test("increments and decrements", async () => {
+  const wrapper = mount(Counter, { props: { initialCount: 5 } });
 
-const INITIAL_COUNT = 0;
+  await wrapper.get('[data-test="increment"]').trigger("click");
+  expect(wrapper.get('[data-test="count"]').text()).toBe("6");
 
-test("increments counter on click", async () => {
-  const wrapper = mount(Counter);
-
-  expect(wrapper.get(DATA_TEST_COUNT).text()).toBe(String(INITIAL_COUNT));
-
-  // MUST await trigger()
-  await wrapper.get(DATA_TEST_INCREMENT).trigger("click");
-
-  expect(wrapper.get(DATA_TEST_COUNT).text()).toBe("1");
+  await wrapper.get('[data-test="decrement"]').trigger("click");
+  expect(wrapper.get('[data-test="count"]').text()).toBe("5");
 });
 
-test("decrements counter on click", async () => {
-  const wrapper = mount(Counter, {
-    props: { initialCount: 5 },
-  });
+test("reset returns to the initial prop, not to zero", async () => {
+  const wrapper = mount(Counter, { props: { initialCount: 10 } });
 
-  await wrapper.get(DATA_TEST_DECREMENT).trigger("click");
+  await wrapper.get('[data-test="increment"]').trigger("click");
+  await wrapper.get('[data-test="reset"]').trigger("click");
 
-  expect(wrapper.get(DATA_TEST_COUNT).text()).toBe("4");
-});
-
-test("resets counter to initial value", async () => {
-  const wrapper = mount(Counter, {
-    props: { initialCount: 10 },
-  });
-
-  await wrapper.get(DATA_TEST_INCREMENT).trigger("click");
-  await wrapper.get(DATA_TEST_INCREMENT).trigger("click");
-  await wrapper.get(DATA_TEST_RESET).trigger("click");
-
-  expect(wrapper.get(DATA_TEST_COUNT).text()).toBe("10");
+  expect(wrapper.get('[data-test="count"]').text()).toBe("10");
 });
 ```
 
-**Why good:** Awaits all trigger() calls, tests multiple interaction scenarios, uses props to control initial state
-
 ---
 
-### Keyboard and Mouse Events
+## Keyboard events
 
 ```typescript
-// Good Example - Keyboard shortcuts and mouse events
 import { mount } from "@vue/test-utils";
-import { SearchInput } from "./search-input.vue";
+import SearchInput from "./search-input.vue";
 
-const DATA_TEST_INPUT = '[data-test="search-input"]';
-const DATA_TEST_SUGGESTION = '[data-test="suggestion"]';
-
-test("submits search on Enter key", async () => {
+test("submits on Enter", async () => {
   const wrapper = mount(SearchInput);
 
-  const input = wrapper.get(DATA_TEST_INPUT);
-  await input.setValue("vue testing");
-  await input.trigger("keydown.enter");
+  const input = wrapper.get('[data-test="search-input"]');
+  await input.setValue("component testing");
+  await input.trigger("keydown.enter"); // Vue's key modifier syntax works here
 
-  expect(wrapper.emitted("search")).toBeTruthy();
-  expect(wrapper.emitted("search")![0][0]).toBe("vue testing");
+  expect(wrapper.emitted("search")![0][0]).toBe("component testing");
 });
 
-test("closes dropdown on Escape key", async () => {
-  const wrapper = mount(SearchInput);
-
-  await wrapper.get(DATA_TEST_INPUT).setValue("test");
-  // Assuming dropdown opens on input
-
-  await wrapper.get(DATA_TEST_INPUT).trigger("keydown.escape");
-
-  expect(wrapper.find(DATA_TEST_SUGGESTION).exists()).toBe(false);
-});
-
-test("selects suggestion on click", async () => {
+test("closes the suggestion list on Escape", async () => {
   const wrapper = mount(SearchInput, {
-    props: {
-      suggestions: ["vue", "vue test utils", "vitest"],
-    },
+    props: { suggestions: ["alpha", "alphabet"] },
   });
 
-  await wrapper.get(DATA_TEST_INPUT).setValue("v");
-  await wrapper.findAll(DATA_TEST_SUGGESTION)[1].trigger("click");
+  await wrapper.get('[data-test="search-input"]').setValue("al");
+  await wrapper.get('[data-test="search-input"]').trigger("keydown.escape");
 
-  expect(wrapper.get(DATA_TEST_INPUT).element.value).toBe("vue test utils");
+  expect(wrapper.find('[data-test="suggestion"]').exists()).toBe(false);
+});
+
+test("clicking a suggestion fills the input", async () => {
+  const wrapper = mount(SearchInput, {
+    props: { suggestions: ["alpha", "alphabet"] },
+  });
+
+  await wrapper.get('[data-test="search-input"]').setValue("al");
+  await wrapper.findAll('[data-test="suggestion"]')[1].trigger("click");
+
+  expect(wrapper.get('[data-test="search-input"]').element.value).toBe(
+    "alphabet",
+  );
 });
 ```
 
-**Why good:** Tests keyboard shortcuts with proper modifiers, tests both keyboard and mouse interactions, verifies state changes after events
+**Why good:** `trigger("keydown.enter")` uses the same modifier syntax the template does, so the test and the handler agree on which key by construction rather than by a hand-written `key` property.
 
 ---
 
-_For more patterns, see:_
-
-- [async.md](async.md) - Async testing patterns
-- [composables.md](composables.md) - Testing composables
-- [mocking.md](mocking.md) - Pinia stores, Vue Router, stubs
+_Next: [async.md](async.md) for requests and timers, [mocking.md](mocking.md) for the `global` options._

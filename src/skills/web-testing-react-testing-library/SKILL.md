@@ -1,76 +1,77 @@
 ---
 name: web-testing-react-testing-library
-description: React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing
+description: React Testing Library — query hierarchy, userEvent, async utilities, renderHook, custom render with providers. Load when writing or reviewing tests that render React components or hooks.
 ---
 
 # React Testing Library Patterns
 
-> **Quick Guide:** Test React components through user interactions and accessible queries. Use `getByRole` as your primary query. Prefer `userEvent` over `fireEvent`. Use `findBy*` for async content. Test user behavior, not implementation details.
+> **Quick Guide:** Query through the accessibility tree (`getByRole` first, `getByTestId` last), drive interactions with `userEvent` rather than `fireEvent`, and reach for `findBy*` whenever the element arrives asynchronously. `userEvent` has been async and `setup()`-first since v14, so every call is awaited. The library renders and interacts; the assertion API, mock functions and fake timers come from whatever test runner is executing the file.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — query hierarchy, choosing between role, label, text and test id
+- [examples/user-events.md](examples/user-events.md) — typing, clicking, keyboard shortcuts, tab order, and the cases fireEvent still covers
+- [examples/async-testing.md](examples/async-testing.md) — `findBy*`, `waitFor`, `waitForElementToBeRemoved`
+- [examples/custom-render.md](examples/custom-render.md) — a render wrapped in the app's providers, with per-test initial state
+- [examples/hooks.md](examples/hooks.md) — `renderHook`, `rerender`, `unmount`, wrappers, hooks that throw
+- [examples/accessibility.md](examples/accessibility.md) — keyboard navigation, ARIA attributes, live regions, focus trapping
+- [examples/scoped-queries.md](examples/scoped-queries.md) — `within()` for tables, cards, sections and modals
+- [examples/configuration.md](examples/configuration.md) — fake timers, pointer-events checks, timeout overrides
+- [reference.md](reference.md) — query and role tables, userEvent methods, keyboard syntax, matcher list, debug checklist
+
+---
+
+## Which path applies
+
+- **A component is the subject** — render it and query the resulting DOM;
+  [examples/core.md](examples/core.md) and [examples/user-events.md](examples/user-events.md) are the
+  path.
+- **A bare hook is the subject** — no DOM to query, so `renderHook` exposes `result.current`;
+  [examples/hooks.md](examples/hooks.md). Where the hook only makes sense inside its UI, test the
+  component instead.
+- **The subject needs providers** — theme, auth, routing — wrap once in a custom render rather than
+  per test; [examples/custom-render.md](examples/custom-render.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing React Testing Library code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Reach for queries in accessibility order — `getByRole`, then `getByLabelText`, then `getByText`, and `getByTestId` only when nothing else reaches the element.** A query that has to fall back is telling you the element is unreachable to assistive technology too.
 
-**(You MUST use the query priority hierarchy: `getByRole` > `getByLabelText` > `getByText` > `getByTestId`)**
+**Call `userEvent.setup()` before the first interaction and await every method.** Since v14 the methods return promises, so an un-awaited call lets assertions run against a DOM that has not finished updating.
 
-**(You MUST use `userEvent` instead of `fireEvent` for realistic user interactions)**
+**Use `findBy*` for anything that arrives asynchronously.** It retries and reports the DOM it gave up on, where `waitFor` wrapped around `getBy*` reports only the last thrown error.
 
-**(You MUST use `findBy*` queries for async content instead of `waitFor` + `getBy*`)**
+**Query through `screen` rather than the object `render` returns.** One import serves every query, and the destructured form drifts out of step as a test grows.
 
-**(You MUST test user-visible behavior, NOT implementation details like internal state)**
-
-**(You MUST use `screen` object for queries, NOT destructured render returns)**
+**Assert on what the user can see or operate.** Internal state, refs and instance fields change under a refactor that keeps the behaviour identical.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** React Testing Library, @testing-library/react, render, screen, userEvent, fireEvent, waitFor, findBy, getByRole, getByLabelText, renderHook, within, cleanup, prettyDOM, configure, logRoles, logTestingPlaygroundURL
+**Auto-detection:** @testing-library/react, @testing-library/user-event, @testing-library/dom, render, screen, userEvent.setup, fireEvent, waitFor, waitForElementToBeRemoved, findByRole, getByRole, getByLabelText, queryByRole, renderHook, result.current, within, cleanup, prettyDOM, logRoles, logTestingPlaygroundURL, testIdAttribute, asyncUtilTimeout
 
-**When to use:**
+**Applies to:**
 
-- Testing React component behavior through user interactions
-- Verifying accessible element rendering and presence
-- Testing form interactions, validation, and submissions
-- Testing async component states (loading, error, success)
-- Testing custom React hooks with `renderHook`
-- Creating custom render functions with providers
+- Rendering a React component and asserting on what it puts in the DOM
+- Driving forms, keyboard navigation and pointer interaction through a simulated user
+- Testing loading, error and success states that resolve asynchronously
+- Testing a custom hook in isolation, and deciding when not to
+- Building a render that carries the app's providers
+- Asserting that interactive elements are reachable by role, label and keyboard
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- E2E testing spanning multiple pages (defer to your E2E testing tool)
-- Network request mocking setup (defer to your API mocking solution)
-- Testing pure utility functions without React (use unit tests directly)
-- Test runner configuration (defer to your test runner skill)
-
-**Key patterns covered:**
-
-- Query hierarchy and selection strategy
-- userEvent vs fireEvent for user simulation
-- Async utilities (waitFor, findBy queries)
-- Testing hooks with renderHook
-- Custom render with providers
-- Accessibility testing patterns
-- Debug utilities (screen.debug, prettyDOM, logRoles)
-- Scoped queries with `within`
-- Global configuration options
-
-**Detailed Resources:**
-
-- For code examples, see `examples/` folder:
-  - [examples/core.md](examples/core.md) - Query hierarchy examples
-  - [examples/user-events.md](examples/user-events.md) - userEvent patterns
-  - [examples/async-testing.md](examples/async-testing.md) - findBy, waitFor, waitForElementToBeRemoved
-  - [examples/custom-render.md](examples/custom-render.md) - Custom render with providers
-  - [examples/hooks.md](examples/hooks.md) - renderHook patterns
-  - [examples/accessibility.md](examples/accessibility.md) - Accessibility testing patterns
-  - [examples/scoped-queries.md](examples/scoped-queries.md) - within() for scoped queries
-  - [examples/configuration.md](examples/configuration.md) - Global configuration options
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Test runner mechanics — the file's `describe`/`it`, the assertion API, mock functions, fake timers
+  and the setup file are the runner's; this skill only names the seam where an option must be handed
+  the runner's timer-advance function
+- Test doubles for the network — a component is unaware of its transport, so responses are arranged
+  by whatever intercepts them
+- Journeys spanning navigations and real backends — browser-driven end-to-end coverage
+- Whether a rendered frame still looks right — pixel comparison against an approved image
 
 ---
 
@@ -78,29 +79,13 @@ description: React Testing Library patterns - query hierarchy, userEvent, async 
 
 ## Philosophy
 
-React Testing Library is built on the guiding principle: "The more your tests resemble the way your software is used, the more confidence they can give you."
+The library's own guiding principle: the more a test resembles the way the software is used, the more confidence it gives. Three consequences follow.
 
-**Core Principles:**
+**Queries are an accessibility audit that happens to be a test.** A component reachable by `getByRole("button", { name: /submit/i })` is reachable by a screen reader for the same reason. When the only query that works is `getByTestId`, the test has just reported a defect in the UI rather than in itself.
 
-1. **Test User Behavior, Not Implementation**: Query elements the way users find them (by role, label, text), not by test IDs or CSS selectors
-2. **Accessibility-First Testing**: If your test struggles to find an element, your UI likely has accessibility issues
-3. **No Implementation Details**: Avoid testing internal state, refs, or component internals - test what users see and interact with
-4. **Real DOM Interactions**: Render components to a real DOM (jsdom) to catch real integration issues
+**Implementation details are whatever survives a refactor unchanged.** State shape, hook internals, class names and DOM nesting are all free to move; rendered text, roles and accessible names are the contract.
 
-**When to use React Testing Library:**
-
-- Integration testing components with their children
-- Testing user interaction flows within a component
-- Verifying accessibility of interactive elements
-- Testing form validation and submission
-- Testing conditional rendering based on props/state
-
-**When NOT to use:**
-
-- Full user journey testing (use E2E tests)
-- Testing visual appearance (use visual regression tools)
-- Testing network requests directly (test component behavior with mocked responses)
-- Testing third-party library behavior (trust the library's tests)
+**The DOM is real.** Components render into a real document, so integration bugs between a component and its children surface here rather than in production.
 
 </philosophy>
 
@@ -108,470 +93,176 @@ React Testing Library is built on the guiding principle: "The more your tests re
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
 ### Pattern 1: Query Priority Hierarchy
 
-Select queries based on accessibility hierarchy. This ensures tests align with how users (including those using assistive technology) interact with your UI.
-
-#### Query Priority Order
+Pick the query by how a user would find the element, not by what is convenient in the markup.
 
 ```typescript
-// Priority 1: Accessible to Everyone
-getByRole(); // BEST - queries accessibility tree
-getByLabelText(); // Form fields - how users navigate forms
-getByPlaceholderText(); // When no label (not ideal, but sometimes necessary)
-getByText(); // Non-interactive content (divs, spans, paragraphs)
-getByDisplayValue(); // Form elements by current value
-
-// Priority 2: Semantic Queries
-getByAltText(); // Images, areas, inputs with alt
-getByTitle(); // Least reliable - not consistently read by screen readers
-
-// Priority 3: Test IDs (Last Resort)
-getByTestId(); // Only when other methods fail
+screen.getByRole("button", { name: /sign in/i }); // interactive elements
+screen.getByLabelText(/password/i); // form fields, incl. password inputs (no textbox role)
+screen.getByText(/welcome back/i); // non-interactive content
+screen.getByDisplayValue("draft title"); // a field by its current value
+screen.getByAltText(/profile photo/i); // images
+screen.getByTestId(`product-${generatedId}`); // last resort: genuinely generated content
 ```
 
-See [examples/core.md](examples/core.md) for complete query examples.
-
-**Why this hierarchy:** Users interact with your app through visible text, labels, and semantic roles - not through test IDs or CSS classes. Testing this way ensures your app is accessible.
-
----
+Full code: [examples/core.md](examples/core.md)
 
 ### Pattern 2: userEvent Over fireEvent
 
-Use `userEvent` for realistic user interaction simulation. It triggers the full event chain that real interactions produce.
-
-#### Key Differences
-
-| Action   | `fireEvent`           | `userEvent`                                                 |
-| -------- | --------------------- | ----------------------------------------------------------- |
-| Typing   | Single `change` event | `keyDown`, `keyPress`, `keyUp` per character                |
-| Clicking | Single `click` event  | `pointerDown`, `mouseDown`, `pointerUp`, `mouseUp`, `click` |
-| Focus    | Manual management     | Automatic focus management                                  |
-
-#### Setup Pattern (userEvent v14+)
+`fireEvent` dispatches one DOM event. `userEvent` replays the sequence a real interaction produces — pointer, focus and keyboard events in order — which is where handler bugs actually live.
 
 ```typescript
 import userEvent from "@testing-library/user-event";
 
-// Setup BEFORE interactions - creates isolated user session
-const user = userEvent.setup();
-
-// Then use throughout test
-await user.click(button);
-await user.type(input, "Hello");
+const user = userEvent.setup(); // before the first interaction
+await user.type(screen.getByLabelText(/email/i), "user@example.com");
+await user.click(screen.getByRole("button", { name: /create account/i }));
 ```
 
-See [examples/user-events.md](examples/user-events.md) for complete userEvent examples.
+Reach for `fireEvent` only for events a user does not originate — `resize`, `scroll`, a synthetic event carrying properties you need to control.
 
-**Why userEvent:** `fireEvent` dispatches DOM events directly, bypassing browser event handling. `userEvent` simulates actual user behavior, triggering the complete event chain including focus, keyboard, and pointer events.
-
----
+Full code: [examples/user-events.md](examples/user-events.md)
 
 ### Pattern 3: Async Utilities
 
-Use `findBy*` queries for elements that appear asynchronously. Use `waitFor` only for assertions, not element queries.
-
-#### findBy vs waitFor
+`findBy*` when the element appears; `waitFor` only when the thing you are waiting on is an assertion rather than an element; `waitForElementToBeRemoved` when it disappears.
 
 ```typescript
-// GOOD: findBy for async elements
-const button = await screen.findByRole("button", { name: /submit/i });
+expect(await screen.findByText(/results/i)).toBeInTheDocument();
 
-// BAD: waitFor + getBy for async elements
 await waitFor(() => {
-  screen.getByRole("button", { name: /submit/i }); // DON'T DO THIS
+  expect(handler).toHaveBeenCalledWith("react"); // one assertion, no side effects
 });
+
+await waitForElementToBeRemoved(() => screen.queryByRole("progressbar"));
 ```
 
-#### waitFor Best Practices
+`waitFor` polls until its callback stops throwing, so a second assertion inside it pays the full retry cost before the first failure is reported, and a side effect inside it runs on every poll.
 
-```typescript
-// GOOD: Single assertion in waitFor
-await waitFor(() => {
-  expect(screen.getByText(/success/i)).toBeInTheDocument();
-});
-
-// BAD: Multiple assertions in waitFor
-await waitFor(() => {
-  expect(screen.getByText(/success/i)).toBeInTheDocument();
-  expect(screen.getByText(/complete/i)).toBeInTheDocument(); // DON'T
-});
-
-// BAD: Side effects in waitFor
-await waitFor(() => {
-  user.click(button); // DON'T - side effects outside waitFor
-  expect(result).toBe(true);
-});
-```
-
-See [examples/async-testing.md](examples/async-testing.md) for complete async testing examples.
-
-**Why this matters:** `waitFor` polls until the callback stops throwing. Multiple assertions or side effects in the callback cause unpredictable behavior and slower test failures.
-
----
+Full code: [examples/async-testing.md](examples/async-testing.md)
 
 ### Pattern 4: Testing Hooks with renderHook
 
-Use `renderHook` for testing custom hooks in isolation. Prefer testing hooks through components when possible.
-
-#### Basic renderHook Usage
+`renderHook` mounts a hook without a component. `result.current` is re-read on every access, so hold the access rather than the value.
 
 ```typescript
-import { renderHook, act } from "@testing-library/react";
-
-const { result } = renderHook(() => useCounter());
-
-// Access current value
-expect(result.current.count).toBe(0);
-
-// Update state with act()
-act(() => {
-  result.current.increment();
-});
-
-expect(result.current.count).toBe(1);
-```
-
-#### With Context Providers
-
-```typescript
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider theme="dark">{children}</ThemeProvider>
+const { result, rerender, unmount } = renderHook(
+  ({ key }) => useLocalStorage(key, "initial"),
+  { initialProps: { key: "draft" } },
 );
 
-const { result } = renderHook(() => useTheme(), { wrapper });
+act(() => {
+  result.current[1]("updated");
+});
+expect(result.current[0]).toBe("updated");
 ```
 
-See [examples/hooks.md](examples/hooks.md) for complete renderHook examples.
+Prefer a component test where the hook is inseparable from its UI; `renderHook` earns its place for hooks you publish, or hooks with edge cases a component would obscure.
 
-**When to use renderHook:**
-
-- Testing library hooks you're publishing
-- Testing complex hook logic in isolation
-- Testing hooks with many edge cases
-
-**When to prefer component testing:**
-
-- The hook is tightly coupled to UI
-- You want to test the hook in realistic context
-- The component test is simpler to write
-
----
+Full code: [examples/hooks.md](examples/hooks.md)
 
 ### Pattern 5: Custom Render with Providers
 
-Create a custom render function that wraps components with all necessary providers.
-
-#### Custom Render Setup
+Wrap the app's providers once and re-export, so no test repeats the nesting.
 
 ```typescript
-// test-utils.tsx
-import { render, type RenderOptions } from "@testing-library/react";
-import type { ReactElement } from "react";
-
-interface AllProvidersProps {
-  children: React.ReactNode;
-}
-
-function AllProviders({ children }: AllProvidersProps) {
-  // Wrap with your app's providers in correct nesting order
-  // return (
-  //   <ThemeProvider>
-  //     <AuthProvider>
-  //       {children}
-  //     </AuthProvider>
-  //   </ThemeProvider>
-  // );
-  return <>{children}</>;
-}
-
 function customRender(
   ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
+  options?: Omit<RenderOptions, "wrapper">,
 ) {
   return render(ui, { wrapper: AllProviders, ...options });
 }
 
-// Re-export everything
 export * from "@testing-library/react";
-export { customRender as render };
+export { customRender as render }; // shadow the default export
 ```
 
-See [examples/custom-render.md](examples/custom-render.md) for complete custom render examples.
+Widen the options type to accept per-test initial state — an auth state, a starting route — so a test states its precondition instead of arranging it.
 
-**Why custom render:** Avoids repeating provider boilerplate in every test. Creates a consistent test environment matching your app.
+Full code: [examples/custom-render.md](examples/custom-render.md)
 
----
+### Pattern 6: Asserting Accessible Behaviour
 
-### Pattern 6: Accessibility Testing Patterns
-
-Use queries that enforce accessibility. If your test struggles to find an element, your UI likely has accessibility issues.
-
-#### Role-Based Queries
+Beyond finding elements, the accessibility tree is where keyboard order, expanded/selected state and announcements are asserted.
 
 ```typescript
-// GOOD: Tests that element is accessible
-screen.getByRole("button", { name: /submit/i });
-screen.getByRole("textbox", { name: /email/i });
-screen.getByRole("checkbox", { name: /agree to terms/i });
-screen.getByRole("combobox", { name: /country/i });
+await user.tab();
+expect(screen.getByRole("combobox")).toHaveFocus();
 
-// GOOD: Verify accessible names
-expect(screen.getByRole("button", { name: /submit/i })).toBeEnabled();
+await user.keyboard("{Enter}");
+expect(screen.getByRole("button", { name: /section 1/i })).toHaveAttribute(
+  "aria-expanded",
+  "true",
+);
 
-// BAD: Using test IDs when accessible queries work
-screen.getByTestId("submit-button"); // DON'T when getByRole works
+expect(await screen.findByRole("alert")).toHaveTextContent(
+  /email is required/i,
+);
 ```
 
-#### logRoles for Debugging
+Full code: [examples/accessibility.md](examples/accessibility.md)
+
+### Pattern 7: Scoped Queries with within
+
+`within` bounds a query to a container, which is what makes repeated structures testable at all.
 
 ```typescript
-import { logRoles } from "@testing-library/react";
+const bobRow = screen.getAllByRole("row")[2];
+await user.click(within(bobRow).getByRole("button", { name: /edit/i }));
 
-// Log all accessible roles in a container
-logRoles(container);
+const billing = screen.getByRole("region", { name: /billing address/i });
+await user.type(
+  within(billing).getByLabelText(/street address/i),
+  "123 Billing St",
+);
 ```
 
-See [examples/accessibility.md](examples/accessibility.md) for complete accessibility testing examples.
+Full code: [examples/scoped-queries.md](examples/scoped-queries.md)
 
-**Why this matters:** Screen readers and assistive technologies use the accessibility tree. Testing with accessible queries ensures your app works for all users.
+### Pattern 8: userEvent Setup Options
 
----
-
-### Pattern 7: Debug Utilities
-
-Use debug utilities to understand what's rendered and troubleshoot failing tests.
-
-#### screen.debug()
+Three options change behaviour rather than tune it, and all three are set at `setup()`.
 
 ```typescript
-// Debug entire document
-screen.debug();
-
-// Debug specific element
-screen.debug(screen.getByRole("form"));
-
-// Debug multiple elements
-screen.debug(screen.getAllByRole("listitem"));
-```
-
-#### prettyDOM for Custom Output
-
-```typescript
-import { prettyDOM } from "@testing-library/react";
-
-// Get formatted DOM string (for logging, assertions)
-const domString = prettyDOM(element);
-console.log(domString);
-
-// Customize output length
-const domString = prettyDOM(element, 15000); // Increase from 7000 default
-```
-
-#### logTestingPlaygroundURL
-
-```typescript
-import { logTestingPlaygroundURL } from "@testing-library/react";
-
-// Logs URL to Testing Playground with current DOM
-logTestingPlaygroundURL();
-// Visit the URL to get suggested queries
-```
-
-**When to use debug:**
-
-- Test is failing and you don't understand why
-- Element can't be found with expected query
-- Need to understand current DOM state
-
-**Remove before committing:** Debug statements are for development only.
-
----
-
-### Pattern 8: Scoped Queries with within
-
-Use `within` to scope queries to a specific container element. Essential when testing components with repeated structures.
-
-#### Basic Usage
-
-```typescript
-import { render, screen, within } from "@testing-library/react";
-
-test("selects item in specific section", () => {
-  render(<Dashboard />);
-
-  // Get a specific section
-  const sidebar = screen.getByRole("navigation");
-
-  // Query only within that section
-  const homeLink = within(sidebar).getByRole("link", { name: /home/i });
-  expect(homeLink).toBeInTheDocument();
-});
-```
-
-#### Testing List Items
-
-```typescript
-test("each row has edit button", () => {
-  render(<UserTable users={mockUsers} />);
-
-  const rows = screen.getAllByRole("row");
-
-  // Skip header row, check each data row
-  rows.slice(1).forEach((row) => {
-    const editButton = within(row).getByRole("button", { name: /edit/i });
-    expect(editButton).toBeInTheDocument();
-  });
-});
-```
-
-See [examples/scoped-queries.md](examples/scoped-queries.md) for complete within() examples.
-
-**When to use within:**
-
-- Components with repeated structures (tables, lists, cards)
-- Multiple sections with similar elements
-- Testing specific regions of a page
-
----
-
-### Pattern 9: Global Configuration
-
-Configure Testing Library defaults for your project using `configure`.
-
-#### Configuration Options
-
-```typescript
-import { configure } from "@testing-library/react";
-
-// In test setup file
-configure({
-  // Custom test ID attribute (default: "data-testid")
-  testIdAttribute: "data-test-id",
-
-  // Async utility timeout (default: 1000ms)
-  asyncUtilTimeout: 5000,
-
-  // Enable React strict mode warnings in tests
-  reactStrictMode: true,
-});
-```
-
-#### userEvent Setup Options
-
-```typescript
-import userEvent from "@testing-library/user-event";
-
-// With fake timers - pass your test runner's timer advance function
 const user = userEvent.setup({
-  advanceTimers: vi.advanceTimersByTime, // Required when using fake timers
-});
-
-// Skip pointer events check (for elements with pointer-events: none)
-const user = userEvent.setup({
-  pointerEventsCheck: 0, // 0 = never check, 1 = check once, 2 = check per API
-});
-
-// Custom delay between events
-const user = userEvent.setup({
-  delay: null, // null = no delay (faster tests)
+  advanceTimers: advanceTimersBy, // your runner's timer-advance fn; without it, fake timers hang
+  delay: null, // skip the inter-event wait
+  pointerEventsCheck: 0, // interact with an element whose CSS sets pointer-events: none
 });
 ```
 
-See [examples/configuration.md](examples/configuration.md) for complete configuration examples.
-
-**When to configure:**
-
-- Project uses custom test ID attribute
-- Tests need longer async timeouts
-- Using fake timers with userEvent
+Full code: [examples/configuration.md](examples/configuration.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**Test runner setup:**
-
-- Import jest-dom matchers in your test setup file for semantic assertions (`toBeInTheDocument`, `toHaveValue`, etc.)
-- Cleanup happens automatically in modern setups - no manual `afterEach(cleanup)` needed
-
-**Mocking approach:**
-
-- Mock data at the network boundary, not at the component level
-- Set up mock responses before rendering, not after
-
-**Framework providers:**
-
-- Custom render wraps components with your app's providers (see Pattern 5)
-- SSR frameworks may need additional DOM configuration
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Using `getByTestId` when accessible queries work** - Indicates UI may not be accessible, test doesn't reflect user experience
-- **Using `waitFor` to find elements** - Use `findBy*` instead, produces better error messages and cleaner code
-- **Using `fireEvent` for user interactions** - Use `userEvent` for realistic event chains
-- **Multiple assertions in single `waitFor`** - Causes slow test failures and unpredictable behavior
-- **Testing internal component state** - Test user-visible behavior, not implementation details
+- A `userEvent` call without `await` — assertions run against the pre-interaction DOM, and the test passes or fails by timing
+- Fake timers installed without passing `advanceTimers` to `setup()` — `userEvent`'s internal delay never resolves and the test hangs until the runner's timeout
+- Calling `userEvent.click(...)` directly instead of on a `setup()` session — the direct API is deprecated and carries none of the session's pointer or keyboard state
+- `getBy*` for an element that arrives asynchronously — throws immediately rather than waiting
+- A side effect inside a `waitFor` callback — the callback runs on every poll, so the effect fires repeatedly
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Destructuring render return instead of using `screen`** - `screen` provides cleaner, more maintainable code
-- **Manual `cleanup` calls** - Modern frameworks handle cleanup automatically
-- **Wrapping `render` or `fireEvent` in `act()`** - They already wrap in `act`, double-wrapping is unnecessary
-- **Using `querySelector` or CSS selectors** - Use Testing Library queries for accessibility-aligned tests
-
-**Common Mistakes:**
-
-- Forgetting to `await` userEvent methods (all are async in v14+)
-- Using `getBy*` for elements that appear asynchronously
-- Putting side effects inside `waitFor` callbacks
-- Not setting up userEvent before interactions (`const user = userEvent.setup()`)
-
-**Gotchas & Edge Cases:**
-
-- `userEvent.setup()` must be called before any interactions (v14+ requirement)
-- `queryBy*` returns `null` for missing elements (use for absence assertions only)
-- `findBy*` has default timeout of 1000ms (configurable via options)
-- `result.current` in renderHook is a ref - value updates on each access
-- Empty `waitFor(() => {})` creates fragile timing-dependent tests
-- Prefer targeted assertions over snapshots - large snapshots produce noise, false positives, and don't communicate test intent
-- Snapshot testing is only appropriate for small, stable components with known output (icons, breadcrumbs)
-- Remove `screen.debug()` calls before committing - they are for development only
+- `container.querySelector(".btn-primary")` returns `null` rather than throwing, so the failure surfaces one line later at the assertion instead of at the query — and it matches on the class names and nesting a refactor is free to change, which is the whole thing the query hierarchy exists to avoid
+- `queryBy*` returns `null` instead of throwing, which is what makes it right for absence assertions and wrong for everything else
+- `findBy*` defaults to a 1000ms timeout, and its third argument — not its second — is where that is raised
+- `result.current` is re-read each time it is touched, so a value captured into a local goes stale after the next `act`
+- `render`, `fireEvent` and `userEvent` already wrap in `act`; wrapping them again is noise that also hides genuine act warnings
+- Cleanup runs automatically wherever the framework adapter is registered, so a manual `afterEach(cleanup)` is redundant
+- Multiple assertions in one `waitFor` pay the full retry window before the first failure surfaces
+- An empty `waitFor(() => {})` waits for the next poll tick and nothing else — a sleep wearing a matcher's clothes
+- A large DOM snapshot fails with noise rather than with a reason; keep snapshots for small, stable output such as an icon or a breadcrumb
+- `screen.debug()` truncates at 7000 characters, which is why a debugged form often appears to end mid-element
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use the query priority hierarchy: `getByRole` > `getByLabelText` > `getByText` > `getByTestId`)**
-
-**(You MUST use `userEvent` instead of `fireEvent` for realistic user interactions)**
-
-**(You MUST use `findBy*` queries for async content instead of `waitFor` + `getBy*`)**
-
-**(You MUST test user-visible behavior, NOT implementation details like internal state)**
-
-**(You MUST use `screen` object for queries, NOT destructured render returns)**
-
-**Failure to follow these rules will produce brittle tests that don't reflect real user interactions and miss accessibility issues.**
-
-</critical_reminders>

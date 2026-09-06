@@ -1,417 +1,279 @@
-# Vue Test Utils - Async Testing Examples
+# Vue Test Utils - Async Examples
 
-> flushPromises, nextTick, and async setup patterns. Reference from [SKILL.md](../SKILL.md).
+> `flushPromises`, `nextTick`, timers and async `setup()`. See [core.md](core.md) for mounting and querying.
+
+> These examples assume the module a component fetches through has been substituted using your test runner's module-mocking API, and refer to the substituted export by its own name (`getUsers`, `fetchData`). `useFakeTimers`, `useRealTimers` and `advanceTimersBy` likewise stand for your runner's fake-timer controls. Arranging that substitution, installing fake timers and advancing them are the runner's concerns; `flushPromises` and the awaits are this skill's.
 
 ---
 
-## Using flushPromises
-
-### Basic API Call Testing
+## flushPromises after a request
 
 ```typescript
-// Good Example - Testing components with API calls
 import { mount, flushPromises } from "@vue/test-utils";
-import { UserList } from "./user-list.vue";
-import { vi } from "vitest";
+import UserList from "./user-list.vue";
+import { getUsers } from "./api/users";
 
-const DATA_TEST_LOADING = '[data-test="loading"]';
-const DATA_TEST_USER = '[data-test="user"]';
-const DATA_TEST_ERROR = '[data-test="error"]';
-const DATA_TEST_EMPTY = '[data-test="empty"]';
-
-const MOCK_USERS = [
+const USERS = [
   { id: 1, name: "Alice" },
   { id: 2, name: "Bob" },
 ];
 
-// Mock the API module
-vi.mock("@/api/users", () => ({
-  getUsers: vi.fn(),
-}));
-
-import { getUsers } from "@/api/users";
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-test("displays loading state initially", () => {
-  vi.mocked(getUsers).mockResolvedValue(MOCK_USERS);
+test("shows the loading state before the request settles", () => {
+  getUsers.mockResolvedValue(USERS);
 
   const wrapper = mount(UserList);
 
-  // Loading shows before API resolves
-  expect(wrapper.find(DATA_TEST_LOADING).exists()).toBe(true);
-  expect(wrapper.find(DATA_TEST_USER).exists()).toBe(false);
+  // No flush yet, so the promise is still pending
+  expect(wrapper.find('[data-test="loading"]').exists()).toBe(true);
+  expect(wrapper.find('[data-test="user"]').exists()).toBe(false);
 });
 
-test("displays users after API resolves", async () => {
-  vi.mocked(getUsers).mockResolvedValue(MOCK_USERS);
+test("shows users once it settles", async () => {
+  getUsers.mockResolvedValue(USERS);
 
   const wrapper = mount(UserList);
-
-  // Wait for API call to resolve
   await flushPromises();
 
-  // Loading hidden, users displayed
-  expect(wrapper.find(DATA_TEST_LOADING).exists()).toBe(false);
-  expect(wrapper.findAll(DATA_TEST_USER)).toHaveLength(MOCK_USERS.length);
+  expect(wrapper.find('[data-test="loading"]').exists()).toBe(false);
+  expect(wrapper.findAll('[data-test="user"]')).toHaveLength(2);
 });
 
-test("displays error on API failure", async () => {
-  const ERROR_MESSAGE = "Failed to load users";
-  vi.mocked(getUsers).mockRejectedValue(new Error(ERROR_MESSAGE));
+test("shows the error branch on rejection", async () => {
+  getUsers.mockRejectedValue(new Error("Failed to load users"));
 
   const wrapper = mount(UserList);
-
   await flushPromises();
 
-  expect(wrapper.get(DATA_TEST_ERROR).text()).toContain(ERROR_MESSAGE);
+  expect(wrapper.get('[data-test="error"]').text()).toContain(
+    "Failed to load users",
+  );
 });
 
-test("displays empty state when no users", async () => {
-  vi.mocked(getUsers).mockResolvedValue([]);
+test("shows the empty branch for no results", async () => {
+  getUsers.mockResolvedValue([]);
 
   const wrapper = mount(UserList);
-
   await flushPromises();
 
-  expect(wrapper.find(DATA_TEST_EMPTY).exists()).toBe(true);
+  expect(wrapper.find('[data-test="empty"]').exists()).toBe(true);
 });
 ```
 
-**Why good:** Mocks at module level, uses flushPromises() after mounting, tests all states (loading, success, error, empty)
+**Why good:** all four branches a fetching component has — pending, resolved, rejected, empty — are covered, and the pending one is asserted _before_ the flush, which is the only point at which it exists.
 
 ---
 
-### Testing Multiple Sequential API Calls
+## One flush drains parallel requests
 
 ```typescript
-// Good Example - Multiple async operations
 import { mount, flushPromises } from "@vue/test-utils";
-import { ProductDetails } from "./product-details.vue";
-import { vi } from "vitest";
+import ProductDetails from "./product-details.vue";
+import { getProduct, getReviews, getRelated } from "./api/products";
 
-const DATA_TEST_PRODUCT = '[data-test="product"]';
-const DATA_TEST_REVIEWS = '[data-test="reviews"]';
-const DATA_TEST_RELATED = '[data-test="related"]';
+test("loads product, reviews and related items together", async () => {
+  getProduct.mockResolvedValue({ id: 1, name: "Widget", price: 99 });
+  getReviews.mockResolvedValue([{ id: 1, rating: 5 }]);
+  getRelated.mockResolvedValue([{ id: 2, name: "Gadget" }]);
 
-vi.mock("@/api/products", () => ({
-  getProduct: vi.fn(),
-  getReviews: vi.fn(),
-  getRelatedProducts: vi.fn(),
-}));
+  const wrapper = mount(ProductDetails, { props: { productId: 1 } });
+  await flushPromises(); // drains the whole microtask queue, not one promise
 
-import { getProduct, getReviews, getRelatedProducts } from "@/api/products";
-
-const MOCK_PRODUCT = { id: 1, name: "Widget", price: 99 };
-const MOCK_REVIEWS = [{ id: 1, rating: 5, text: "Great!" }];
-const MOCK_RELATED = [{ id: 2, name: "Gadget" }];
-
-test("loads product with reviews and related items", async () => {
-  vi.mocked(getProduct).mockResolvedValue(MOCK_PRODUCT);
-  vi.mocked(getReviews).mockResolvedValue(MOCK_REVIEWS);
-  vi.mocked(getRelatedProducts).mockResolvedValue(MOCK_RELATED);
-
-  const wrapper = mount(ProductDetails, {
-    props: { productId: 1 },
-  });
-
-  // Single flushPromises resolves all parallel requests
-  await flushPromises();
-
-  expect(wrapper.get(DATA_TEST_PRODUCT).text()).toContain("Widget");
-  expect(wrapper.findAll(DATA_TEST_REVIEWS)).toHaveLength(1);
-  expect(wrapper.findAll(DATA_TEST_RELATED)).toHaveLength(1);
+  expect(wrapper.get('[data-test="product"]').text()).toContain("Widget");
+  expect(wrapper.findAll('[data-test="review"]')).toHaveLength(1);
+  expect(wrapper.findAll('[data-test="related"]')).toHaveLength(1);
 });
 
-test("handles partial failure gracefully", async () => {
-  vi.mocked(getProduct).mockResolvedValue(MOCK_PRODUCT);
-  vi.mocked(getReviews).mockRejectedValue(new Error("Reviews unavailable"));
-  vi.mocked(getRelatedProducts).mockResolvedValue(MOCK_RELATED);
+test("a failing sub-request does not take the page down", async () => {
+  getProduct.mockResolvedValue({ id: 1, name: "Widget", price: 99 });
+  getReviews.mockRejectedValue(new Error("Reviews unavailable"));
+  getRelated.mockResolvedValue([{ id: 2, name: "Gadget" }]);
 
-  const wrapper = mount(ProductDetails, {
-    props: { productId: 1 },
-  });
-
+  const wrapper = mount(ProductDetails, { props: { productId: 1 } });
   await flushPromises();
 
-  // Product still displays despite reviews failure
-  expect(wrapper.get(DATA_TEST_PRODUCT).text()).toContain("Widget");
+  expect(wrapper.get('[data-test="product"]').text()).toContain("Widget");
   expect(wrapper.text()).toContain("Reviews unavailable");
 });
 ```
 
-**Why good:** Tests parallel API calls, single flushPromises() handles all, tests partial failure scenarios
+**Why good:** the partial-failure test is the one worth having. A component that renders when everything succeeds is easy; one that keeps the page usable when a secondary request fails is the design decision under test.
 
 ---
 
-## Awaiting DOM Updates
-
-### trigger() and setValue() Return Promises
+## Awaiting DOM updates
 
 ```typescript
-// Good Example - Chained async interactions
 import { mount } from "@vue/test-utils";
-import { SearchForm } from "./search-form.vue";
+import SearchForm from "./search-form.vue";
 
-const DATA_TEST_INPUT = '[data-test="search"]';
-const DATA_TEST_CLEAR = '[data-test="clear"]';
-const DATA_TEST_SUBMIT = '[data-test="submit"]';
-const DATA_TEST_RESULTS = '[data-test="results"]';
-
-const SEARCH_TERM = "vue testing";
-
-test("search flow with multiple interactions", async () => {
+test("clearing resets the input", async () => {
   const wrapper = mount(SearchForm);
 
-  // Each method returns a Promise - await each
-  await wrapper.get(DATA_TEST_INPUT).setValue(SEARCH_TERM);
-  await wrapper.get(DATA_TEST_SUBMIT).trigger("click");
+  await wrapper.get('[data-test="search"]').setValue("component testing");
+  expect(wrapper.get('[data-test="search"]').element.value).toBe(
+    "component testing",
+  );
 
-  // Verify search was performed
-  expect(wrapper.emitted("search")![0][0]).toBe(SEARCH_TERM);
-});
-
-test("clear resets input value", async () => {
-  const wrapper = mount(SearchForm);
-
-  await wrapper.get(DATA_TEST_INPUT).setValue(SEARCH_TERM);
-  expect(wrapper.get(DATA_TEST_INPUT).element.value).toBe(SEARCH_TERM);
-
-  await wrapper.get(DATA_TEST_CLEAR).trigger("click");
-  expect(wrapper.get(DATA_TEST_INPUT).element.value).toBe("");
+  await wrapper.get('[data-test="clear"]').trigger("click");
+  expect(wrapper.get('[data-test="search"]').element.value).toBe("");
 });
 ```
 
-**Why good:** Each await ensures DOM is updated before next interaction, tests verify intermediate states
-
 ---
 
-### Using nextTick for Reactive Updates
+## nextTick, and when it is already handled
 
 ```typescript
-// Good Example - When to use nextTick vs flushPromises
-import { mount, flushPromises } from "@vue/test-utils";
+import { mount } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { Counter } from "./counter.vue";
+import Counter from "./counter.vue";
 
-const DATA_TEST_COUNT = '[data-test="count"]';
-const DATA_TEST_DOUBLE = '[data-test="double"]';
-
-test("computed value updates reactively", async () => {
+test("a change made outside the wrapper API needs nextTick", async () => {
   const wrapper = mount(Counter);
 
-  // Direct state manipulation (via exposed method)
-  await wrapper.vm.increment();
-
-  // nextTick ensures Vue processes the reactive update
+  wrapper.vm.increment(); // not a wrapper method, so nothing was awaited for us
   await nextTick();
 
-  // Computed 'double' should update
-  expect(wrapper.get(DATA_TEST_DOUBLE).text()).toBe("2");
+  expect(wrapper.get('[data-test="double"]').text()).toBe("2");
 });
 
-// Note: Usually trigger() handles nextTick internally
-test("trigger handles nextTick automatically", async () => {
+test("trigger already includes it", async () => {
   const wrapper = mount(Counter);
 
-  // trigger() returns Promise that includes nextTick
   await wrapper.get('[data-test="increment"]').trigger("click");
-
-  // No need for explicit nextTick
-  expect(wrapper.get(DATA_TEST_COUNT).text()).toBe("1");
+  // No nextTick needed - the promise trigger() returned already covered it
+  expect(wrapper.get('[data-test="count"]').text()).toBe("1");
 });
 ```
 
-**Why good:** Shows when nextTick is needed (manual state changes) vs when it's automatic (trigger/setValue)
+**Why this distinction matters:** an explicit `nextTick` after a wrapper method is harmless but signals to the next reader that something subtle is happening when nothing is. Reserve it for state changed outside the wrapper API — which is itself usually a sign the test should be driving the DOM instead.
 
 ---
 
-## Combining flushPromises with DOM Updates
-
-### Search with Debounce
+## Timers plus promises
 
 ```typescript
-// Good Example - Debounced search with API
 import { mount, flushPromises } from "@vue/test-utils";
-import { vi } from "vitest";
-import { AutocompleteSearch } from "./autocomplete-search.vue";
-
-const DATA_TEST_INPUT = '[data-test="search-input"]';
-const DATA_TEST_SUGGESTION = '[data-test="suggestion"]';
-const DATA_TEST_LOADING = '[data-test="loading"]';
+import AutocompleteSearch from "./autocomplete-search.vue";
+import { searchSuggestions } from "./api/search";
 
 const DEBOUNCE_DELAY_MS = 300;
 
-vi.mock("@/api/search", () => ({
-  searchSuggestions: vi.fn(),
-}));
+describe("AutocompleteSearch", () => {
+  beforeEach(() => useFakeTimers()); // your runner's fake-timer controls
+  afterEach(() => useRealTimers());
 
-import { searchSuggestions } from "@/api/search";
+  test("waits for the debounce before searching", async () => {
+    searchSuggestions.mockResolvedValue([{ id: 1, text: "alpha" }]);
 
-beforeEach(() => {
-  vi.useFakeTimers();
-});
+    const wrapper = mount(AutocompleteSearch);
+    await wrapper.get('[data-test="search-input"]').setValue("al");
 
-afterEach(() => {
-  vi.useRealTimers();
-});
+    expect(searchSuggestions).not.toHaveBeenCalled();
 
-test("shows suggestions after debounce", async () => {
-  vi.mocked(searchSuggestions).mockResolvedValue([
-    { id: 1, text: "vue" },
-    { id: 2, text: "vue test utils" },
-  ]);
+    advanceTimersBy(DEBOUNCE_DELAY_MS); // fires the debounce callback
+    expect(searchSuggestions).toHaveBeenCalledWith("al");
 
-  const wrapper = mount(AutocompleteSearch);
+    await flushPromises(); // settles the request the callback started
+    expect(wrapper.findAll('[data-test="suggestion"]')).toHaveLength(1);
+  });
 
-  // Type in input
-  await wrapper.get(DATA_TEST_INPUT).setValue("vu");
+  test("a second keystroke cancels the first search", async () => {
+    searchSuggestions.mockResolvedValue([]);
 
-  // No API call yet (debouncing)
-  expect(searchSuggestions).not.toHaveBeenCalled();
+    const wrapper = mount(AutocompleteSearch);
 
-  // Advance timers past debounce delay
-  vi.advanceTimersByTime(DEBOUNCE_DELAY_MS);
+    await wrapper.get('[data-test="search-input"]').setValue("a");
+    advanceTimersBy(DEBOUNCE_DELAY_MS / 2);
 
-  // Now API should be called
-  expect(searchSuggestions).toHaveBeenCalledWith("vu");
+    await wrapper.get('[data-test="search-input"]').setValue("alpha");
+    advanceTimersBy(DEBOUNCE_DELAY_MS / 2);
 
-  // Flush the API promise
-  await flushPromises();
+    expect(searchSuggestions).not.toHaveBeenCalled(); // neither window completed
 
-  // Suggestions should appear
-  expect(wrapper.findAll(DATA_TEST_SUGGESTION)).toHaveLength(2);
-});
+    advanceTimersBy(DEBOUNCE_DELAY_MS / 2);
 
-test("cancels pending search on new input", async () => {
-  vi.mocked(searchSuggestions).mockResolvedValue([]);
-
-  const wrapper = mount(AutocompleteSearch);
-
-  await wrapper.get(DATA_TEST_INPUT).setValue("v");
-  vi.advanceTimersByTime(DEBOUNCE_DELAY_MS / 2);
-
-  // Type more before debounce completes
-  await wrapper.get(DATA_TEST_INPUT).setValue("vue");
-  vi.advanceTimersByTime(DEBOUNCE_DELAY_MS / 2);
-
-  // First search should not have fired
-  expect(searchSuggestions).not.toHaveBeenCalled();
-
-  // Complete debounce for second input
-  vi.advanceTimersByTime(DEBOUNCE_DELAY_MS / 2);
-
-  // Only "vue" search should fire
-  expect(searchSuggestions).toHaveBeenCalledTimes(1);
-  expect(searchSuggestions).toHaveBeenCalledWith("vue");
+    expect(searchSuggestions).toHaveBeenCalledTimes(1);
+    expect(searchSuggestions).toHaveBeenCalledWith("alpha");
+  });
 });
 ```
 
-**Why good:** Combines fake timers for debounce with flushPromises for API, tests debounce cancellation
+**Why good:** the two queues are advanced separately and in order — timers first to fire the callback, `flushPromises` second to settle what it started. Collapsing them into one `await` is why debounce tests are so often flaky.
 
 ---
 
-## Testing Async Setup
-
-### Components with async setup()
+## Async setup() needs Suspense
 
 ```typescript
-// Good Example - Testing async setup components
 import { mount, flushPromises } from "@vue/test-utils";
-import { Suspense, defineComponent, h } from "vue";
-import { AsyncDashboard } from "./async-dashboard.vue";
+import { Suspense, defineComponent, h, type Component } from "vue";
+import AsyncDashboard from "./async-dashboard.vue";
 
-const DATA_TEST_STATS = '[data-test="stats"]';
-const FALLBACK_TEXT = "Loading dashboard...";
-
-// Helper to mount async component with Suspense
-function mountWithSuspense(component: any, options = {}) {
-  const wrapper = mount(
+function mountSuspended(
+  component: Component,
+  props: Record<string, unknown> = {},
+) {
+  return mount(
     defineComponent({
-      render() {
-        return h(Suspense, null, {
-          default: () => h(component, options.props || {}),
-          fallback: () => h("div", { "data-test": "fallback" }, FALLBACK_TEXT),
-        });
-      },
+      render: () =>
+        h(Suspense, null, {
+          default: () => h(component, props),
+          fallback: () =>
+            h("div", { "data-test": "fallback" }, "Loading dashboard..."),
+        }),
     }),
-    options,
   );
-  return wrapper;
 }
 
-test("shows fallback while loading", () => {
-  const wrapper = mountWithSuspense(AsyncDashboard);
+test("renders the fallback first", () => {
+  const wrapper = mountSuspended(AsyncDashboard);
 
-  expect(wrapper.get('[data-test="fallback"]').text()).toBe(FALLBACK_TEXT);
+  expect(wrapper.get('[data-test="fallback"]').text()).toBe(
+    "Loading dashboard...",
+  );
 });
 
-test("shows dashboard after async setup resolves", async () => {
-  const wrapper = mountWithSuspense(AsyncDashboard);
-
+test("renders the component once setup resolves", async () => {
+  const wrapper = mountSuspended(AsyncDashboard);
   await flushPromises();
 
   expect(wrapper.find('[data-test="fallback"]').exists()).toBe(false);
-  expect(wrapper.get(DATA_TEST_STATS).exists()).toBe(true);
+  expect(wrapper.get('[data-test="stats"]').exists()).toBe(true);
 });
 ```
 
-**Why good:** Uses Suspense wrapper as required by Vue 3, tests both fallback and resolved states
+**Why good:** a component with a top-level `await` in `setup()` mounted on its own never resolves — Vue needs a `Suspense` boundary to hold the pending state. The helper makes that boundary a detail rather than a per-test ritual.
 
 ---
 
-## Error Boundary Testing
-
-### Testing Error States
+## Retry after failure
 
 ```typescript
-// Good Example - Testing async error handling
 import { mount, flushPromises } from "@vue/test-utils";
-import { vi } from "vitest";
-import { DataLoader } from "./data-loader.vue";
+import DataLoader from "./data-loader.vue";
+import { fetchData } from "./api/data";
 
-const DATA_TEST_RETRY = '[data-test="retry"]';
-const DATA_TEST_ERROR = '[data-test="error"]';
-const DATA_TEST_DATA = '[data-test="data"]';
-
-vi.mock("@/api/data", () => ({
-  fetchData: vi.fn(),
-}));
-
-import { fetchData } from "@/api/data";
-
-test("allows retry after error", async () => {
-  // First call fails, second succeeds
-  vi.mocked(fetchData)
+test("allows retrying after an error", async () => {
+  fetchData
     .mockRejectedValueOnce(new Error("Network error"))
     .mockResolvedValueOnce({ items: ["item1"] });
 
   const wrapper = mount(DataLoader);
-
-  // Wait for first (failing) request
   await flushPromises();
 
-  expect(wrapper.get(DATA_TEST_ERROR).text()).toContain("Network error");
+  expect(wrapper.get('[data-test="error"]').text()).toContain("Network error");
 
-  // Click retry
-  await wrapper.get(DATA_TEST_RETRY).trigger("click");
-
-  // Wait for second (successful) request
+  await wrapper.get('[data-test="retry"]').trigger("click");
   await flushPromises();
 
-  expect(wrapper.find(DATA_TEST_ERROR).exists()).toBe(false);
-  expect(wrapper.get(DATA_TEST_DATA).text()).toContain("item1");
+  expect(wrapper.find('[data-test="error"]').exists()).toBe(false);
+  expect(wrapper.get('[data-test="data"]').text()).toContain("item1");
 });
 ```
 
-**Why good:** Tests error recovery flow, uses mockRejectedValueOnce/mockResolvedValueOnce for sequential behavior
+**Why good:** the `…Once` variants let one test cover the whole recovery path, including the part most often broken — clearing the previous error before the retry renders.
 
 ---
 
-_For more patterns, see:_
-
-- [core.md](core.md) - Mounting and querying
-- [composables.md](composables.md) - Testing composables
-- [mocking.md](mocking.md) - Pinia stores, Vue Router, stubs
+_Next: [composables.md](composables.md), or [mocking.md](mocking.md) for the `global` options._

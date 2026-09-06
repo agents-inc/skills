@@ -1,189 +1,161 @@
-# Testing - Integration Examples
+# Vitest — Integration Test Machinery
 
-> Integration tests with network-level mocking. Reference from [SKILL.md](../SKILL.md).
+> Environments, setup files, lifecycle hooks and transport-level mocking. Referenced from
+> [SKILL.md](../SKILL.md). See [core.md](core.md) for the runner's core API.
+
+An integration test in Vitest is an ordinary test file with two extra things configured: an
+**environment** that supplies the globals the code under test expects, and a **setup file** that
+starts and resets whatever stands in for the outside world.
 
 ---
 
-## Integration Test with Network-Level Mocking
+## Configuration
 
 ```typescript
-// Good Example - Integration test with network-level mocking
-// src/features/home/__tests__/features.test.tsx
-import { screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
-import { renderApp } from "../../testSetup/testUtils.local";
-// Import your network mocking handlers (implementation varies by mocking library)
-import { featuresHandlers, mockServer } from "../test-utils/mock-server";
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
 
-const EXPECTED_FEATURE_COUNT = 3;
+export default defineConfig({
+  test: {
+    // "node" (default) | "jsdom" | "happy-dom" | "edge-runtime"
+    environment: "jsdom",
+    // Runs once per test FILE, before its tests.
+    setupFiles: ["./tests/setup.ts"],
+    // Runs once per RUN, in Node, before any file — for ports, containers, seeds.
+    globalSetup: ["./tests/global-setup.ts"],
+    restoreMocks: true,
+    clearMocks: true,
+  },
+});
+```
 
-describe("Features", () => {
-  it("should render empty state", async () => {
-    // Override default handler with empty response
-    mockServer.use(featuresHandlers.empty());
-    renderApp();
+A single file can override the environment without a second config, which keeps one stray DOM test
+out of the whole suite's budget:
 
-    await expect(
-      screen.findByText("No features found"),
-    ).resolves.toBeInTheDocument();
+```typescript
+// @vitest-environment jsdom
+```
+
+**Why good:** the environment is the expensive part of a test run. Declaring it per suite means the
+pure-logic files stay in Node and finish in milliseconds.
+
+---
+
+## Setup file lifecycle
+
+```typescript
+// tests/setup.ts
+import { afterAll, afterEach, beforeAll } from "vitest";
+import { server } from "./mock-server";
+
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+// Handlers are process-global: without this, an override in one test answers the next one's request.
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+**Why good:** `onUnhandledRequest: "error"` turns a request nobody stubbed into a failure with a URL
+in it, rather than a timeout or a silent empty response fifty lines away.
+
+---
+
+## Mocking at the transport boundary
+
+The handler API belongs to whichever interception library the project uses; what matters here is
+where the calls sit in the Vitest lifecycle and what the test asserts.
+
+```typescript
+import { afterEach, describe, expect, it } from "vitest";
+import { server } from "../../tests/mock-server";
+import { featureHandlers } from "./handlers";
+
+describe("loadFeatures", () => {
+  afterEach(() => {
+    server.resetHandlers();
   });
 
-  it("should render error state", async () => {
-    // Override default handler with error response
-    mockServer.use(featuresHandlers.error());
-    renderApp();
-
-    await expect(
-      screen.findByText(/An error has occurred/i),
-    ).resolves.toBeInTheDocument();
+  it("returns the parsed feature list", async () => {
+    server.use(featureHandlers.list());
+    await expect(loadFeatures()).resolves.toHaveLength(3);
   });
 
-  it("should render features", async () => {
-    // Use default handler (returns feature list)
-    mockServer.use(featuresHandlers.default());
-    renderApp();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("feature")).toBeInTheDocument();
-    });
-
-    expect(screen.getAllByTestId("feature")).toHaveLength(
-      EXPECTED_FEATURE_COUNT,
-    );
+  it("returns an empty list rather than throwing", async () => {
+    server.use(featureHandlers.empty());
+    await expect(loadFeatures()).resolves.toStrictEqual([]);
   });
 
-  it("should toggle feature", async () => {
-    renderApp();
-
-    const feature = await screen.findByTestId("feature");
-    const switchElement = within(feature).getByRole("switch");
-
-    expect(switchElement).toBeChecked();
-
-    userEvent.click(switchElement);
-    await waitFor(() => expect(switchElement).not.toBeChecked());
+  it("surfaces a server error as a typed failure", async () => {
+    server.use(featureHandlers.error(500));
+    await expect(loadFeatures()).rejects.toThrowError(/failed to load/i);
   });
 });
 ```
 
-**Why good:** Tests component with API integration via network-level mocking, tests all states (loading, empty, error, success) ensuring robustness, centralized mock handlers prevent duplication, shared between tests and development for consistency
+**Why good:** the code under test is exercised through the request it really makes, so the JSON
+shape, the status handling and the parsing are all covered. Nothing here knows how `loadFeatures`
+imports its client, so moving that import breaks no test.
+
+**Why a module mock is worse here:** `vi.mock("./client")` replaces the transport with a resolved
+value, which skips serialisation entirely and re-binds the test to the import graph. Keep module
+mocks for collaborators with no transport at all — the filesystem, the clock, a native module.
+
+---
+
+## Several environments in one run
 
 ```typescript
-// Bad Example - Module-level mocking
-import { vi } from "vitest";
-import { getFeatures } from "../api";
-
-// Note: vi.mock is hoisted - runs before imports
-// Factory must return object with explicit exports (unlike Jest)
-vi.mock("../api", () => ({
-  getFeatures: vi.fn(),
-  // For default exports: default: vi.fn()
-}));
-
-test("renders features", async () => {
-  (getFeatures as any).mockResolvedValue({ features: [] });
-  // Module mocking breaks at runtime, hard to maintain
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          environment: "node",
+          include: ["src/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "dom",
+          environment: "jsdom",
+          setupFiles: ["./tests/setup.ts"],
+          include: ["src/**/*.dom.test.ts"],
+        },
+      },
+    ],
+  },
 });
 ```
 
-**Why bad:** Module-level mocks break when import structure changes, mocking at wrong level defeats purpose of integration testing, doesn't test network layer or serialization, maintenance nightmare when refactoring
+**Why good:** one command runs both, the reporter labels each failure with its project name, and
+neither suite pays for the other's environment. `projects` replaced the separate workspace file in
+v3.2 — see [reference.md](../reference.md).
 
-**Vitest-specific notes:**
+---
 
-- Unlike Jest, `vi.mock` factory must return an object with explicit exports
-- Default exports require `default` key in the returned object
-- Use `importOriginal` parameter to access original module when partially mocking:
+## Stubbing environment variables and globals
 
 ```typescript
-// If you must use module mocks, use importOriginal (v3+)
-vi.mock("../api", async (importOriginal) => {
-  const mod = await importOriginal<typeof import("../api")>();
-  return {
-    ...mod,
-    getFeatures: vi.fn(), // Override only specific export
-  };
+import { afterEach, expect, it, vi } from "vitest";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
+
+it("reads the API base from the environment", () => {
+  vi.stubEnv("API_URL", "https://api.test");
+  expect(resolveBaseUrl()).toBe("https://api.test");
+});
+
+it("treats a missing crypto implementation as a hard failure", () => {
+  vi.stubGlobal("crypto", undefined);
+  expect(() => newRequestId()).toThrowError(/crypto/i);
 });
 ```
 
----
-
-## Network Mock Setup Pattern
-
-```typescript
-// Good Example - Network mock handler setup
-// src/mocks/handlers.ts
-// Note: Implementation varies by your chosen mocking library
-
-const API_USER_ENDPOINT = "/api/users/:id";
-
-export const userHandlers = {
-  default: () => ({
-    method: "GET",
-    path: API_USER_ENDPOINT,
-    response: {
-      id: "123",
-      name: "John Doe",
-      email: "john@example.com",
-    },
-  }),
-  error: () => ({
-    method: "GET",
-    path: API_USER_ENDPOINT,
-    status: 500,
-    response: { error: "Internal server error" },
-  }),
-};
-```
-
-```typescript
-// src/mocks/server.ts
-// Setup varies by mocking library - this is conceptual
-import { handlers } from "./handlers";
-
-export const mockServer = createMockServer(handlers);
-```
-
-**Why good:** Network-level mocking matches real API behavior, handlers are reusable across tests and development, easy to override per-test for different scenarios
-
----
-
-## Test Setup
-
-```typescript
-// Good Example - Network mock setup for tests
-// setupTests.ts
-import { mockServer } from "./test-utils/mock-server";
-
-beforeAll(() => mockServer.listen());
-afterEach(() => mockServer.resetHandlers());
-afterAll(() => mockServer.close());
-```
-
-**Why good:** Network-level mocking intercepts HTTP requests matching real API behavior, resetHandlers() after each test prevents test pollution, centralized mock server enables reuse across tests
-
----
-
-## Per-Test Overrides
-
-```typescript
-// Good Example - Test-specific handler overrides
-import { featuresHandlers, mockServer } from "./test-utils/mock-server";
-
-it("should handle empty state", async () => {
-  mockServer.use(featuresHandlers.empty());
-  renderApp();
-  await expect(
-    screen.findByText("No features found"),
-  ).resolves.toBeInTheDocument();
-});
-```
-
-**Why good:** Easy to test different scenarios (empty, error, success), handlers are reusable across tests, doesn't pollute global state with per-test overrides
-
----
-
-_For more patterns, see:_
-
-- [core.md](core.md) - E2E and Unit testing essentials
-- [anti-patterns.md](anti-patterns.md) - What NOT to test
+**Why good:** both stubs are undone by a named call rather than by remembering the previous value,
+so a test that fails mid-way still leaves the process clean.

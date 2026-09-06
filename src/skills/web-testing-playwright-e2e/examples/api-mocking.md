@@ -1,53 +1,44 @@
-# Playwright E2E Testing - API Mocking
+# Playwright E2E Testing — Modifying Real Responses
 
-> Advanced API mocking patterns including response interception and modification. See [core.md](core.md) for foundational patterns.
-
-**Prerequisites**: Understand [Pattern 3: Network Mocking](core.md#pattern-3-network-mocking) from core examples first.
+> Letting the request through and changing the answer. See [core.md](core.md) Pattern 3 for
+> replacing a response outright.
 
 ---
 
-## Pattern: Intercepting and Modifying Responses
+## Intercept, fetch, modify, fulfill
 
 ```typescript
 // tests/e2e/api-mocking/response-modification.spec.ts
 import { test, expect } from "@playwright/test";
 
-const API_PRODUCTS = "**/api/products";
-const DISCOUNT_PERCENTAGE = 0.2;
+const DISCOUNT = 0.2;
 
-test("applies discount to all product prices", async ({ page }) => {
-  await page.route(API_PRODUCTS, async (route) => {
-    // Fetch real response
-    const response = await route.fetch();
+test("shows a discount badge on every product", async ({ page }) => {
+  await page.route("**/api/products", async (route) => {
+    const response = await route.fetch(); // the real request
     const data = await response.json();
 
-    // Modify prices
-    const discountedProducts = data.products.map(
-      (product: { price: number }) => ({
-        ...product,
-        price: product.price * (1 - DISCOUNT_PERCENTAGE),
-        originalPrice: product.price,
-        hasDiscount: true,
-      }),
-    );
-
-    // Return modified response
     await route.fulfill({
-      response,
-      json: { ...data, products: discountedProducts },
+      response, // keeps status and headers
+      json: {
+        ...data,
+        products: data.products.map((product: { price: number }) => ({
+          ...product,
+          originalPrice: product.price,
+          price: product.price * (1 - DISCOUNT),
+          hasDiscount: true,
+        })),
+      },
     });
   });
 
   await page.goto("/products");
-
-  // Verify discount badges are shown
-  const discountBadges = page.getByTestId("discount-badge");
-  await expect(discountBadges.first()).toBeVisible();
+  await expect(page.getByTestId("discount-badge").first()).toBeVisible();
 });
 ```
 
-**Why good:** Combines real API behavior with controlled modifications, useful for testing features that depend on specific data states, preserves response structure while modifying values
+**Why good:** the response keeps every field the real API returns, so the test exercises a shape
+nobody had to maintain by hand — and only the field under test is invented.
 
----
-
-_See [core.md](core.md) for foundational patterns: User Flows, Basic Page Objects, Network Mocking, and Configuration._
+**When to prefer a full stub instead:** where the test is about an error path, an empty state, or a
+value the API cannot be made to produce on demand.

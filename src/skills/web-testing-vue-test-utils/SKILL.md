@@ -1,70 +1,72 @@
 ---
 name: web-testing-vue-test-utils
-description: Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking
+description: Vue Test Utils — mount vs shallowMount, the wrapper API, awaiting DOM updates, flushPromises, testing composables, and the global mounting options. Load when writing or reviewing tests that mount Vue components.
 ---
 
 # Vue Test Utils Patterns
 
-> **Quick Guide:** Test Vue components with `mount()` for full rendering or `shallowMount()` for isolation. Use `wrapper.find()` with data-test attributes, `await trigger()` for events, `await setValue()` for inputs. Use `flushPromises()` for async operations. Mock Pinia stores with `createTestingPinia()`.
+> **Quick Guide:** `mount()` renders a component with its children; `shallowMount()` stubs them all and is the exception rather than the default. Query with `get()` when the element must exist and `find()` when it may not, using `data-test` attributes rather than classes. Every DOM-updating method returns a promise and is awaited; anything Vue's reactivity does not track — a request, a timer — needs `flushPromises()` as well. A component's environment arrives through the `global` mounting options.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — mounting, slots, `get`/`find`/`findAll`, `trigger`, `setValue`
+- [examples/async.md](examples/async.md) — `flushPromises`, `nextTick`, debounced input, async `setup()` under Suspense
+- [examples/composables.md](examples/composables.md) — through a component, in isolation, and with injected dependencies
+- [examples/mocking.md](examples/mocking.md) — the four `global` seams: plugins, stubs, mocks, provide — and a custom mount that composes them
+- [reference.md](reference.md) — wrapper API tables, mounting options, emitted-event patterns, debug checklist
+
+---
+
+## Which path applies
+
+- **A component is the subject** — `mount` it and drive the wrapper;
+  [examples/core.md](examples/core.md).
+- **A composable is the subject** — mount a minimal component that calls it, so it runs inside a
+  real setup scope; [examples/composables.md](examples/composables.md). Calling a composable outside
+  a component works only for ones that register no lifecycle hooks and inject nothing.
+- **The subject has an async `setup()`** — it must be mounted inside `Suspense`, or it never
+  resolves; [examples/async.md](examples/async.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Vue Test Utils code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Await every DOM-updating method — `trigger()`, `setValue()`, `setProps()`, `setData()`.** Each returns a promise that resolves after Vue has flushed, so an un-awaited call leaves the assertion looking at the pre-update DOM.
 
-**(You MUST `await` all DOM-updating methods: `trigger()`, `setValue()`, `setProps()`, `setData()`)**
+**Call `flushPromises()` after anything Vue's reactivity does not own** — a request, a timer callback, a promise chain started in `onMounted`. Awaiting the interaction flushes Vue's queue and nothing else.
 
-**(You MUST use `flushPromises()` after async operations that Vue doesn't track (API calls, timers))**
+**Reach for `mount()` first, and treat `shallowMount()` as the exception.** Stubbing every child changes how the component behaves, so a shallow test passes for a tree that does not render.
 
-**(You MUST use `mount()` by default - only use `shallowMount()` for performance issues or complex isolation)**
+**Select with `data-test` attributes.** Classes and ids belong to styling and move under a restyle; a `data-test` attribute is a stated contract that a reader can see is load-bearing.
 
-**(You MUST use `data-test` attributes for selectors, NOT classes or IDs)**
-
-**(You MUST use `createTestingPinia()` for Pinia stores, NOT manual mocking)**
+**Supply the component's environment through the `global` mounting options** — `plugins`, `stubs`, `mocks`, `provide`. That is the seam the library gives you, and it keeps the arrangement visible at the mount rather than hidden in module-level substitution.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Vue Test Utils, @vue/test-utils, mount, shallowMount, wrapper, VueWrapper, DOMWrapper, trigger, setValue, setProps, setData, flushPromises, findComponent, findAllComponents, createTestingPinia, @pinia/testing
+**Auto-detection:** @vue/test-utils, mount, shallowMount, VueWrapper, DOMWrapper, wrapper.get, wrapper.find, findAll, findComponent, findAllComponents, getComponent, trigger, setValue, setProps, setData, flushPromises, emitted, enableAutoUnmount, attachTo, renderStubDefaultSlot, config.global
 
-**When to use:**
+**Applies to:**
 
-- Testing Vue 3 components with Composition API
-- Testing component behavior through user interactions
-- Testing components with Pinia stores
-- Testing components with Vue Router
-- Testing composables in isolation
-- Mocking child components for isolation
+- Mounting a Vue component and asserting on what it rendered
+- Driving clicks, typing, selection and keyboard events through the wrapper
+- Asserting on emitted events and their payloads
+- Deciding between full mount, selective stubs and shallow rendering
+- Testing a composable, in a component or in isolation
+- Supplying plugins, stubs, global properties and injected values at mount time
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- E2E testing spanning multiple pages (use your E2E solution)
-- Testing pure utility functions without Vue (use unit tests directly)
-- Visual regression testing (use visual testing tools)
-- Test runner configuration (separate concern from component testing)
-
-**Key patterns covered:**
-
-- Mounting components (mount vs shallowMount)
-- Wrapper API (find, findAll, trigger, setValue)
-- Async testing (flushPromises, nextTick)
-- Testing composables
-- Pinia store mocking with createTestingPinia
-- Vue Router mocking
-- Stubbing child components
-
-**Detailed Resources:**
-
-- For code examples, see `examples/` folder:
-  - [examples/core.md](examples/core.md) - Mounting, wrapper API, queries
-  - [examples/async.md](examples/async.md) - flushPromises, nextTick, async setup
-  - [examples/composables.md](examples/composables.md) - Testing composables
-  - [examples/mocking.md](examples/mocking.md) - Pinia stores, Vue Router, stubs
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Test runner mechanics — the file's `describe`/`it`, the assertion API, module substitution, mock
+  functions and fake timers all belong to whatever runs the file
+- Store design and its own test helpers — a store's testing plugin is installed through
+  `global.plugins`, and how to configure it is settled by whoever owns the store
+- Route definition and navigation guards — a router installs as a plugin like any other
+- Journeys spanning navigations and a real backend — browser-driven end-to-end coverage
+- Whether the rendered result still looks right — pixel comparison against an approved image
 
 ---
 
@@ -72,30 +74,11 @@ description: Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger
 
 ## Philosophy
 
-Vue Test Utils provides utilities to mount Vue components in isolation and interact with them through the wrapper API. The guiding principle: "The more your tests resemble the way your software is used, the more confidence they can give you."
+**Vue's DOM updates are asynchronous, and the library's API is shaped around that one fact.** `trigger`, `setValue`, `setProps` and `setData` all return promises for the same reason: the effect of the change is not observable on the line after it. Most flaky Vue component tests are a missing `await` on one of those four.
 
-**Core Principles:**
+**Two async queues, two tools.** Awaiting a wrapper method flushes Vue's own render queue. `flushPromises()` drains the microtask queue, which is where a resolved request or a settled promise chain is waiting. A component that fetches on mount needs the second even though nothing was triggered.
 
-1. **Test User Behavior, Not Implementation**: Test what users see and interact with, not internal component state
-2. **Prefer Full Rendering**: Use `mount()` by default for realistic testing; `shallowMount()` only when needed
-3. **Use Accessible Selectors**: Prefer `data-test` attributes over classes or IDs that may change
-4. **Await Async Operations**: Vue updates the DOM asynchronously - always await DOM-updating methods
-5. **Minimize Stubbing**: More stubs reduce test fidelity; stub only what's necessary
-
-**When to use Vue Test Utils:**
-
-- Component integration testing with child components
-- Testing user interaction flows (clicks, input, form submission)
-- Testing reactive state and computed properties
-- Testing component lifecycle and watchers
-- Testing components with Pinia or Vue Router
-
-**When NOT to use:**
-
-- Full user journey testing (use E2E tests)
-- Testing visual appearance (use visual regression tools)
-- Testing API endpoints directly (test component behavior with mocked responses)
-- Testing third-party library behavior (trust the library's tests)
+**Stubbing is a dial, not a switch.** `shallowMount` is the far end of it — every child replaced, slots inert, integration coverage gone. Stubbing the one heavy child by name keeps the rest of the tree real and usually solves the actual problem, which is a chart library or a network call rather than depth.
 
 </philosophy>
 
@@ -103,326 +86,119 @@ Vue Test Utils provides utilities to mount Vue components in isolation and inter
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Mounting Components
-
-Use `mount()` for full rendering with child components. Use `shallowMount()` only when you need isolation or have performance issues.
-
-#### mount vs shallowMount
+### Pattern 1: Mounting
 
 ```typescript
 import { mount, shallowMount } from "@vue/test-utils";
-import { TodoList } from "./todo-list.vue";
 
-// GOOD: mount() for realistic testing
+// Default: children render, slots work, events bubble
 const wrapper = mount(TodoList, {
-  props: {
-    todos: [{ id: 1, text: "Test", done: false }],
-  },
+  props: { todos: [{ id: 1, text: "Test", done: false }] },
 });
 
-// Use when: You need to test component with its children
-// Child components render normally, slots work, events bubble up
+// Every child stubbed - reach for this only when depth itself is the problem
+const shallow = shallowMount(TodoList, { props: { todos: [] } });
 
-// shallowMount() for isolation (use sparingly)
-const shallowWrapper = shallowMount(TodoList, {
-  props: {
-    todos: [{ id: 1, text: "Test", done: false }],
-  },
+// Usually better than shallow: stub the one child that misbehaves
+const selective = mount(Dashboard, {
+  global: { stubs: { HeavyChartWidget: { template: "<div />" } } },
 });
-
-// Use when: Component has many heavy children, or you need complete isolation
-// All child components are replaced with stubs
 ```
 
-**Why mount by default:** `shallowMount` makes the component behave differently from production. Child components don't render, slots may not work correctly, and you lose integration coverage.
+Full code: [examples/core.md](examples/core.md)
 
-See [examples/core.md](examples/core.md) for complete mounting examples.
+### Pattern 2: Querying the Wrapper
 
----
-
-### Pattern 2: Wrapper API for Querying
-
-Use `get()` when element must exist (throws on failure). Use `find()` when element may not exist (returns empty wrapper). Use `findAll()` for multiple elements.
-
-#### Querying Elements
+`get*` throws with a useful message when the element is missing; `find*` returns an empty wrapper you then check with `.exists()`. The same split applies to `getComponent` / `findComponent`.
 
 ```typescript
-import { mount } from "@vue/test-utils";
-import { SearchForm } from "./search-form.vue";
+const input = wrapper.get('[data-test="search-input"]'); // must exist
+expect(wrapper.find('[data-test="error"]').exists()).toBe(false); // may not exist
+expect(wrapper.findAll('[data-test="result"]')).toHaveLength(3);
 
-const DATA_TEST_INPUT = '[data-test="search-input"]';
-const DATA_TEST_BUTTON = '[data-test="search-button"]';
-const DATA_TEST_RESULT = '[data-test="search-result"]';
-
-test("renders search form elements", () => {
-  const wrapper = mount(SearchForm);
-
-  // get() - throws if not found (use for required elements)
-  const input = wrapper.get(DATA_TEST_INPUT);
-  const button = wrapper.get(DATA_TEST_BUTTON);
-
-  expect(input.exists()).toBe(true);
-  expect(button.text()).toBe("Search");
-});
-
-test("shows results after search", async () => {
-  const wrapper = mount(SearchForm);
-
-  // find() - returns empty wrapper if not found (use for conditional elements)
-  expect(wrapper.find(DATA_TEST_RESULT).exists()).toBe(false);
-
-  // After triggering search...
-  await wrapper.get(DATA_TEST_INPUT).setValue("test");
-  await wrapper.get(DATA_TEST_BUTTON).trigger("click");
-
-  // findAll() - returns array of wrappers
-  const results = wrapper.findAll(DATA_TEST_RESULT);
-  expect(results.length).toBeGreaterThan(0);
-});
+expect(wrapper.getComponent(ChildComponent).props("message")).toBe("Hello");
 ```
 
-**Why data-test attributes:** CSS classes and IDs change during styling updates. `data-test` attributes are explicit testing contracts that don't affect production styling.
+Using `find()` where `get()` was meant is the quiet failure: the empty wrapper satisfies nothing, and the assertion after it reports a confusing type error rather than "element not found".
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 3: User Interactions with trigger and setValue
-
-Always `await` DOM-updating methods. They return a Promise that resolves after Vue updates the DOM.
-
-#### Form Interactions
+### Pattern 3: Interaction and Emitted Events
 
 ```typescript
-import { mount } from "@vue/test-utils";
-import { LoginForm } from "./login-form.vue";
+await wrapper.get('[data-test="email"]').setValue("test@example.com");
+await wrapper.get('[data-test="form"]').trigger("submit.prevent");
 
-const DATA_TEST_EMAIL = '[data-test="email-input"]';
-const DATA_TEST_PASSWORD = '[data-test="password-input"]';
-const DATA_TEST_FORM = '[data-test="login-form"]';
-const DATA_TEST_ERROR = '[data-test="error-message"]';
-
-const VALID_EMAIL = "test@example.com";
-const VALID_PASSWORD = "password123";
-
-test("submits login form", async () => {
-  const wrapper = mount(LoginForm);
-
-  // setValue() for input values - MUST await
-  await wrapper.get(DATA_TEST_EMAIL).setValue(VALID_EMAIL);
-  await wrapper.get(DATA_TEST_PASSWORD).setValue(VALID_PASSWORD);
-
-  // trigger() for events - MUST await
-  await wrapper.get(DATA_TEST_FORM).trigger("submit.prevent");
-
-  // Assert emitted events
-  expect(wrapper.emitted("submit")).toBeTruthy();
-  expect(wrapper.emitted("submit")![0]).toEqual([
-    { email: VALID_EMAIL, password: VALID_PASSWORD },
-  ]);
-});
-
-test("shows validation errors", async () => {
-  const wrapper = mount(LoginForm);
-
-  // Submit empty form
-  await wrapper.get(DATA_TEST_FORM).trigger("submit.prevent");
-
-  // Check for error message
-  expect(wrapper.get(DATA_TEST_ERROR).text()).toContain("Email is required");
-});
+expect(wrapper.emitted("submit")).toBeTruthy();
+expect(wrapper.emitted("submit")![0]).toEqual([{ email: "test@example.com" }]);
 ```
 
-**Why await:** Vue updates the DOM asynchronously. Without `await`, assertions run before Vue finishes updating, causing flaky tests.
+`emitted()` accumulates across the whole test, so index into it rather than asserting on the array as a whole after several interactions.
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 4: Async Operations with flushPromises
-
-Use `flushPromises()` after async operations that Vue doesn't track (API calls, setTimeout, etc.). Use `nextTick()` only for reactive state updates.
-
-#### Testing Async API Calls
+### Pattern 4: flushPromises for Untracked Async
 
 ```typescript
 import { mount, flushPromises } from "@vue/test-utils";
-import { UserProfile } from "./user-profile.vue";
-import { vi } from "vitest";
 
-const DATA_TEST_LOADING = '[data-test="loading"]';
-const DATA_TEST_NAME = '[data-test="user-name"]';
-const DATA_TEST_ERROR = '[data-test="error"]';
+const wrapper = mount(UserProfile, { props: { userId: 1 } });
 
-const MOCK_USER = { id: 1, name: "John Doe" };
+expect(wrapper.find('[data-test="loading"]').exists()).toBe(true);
 
-// Mock API module
-vi.mock("@/api/users", () => ({
-  fetchUser: vi.fn(),
-}));
+await flushPromises(); // the request settles, then Vue re-renders
 
-import { fetchUser } from "@/api/users";
-
-test("displays user data after loading", async () => {
-  // Arrange: Setup mock to resolve
-  vi.mocked(fetchUser).mockResolvedValue(MOCK_USER);
-
-  const wrapper = mount(UserProfile, {
-    props: { userId: 1 },
-  });
-
-  // Initially shows loading
-  expect(wrapper.find(DATA_TEST_LOADING).exists()).toBe(true);
-
-  // Act: Wait for all promises to resolve
-  await flushPromises();
-
-  // Assert: Loading gone, data displayed
-  expect(wrapper.find(DATA_TEST_LOADING).exists()).toBe(false);
-  expect(wrapper.get(DATA_TEST_NAME).text()).toBe("John Doe");
-});
-
-test("displays error on API failure", async () => {
-  // Arrange: Setup mock to reject
-  vi.mocked(fetchUser).mockRejectedValue(new Error("Network error"));
-
-  const wrapper = mount(UserProfile, {
-    props: { userId: 1 },
-  });
-
-  // Act: Wait for promise to reject
-  await flushPromises();
-
-  // Assert: Error displayed
-  expect(wrapper.get(DATA_TEST_ERROR).text()).toContain("Network error");
-});
+expect(wrapper.get('[data-test="user-name"]').text()).toBe("John Doe");
 ```
 
-**Why flushPromises:** Vue's reactivity system doesn't track external promises (HTTP requests, timers). `flushPromises()` resolves all pending promises so the DOM reflects the async result.
+`flushPromises()` drains microtasks only. A `setTimeout` needs the runner's fake timers advanced first, and then `flushPromises()` for whatever the callback started.
 
-See [examples/async.md](examples/async.md) for complete async testing examples.
+Full code: [examples/async.md](examples/async.md)
 
----
+### Pattern 5: Testing Composables
 
-### Pattern 5: Testing Components with findComponent/getComponent
-
-Use `findComponent()` or `getComponent()` to interact with child Vue components directly. Useful for testing component communication.
-
-- **`getComponent()`** - Throws error if not found (use when component **must** exist)
-- **`findComponent()`** - Returns empty wrapper if not found (use when component **may not** exist)
-
-#### Component Queries
+Mount a component whose only job is to call the composable, so lifecycle hooks and `inject` work as they do in production.
 
 ```typescript
-import { mount } from "@vue/test-utils";
-import { ParentComponent } from "./parent-component.vue";
-import { ChildComponent } from "./child-component.vue";
+function withSetup<T>(composable: () => T) {
+  let result!: T;
+  const wrapper = mount(
+    defineComponent({ setup: () => ((result = composable()), () => null) }),
+  );
+  return { result, unmount: () => wrapper.unmount() };
+}
 
-test("passes props to child component", () => {
-  const wrapper = mount(ParentComponent, {
-    props: { message: "Hello" },
-  });
-
-  // getComponent() - throws if not found (clearer error messages)
-  const child = wrapper.getComponent(ChildComponent);
-
-  // Assert props passed correctly
-  expect(child.props("message")).toBe("Hello");
-});
-
-test("receives emitted events from child", async () => {
-  const wrapper = mount(ParentComponent);
-  const child = wrapper.getComponent(ChildComponent);
-
-  // Trigger event on child
-  await child.vm.$emit("update", "new value");
-
-  // Assert parent handled the event
-  expect(wrapper.vm.value).toBe("new value");
-});
-
-test("conditionally rendered child component", () => {
-  const wrapper = mount(ParentComponent, {
-    props: { showChild: false },
-  });
-
-  // findComponent() - returns empty wrapper (check with .exists())
-  const child = wrapper.findComponent(ChildComponent);
-
-  expect(child.exists()).toBe(false);
-});
-
-test("finds component by name", () => {
-  const wrapper = mount(ParentComponent);
-
-  // Find by component name (less preferred - use component definition)
-  const child = wrapper.findComponent({ name: "ChildComponent" });
-
-  expect(child.exists()).toBe(true);
-});
+const { result, unmount } = withSetup(() =>
+  useLocalStorage("draft", "initial"),
+);
 ```
 
-**When to use getComponent vs findComponent:**
+Where the composable is inseparable from its UI, render a small template around it and assert on the DOM instead — the reactivity is then covered rather than assumed.
 
-- Use `getComponent` when the child **must** exist - provides clearer error messages on failure
-- Use `findComponent` when the child **may not** exist - check with `.exists()` first
+Full code: [examples/composables.md](examples/composables.md)
 
----
+### Pattern 6: The global Mounting Options
 
-### Pattern 6: Global Configuration
-
-Configure global plugins, components, and directives that all tests need. Create a custom mount function for consistency.
-
-#### Test Utils Setup
+Four seams, each for a different kind of dependency, all set at the mount and all settable project-wide through `config.global`.
 
 ```typescript
-// test-utils.ts
-import { mount, type MountingOptions, type VueWrapper } from "@vue/test-utils";
-import { createTestingPinia } from "@pinia/testing";
-import type { Component } from "vue";
-
-// Import global components your app uses
-import { Button } from "@/components/ui/button.vue";
-import { Input } from "@/components/ui/input.vue";
-
-interface ExtendedMountOptions extends MountingOptions<unknown> {
-  initialPiniaState?: Record<string, unknown>;
-}
-
-function customMount<T extends Component>(
-  component: T,
-  options: ExtendedMountOptions = {},
-): VueWrapper {
-  const { initialPiniaState, ...mountOptions } = options;
-
-  return mount(component, {
-    global: {
-      plugins: [
-        createTestingPinia({
-          initialState: initialPiniaState,
-          stubActions: false,
-        }),
-      ],
-      components: {
-        Button,
-        Input,
-      },
-      stubs: {
-        // Stub router components by default
-        RouterLink: true,
-        RouterView: true,
-      },
-      ...mountOptions.global,
-    },
-    ...mountOptions,
-  });
-}
-
-export { customMount as mount };
-export * from "@vue/test-utils";
+mount(Component, {
+  global: {
+    plugins: [
+      /* anything installed with app.use() - a store, a router, an i18n instance */
+    ],
+    stubs: { RouterLink: true, HeavyChart: { template: "<div />" } },
+    mocks: { $t: (key: string) => key }, // global properties the template reads
+    provide: { [THEME_KEY]: { theme: ref("light") } }, // what an ancestor would provide
+  },
+});
 ```
 
-**Why custom mount:** Avoids repeating global configuration in every test. Creates consistent test environment matching your app.
+Wrap these in a custom mount once, so a test states only what makes it different.
 
-See [examples/mocking.md](examples/mocking.md) for complete mocking examples.
+Full code: [examples/mocking.md](examples/mocking.md)
 
 </patterns>
 
@@ -430,59 +206,25 @@ See [examples/mocking.md](examples/mocking.md) for complete mocking examples.
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Not awaiting DOM-updating methods** - Causes flaky tests that pass/fail randomly based on timing
-- **Using `shallowMount` by default** - Reduces test fidelity; child components don't render as expected
-- **Using classes/IDs as selectors** - Brittle tests that break when styling changes
-- **Forgetting `flushPromises()` after API calls** - Assertions run before async operations complete
+- A `trigger()`, `setValue()`, `setProps()` or `setData()` without `await` — the assertion reads the DOM before Vue has flushed, so the test passes or fails by timing
+- No `flushPromises()` after a request resolves — the loading branch is still rendered when the assertion runs
+- `setData()` on a component written with the Composition API — it only reaches an Options API `data()` function, so the call silently changes nothing
+- A component with an async `setup()` mounted directly instead of inside `Suspense` — it never resolves and the wrapper stays on the fallback
+- `isVisible()` without `attachTo: document.body` — the element is not in a rendered document, so visibility cannot be computed correctly
+- `trigger("click")` on a disabled element — the browser drops it, and so does the library; that is correct behaviour rather than a bug to work around
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Testing implementation details** - Accessing `wrapper.vm` directly instead of testing user-visible behavior
-- **Over-mocking** - Stubbing everything reduces confidence that code works in production
-- **Not using `createTestingPinia()`** - Manual store mocking is error-prone and verbose
-- **Using `wrapper.setData()` to set reactive state** - Better to trigger through user interactions
-
-**Common Mistakes:**
-
-- Missing `await` on `trigger()`, `setValue()`, `setProps()`, `setData()`
-- Using `find()` instead of `get()` for required elements (hides failures)
-- Not resetting mocks between tests (cross-test pollution)
-- Using `wrapper.vm.someMethod()` instead of triggering through UI
-
-**Gotchas and Edge Cases:**
-
-- `trigger('click')` doesn't work on disabled elements (expected browser behavior)
-- `setValue()` only works on `<input>`, `<textarea>`, and `<select>` elements
-- `shallowMount` stubs ALL child components including those from component libraries
-- `flushPromises()` only resolves Promises - not `setTimeout` (use fake timers)
-- Emitted events array grows across interactions - check specific index for assertions
-- **`setData()` does NOT work with Composition API** - it only works with Options API `data()` function
-- `isVisible()` requires `attachTo: document.body` to work correctly
+- `shallowMount` stubs every child including ones from a component library, so a test can pass against a tree that renders nothing
+- `find()` returns an empty wrapper rather than throwing, which turns a missing element into a confusing error one line later
+- `emitted()` accumulates for the lifetime of the wrapper — asserting a length after several interactions counts all of them
+- `setValue()` applies only to `<input>`, `<textarea>` and `<select>`; on anything else it is a no-op
+- `trigger()` already awaits `nextTick`, so an extra `await nextTick()` after it is redundant
+- Reaching into `wrapper.vm` to call a method or read state couples the test to the implementation; drive the component through the DOM instead
+- A wrapper mounted with `attachTo` stays in the document until unmounted — register `enableAutoUnmount` once rather than remembering per test
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST `await` all DOM-updating methods: `trigger()`, `setValue()`, `setProps()`, `setData()`)**
-
-**(You MUST use `flushPromises()` after async operations that Vue doesn't track (API calls, timers))**
-
-**(You MUST use `mount()` by default - only use `shallowMount()` for performance issues or complex isolation)**
-
-**(You MUST use `data-test` attributes for selectors, NOT classes or IDs)**
-
-**(You MUST use `createTestingPinia()` for Pinia stores, NOT manual mocking)**
-
-**Failure to follow these rules will produce flaky tests that don't reflect real component behavior.**
-
-</critical_reminders>

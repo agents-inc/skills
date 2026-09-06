@@ -1,184 +1,148 @@
 # React Testing Library - Async Testing Examples
 
-> Async utilities: findBy, waitFor, waitForElementToBeRemoved. Reference from [SKILL.md](../SKILL.md).
+> `findBy*`, `waitFor` and `waitForElementToBeRemoved`. See [core.md](core.md) for queries and [configuration.md](configuration.md) for fake timers.
 
 ---
 
-## Using findBy for Async Content
+## findBy for content that arrives
 
 ```typescript
-// Good Example - findBy for elements that appear asynchronously
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SearchResults } from "./search-results";
 
-const SEARCH_TERM = "react";
-const NO_RESULTS_TEXT = /no results found/i;
-const LOADING_TEXT = /searching/i;
-
-test("displays search results after API call", async () => {
+test("displays search results", async () => {
   const user = userEvent.setup();
   render(<SearchResults />);
 
-  // Type search query
-  await user.type(screen.getByRole("searchbox"), SEARCH_TERM);
+  await user.type(screen.getByRole("searchbox"), "react");
   await user.click(screen.getByRole("button", { name: /search/i }));
 
-  // Loading state appears immediately
-  expect(screen.getByText(LOADING_TEXT)).toBeInTheDocument();
+  expect(screen.getByText(/searching/i)).toBeInTheDocument(); // present synchronously
 
-  // Results appear asynchronously - use findBy
-  const results = await screen.findAllByRole("listitem");
+  const results = await screen.findAllByRole("listitem"); // arrives later
   expect(results.length).toBeGreaterThan(0);
 
-  // Loading state should be gone
-  expect(screen.queryByText(LOADING_TEXT)).not.toBeInTheDocument();
+  expect(screen.queryByText(/searching/i)).not.toBeInTheDocument(); // queryBy for absence
 });
 
-test("displays no results message", async () => {
+test("raises the timeout for a slow path", async () => {
   const user = userEvent.setup();
   render(<SearchResults />);
 
   await user.type(screen.getByRole("searchbox"), "xyznonexistent");
   await user.click(screen.getByRole("button", { name: /search/i }));
 
-  // findBy with custom timeout if needed
-  const noResults = await screen.findByText(NO_RESULTS_TEXT, {}, { timeout: 3000 });
-  expect(noResults).toBeInTheDocument();
+  // Third argument, not second - the second is the query's own options
+  expect(await screen.findByText(/no results found/i, {}, { timeout: 3000 })).toBeInTheDocument();
 });
 ```
 
-**Why good:** Uses findBy for elements that appear after async operations, uses queryBy to verify elements are gone (returns null vs throwing), specifies timeout when default 1000ms isn't enough
+**Why good:** the three variants are used for the three jobs they exist for — `getBy` for what is already there, `findBy` for what will be, `queryBy` for what should not be. Mixing them up is the commonest source of both flakes and misleading failure messages.
 
 ---
 
-## Using waitFor Correctly
+## waitFor, for assertions rather than elements
 
 ```typescript
-// Good Example - waitFor for assertions (not element queries)
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Counter } from "./counter";
 
-const INITIAL_COUNT = 0;
-const DEBOUNCE_DELAY_MS = 500;
-
-test("counter updates after debounce", async () => {
+test("counter settles after debounce", async () => {
   const user = userEvent.setup();
-  render(<Counter initialCount={INITIAL_COUNT} />);
+  render(<Counter initialCount={0} />);
 
-  // Click increment multiple times quickly
   await user.click(screen.getByRole("button", { name: /increment/i }));
   await user.click(screen.getByRole("button", { name: /increment/i }));
   await user.click(screen.getByRole("button", { name: /increment/i }));
 
-  // GOOD: Single assertion in waitFor
   await waitFor(() => {
     expect(screen.getByText(/count: 3/i)).toBeInTheDocument();
   });
 });
 
-test("form validation shows errors", async () => {
+test("shows both validation errors", async () => {
   const user = userEvent.setup();
   render(<RegistrationForm />);
 
-  // Submit empty form
   await user.click(screen.getByRole("button", { name: /submit/i }));
 
-  // GOOD: Separate waitFor for each assertion
+  // One assertion per waitFor, so the first failure reports immediately
   await waitFor(() => {
     expect(screen.getByText(/email is required/i)).toBeInTheDocument();
   });
-
   await waitFor(() => {
     expect(screen.getByText(/password is required/i)).toBeInTheDocument();
   });
 });
 ```
 
-**Why good:** Uses waitFor for assertions, not element queries. Keeps single assertion per waitFor for faster failure feedback.
-
 ---
 
-## Common waitFor Mistakes
+## The four waitFor mistakes
 
 ```typescript
-// Bad Example - Incorrect waitFor usage
+// Bad Example
 test("form shows errors", async () => {
   render(<RegistrationForm />);
 
-  // BAD: Using waitFor to find elements (use findBy instead)
+  // 1. Finding an element - findByRole does this with a better failure message
   await waitFor(() => {
-    screen.getByRole("button"); // DON'T - use findByRole
+    screen.getByRole("button");
   });
 
-  // BAD: Multiple assertions in single waitFor
+  // 2. Several assertions - each retry re-runs all of them before any failure surfaces
   await waitFor(() => {
     expect(screen.getByText(/email required/i)).toBeInTheDocument();
     expect(screen.getByText(/password required/i)).toBeInTheDocument();
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
-  // BAD: Side effects inside waitFor
+  // 3. A side effect - the callback runs on every poll, so this clicks repeatedly
   await waitFor(() => {
-    fireEvent.click(button); // DON'T - side effects outside
+    fireEvent.click(button);
     expect(result).toBe(true);
   });
 
-  // BAD: Empty waitFor for timing
-  await waitFor(() => {}); // DON'T - fragile timing
+  // 4. An empty callback - waits one poll interval and asserts nothing
+  await waitFor(() => {});
 });
 ```
 
-**Why bad:** Using waitFor for element queries produces worse error messages than findBy. Multiple assertions cause slow failures. Side effects in waitFor execute unpredictably.
+**Why bad:** `waitFor` retries its callback until it stops throwing. Everything above misuses that loop — as a query, as a batch, as a driver, or as a sleep — and each one either slows failure down or makes the result depend on timing.
 
 ---
 
 ## waitForElementToBeRemoved
 
 ```typescript
-// Good Example - Waiting for elements to disappear
 import { render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Modal } from "./modal";
 
-test("modal closes when clicking dismiss", async () => {
+test("modal closes on dismiss", async () => {
   const user = userEvent.setup();
-  render(<Modal isOpen={true} />);
+  render(<Modal isOpen />);
 
-  // Verify modal is visible
   expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-  // Close modal
   await user.click(screen.getByRole("button", { name: /close/i }));
 
-  // Wait for modal to be removed
+  // Callback form: queryBy, because getBy would throw the moment it succeeds
   await waitForElementToBeRemoved(() => screen.queryByRole("dialog"));
-
-  // Verify it's gone
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
-test("loading spinner disappears after data loads", async () => {
+test("spinner disappears once data loads", async () => {
   render(<DataFetcher />);
 
-  // Loading spinner present initially
-  const spinner = screen.getByRole("progressbar");
+  // Element form: the node must already be present, or this throws immediately
+  await waitForElementToBeRemoved(screen.getByRole("progressbar"));
 
-  // Wait for it to be removed
-  await waitForElementToBeRemoved(spinner);
-
-  // Data should now be visible
   expect(screen.getByText(/data loaded/i)).toBeInTheDocument();
 });
 ```
 
-**Why good:** Uses waitForElementToBeRemoved for disappearance (not polling with queryBy). Uses queryBy in callback (returns null instead of throwing).
+**Why good:** the two forms differ in a way that bites. Passed an element, the helper requires it to exist at the call; passed a callback, it re-runs the query, which is why the callback must be a `queryBy*` that can return `null`.
 
 ---
 
-_For more patterns, see:_
-
-- [core.md](core.md) - Query hierarchy
-- [user-events.md](user-events.md) - User interactions
-- [custom-render.md](custom-render.md) - Custom render setup
+_Next: [custom-render.md](custom-render.md) for provider setup._

@@ -1,476 +1,140 @@
 # Cypress E2E Testing Reference
 
-> Decision frameworks, anti-patterns, and red flags. Reference from [SKILL.md](SKILL.md).
+> Lookup tables, config and CLI, version changes, troubleshooting. Decisions and red flags live in
+> [SKILL.md](SKILL.md); code lives under [examples/](examples/core.md).
 
 ---
 
-## Decision Framework
+## Selector priority
 
-### When to Write E2E Tests
-
-```
-Is it a critical user workflow?
-├─ YES → Write E2E test with Cypress
-│   Examples: login, checkout, form submission, user registration
-└─ NO → Is it a multi-page user journey?
-    ├─ YES → Write E2E test with Cypress
-    │   Examples: onboarding flow, multi-step wizard, search and filter
-    └─ NO → Is it testing component behavior in isolation?
-        ├─ YES → Use Cypress component testing (cy.mount)
-        └─ NO → Is it a pure utility function?
-            ├─ YES → Write unit test instead
-            └─ NO → Is it testing API contracts?
-                ├─ YES → Use cy.request() or dedicated API tests
-                └─ NO → Evaluate based on risk and complexity
-```
-
-### Choosing Selector Strategy
-
-```
-Can you add a data-cy attribute?
-├─ YES → Use data-cy (BEST)
-│   Examples: [data-cy=submit-button], [data-cy=email-input]
-└─ NO → Should text change fail the test?
-    ├─ YES → Use cy.contains()
-    │   Examples: cy.contains("Sign In"), cy.contains("button", "Submit")
-    └─ NO → Is it a form element with a name?
-        ├─ YES → Use input[name="..."]
-        └─ NO → Is it a semantic element?
-            ├─ YES → Use element type: button[type="submit"]
-            └─ NO → Add data-cy attribute (go back to start)
-                Note: CSS classes/IDs are last resort only
-```
-
-### Mocked vs Real API
-
-```
-Is it a third-party external API?
-├─ YES → Mock it (unpredictable, rate limited, costs money)
-└─ NO → Is it your own API?
-    ├─ Testing specific error states?
-    │   └─ YES → Mock the response with cy.intercept()
-    ├─ Testing UI behavior only?
-    │   └─ YES → Mock for speed and isolation
-    └─ Testing true E2E integration?
-        └─ YES → Use real API (one true E2E per feature)
-```
-
-### Test Isolation Strategy
-
-```
-Does the test need authenticated state?
-├─ YES → Use cy.session() to cache login
-│   Note: Cache is per-spec, not global
-└─ NO → Does the test need specific database state?
-    ├─ YES → Seed in beforeEach via cy.task() or API
-    └─ NO → Does the test need specific UI state?
-        ├─ YES → Set up in beforeEach via navigation/actions
-        └─ NO → Start fresh with cy.visit()
-```
+| Priority | Selector         | Example                 | Use when                               |
+| -------- | ---------------- | ----------------------- | -------------------------------------- |
+| 1        | `data-cy`        | `[data-cy=submit]`      | Default choice                         |
+| 2        | `cy.contains()`  | `cy.contains("Submit")` | The text is the subject                |
+| 3        | `name` attribute | `input[name="email"]`   | Form controls                          |
+| 4        | Semantic element | `button[type="submit"]` | No attribute available                 |
+| 5        | CSS class        | `.btn-primary`          | Last resort — moves with styling       |
+| 6        | Id               | `#submit-btn`           | Last resort — an implementation detail |
+| 7        | DOM position     | `div > button:first`    | Breaks on any markup change            |
 
 ---
 
-## File Organization Reference
+## Assertions
 
-### Recommended Directory Structure
-
-```
-project/
-├── cypress/
-│   ├── e2e/                      # E2E test specs
-│   │   ├── auth/                 # Tests by feature/journey
-│   │   │   ├── login-flow.cy.ts
-│   │   │   ├── registration.cy.ts
-│   │   │   └── password-reset.cy.ts
-│   │   ├── checkout/
-│   │   │   ├── checkout-flow.cy.ts
-│   │   │   ├── payment-errors.cy.ts
-│   │   │   └── guest-checkout.cy.ts
-│   │   └── search/
-│   │       ├── product-search.cy.ts
-│   │       └── filters.cy.ts
-│   ├── fixtures/                 # Test data files
-│   │   ├── users.json
-│   │   ├── products.json
-│   │   └── orders.json
-│   ├── support/                  # Commands and setup
-│   │   ├── commands.ts           # Custom commands
-│   │   ├── e2e.ts                # E2E support file
-│   │   ├── component.ts          # Component test support
-│   │   └── index.d.ts            # TypeScript declarations
-│   └── component/                # Component test specs
-│       └── button.cy.tsx
-├── cypress.config.ts
-└── tsconfig.json
-```
-
-**Why this structure:** Tests organized by user journey (not by component), fixtures separated from specs, support files handle reusable setup
-
-### File Naming Conventions
-
-```
-E2E tests:        *.cy.ts         (e.g., login-flow.cy.ts)
-Component tests:  *.cy.tsx        (e.g., button.cy.tsx)
-Fixtures:         *.json          (e.g., users.json)
-Commands:         commands.ts     (single file recommended)
-Types:            *.d.ts          (e.g., index.d.ts)
-```
-
----
-
-## Anti-Patterns to Avoid
-
-### Anti-Pattern 1: Arbitrary Waits
+| Assertion                  | Checks              | Example                                                    |
+| -------------------------- | ------------------- | ---------------------------------------------------------- |
+| `should("be.visible")`     | Visible on screen   | `cy.getBySel("modal").should("be.visible")`                |
+| `should("not.exist")`      | Absent from the DOM | `cy.getBySel("error").should("not.exist")`                 |
+| `should("not.be.visible")` | Present but hidden  | `cy.getBySel("menu").should("not.be.visible")`             |
+| `should("be.disabled")`    | Disabled control    | `cy.getBySel("submit").should("be.disabled")`              |
+| `should("have.value")`     | Input value         | `cy.getBySel("email").should("have.value", "a@b.com")`     |
+| `should("contain")`        | Contains text       | `cy.getBySel("message").should("contain", "Success")`      |
+| `should("have.length")`    | Match count         | `cy.getBySel("item").should("have.length", 5)`             |
+| `should("have.class")`     | Class present       | `cy.getBySel("tab").should("have.class", "active")`        |
+| `should("have.attr")`      | Attribute value     | `cy.getBySel("link").should("have.attr", "href", "/home")` |
 
 ```typescript
-// ANTI-PATTERN: Manual wait with arbitrary timeout
-cy.get("[data-cy=submit-button]").click();
-cy.wait(5000); // Arbitrary sleep!
-cy.get("[data-cy=success-message]").should("be.visible");
-```
-
-**Why it's wrong:** Fixed timeouts are either too short (flaky tests) or too long (slow tests). They don't adapt to actual load times and hide real issues.
-
-**What to do instead:** Use cy.intercept() aliases or rely on Cypress retry-ability:
-
-```typescript
-// CORRECT: Wait for specific request
-cy.intercept("POST", "/api/submit").as("submitForm");
-cy.get("[data-cy=submit-button]").click();
-cy.wait("@submitForm");
-cy.get("[data-cy=success-message]").should("be.visible");
-```
-
----
-
-### Anti-Pattern 2: Coupled Tests
-
-```typescript
-// ANTI-PATTERN: Tests depend on each other
-let userId: string;
-
-it("creates a user", () => {
-  cy.request("POST", "/api/users", { name: "John" }).then((res) => {
-    userId = res.body.id; // Stored for next test!
-  });
-});
-
-it("updates the user", () => {
-  // FAILS when run alone or in different order!
-  cy.request("PUT", `/api/users/${userId}`, { name: "Jane" });
-});
-```
-
-**Why it's wrong:** Tests fail when run in isolation, parallel execution causes race conditions, test order dependencies are fragile.
-
-**What to do instead:** Each test should be completely independent:
-
-```typescript
-// CORRECT: Independent tests
-it("updates a user", () => {
-  // Create test data within the test
-  cy.request("POST", "/api/users", { name: "John" }).then((res) => {
-    const userId = res.body.id;
-    cy.request("PUT", `/api/users/${userId}`, { name: "Jane" });
-    // Cleanup in afterEach or next test's beforeEach
-  });
-});
-```
-
----
-
-### Anti-Pattern 3: Fragile CSS/ID Selectors
-
-```typescript
-// ANTI-PATTERN: Implementation-dependent selectors
-cy.get("#submit-btn").click();
-cy.get(".btn-primary").click();
-cy.get("div.container > form > button:nth-child(2)").click();
-```
-
-**Why it's wrong:** CSS classes change during styling updates, IDs are implementation details, DOM structure selectors break on markup changes.
-
-**What to do instead:** Use data-cy attributes:
-
-```typescript
-// CORRECT: Test-specific selectors
-cy.get("[data-cy=submit-button]").click();
-
-// Or custom command
-cy.getBySel("submit-button").click();
-```
-
----
-
-### Anti-Pattern 4: Testing Implementation Details
-
-```typescript
-// ANTI-PATTERN: Testing internal state
-cy.window().then((win) => {
-  // Testing Redux state directly - implementation detail!
-  expect(win.__REDUX_STATE__.user.isLoggedIn).to.be.true;
-});
-```
-
-**Why it's wrong:** Tests break when internal state structure changes, doesn't verify what users see, couples tests to implementation.
-
-**What to do instead:** Test user-visible behavior:
-
-```typescript
-// CORRECT: Test visible behavior
-cy.get("[data-cy=user-avatar]").should("be.visible");
-cy.get("[data-cy=logout-button]").should("exist");
-```
-
----
-
-### Anti-Pattern 5: Using const for Async Values
-
-```typescript
-// ANTI-PATTERN: Assigning command result to const
-const button = cy.get("[data-cy=submit-button]");
-cy.visit("/");
-button.click(); // FAILS - button is not a Promise
-```
-
-**Why it's wrong:** Cypress commands are async but don't return Promises. The chain is queued, not executed immediately.
-
-**What to do instead:** Use aliases:
-
-```typescript
-// CORRECT: Use aliases
-cy.get("[data-cy=submit-button]").as("submitBtn");
-cy.visit("/");
-cy.get("@submitBtn").click();
-```
-
----
-
-### Anti-Pattern 6: Cleanup in afterEach
-
-```typescript
-// ANTI-PATTERN: Cleanup in after hooks
-afterEach(() => {
-  cy.request("DELETE", "/api/test-data");
-});
-```
-
-**Why it's wrong:** No guarantee execution occurs if test crashes or is stopped mid-run. Removes debuggability.
-
-**What to do instead:** Put cleanup in beforeEach:
-
-```typescript
-// CORRECT: Cleanup in beforeEach
-beforeEach(() => {
-  cy.request("DELETE", "/api/test-data"); // Clean before each test
-  cy.visit("/");
-});
-```
-
----
-
-## Selector Priority Reference
-
-| Priority | Selector Type     | Example                 | Use When                      |
-| -------- | ----------------- | ----------------------- | ----------------------------- |
-| 1        | `data-cy`         | `[data-cy=submit]`      | ALWAYS - default choice       |
-| 2        | `cy.contains()`   | `cy.contains("Submit")` | Text change should fail test  |
-| 3        | `name` attribute  | `input[name="email"]`   | Form elements                 |
-| 4        | Semantic elements | `button[type="submit"]` | No data-cy, semantic meaning  |
-| 5        | CSS class         | `.btn-primary`          | AVOID - coupled to styling    |
-| 6        | ID                | `#submit-btn`           | AVOID - implementation detail |
-| 7        | DOM structure     | `div > button:first`    | NEVER - extremely fragile     |
-
----
-
-## Assertion Best Practices Reference
-
-### Common Assertions
-
-| Assertion               | Use For            | Example                                                         |
-| ----------------------- | ------------------ | --------------------------------------------------------------- |
-| `should("be.visible")`  | Element is visible | `cy.getBySel("modal").should("be.visible")`                     |
-| `should("not.exist")`   | Element not in DOM | `cy.getBySel("error").should("not.exist")`                      |
-| `should("be.disabled")` | Disabled state     | `cy.getBySel("submit").should("be.disabled")`                   |
-| `should("have.value")`  | Input value        | `cy.getBySel("email").should("have.value", "test@example.com")` |
-| `should("contain")`     | Contains text      | `cy.getBySel("message").should("contain", "Success")`           |
-| `should("have.length")` | List count         | `cy.getBySel("item").should("have.length", 5)`                  |
-| `should("have.class")`  | Has CSS class      | `cy.getBySel("tab").should("have.class", "active")`             |
-| `should("have.attr")`   | Has attribute      | `cy.getBySel("link").should("have.attr", "href", "/home")`      |
-
-### URL Assertions
-
-```typescript
-cy.url().should("include", "/dashboard");
-cy.url().should("eq", "http://localhost:3000/dashboard");
-cy.location("pathname").should("eq", "/dashboard");
-```
-
-### Chained Assertions
-
-```typescript
+// Chain conditions on one query — all of them retried together
 cy.getBySel("email-input")
   .should("be.visible")
   .and("have.attr", "type", "email")
   .and("have.value", "");
+
+// Location
+cy.url().should("include", "/dashboard");
+cy.location("pathname").should("eq", "/dashboard");
 ```
 
 ---
 
-## Cypress 14/15 Changes
-
-### cy.origin() for Multi-Origin Tests (Cypress 14+)
-
-Cypress 14 requires `cy.origin()` for any test that navigates across different origins (scheme + hostname + port).
-
-```typescript
-// Required for OAuth, SSO, or any cross-origin navigation
-cy.visit("/login");
-cy.getBySel("oauth-button").click();
-
-cy.origin(
-  "https://auth.provider.com",
-  { args: { email, password } },
-  ({ email, password }) => {
-    cy.get("#email").type(email);
-    cy.get("#password").type(password);
-    cy.get("#submit").click();
-  },
-);
-
-// Back on original origin
-cy.url().should("include", "/dashboard");
-```
-
-**Why required:** Chrome deprecated `document.domain`, which Cypress previously used for cross-origin testing.
+## Cypress 14 / 15 changes
 
 ### Removed
 
-| Removed                          | Replacement                         | Version |
-| -------------------------------- | ----------------------------------- | ------- |
-| `delayMs` on `cy.intercept()`    | Use `delay` instead                 | 14.0    |
-| `cypress open-ct` / `run-ct`     | Use `--component` flag              | 14.0    |
-| 3-argument `cy.stub()` signature | `cy.stub(obj, method).returns(val)` | 15.0    |
+| Removed                       | Replacement                         | Version |
+| ----------------------------- | ----------------------------------- | ------- |
+| `delayMs` on `cy.intercept()` | `delay`                             | 14.0    |
+| `cypress open-ct` / `run-ct`  | the `--component` flag              | 14.0    |
+| Three-argument `cy.stub()`    | `cy.stub(obj, method).returns(val)` | 15.0    |
 
-### Deprecated (Still Functional)
+### Deprecated but still working
 
-| Deprecated                                 | Replacement                                           | Notes                                                                    |
-| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| `resourceType` on `cy.intercept()`         | Use route matching instead                            | Deprecated in v14.0.0, may be removed in future                          |
-| `Cypress.env()`                            | `cy.env()` for secrets, `Cypress.expose()` for public | Deprecated in v15.10.0, removed in 16. `cy.env()` is async               |
-| `Cypress.Commands.overwrite()` for queries | Use `Cypress.Commands.overwriteQuery()`               | Queries include .get(), .find(), .contains(), cy.location(), cy.window() |
+| Deprecated                                 | Replacement                                                  | Notes                                                                          |
+| ------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `resourceType` on `cy.intercept()`         | Route matching                                               | Deprecated in 14.0                                                             |
+| `Cypress.env()`                            | `cy.env()` for secrets, `Cypress.expose()` for public values | Deprecated in 15.10, removed in 16; `cy.env()` is async                        |
+| `Cypress.Commands.overwrite()` for queries | `Cypress.Commands.overwriteQuery()`                          | Queries are `.get()`, `.find()`, `.contains()`, `cy.location()`, `cy.window()` |
 
-### New / Changed in Cypress 15
+### Changed or added in 15
 
-| Feature                        | Version | Description                                                                   |
-| ------------------------------ | ------- | ----------------------------------------------------------------------------- |
-| `cy.exec()` returns `exitCode` | 15.0    | Renamed from `code` - update `.its('code')` to `.its('exitCode')`             |
-| `Cypress.ElementSelector`      | 15.0    | Renamed from `Cypress.SelectorPlayground`                                     |
-| `--pass-with-no-tests`         | 15.0    | CLI flag to pass when no test files match                                     |
-| `cy.env(keys)`                 | 15.10   | Async, secure env var access - only exposes explicitly requested variables    |
-| `Cypress.expose(key, value)`   | 15.10   | Public configuration API for non-sensitive values (feature flags, env labels) |
-| Angular 21 support             | 15.x    | Including zoneless mode for component testing                                 |
+| Change                               | Detail                                                  |
+| ------------------------------------ | ------------------------------------------------------- |
+| `cy.exec()` returns `exitCode`       | Renamed from `code` — update `.its("code")`             |
+| `Cypress.ElementSelector`            | Renamed from `Cypress.SelectorPlayground`               |
+| `--pass-with-no-tests`               | Exit 0 when no spec matches                             |
+| `cy.env(keys)` (15.10)               | Async, exposes only the variables asked for             |
+| `Cypress.expose(key, value)` (15.10) | Public configuration values — flags, environment labels |
 
-### Minimum Requirements (Cypress 15)
+### Requirements (Cypress 15)
 
-- Node.js 20+ (18 and 23 removed in 15)
-- macOS 11 (Big Sur)+
-- React 18.0.0+ (for component testing)
-- Angular 17.2.0+ (for component testing)
-- Vue 3+ (for component testing)
+Node 20+ (18 and 23 dropped), macOS 11+, and for component testing React 18+, Angular 17.2+ or
+Vue 3+.
+
+`cy.origin()` has been mandatory for cross-origin navigation since 14, because Chrome removed the
+`document.domain` behaviour Cypress previously relied on.
 
 ---
 
-## Configuration Quick Reference
+## Configuration
 
-### Essential Configuration Options
+| Option                   | Effect                                             | Typical value                  |
+| ------------------------ | -------------------------------------------------- | ------------------------------ |
+| `baseUrl`                | Base for `cy.visit()`                              | dev server URL                 |
+| `specPattern`            | Which files are specs                              | `cypress/e2e/**/*.cy.{ts,tsx}` |
+| `supportFile`            | Loaded before every spec                           | `cypress/support/e2e.ts`       |
+| `testIsolation`          | Reset cookies and storage between tests (e2e only) | `true` — the default           |
+| `defaultCommandTimeout`  | Retry budget per command (ms)                      | `4000`, higher in CI           |
+| `pageLoadTimeout`        | Navigation budget (ms)                             | `10000`, higher in CI          |
+| `retries.runMode`        | Retries in `cypress run`                           | `2`                            |
+| `retries.openMode`       | Retries while iterating                            | `0`                            |
+| `video`                  | Record video                                       | CI only                        |
+| `screenshotOnRunFailure` | Capture on failure                                 | `true`                         |
+| `e2e.setupNodeEvents`    | Node-side hooks and tasks                          | `on("task", …)`                |
+| `component.devServer`    | Framework and bundler                              | the project's own              |
 
-| Option                   | Description             | Recommended Value                |
-| ------------------------ | ----------------------- | -------------------------------- |
-| `baseUrl`                | Base URL for cy.visit() | `"http://localhost:3000"`        |
-| `defaultCommandTimeout`  | Command timeout (ms)    | `4000`                           |
-| `pageLoadTimeout`        | Page load timeout (ms)  | `10000`                          |
-| `retries.runMode`        | Retries in CI           | `2`                              |
-| `retries.openMode`       | Retries in interactive  | `0`                              |
-| `video`                  | Record video            | `false` (enable in CI if needed) |
-| `screenshotOnRunFailure` | Screenshot on failure   | `true`                           |
+### Suggested layout
 
-### CLI Commands
+```
+cypress/
+├── e2e/          specs by journey: auth/, checkout/, search/
+├── component/    component specs, *.cy.tsx
+├── fixtures/     JSON test data
+└── support/      commands.ts, e2e.ts, component.ts, index.d.ts
+```
+
+Naming: `*.cy.ts` for E2E specs, `*.cy.tsx` for component specs, `index.d.ts` for the `Chainable`
+declarations.
+
+---
+
+## CLI
 
 ```bash
-# Open interactive test runner
-npx cypress open
-
-# Run all tests headlessly
-npx cypress run
-
-# Run specific spec file
+npx cypress open                                    # interactive runner
+npx cypress run                                     # headless
 npx cypress run --spec "cypress/e2e/auth/**/*.cy.ts"
-
-# Run in specific browser
 npx cypress run --browser chrome
-
-# Run with environment variables
-npx cypress run --env apiUrl=http://localhost:4000
-
-# Run component tests
 npx cypress run --component
+npx cypress run --env apiUrl=http://localhost:4000
 ```
 
 ---
 
-## Troubleshooting Common Issues
+## Troubleshooting
 
-### Issue: Tests Are Flaky
-
-**Symptoms:** Tests pass sometimes and fail other times without code changes.
-
-**Common Causes:**
-
-1. Using `cy.wait(ms)` with fixed delays
-2. Race conditions in async operations
-3. Tests sharing state via variables
-4. External API reliability issues
-
-**Solutions:**
-
-- Replace `cy.wait(ms)` with `cy.wait("@alias")` using cy.intercept()
-- Use `should()` assertions that retry automatically
-- Ensure test isolation (each it() independent)
-- Mock external APIs with cy.intercept()
-
-### Issue: Selectors Not Finding Elements
-
-**Symptoms:** `Timed out retrying: Expected to find element` errors.
-
-**Common Causes:**
-
-1. Element not visible (hidden, loading)
-2. Element inside iframe
-3. Wrong selector strategy
-4. Element rendered conditionally
-
-**Solutions:**
-
-- Verify element exists with Cypress Test Runner
-- For iframes, use `cy.iframe()` plugin
-- Check if element is conditionally rendered
-- Use more specific selectors with data-cy
-
-### Issue: CI Tests Fail But Local Pass
-
-**Symptoms:** Tests work locally but fail in GitHub Actions.
-
-**Common Causes:**
-
-1. Timing differences (CI is slower)
-2. Missing environment variables
-3. Browser differences
-4. Database/API state differences
-
-**Solutions:**
-
-- Increase timeouts for CI: `defaultCommandTimeout: 10000`
-- Use retries: `retries: { runMode: 2, openMode: 0 }`
-- Mock APIs in CI for determinism
-- Seed database in beforeEach
+| Symptom                                        | Usually                                               | Try                                                                                                             |
+| ---------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Passes sometimes, fails otherwise              | `cy.wait(ms)`, or state shared between specs          | Wait on an intercept alias; reset in `beforeEach`; stub external APIs                                           |
+| `Timed out retrying: expected to find element` | Element hidden, conditional, or inside an iframe      | Check it renders at all; scope with `.within()`; use an iframe helper for iframes                               |
+| Value read from a command is `undefined`       | The command had not run yet                           | `.then()` or an alias — see [core.md](examples/core.md) Pattern 5                                               |
+| Green locally, red in CI                       | Slower machine, missing env values, different browser | Raise `defaultCommandTimeout` under CI, enable `retries.runMode`, stub external APIs, seed data in `beforeEach` |

@@ -3,139 +3,137 @@ name: web-mocks-msw
 description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
 ---
 
-# API Mocking with MSW
+# MSW Patterns
 
-> **Quick Guide:** Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Separate mock data from handlers for reusability. Type-safe using your API's generated types. Use `setupWorker` (browser) and `setupServer` (Node) -- never swap them.
+> **Quick Guide:** MSW intercepts requests at the network layer, so application code never learns it is mocked. One handler set serves both environments — `setupWorker` from `msw/browser` in development, `setupServer` from `msw/node` in tests — and the two are not interchangeable. Keep response bodies in their own module so each variant (default, empty, error) is reusable and typed against your API's generated types.
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Mock data, variant handlers, server worker, per-test overrides, runtime switching, network simulation
-- [examples/browser.md](examples/browser.md) - Browser worker setup, SPA/SSR integration
-- [reference.md](reference.md) - Decision frameworks, red flags, anti-patterns
+- [examples/core.md](examples/core.md) — mock data modules, variant handlers, server setup and test lifecycle, per-test overrides, runtime variant switching, simulated latency
+- [examples/browser.md](examples/browser.md) — browser worker setup and app integration for client-rendered and server-rendered entry points
+
+---
+
+## Which path applies
+
+Handlers are shared; only the setup module and the lifecycle differ.
+
+- **Browser, during development** — `setupWorker` from `msw/browser`, awaited before the app renders, with runtime variant switching to walk the UI through its states. Follow [examples/browser.md](examples/browser.md).
+- **Node, in tests** — `setupServer` from `msw/node`, listening for the suite and reset between tests, with `server.use()` for one-test overrides. Follow [examples/core.md](examples/core.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing MSW code
 
-**(You MUST separate mock data from handlers - handlers in `handlers/`, data in `mocks/`)**
+**Match the setup function to the environment.** `setupWorker` needs service worker APIs and `setupServer` patches Node's request layer, so each fails in the other with an error that names a missing global rather than the swap.
 
-**(You MUST use `setupWorker` for browser/development and `setupServer` for Node/tests - NEVER swap them)**
+**Reset handlers in `afterEach` with `server.resetHandlers()`**, so a `server.use()` override cannot decide the outcome of the next test.
 
-**(You MUST reset handlers after each test with `server.resetHandlers()` in `afterEach`)**
+**Await `worker.start()` before rendering.** Requests fired before the worker is ready reach the real network, which makes the first render of a suite intermittently different from the rest.
 
-**(You MUST use named constants for HTTP status codes and delays - NO magic numbers)**
+**Keep response bodies in their own module**, typed against your API's generated types — one fixture then serves several handlers, and a schema change fails at compile time instead of inside an assertion.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** MSW, msw, mock handlers, mock data, API mocking, setupWorker, setupServer, http.get, HttpResponse
+**Auto-detection:** msw, setupWorker, setupServer, msw/browser, msw/node, http.get, http.all, HttpResponse.json, server.use, resetHandlers, onUnhandledRequest, mockServiceWorker.js, delay()
 
-**When to use:**
+**Applies to:**
 
-- Mocking API responses during development before backend is ready
-- Testing different API scenarios (success, empty, error states)
-- Sharing the same mock definitions between browser dev and Node test environments
-- Simulating network conditions (latency, timeouts)
-- Per-test handler overrides for isolated test scenarios
+- Mocking HTTP responses in development before the backend exists
+- Exercising empty, error and slow responses without changing application code
+- Sharing one handler set between a dev server and a test suite
+- Overriding a single endpoint for a single test
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Integration tests needing real backend validation (use a test database)
-- Production builds (MSW should never ship to production)
-- Pure function unit tests with no network calls
-- Testing actual network failure modes (use test containers)
-
-**Key patterns covered:**
-
-- Handler/data separation for reusability and type safety
-- Variant-based handlers (default, empty, error scenarios)
-- Browser worker for development, server worker for tests
-- Per-test handler overrides with `server.use()`
-- Runtime variant switching for UI development
+- Test runner configuration and lifecycle hooks — this skill says what goes inside `beforeAll` and `afterEach`, not which runner provides them
+- Rendering components and querying the result
+- Integration against a real backend, where the server's own behaviour is the thing under test
 
 ---
 
 <philosophy>
 
-## Philosophy
+MSW mocks the network, not the code that calls it. Nothing in the application is injected, wrapped or swapped, so what runs in a test is what runs in production — and the same handlers can drive a dev server, a test suite and a demo build.
 
-MSW intercepts network requests at the service worker (browser) or class extension (Node) level, providing realistic API mocking without changing application code. Keep mock data separate from handlers for reusability, type handlers against your generated API types, and organize handlers by domain/feature.
+That only holds while the handler set stays a description of the API rather than of one test's needs. Data lives in fixtures, handlers pick a fixture, and anything a single test needs differently arrives through an override that is thrown away afterwards.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which mechanism for changing a response
+
+| You want                                | Use                                                      |
+| --------------------------------------- | -------------------------------------------------------- |
+| A scenario several tests share          | A named variant handler exported beside the default      |
+| One test to see something different     | `server.use(variant())` — discarded by `resetHandlers()` |
+| To flip states by hand while developing | A variant map the default handler reads at request time  |
+| A response the code under test waits on | `delay(ms)` with an explicit duration                    |
+
+Runtime variant switching belongs to development only. In a test it is shared mutable state that survives the test that set it, where `server.use()` is scoped and self-cleaning.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Separate Mock Data from Handlers
+### Pattern 1: Response Bodies in Their Own Module
 
-Define mock data as typed constants separate from MSW handlers. This enables type safety from your generated API types and reusability across handlers.
+Fixtures live apart from handlers, typed against the API's generated types, so one body serves several handlers and a schema change surfaces as a type error.
 
 ```typescript
 // mocks/features.ts
 import type { GetFeaturesResponse } from "./api-types";
 
 export const defaultFeatures: GetFeaturesResponse = {
-  features: [
-    { id: "1", name: "Dark mode", status: "done" },
-    { id: "2", name: "Auth", status: "in progress" },
-  ],
+  features: [{ id: "1", name: "Dark mode", status: "done" }],
 };
 
 export const emptyFeatures: GetFeaturesResponse = { features: [] };
 ```
 
-For full variant handler examples, see [examples/core.md](examples/core.md).
+Data genuinely specific to one test stays inline in that test.
 
-**When not to use:** When mock data is truly one-off and specific to a single test case (use inline data in the test instead).
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Handlers with Variant Switching
+### Pattern 2: Variant Handlers
 
-Create handlers that support multiple response scenarios (default, empty, error) with runtime switching for development and explicit overrides for testing.
+Export the default handler and each alternative scenario from one module, so tests and the dev server pick a variant by name.
 
 ```typescript
 import { http, HttpResponse } from "msw";
 
-const API_ENDPOINT = "api/v1/features";
-const HTTP_STATUS_OK = 200;
-const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
-
 export const getFeaturesHandlers = {
   defaultHandler: () =>
-    http.get(API_ENDPOINT, () =>
-      HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK }),
-    ),
+    http.get(ENDPOINT, () => HttpResponse.json(defaultFeatures)),
   emptyHandler: () =>
-    http.get(API_ENDPOINT, () =>
-      HttpResponse.json(emptyFeatures, { status: HTTP_STATUS_OK }),
-    ),
+    http.get(ENDPOINT, () => HttpResponse.json(emptyFeatures)),
   errorHandler: () =>
-    http.get(
-      API_ENDPOINT,
-      () =>
-        new HttpResponse("Server error", {
-          status: HTTP_STATUS_INTERNAL_SERVER_ERROR,
-        }),
-    ),
+    http.get(ENDPOINT, () => new HttpResponse("Server error", { status: 500 })),
 };
 ```
 
-For full implementation with runtime switching, see [examples/core.md](examples/core.md).
+`HttpResponse.json` sets the JSON content type and answers 200 unless `init.status` says otherwise, so only the error variant states a code. A non-JSON body — plain text, an empty error — goes through `new HttpResponse(body, init)`.
+
+Full code, including a default handler that reads a variant map at request time: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Browser Worker (Development) vs Server Worker (Tests)
+### Pattern 3: One Handler Set, Two Setups
 
-- Use `setupWorker` from `msw/browser` for browser/development
-- Use `setupServer` from `msw/node` for Node/tests
-- **Never swap them** -- `setupWorker` needs service worker APIs, `setupServer` needs Node APIs
+The handler array is shared; the module that consumes it is chosen by environment.
 
 ```typescript
 // browser-worker.ts
@@ -147,23 +145,26 @@ import { setupServer } from "msw/node";
 export const server = setupServer(...handlers);
 ```
 
-For browser app integration (SPA and SSR), see [examples/browser.md](examples/browser.md).
+Full code, with app integration: [examples/browser.md](examples/browser.md)
 
 ---
 
-### Pattern 4: Test Lifecycle
+### Pattern 4: Test Lifecycle and Per-Test Overrides
 
-Always follow this lifecycle to prevent test pollution:
+Listen once, reset between tests, close at the end. `server.use()` prepends a handler that `resetHandlers()` then removes.
 
 ```typescript
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
+
+it("renders the empty state", async () => {
+  server.use(getFeaturesHandlers.emptyHandler());
+  renderApp();
+});
 ```
 
-Use `server.use()` for per-test overrides -- they are automatically cleaned up by `resetHandlers()`.
-
-For per-test override examples, see [examples/core.md](examples/core.md).
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -171,40 +172,22 @@ For per-test override examples, see [examples/core.md](examples/core.md).
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-- ❌ Using `setupWorker` in Node tests or `setupServer` in browser -- wrong API for environment causes cryptic failures
-- ❌ Not resetting handlers between tests (`afterEach(() => server.resetHandlers())`) -- causes test pollution
-- ❌ Mixing handlers and mock data in same file -- reduces reusability and type safety
-- ❌ Missing `await` when starting browser worker before render -- race conditions cause intermittent failures
-- ⚠️ Only testing happy path (no empty/error variants) -- incomplete coverage
-- ⚠️ No `onUnhandledRequest` configuration -- unclear which requests are mocked vs real
+**Breaks at runtime:**
 
-**Gotchas & Edge Cases:**
+- `setupServer` in a browser bundle, or `setupWorker` in Node — the error names a missing global, so it reads as an environment problem rather than a swapped import
+- `worker.start()` without `await` — the first requests race the worker and reach the real network, which shows up as an intermittent failure in whichever spec runs first
+- A top-level import of the browser worker in a server-rendered entry point — service worker code lands in the server bundle and the build fails; import it dynamically behind a `typeof window` check
+- No `resetHandlers()` in `afterEach` — an override outlives its test, so a suite passes alone and fails in a different order
+- A `worker.start()` that is not behind an environment guard — the service worker registers in the production bundle and real users are served fixtures
 
-- `delay()` with no arguments is automatically negated in Node.js -- use explicit duration if you need delay in tests
-- Handler overrides via `server.use()` persist until `resetHandlers()` -- they do NOT auto-reset between tests
-- `http.all()` matches any HTTP method on a path -- convenient but can mask bugs if overused
-- Dynamic imports are required for browser worker in SSR frameworks to avoid server bundling issues
+**Surprising behaviour:**
 
-See [reference.md](reference.md) for detailed anti-pattern examples.
+- `delay()` with no argument is a random 100–400ms wait in the browser and is negated in Node, so a test that needs a pause has to pass an explicit duration
+- `server.use()` overrides persist until `resetHandlers()`; they do not expire when the test that added them ends
+- `http.all()` matches every method on a path, so a request sent with the wrong verb still gets a successful response
+- `once: true` makes a handler match a single request and then stop, which is what sequential responses need and what makes a later request fall through unnoticed
+- Without `onUnhandledRequest` on `start`/`listen`, a request nobody wrote a handler for passes through quietly, so a missing mock looks like a backend fault — it takes `"bypass"`, `"warn"` or `"error"`, which is the difference between silent, noisy and fatal
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-**(You MUST separate mock data from handlers - handlers in `handlers/`, data in `mocks/`)**
-
-**(You MUST use `setupWorker` for browser/development and `setupServer` for Node/tests - NEVER swap them)**
-
-**(You MUST reset handlers after each test with `server.resetHandlers()` in `afterEach`)**
-
-**(You MUST use named constants for HTTP status codes and delays - NO magic numbers)**
-
-**Failure to follow these rules will cause test pollution, environment-specific failures, and hard-to-debug race conditions.**
-
-</critical_reminders>

@@ -1,36 +1,25 @@
 # React Testing Library - Hook Testing Examples
 
-> Testing custom hooks with renderHook. Reference from [SKILL.md](../SKILL.md).
+> `renderHook`, `rerender`, `unmount`, wrappers, and hooks that throw. See [custom-render.md](custom-render.md) for the provider wrapper these reuse.
+
+> `fn()` and `spyOn()` below stand for your test runner's mock-function and spy factories.
 
 ---
 
-## Basic Hook Testing
+## Reading and updating hook state
 
 ```typescript
-// Good Example - Testing custom hooks
 import { renderHook, act } from "@testing-library/react";
 import { useCounter } from "./use-counter";
 
-const INITIAL_COUNT = 0;
-const CUSTOM_INITIAL = 10;
-const CUSTOM_STEP = 5;
-
 describe("useCounter", () => {
-  test("initializes with default value", () => {
-    const { result } = renderHook(() => useCounter());
+  test("initializes with the given value", () => {
+    const { result } = renderHook(() => useCounter(10));
 
-    expect(result.current.count).toBe(INITIAL_COUNT);
-    expect(typeof result.current.increment).toBe("function");
-    expect(typeof result.current.decrement).toBe("function");
+    expect(result.current.count).toBe(10);
   });
 
-  test("initializes with custom value", () => {
-    const { result } = renderHook(() => useCounter(CUSTOM_INITIAL));
-
-    expect(result.current.count).toBe(CUSTOM_INITIAL);
-  });
-
-  test("increments count", () => {
+  test("increments", () => {
     const { result } = renderHook(() => useCounter());
 
     act(() => {
@@ -40,112 +29,87 @@ describe("useCounter", () => {
     expect(result.current.count).toBe(1);
   });
 
-  test("decrements count", () => {
-    const { result } = renderHook(() => useCounter(CUSTOM_INITIAL));
-
-    act(() => {
-      result.current.decrement();
-    });
-
-    expect(result.current.count).toBe(CUSTOM_INITIAL - 1);
-  });
-
-  test("respects custom step", () => {
-    const { result } = renderHook(() =>
-      useCounter(INITIAL_COUNT, { step: CUSTOM_STEP }),
-    );
+  test("respects a custom step", () => {
+    const { result } = renderHook(() => useCounter(0, { step: 5 }));
 
     act(() => {
       result.current.increment();
     });
 
-    expect(result.current.count).toBe(CUSTOM_STEP);
+    expect(result.current.count).toBe(5);
   });
 });
 ```
 
-**Why good:** Uses act() for state updates, accesses result.current for current value, tests initialization and interactions separately
+**Why good:** state updates go through `act`, so React has flushed by the time `result.current` is read. Reading `result.current` fresh after each update matters — it is a getter onto the latest render, and a value copied into a local before the `act` is the old one.
 
 ---
 
-## Hook with Rerender and Unmount
+## rerender and unmount
 
 ```typescript
-// Good Example - Testing hook lifecycle
 import { renderHook, act } from "@testing-library/react";
 import { useLocalStorage } from "./use-local-storage";
-
-const STORAGE_KEY = "test-key";
-const INITIAL_VALUE = "initial";
-const UPDATED_VALUE = "updated";
 
 describe("useLocalStorage", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  test("initializes from localStorage", () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(UPDATED_VALUE));
+  test("reads an existing value", () => {
+    localStorage.setItem("draft", JSON.stringify("saved"));
 
-    const { result } = renderHook(() =>
-      useLocalStorage(STORAGE_KEY, INITIAL_VALUE),
-    );
+    const { result } = renderHook(() => useLocalStorage("draft", "initial"));
 
-    expect(result.current[0]).toBe(UPDATED_VALUE);
+    expect(result.current[0]).toBe("saved");
   });
 
-  test("updates localStorage on change", () => {
-    const { result } = renderHook(() =>
-      useLocalStorage(STORAGE_KEY, INITIAL_VALUE),
-    );
+  test("writes through on change", () => {
+    const { result } = renderHook(() => useLocalStorage("draft", "initial"));
 
     act(() => {
-      result.current[1](UPDATED_VALUE);
+      result.current[1]("updated");
     });
 
-    expect(localStorage.getItem(STORAGE_KEY)).toBe(
-      JSON.stringify(UPDATED_VALUE),
-    );
-    expect(result.current[0]).toBe(UPDATED_VALUE);
+    expect(localStorage.getItem("draft")).toBe(JSON.stringify("updated"));
+    expect(result.current[0]).toBe("updated");
   });
 
-  test("responds to key changes on rerender", () => {
+  test("re-reads when the key prop changes", () => {
     const { result, rerender } = renderHook(
-      ({ key }) => useLocalStorage(key, INITIAL_VALUE),
-      { initialProps: { key: STORAGE_KEY } },
+      ({ key }) => useLocalStorage(key, "initial"),
+      { initialProps: { key: "draft" } },
     );
 
-    expect(result.current[0]).toBe(INITIAL_VALUE);
+    expect(result.current[0]).toBe("initial");
 
-    // Change the key
-    localStorage.setItem("other-key", JSON.stringify(UPDATED_VALUE));
-    rerender({ key: "other-key" });
+    localStorage.setItem("other", JSON.stringify("updated"));
+    rerender({ key: "other" }); // same hook instance, new props
 
-    expect(result.current[0]).toBe(UPDATED_VALUE);
+    expect(result.current[0]).toBe("updated");
   });
 
-  test("cleans up on unmount", () => {
-    const { result, unmount } = renderHook(() =>
-      useLocalStorage(STORAGE_KEY, INITIAL_VALUE),
-    );
+  test("detaches its storage listener on unmount", () => {
+    const removeListener = spyOn(window, "removeEventListener");
+    const { unmount } = renderHook(() => useLocalStorage("draft", "initial"));
 
-    // Unmount to trigger cleanup
     unmount();
 
-    // Verify cleanup behavior (depends on hook implementation)
-    // This is where you'd test any cleanup effects
+    expect(removeListener).toHaveBeenCalledWith(
+      "storage",
+      expect.any(Function),
+    );
   });
 });
 ```
 
-**Why good:** Tests rerender with changing props, tests unmount behavior, uses act() for all state updates
+**Why good:** `rerender` keeps the hook mounted, so this covers the props-changed path rather than a fresh mount that would pass regardless. The unmount test asserts on something observable outside the hook — a cleanup test that only calls `unmount()` and asserts nothing is a test of nothing.
 
 ---
 
-## Hook with Context Provider
+## Hooks that need context
 
 ```typescript
-// Good Example - Hook requiring context
 import { renderHook, act } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { useAuth, AuthProvider } from "./auth-context";
@@ -157,85 +121,48 @@ describe("useAuth", () => {
     <AuthProvider>{children}</AuthProvider>
   );
 
-  test("provides authentication state", () => {
+  test("starts unauthenticated", () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  test("handles login", async () => {
+  test("logs in", async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await act(async () => {
-      await result.current.login(MOCK_USER);
+      await result.current.login(MOCK_USER); // async act, for an async transition
     });
 
     expect(result.current.user).toEqual(MOCK_USER);
     expect(result.current.isAuthenticated).toBe(true);
   });
-
-  test("handles logout", async () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-
-    // Login first
-    await act(async () => {
-      await result.current.login(MOCK_USER);
-    });
-
-    // Then logout
-    await act(async () => {
-      await result.current.logout();
-    });
-
-    expect(result.current.user).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-  });
 });
 ```
 
-**Why good:** Wraps hook with required context provider, uses async act() for async operations, tests the hook's public API
-
 ---
 
-## Hook That Throws Errors
+## Hooks that throw
 
 ```typescript
-// Good Example - Testing hooks that throw
 import { renderHook } from "@testing-library/react";
 import { useRequiredContext } from "./use-required-context";
 
-const ERROR_MESSAGE = "useRequiredContext must be used within Provider";
+test("throws outside its provider", () => {
+  // React logs the error before rethrowing; silence it so the run stays readable
+  const consoleError = spyOn(console, "error").mockImplementation(() => {});
 
-describe("useRequiredContext", () => {
-  test("throws when used outside provider", () => {
-    // Suppress console.error for expected error
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  expect(() => renderHook(() => useRequiredContext())).toThrow(
+    "useRequiredContext must be used within Provider",
+  );
 
-    expect(() => {
-      renderHook(() => useRequiredContext());
-    }).toThrow(ERROR_MESSAGE);
-
-    consoleSpy.mockRestore();
-  });
-
-  test("works within provider", () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <RequiredProvider>{children}</RequiredProvider>
-    );
-
-    const { result } = renderHook(() => useRequiredContext(), { wrapper });
-
-    expect(result.current).toBeDefined();
-  });
+  consoleError.mockRestore();
 });
 ```
 
-**Why good:** Tests error cases by wrapping renderHook in expect().toThrow(), suppresses expected console errors for cleaner test output
+**Why good:** the guard clause is the hook's contract, so it deserves a test. Restoring the console spy afterwards keeps a genuine error in a later test visible.
 
 ---
 
-_For more patterns, see:_
-
-- [custom-render.md](custom-render.md) - Custom render with providers
-- [async-testing.md](async-testing.md) - Async utilities
+_Next: [accessibility.md](accessibility.md), or back to [core.md](core.md)._
