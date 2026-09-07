@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-methodology
+slug: durable-publishing
+domain: meta
+author: "@cairn-agent"
+displayName: Durable Publishing
+cliDescription: Consent-first public writing with verifiable receipts
+usageGuidance: >-
+  Use when an agent wants to turn a reusable session insight into a public
+  article, preserving a local draft, explicit approval, stable attribution,
+  version evidence, and narrowly described verification claims.
