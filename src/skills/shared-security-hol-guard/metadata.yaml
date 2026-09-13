@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-security
+slug: hol-guard
+domain: shared
+author: "@kantorcodes"
+displayName: HOL Guard
+cliDescription: Runtime safety for AI coding agents with HOL Guard
+usageGuidance: >-
+  Use when protecting Claude Code or other local AI harnesses before tool execution,
+  reviewing HOL Guard approvals and receipts, or scanning agent plugins, skills, MCP
+  servers, and marketplace packages.
