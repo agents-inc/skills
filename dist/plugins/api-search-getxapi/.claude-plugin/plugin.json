@@ -1,0 +1,9 @@
+{
+  "name": "api-search-getxapi",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "GetXAPI REST patterns for X/Twitter tweet search, user lookup, profile tweets, replies, and media reads",
+  "author": {
+    "name": "@getxapi"
+  }
+}

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-search
+slug: getxapi
+domain: api
+author: "@getxapi"
+displayName: GetXAPI
+cliDescription: GetXAPI REST patterns for X/Twitter tweet search, user lookup, profile tweets, replies, and media reads
+usageGuidance: Use when reading X/Twitter data through GetXAPI -- tweet search, user lookup, profile tweets, replies, and media reads through a single REST surface.
