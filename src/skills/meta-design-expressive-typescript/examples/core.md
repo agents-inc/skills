@@ -1,96 +1,79 @@
-# Expressive TypeScript - Core Patterns
+# Expressive TypeScript — Core Examples
 
-> Two-tier orchestrator pattern, guard clauses, named predicates, named constants, discriminated unions, async orchestrators, and pure function extraction. See [SKILL.md](../SKILL.md) for decision frameworks and [reference.md](../reference.md) for quick lookup tables.
+> Full code for Patterns 1–6 in [SKILL.md](../SKILL.md). Pattern 7, collection operations, is in [data-transforms.md](data-transforms.md); what each compiler check needs is in [reference.md](../reference.md).
 
 ---
 
-## The Two-Tier Pattern: Before/After
+## Pattern 1: Orchestrator Over Pure Functions
 
-### Before: Mixed-Concern Function
-
-This function validates, transforms, deduplicates, and assembles results -- all inline. A reader must simulate every step to understand the flow.
+### Before — parsing, deduplicating, counting and formatting in one loop
 
 ```typescript
 function processDiffOutput(rawDiff: string): DiffSummary {
-  const lines = rawDiff.split("\n");
-  const changes: FileChange[] = [];
-  let currentFile: string | null = null;
+  const files: string[] = [];
   let additions = 0;
   let deletions = 0;
 
-  for (const line of lines) {
+  for (const line of rawDiff.split("\n")) {
     if (line.startsWith("diff --git")) {
-      const match = line.match(/b\/(.+)$/);
-      if (match) currentFile = match[1];
+      const file = line.match(/ b\/(.+)$/)?.[1];
+      if (file && !files.includes(file)) files.push(file);
     } else if (line.startsWith("+") && !line.startsWith("+++")) {
       additions++;
-      if (currentFile && !changes.some((c) => c.file === currentFile)) {
-        changes.push({ file: currentFile, type: "modified" });
-      }
     } else if (line.startsWith("-") && !line.startsWith("---")) {
       deletions++;
     }
   }
 
-  const summary = changes
-    .map((c) => `  ${c.type === "modified" ? "M" : "?"} ${c.file}`)
-    .join("\n");
-
-  return {
-    changes,
-    additions,
-    deletions,
-    summary,
-    hasChanges: changes.length > 0,
-  };
+  const summary = files.map((file) => `  M ${file}`).join("\n");
+  return { files, additions, deletions, summary };
 }
 ```
 
-**Why bad:** Guard logic, parsing, counting, deduplication, and formatting are all interleaved. To understand what this function produces, you must trace through the loop line by line.
+**Why bad:** Four jobs share one loop and three mutable variables, so learning what the function returns means tracing the loop line by line.
 
-### After: Two-Tier Decomposition
+### After — an orchestrator over named steps
 
 ```typescript
-// ORCHESTRATOR: reads like a plan
-function processDiffOutput(rawDiff: string): DiffSummary {
-  const lines = rawDiff.split("\n");
-  if (!lines.length) return EMPTY_DIFF_SUMMARY;
+type FileHeaderLine = { readonly kind: "file-header"; readonly file: string };
 
-  const parsedLines = lines.map(parseDiffLine);
-  const fileChanges = extractUniqueFileChanges(parsedLines);
-  const counts = countAdditionsAndDeletions(parsedLines);
+type DiffLine =
+  | FileHeaderLine
+  | { readonly kind: "addition" | "deletion" | "context" };
 
-  return {
-    changes: fileChanges,
-    ...counts,
-    summary: formatChangeSummary(fileChanges),
-    hasChanges: fileChanges.length > 0,
-  };
-}
-
-// PURE FUNCTIONS: each does one thing
-
-interface ParsedDiffLine {
-  readonly type: "file-header" | "addition" | "deletion" | "context";
-  readonly file?: string;
-}
+const FILE_HEADER_PATH = / b\/(.+)$/;
 
 const EMPTY_DIFF_SUMMARY: DiffSummary = {
-  changes: [],
+  files: [],
   additions: 0,
   deletions: 0,
   summary: "",
-  hasChanges: false,
 };
 
-function parseDiffLine(line: string): ParsedDiffLine {
-  if (line.startsWith("diff --git")) {
-    const match = line.match(/b\/(.+)$/);
-    return { type: "file-header", file: match?.[1] };
-  }
-  if (isContentAddition(line)) return { type: "addition" };
-  if (isContentDeletion(line)) return { type: "deletion" };
-  return { type: "context" };
+function processDiffOutput(rawDiff: string): DiffSummary {
+  if (rawDiff.trim() === "") return EMPTY_DIFF_SUMMARY;
+
+  const diffLines = rawDiff.split("\n").map(parseDiffLine);
+  const files = listChangedFiles(diffLines);
+
+  return {
+    files,
+    additions: countLinesOfKind(diffLines, "addition"),
+    deletions: countLinesOfKind(diffLines, "deletion"),
+    summary: formatFileList(files),
+  };
+}
+
+function parseDiffLine(line: string): DiffLine {
+  if (line.startsWith("diff --git")) return parseFileHeader(line);
+  if (isContentAddition(line)) return { kind: "addition" };
+  if (isContentDeletion(line)) return { kind: "deletion" };
+  return { kind: "context" };
+}
+
+function parseFileHeader(line: string): DiffLine {
+  const file = line.match(FILE_HEADER_PATH)?.[1];
+  return file ? { kind: "file-header", file } : { kind: "context" };
 }
 
 function isContentAddition(line: string): boolean {
@@ -101,178 +84,61 @@ function isContentDeletion(line: string): boolean {
   return line.startsWith("-") && !line.startsWith("---");
 }
 
-function extractUniqueFileChanges(lines: ParsedDiffLine[]): FileChange[] {
+function listChangedFiles(lines: readonly DiffLine[]): string[] {
+  const headers = lines.filter(isFileHeader);
+  return [...new Set(headers.map((header) => header.file))];
+}
+
+function isFileHeader(line: DiffLine): line is FileHeaderLine {
+  return line.kind === "file-header";
+}
+
+function countLinesOfKind(
+  lines: readonly DiffLine[],
+  kind: DiffLine["kind"],
+): number {
+  return lines.filter((line) => line.kind === kind).length;
+}
+
+function formatFileList(files: readonly string[]): string {
+  return files.map((file) => `  M ${file}`).join("\n");
+}
+```
+
+**Why good:** The orchestrator reads as its plan — parse each line, list the changed files, count additions and deletions, format the list — and returns the same summary as the loop. Each helper takes its input as an argument, so each is tested with a literal. The helpers sit below the orchestrator as `function` declarations, which are hoisted, so their position never matters; only the constants have to be declared before the first call.
+
+### The helpers behind `processUserImport`
+
+The orchestrator in [SKILL.md](../SKILL.md#pattern-1-orchestrator-over-pure-functions) calls these:
+
+```typescript
+function isValidUser(user: RawUser): boolean {
+  return user.email.includes("@") && user.name.trim().length > 0;
+}
+
+function toUserRecord(user: RawUser): NormalizedUser {
+  return {
+    email: user.email.toLowerCase().trim(),
+    name: user.name.trim(),
+    role: user.role ?? DEFAULT_ROLE,
+  };
+}
+
+function removeDuplicatesByEmail(users: NormalizedUser[]): NormalizedUser[] {
   const seen = new Set<string>();
-  const changes: FileChange[] = [];
-  for (const line of lines) {
-    if (line.file && !seen.has(line.file)) {
-      seen.add(line.file);
-      changes.push({ file: line.file, type: "modified" });
-    }
-  }
-  return changes;
-}
-
-function countAdditionsAndDeletions(lines: ParsedDiffLine[]): {
-  additions: number;
-  deletions: number;
-} {
-  let additions = 0;
-  let deletions = 0;
-  for (const line of lines) {
-    if (line.type === "addition") additions++;
-    if (line.type === "deletion") deletions++;
-  }
-  return { additions, deletions };
-}
-
-function formatChangeSummary(changes: FileChange[]): string {
-  return changes.map(formatSingleChange).join("\n");
-}
-
-function formatSingleChange(change: FileChange): string {
-  const prefix = change.type === "modified" ? "M" : "?";
-  return `  ${prefix} ${change.file}`;
-}
-```
-
-**Why good:** The orchestrator reads as: "parse lines, extract unique file changes, count additions/deletions, format summary." Each pure function has a single responsibility and can be tested independently. A reader understands the flow without reading any function body.
-
----
-
-## Named Predicates: Before/After
-
-### Before: Inline Complex Conditions
-
-```typescript
-// Requires simulation: what does this filter actually select?
-const relevantSkills = skills.filter(
-  (skill) =>
-    skill.category !== "deprecated" &&
-    skill.scope === currentScope &&
-    (skill.tags.includes(selectedTag) || selectedTag === "all"),
-);
-```
-
-### After: Named Predicate
-
-```typescript
-const relevantSkills = skills.filter(isRelevantForSelection);
-
-function isRelevantForSelection(skill: Skill): boolean {
-  if (skill.category === "deprecated") return false;
-  if (skill.scope !== currentScope) return false;
-  return selectedTag === "all" || skill.tags.includes(selectedTag);
-}
-```
-
-**Why good:** The filter's intent is immediately clear from `isRelevantForSelection`. The predicate body uses early-return guard clauses for each condition, making the logic scannable. Closure over `currentScope` and `selectedTag` is fine -- the predicate is defined in the same scope.
-
----
-
-### When a Predicate Needs Parameters
-
-When a predicate depends on runtime values, use a factory function or an explicit lambda:
-
-```typescript
-// Option A: factory function (reusable)
-function createScopeFilter(scope: string) {
-  return (skill: Skill): boolean => skill.scope === scope;
-}
-const inProjectScope = skills.filter(createScopeFilter("project"));
-
-// Option B: explicit lambda (one-off, clear enough)
-const inProjectScope = skills.filter((skill) => skill.scope === "project");
-```
-
-**When to choose:** If the predicate has complex logic or appears in multiple places, use the factory. If it is a single clear comparison, the inline lambda is fine.
-
----
-
-## Named Constants: Before/After
-
-### Before: Anonymous Test Fixtures
-
-```typescript
-describe("conflict detection", () => {
-  it("detects mutual conflicts", () => {
-    const matrix = createMockMatrix(
-      createMockSkill("react", {
-        conflictsWith: ["vue", "angular"],
-        requires: ["typescript"],
-      }),
-      createMockSkill("vue", {
-        conflictsWith: ["react"],
-      }),
-    );
-    // ... test body uses matrix
+  return users.filter((user) => {
+    if (seen.has(user.email)) return false;
+    seen.add(user.email);
+    return true;
   });
-});
-```
-
-**Why bad:** The reader must trace through the `createMockSkill` calls to understand what this test is checking. The fixture's purpose is hidden in its construction.
-
-### After: Named Constants
-
-```typescript
-const REACT_WITH_FRAMEWORK_CONFLICTS = createMockSkill("react", {
-  conflictsWith: ["vue", "angular"],
-  requires: ["typescript"],
-});
-
-const VUE_CONFLICTS_REACT = createMockSkill("vue", {
-  conflictsWith: ["react"],
-});
-
-describe("conflict detection", () => {
-  it("detects mutual conflicts", () => {
-    const matrix = createMockMatrix(
-      REACT_WITH_FRAMEWORK_CONFLICTS,
-      VUE_CONFLICTS_REACT,
-    );
-    // ... test body uses matrix
-  });
-});
-```
-
-**Why good:** The constant names encode the relevant characteristics. When reading the test, `REACT_WITH_FRAMEWORK_CONFLICTS` immediately communicates what matters about this fixture. The reader never needs to look at the construction.
-
----
-
-## Pure Function Extraction: Before/After
-
-### Before: Formatting Logic Mixed Into Orchestrator
-
-```typescript
-function generateReport(results: TestResult[]): string {
-  const passed = results.filter((r) => r.status === "passed");
-  const failed = results.filter((r) => r.status === "failed");
-
-  let report = `# Test Report\n\n`;
-  report += `**${passed.length}** passed, **${failed.length}** failed\n\n`;
-
-  if (failed.length > 0) {
-    report += `## Failures\n\n`;
-    for (const result of failed) {
-      report += `### ${result.name}\n\n`;
-      report += `**File:** ${result.file}:${result.line}\n`;
-      report += `**Expected:** ${result.expected}\n`;
-      report += `**Received:** ${result.received}\n\n`;
-    }
-  }
-
-  if (passed.length > 0) {
-    report += `## Passed\n\n`;
-    report += passed.map((r) => `- ${r.name}`).join("\n");
-  }
-
-  return report;
 }
 ```
 
-**Why bad:** String assembly, conditional sections, and iteration are all mixed together. The reader must simulate the entire function to know what the report looks like.
+**Why good:** Each does one thing, is named for it, and is tested with nothing but its arguments — no mocks, no state to set up first.
 
-### After: Orchestrator + Pure Functions
+### Optional sections, each from its own formatter
+
+A report built by appending to a string in `if` blocks becomes a list of sections, where each formatter returns `null` when it has nothing to say:
 
 ```typescript
 function generateReport(results: TestResult[]): string {
@@ -322,49 +188,107 @@ function formatPassedSection(passed: TestResult[]): string | null {
 }
 ```
 
-**Why good:** The orchestrator reads as: "partition results, format header, format failures, format passed, join sections." Each formatting function is independently testable and reusable. Adding a new section (e.g., "Skipped") means adding one function and one line in the orchestrator.
+**Why good:** Adding a "Skipped" section is one function and one line in the list; nothing else in the orchestrator moves.
 
 ---
 
-## The Thin Orchestrator Pattern
+## Pattern 2: Named Predicates, Transforms and Constants
 
-When orchestrators get too large, it usually means they are doing transformation work inline. The fix is to push more work into pure functions until the orchestrator is thin.
-
-### Symptom: Fat Orchestrator
+### Named predicate
 
 ```typescript
-function buildDashboard(config: Config): Dashboard {
-  // 30+ lines of mixed logic
-  const skills = loadSkills(config.source);
-  const filtered = skills.filter(/* inline complex logic */);
-  const mapped = filtered.map(/* inline complex transform */);
-  // ... more inline work ...
-  const grouped = mapped.reduce(/* inline grouping */);
-  // ... more inline assembly ...
-  return { sections: Object.entries(grouped).map(/* inline formatting */) };
+// Before: what does this select?
+const relevantSkills = skills.filter(
+  (skill) =>
+    skill.category !== "deprecated" &&
+    skill.scope === currentScope &&
+    (skill.tags.includes(selectedTag) || selectedTag === "all"),
+);
+```
+
+```typescript
+// After: the selection is passed in, not closed over
+const relevantSkills = skills.filter(isRelevantTo(selection));
+
+function isRelevantTo(selection: Selection): (skill: Skill) => boolean {
+  return (skill) => {
+    if (skill.category === "deprecated") return false;
+    if (skill.scope !== selection.scope) return false;
+    return selection.tag === "all" || skill.tags.includes(selection.tag);
+  };
 }
 ```
 
-### Fix: Push Logic Down
+**Why good:** The call reads as "skills relevant to the selection". Because the factory takes the selection as an argument, the predicate can live at the bottom of the file and be tested with a literal selection, and its body is one guard per condition.
+
+A single comparison stays inline — a factory for it would add a name the expression already carries:
 
 ```typescript
-function buildDashboard(config: Config): Dashboard {
-  const skills = loadSkills(config.source);
-  const displaySkills = selectDisplayableSkills(skills, config);
-  const grouped = groupBySection(displaySkills);
-  return assembleDashboard(grouped);
+const inProjectScope = skills.filter((skill) => skill.scope === "project");
+```
+
+### Named transform
+
+```typescript
+// Before: the ternary has to be run to see the two message shapes
+const message = results
+  .map((r) =>
+    r.success ? `  Installed ${r.name}` : `  Failed ${r.name}: ${r.error}`,
+  )
+  .join("\n");
+```
+
+```typescript
+// After
+const message = results.map(formatInstallResult).join("\n");
+
+function formatInstallResult(result: InstallResult): string {
+  if (result.success) return `  Installed ${result.name}`;
+  return `  Failed ${result.name}: ${result.error}`;
 }
 ```
 
-**Why good:** The orchestrator is four lines. Each line is a clear step. All complexity lives in testable pure functions below. If any step needs to change, you modify one focused function without touching the overall flow.
+**Why good:** The orchestrator line reads as "format each result, join with newlines". `formatInstallResult` takes exactly the element, so passing it by reference to `map` is safe.
+
+### Named constants
+
+```typescript
+// Before: the test's premise is buried in the construction
+const account = createAccount({
+  plan: "trial",
+  trialEndsAt: YESTERDAY,
+  seats: 3,
+});
+```
+
+```typescript
+// After: the name carries the one characteristic the test depends on
+const EXPIRED_TRIAL_ACCOUNT = createAccount({
+  plan: "trial",
+  trialEndsAt: YESTERDAY,
+  seats: 3,
+});
+```
+
+**Why good:** At the point of use — `canCheckOut(EXPIRED_TRIAL_ACCOUNT)` — the test states its premise without a scroll back to the construction, and `seats: 3` is visibly incidental because the name leaves it out.
+
+### When a name adds nothing
+
+```typescript
+// Already clear: a helper would only move one line
+const ids = skills.map((skill) => skill.id);
+const hasConflicts = conflicts.length > 0;
+const displayName = `${firstName} ${lastName}`;
+const isSelected = selectedIds.has(item.id);
+```
+
+**Why leave them:** `getIds`, `checkHasConflicts`, `buildDisplayName` or `isItemSelected(item, selectedIds)` would each be as long as the expression and say no more.
 
 ---
 
-## Guard Clauses: Before/After
+## Pattern 3: Guard Clauses
 
-Guard clauses are the most direct way to flatten deeply nested conditionals. Invert the condition, return early, and the rest of the function body is the happy path at zero nesting.
-
-### Before: The Arrow Anti-Pattern
+### Before: the arrow anti-pattern
 
 ```typescript
 function processOrder(order: Order, user: User): OrderResult {
@@ -402,9 +326,9 @@ function processOrder(order: Order, user: User): OrderResult {
 }
 ```
 
-**Why bad:** Five levels of nesting. The reader must maintain a mental stack of which conditions are true at any point. The happy path is buried at the deepest indentation level. Each `else` requires scrolling up to find which `if` it belongs to.
+**Why bad:** Five levels of nesting. The reader holds a stack of which conditions are true at each point, the happy path sits at the deepest indentation, and each `else` sends them scrolling up to find its `if`.
 
-### After: Guard Clauses
+### After: guard clauses
 
 ```typescript
 function processOrder(order: Order, user: User): OrderResult {
@@ -436,22 +360,20 @@ function calculateDiscount(user: User, total: number): number {
 }
 ```
 
-**Why good:** Every guard exits early at the top. The happy path flows straight down with zero nesting. A reader knows that by the time they reach `submitPayment`, all preconditions have been validated. The discount calculation is extracted to keep the orchestrator thin.
+**Why good:** Every guard exits at the top, so by `submitPayment` every precondition holds — and TypeScript has narrowed `user.paymentMethod` to match. The happy path runs straight down at zero nesting.
 
-### The Transformation Rule
-
-To convert any nested block to guard clauses:
+### The transformation rule
 
 1. Find the outermost `if` and its `else` return
-2. Invert: move the `else` body to the top as a guard, remove one nesting level
-3. Repeat until no `else` blocks remain
-4. The code remaining at the bottom is the happy path
+2. Invert it: move the `else` body to the top as a guard, and remove one nesting level
+3. Repeat until no `else` remains
+4. What is left at the bottom is the happy path
 
 ---
 
-## Discriminated Unions + Exhaustive Switch: Before/After
+## Pattern 4: Discriminated Unions With an Exhaustive Switch
 
-### Before: String-Based Status Checks
+### Before: string-based status checks
 
 ```typescript
 function handleApiResponse(response: {
@@ -470,9 +392,9 @@ function handleApiResponse(response: {
 }
 ```
 
-**Why bad:** The `status` is typed as `string`, so any typo compiles. New statuses can be added without updating this handler. The `data` and `error` fields are optional everywhere even though they only exist for specific statuses.
+**Why bad:** `status` is a `string`, so a typo compiles and a new status needs no handler. `data` and `error` are optional everywhere, though each exists for one status only.
 
-### After: Discriminated Union + Exhaustive Switch
+### After: discriminated union and exhaustive switch
 
 ```typescript
 type ApiResponse =
@@ -496,32 +418,37 @@ function handleApiResponse(response: ApiResponse): void {
       scheduleRetry(response.retryAfterMs);
       return;
     default: {
-      const _exhaustive: never = response;
-      return _exhaustive;
+      const unhandled: never = response;
+      return unhandled;
     }
   }
 }
 ```
 
-**Why good:** Each branch has access to exactly the fields that exist for that status -- no optional chaining needed. The `never` default guarantees exhaustive handling: adding a fifth status variant to `ApiResponse` causes a compile error here until the new case is added.
+**Why good:** Each branch sees exactly the fields its status carries. Adding a fifth variant fails at the `never` line with the variant's name in the error, until a case handles it — and because this handler returns `void`, that line is the only check it has.
 
-### When to Use Discriminated Unions
+### Values the types did not check
 
-- A value has a fixed set of states (API responses, form steps, task status)
-- Different states carry different data (success has `data`, error has `message`)
-- All states must be handled -- missing a case should be a compile error
+For a value asserted into the union rather than validated — parsed JSON cast to `ApiResponse`, say — end the switch with `default: return assertUnhandled(response);`:
 
-### When NOT to Use
+```typescript
+function assertUnhandled(value: never): never {
+  throw new Error(`Unhandled variant: ${JSON.stringify(value)}`);
+}
+```
 
-- A simple boolean (`isActive: true | false`) -- use a plain boolean
-- The set of variants changes frequently -- the compile errors become noise
-- The type only appears in one place -- the ceremony isn't worth it
+### When to reach for a union
+
+- A value has a fixed set of states, and different states carry different data
+- Every state must be handled, and a missed one should fail compilation
+
+Not for a plain yes/no, which a `boolean` says. Not for a type used in one place only, where declaring the union costs more ceremony than the narrowing saves. Not for an open set — codes a newer server may add — which wants a fallback branch rather than a `never` default that throws on the first value it has not seen.
 
 ---
 
-## Async Orchestrators: Before/After
+## Pattern 5: Async Orchestrators
 
-### Before: Mixed Async Concerns
+### Before: mixed async concerns
 
 ```typescript
 async function deployProject(config: DeployConfig): Promise<DeployResult> {
@@ -556,9 +483,9 @@ async function deployProject(config: DeployConfig): Promise<DeployResult> {
 }
 ```
 
-**Why bad:** File filtering, compilation, validation, and deployment are all in one function. Three independent checks (`lint`, `typeCheck`, `tests`) are awaited sequentially -- wasting time. The failure aggregation logic is inline.
+**Why bad:** Filtering, compiling, validating and deploying share one function. Three independent checks run one after another, so the wait is their sum, and the failure aggregation is inline.
 
-### After: Async Orchestrator + Named Steps
+### After: async orchestrator and named steps
 
 ```typescript
 async function deployProject(config: DeployConfig): Promise<DeployResult> {
@@ -581,8 +508,6 @@ async function deployProject(config: DeployConfig): Promise<DeployResult> {
   const { url } = await uploadToCloud(bundle, config.environment);
   return { status: "deployed", url };
 }
-
-// Pure async functions below
 
 async function findSourceFiles(sourceDir: string): Promise<string[]> {
   const files = await fs.readdir(sourceDir);
@@ -612,4 +537,32 @@ function collectFailures(...checks: CheckResult[]): string[] {
 }
 ```
 
-**Why good:** The orchestrator reads as a plan: find files, compile, validate, bundle, upload. Independent validation steps run in parallel via `Promise.all`, communicating to the reader that they don't depend on each other. Failure aggregation is a pure function. Each async helper has a single responsibility.
+**Why good:** The orchestrator reads as its plan: find files, compile, validate, bundle, upload. `Promise.all` tells the reader the three checks are independent, and the wait becomes the slowest check rather than all three.
+
+`Promise.all` fits here because each check reports failure by resolving with `passed: false` rather than by rejecting.
+
+---
+
+## Pattern 6: `as const satisfies` for Configuration
+
+```typescript
+interface RouteConfig {
+  path: string;
+  auth: boolean;
+}
+
+// Annotated: any string is a key, and every path widens to `string`
+const ANNOTATED_ROUTES: Record<string, RouteConfig> = {
+  home: { path: "/", auth: false },
+};
+
+// Checked and kept: the shape is enforced, the keys and literals survive
+const ROUTES = {
+  home: { path: "/", auth: false },
+  dashboard: { path: "/dashboard", auth: true },
+} as const satisfies Record<string, RouteConfig>;
+
+type RouteName = keyof typeof ROUTES; // "home" | "dashboard"
+```
+
+**Why good:** `ROUTES.dashbaord` fails to compile, where `ANNOTATED_ROUTES.dashbaord` compiles and is `undefined` at runtime. A misspelled field such as `{ pth: "/" }` fails against both, and `as const` on its own would accept it.

@@ -5,4 +5,4 @@ domain: meta
 author: "@vince"
 displayName: Expressive TypeScript
 cliDescription: Readable functional patterns and named abstractions
-usageGuidance: Use when writing or refactoring TypeScript functions, data transformations, store actions, or any code that mixes logic levels. Apply the orchestrator pattern and extract until the code reads like prose.
+usageGuidance: Use when writing or refactoring TypeScript functions, data transformations, store actions, or any code that mixes logic levels; when deciding whether an expression should be extracted and named; or when modelling a fixed set of states for exhaustive handling. Apply the orchestrator pattern and extract until the code reads like prose.

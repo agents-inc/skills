@@ -1,16 +1,14 @@
-# Expressive TypeScript - Data Transformation Patterns
+# Expressive TypeScript — Collection Operations
 
-> When to use plain JS, when utility libraries help, and how to keep data transformations readable. See [SKILL.md](../SKILL.md) for decision frameworks and [reference.md](../reference.md) for the use/don't-use table.
+> Full code for Pattern 7 in [SKILL.md](../SKILL.md). Orchestrators, predicates and guard clauses are in [core.md](core.md); what each compiler check needs is in [reference.md](../reference.md).
 
-**Prerequisites**: Understand the two-tier pattern, named abstractions, and the extraction decision framework from [core.md](core.md) first.
+Operations without a native method are imported below from `./collections`, a stand-in for whichever utility library or helper module the project already depends on. Names vary between libraries; the rule does not.
 
 ---
 
-## When Plain JS Is Enough
+## Pattern 7: Collection Operations Named for the Concept
 
-For single operations or two-step chains, plain JS array methods are already expressive. Adding a utility library adds dependency without improving clarity.
-
-### Single Transform
+### When one method already reads
 
 ```typescript
 // Already clear -- no utility needed
@@ -20,8 +18,6 @@ const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
 const firstAdmin = users.find((user) => user.role === "admin");
 ```
 
-### Two-Step Chain
-
 ```typescript
 // Two chained operations -- still clear without pipe()
 const activeNames = users
@@ -29,76 +25,62 @@ const activeNames = users
   .map((user) => user.displayName);
 ```
 
-**Why plain JS:** A reader fluent in JavaScript instantly understands these. Wrapping them in `pipe(users, filter(isActive), map(getName))` adds indirection and requires familiarity with the utility library's calling conventions.
+**Why plain JS:** A reader fluent in JavaScript reads these in one scan. `pipe(users, filter(isActive), map(getName))` says the same thing in a calling convention the reader also has to know.
 
----
-
-## When Utility Libraries Help
-
-Use utility functions when the **function name IS the documentation** -- when the utility name communicates intent more clearly than the equivalent manual implementation.
-
-### groupBy: Array to Keyed Groups
+### Grouping
 
 ```typescript
-// Before: manual reduce requires simulation
+// Before: the loop has to be traced to see that it groups
 const byCategory: Record<string, Skill[]> = {};
 for (const skill of skills) {
-  const cat = skill.category;
-  if (!byCategory[cat]) byCategory[cat] = [];
-  byCategory[cat].push(skill);
+  const category = skill.category;
+  if (!byCategory[category]) byCategory[category] = [];
+  byCategory[category].push(skill);
 }
 
-// After: intent is clear from the function name
-import { groupBy } from "remeda";
-
-const byCategory = groupBy(skills, (skill) => skill.category);
+// After: the operation is the name
+const byCategory = Object.groupBy(skills, (skill) => skill.category);
 ```
 
-**Why better:** `groupBy` is a universally understood concept. The manual version requires tracing the loop, the conditional initialization, and the push. The utility version reads as: "group skills by category."
+**Why better:** `Object.groupBy` names the operation and is native, so it adds no dependency.
 
----
-
-### countBy: Count Occurrences Per Category
+### Counting
 
 ```typescript
-// Before: manual counting loop
+// Before: a counting loop
 const statusCounts: Record<string, number> = {};
 for (const task of tasks) {
   const status = task.status;
   statusCounts[status] = (statusCounts[status] ?? 0) + 1;
 }
 
-// After: intent is clear
-import { countBy } from "remeda";
+// After
+import { countBy } from "./collections";
 
 const statusCounts = countBy(tasks, (task) => task.status);
 // => { active: 5, completed: 12, pending: 3 }
 ```
 
-**Why better:** `countBy` communicates "count occurrences per category" instantly. The manual loop requires understanding the null-coalescing initialization pattern.
+**Why better:** `countBy` says "occurrences per status" at once, where the loop asks the reader to decode the `?? 0` initialisation first.
 
----
-
-### difference: Set Subtraction
+### Difference
 
 ```typescript
-// Before: requires understanding the negation pattern
+// Before: the reader inverts the condition to see "in A, not in B"
 const newSkills = allSkills.filter((skill) => !installedSkills.includes(skill));
 
-// After: mathematical set operation, immediately understood
-import { difference } from "remeda";
+// After
+import { difference } from "./collections";
 
 const newSkills = difference(allSkills, installedSkills);
 ```
 
-**Why better:** `difference(a, b)` is the standard name for "items in A not in B." The filter-with-negated-includes pattern requires the reader to mentally invert the condition.
+**Why better:** `difference(a, b)` is the standard name for "items in A that are not in B". For two `Set`s the method is native: `allIds.difference(installedIds)`.
 
----
-
-### partition: Split Into Two Groups
+### Partitioning
 
 ```typescript
-// Before: two separate filter passes or manual push-to-two-arrays
+// Before: two arrays and an if/else to say "split by a predicate"
 const valid: Item[] = [];
 const invalid: Item[] = [];
 for (const item of items) {
@@ -109,65 +91,55 @@ for (const item of items) {
   }
 }
 
-// After: single pass, intent is clear
-import { partition } from "remeda";
+// After
+import { partition } from "./collections";
 
 const [valid, invalid] = partition(items, isValid);
 ```
 
-**Why better:** `partition` communicates "split into two groups based on a predicate" as a single concept. The manual version requires reading the loop, both arrays, and the if/else to understand the same thing.
-
----
-
-### indexBy: Array to Keyed Lookup
+### Indexing
 
 ```typescript
-// Before: manual reduce to build lookup
+// Before: a reduce to build a lookup
 const skillById = skills.reduce<Record<string, Skill>>((acc, skill) => {
   acc[skill.id] = skill;
   return acc;
 }, {});
 
-// After: intent is clear
-import { indexBy } from "remeda";
+// After
+import { indexBy } from "./collections";
 
 const skillById = indexBy(skills, (skill) => skill.id);
 ```
 
-**Why better:** `indexBy` communicates "create a lookup keyed by this field." The reduce version requires understanding the accumulator pattern, the explicit type annotation, and the mutation-then-return.
+**Why better:** The reduce asks the reader to follow the accumulator, the explicit type argument and the mutate-then-return; `indexBy` says "a lookup keyed by id".
 
----
-
-### mapValues: Transform Object Values
+### Mapping object values
 
 ```typescript
-// Before: verbose Object.entries/fromEntries dance
+// Before: the Object.entries / fromEntries round trip
 const uppercased = Object.fromEntries(
   Object.entries(config).map(([key, value]) => [key, value.toUpperCase()]),
 );
 
-// After: intent is clear
-import { mapValues } from "remeda";
+// After
+import { mapValues } from "./collections";
 
 const uppercased = mapValues(config, (value) => value.toUpperCase());
 ```
 
-**Why better:** `mapValues` communicates "apply a transform to every value in this object." The `Object.fromEntries(Object.entries(...).map(...))` pattern is a well-known JS idiom, but it requires parsing three levels of nesting.
-
----
-
-### sortBy: Multi-Key Sorting
+### Multi-key sorting
 
 ```typescript
-// Before: manual comparator with multiple sort keys
+// Before: a comparator with a fallback key
 const sorted = [...skills].sort((a, b) => {
   const catCompare = a.category.localeCompare(b.category);
   if (catCompare !== 0) return catCompare;
   return a.name.localeCompare(b.name);
 });
 
-// After: sort keys as a readable list
-import { sortBy } from "remeda";
+// After: the keys as a list
+import { sortBy } from "./collections";
 
 const sorted = sortBy(
   skills,
@@ -176,17 +148,12 @@ const sorted = sortBy(
 );
 ```
 
-**Why better:** `sortBy` with multiple key extractors reads as "sort by category, then by name." The manual comparator requires understanding the comparison-then-fallback pattern.
+### When `pipe` helps
 
----
-
-## When pipe() Helps
-
-Use `pipe()` when you have **3 or more chained transformations** and intermediate variables would obscure the data flow.
-
-### Before: Intermediate Variables Obscure Flow
+Three or more steps whose intermediate values nothing else reads:
 
 ```typescript
+// Before: five names that only carry data to the next line
 const active = skills.filter(isActive);
 const withDisplayNames = active.map(addDisplayName);
 const sorted = withDisplayNames.sort(byCategory);
@@ -197,12 +164,9 @@ const counts = Object.entries(grouped).map(([cat, items]) => ({
 }));
 ```
 
-**Why mediocre:** Five intermediate variables that exist only to pass data to the next step. The variables don't add semantic meaning -- they are plumbing.
-
-### After: pipe() Shows the Data Flow
-
 ```typescript
-import { pipe, filter, map, sortBy, groupBy, mapValues } from "remeda";
+// After: the data flow, top to bottom
+import { pipe, filter, map, sortBy, groupBy, mapValues } from "./collections";
 
 const categoryCounts = pipe(
   skills,
@@ -214,67 +178,22 @@ const categoryCounts = pipe(
 );
 ```
 
-**Why better:** The data flow reads top-to-bottom: start with skills, filter active, add display names, sort, group, count. No intermediate variables that add noise without adding meaning.
+**Why better:** No variable exists only to hand data to the next line. Where a later line reads an intermediate again — an orchestrator's assembly counting `validUsers`, say — the named variable is the better form, because the name gets used.
 
-### When pipe() Hurts
-
-```typescript
-// DON'T: pipe for 1-2 operations
-import { pipe, filter } from "remeda";
-const active = pipe(skills, filter(isActive));
-
-// DO: plain JS is clearer
-const active = skills.filter(isActive);
-```
-
-**Why plain JS is better here:** For one or two operations, `pipe()` adds import overhead and library-specific syntax without improving readability.
-
----
-
-## Combining Transforms Readably
-
-When a transformation has multiple stages, use the orchestrator pattern even for data transforms:
+### When `pipe` hurts
 
 ```typescript
-// Orchestrator: clear stage names
-function buildCategoryReport(skills: Skill[]): CategoryReport[] {
-  const active = skills.filter(isActive);
-  const grouped = groupBy(active, (s) => s.category);
-  return Object.entries(grouped).map(buildReportEntry);
-}
+// One or two operations: pipe adds an import and a calling convention
+import { pipe, filter, map } from "./collections";
 
-// Pure function: formatting isolated
-function buildReportEntry([category, skills]: [
-  string,
-  Skill[],
-]): CategoryReport {
-  return {
-    category,
-    count: skills.length,
-    names: skills.map((s) => s.displayName).join(", "),
-  };
-}
-```
-
-**Why good:** The orchestrator names each stage. The formatting logic is extracted to a pure function. A reader sees the flow without needing to understand the formatting details.
-
----
-
-## Anti-Pattern: Forcing Utility Libraries
-
-```typescript
-// DON'T: using pipe/map/filter when plain JS is clearer
-import { pipe, map, filter } from "remeda";
-const result = pipe(
+const names = pipe(
   items,
   filter((item) => item.isActive),
   map((item) => item.name),
 );
 
-// DO: plain JS
-const result = items.filter((item) => item.isActive).map((item) => item.name);
+// Plain JS reads in one scan
+const names = items.filter((item) => item.isActive).map((item) => item.name);
 ```
 
-**Why plain JS wins:** The two-step chain is already perfectly readable. The `pipe` version requires familiarity with Remeda's calling convention and adds an import for zero readability gain.
-
-**Rule of thumb:** If you can fluently read the plain JS version in one scan, don't add a utility library.
+**Rule of thumb:** if the plain version reads in one scan, it stays plain.
