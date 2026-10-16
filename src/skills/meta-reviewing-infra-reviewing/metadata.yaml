@@ -5,4 +5,4 @@ domain: meta
 author: "@vince"
 displayName: Infra Reviewing
 cliDescription: Supply-chain pinning, secret exposure, container hygiene
-usageGuidance: Use when reviewing diffs that touch CI/CD workflows, Dockerfiles, deployment configs, or IaC. Covers action and base-image pinning, secret handling, non-root containers, layer caching, least-privilege permissions, and deployment safety.
+usageGuidance: Use when reviewing diffs that touch CI/CD workflows, Dockerfiles, deployment configs, or IaC. Covers action and base-image pinning, secret handling, privileged workflow triggers and script injection, least-privilege permissions, non-root containers, layer caching, and deployment safety.

@@ -1,61 +1,55 @@
 ---
 name: meta-reviewing-infra-reviewing
-description: Infrastructure code review patterns. Use when reviewing CI/CD workflows, Dockerfiles, deployment configs, and IaC. Covers supply-chain pinning, secret exposure, container hygiene, least-privilege permissions, and deployment safety.
+description: Infrastructure code review — supply-chain pinning, secret exposure, workflow triggers and untrusted input, container hygiene, deployment safety. Load when reviewing a diff that touches CI/CD workflows, Dockerfiles, deployment configs or IaC.
 ---
 
 # Infrastructure Code Review Patterns
 
-> **Quick Guide:** When a diff touches operational code, grep it for secrets first - hardcoded credentials are always blocking. Verify third-party actions are pinned to SHAs and base images to digests or versions, containers run as non-root, workflow permissions are least-privilege, and secrets never pass through build args, logs, or artifacts. Judge deployment ceremony against what the diff actually deploys.
+> **Quick Guide:** Review operational code for what it can leak and what it lets a stranger run. Secrets, mutable third-party references and outsider input reaching a privileged job block the merge in any diff, at any scale; deployment ceremony scales with what the diff actually deploys. Recent facts that change the answer: `actions/checkout` v7 refuses fork-PR code under `pull_request_target` and `workflow_run` unless told otherwise; since December 2025 `pull_request_target` always runs the default branch's copy of the workflow; an organisation can enforce SHA pinning so a tag-pinned action fails at job setup; and GitHub's workflow dependency lockfile (public preview) pins what a `uses:` tag resolves to.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — a good/bad pair for each pattern below: pinned actions and installs, secret mounts and log hygiene, permissions, privileged triggers and script injection, the non-root Dockerfile, deploy ordering, signal-safe startup
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Reviewing Infrastructure Code
+## Before reviewing infrastructure code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Grep the diff for credentials before reading it for anything else.** A pushed secret stays reachable through clones, forks and the pull request's own refs, so the fix to ask for is revocation, not a follow-up commit — and the check takes seconds.
 
-**(You MUST verify no secrets are hardcoded - scan the diff for tokens, API keys, passwords, and connection strings)**
+**Resolve every external reference to something immutable.** A tag or branch on an action, base image, provider or module runs whatever its owner — or whoever holds the owner's token — points it at next, with this pipeline's secrets in scope.
 
-**(You MUST verify third-party CI actions are pinned to full SHA hashes, not mutable tags like `@v4` or `@main`)**
+**Trace each secret from its store to the one process that needs it.** A build arg lands in image history, a job-level `env:` reaches every step including third-party actions, and log masking matches only the exact registered string — each hop the diff adds is a place it leaks.
 
-**(You MUST verify secrets never pass through build args, echo/log lines, or uploaded artifacts)**
+**Read a workflow's trigger and `permissions:` before its steps.** Under `pull_request_target` and `workflow_run` the job holds the base repository's secrets and token while handling fork-controlled input, and a missing `permissions:` block inherits a default set in settings the diff never shows.
 
-**(You MUST verify production Dockerfiles the diff adds or changes set a non-root USER and pin their base image)**
+**Treat every value an outsider can set as code.** A PR title, branch name or comment body written as `${{ }}` inside `run:` is spliced into the script before the shell parses it, so a quote in that value ends the string and the rest runs as commands.
 
-**(You MUST verify workflow permissions are declared least-privilege, not inherited write-all)**
+**Check that a production image ends on a non-root `USER`.** Without one the process runs as root, and an application compromise starts one container-escape bug away from the host.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** review workflow, CI PR review, Dockerfile review, pipeline review, deployment config review, GitHub Actions review, IaC review, terraform review
+**Auto-detection:** `.github/workflows`, `uses:`, `permissions:`, `pull_request_target`, `workflow_run`, `GITHUB_TOKEN`, `secrets.`, `allow-unsafe-pr-checkout`, `concurrency:`, `.gitlab-ci.yml`, `Dockerfile`, `.dockerignore`, `compose.yaml`, `FROM`, `USER`, `ARG`, `RUN --mount=type=secret`, Kubernetes manifest, Helm chart, `readinessProbe`, `terraform`, `.terraform.lock.hcl`, Pulumi, CI review, Dockerfile review, IaC review
 
-**When to use:**
+**Applies to:**
 
-- Reviewing diffs that touch CI/CD workflows (GitHub Actions, GitLab CI)
-- Reviewing Dockerfiles, .dockerignore, or compose files
-- Reviewing deployment configs (Kubernetes, Helm, platform configs)
-- Reviewing IaC (Terraform, Pulumi) or release/build scripts
-- Reviewing package-manager and lockfile changes with supply-chain impact
+- Diffs touching CI/CD workflow files — triggers, permissions, pinned references, secrets, job ordering
+- Dockerfiles, `.dockerignore` and compose files
+- Deployment manifests and platform configs — readiness, resources, shutdown, per-environment config
+- IaC — provider and module pinning, state, plan and apply in CI
+- Release and build scripts — what they publish, sign and tag, and which credentials they read
+- Lockfile and package-manager changes with supply-chain reach
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- When implementing infrastructure (use the relevant infra implementation skill)
-- For application code in the same diff (use the web/api reviewing skills)
-- For incident response or live operations questions
-
-**Key patterns covered:**
-
-- Supply-chain pinning: actions, base images, lockfiles
-- Secret exposure across build args, logs, artifacts, and ignore files
-- Dockerfile hygiene: non-root, multi-stage, layer order
-- CI/CD least-privilege permissions and pipeline correctness
-- Deployment safety scoped to what the diff deploys
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Good/bad infrastructure patterns to look for during review
+- Application code in the same diff — reviewed against its own layer's conventions; this skill reviews what builds, ships and runs it.
+- Severity vocabulary, comment format and the approve-or-request-changes call — the general review practice, which this skill's severities slot into.
+- Designing or restructuring a pipeline — a review names the defect and its fix; the platform's shape belongs to whoever owns it.
+- Incident response and live operations — a review gates a diff, not a running system.
 
 ---
 
@@ -63,264 +57,219 @@ description: Infrastructure code review patterns. Use when reviewing CI/CD workf
 
 ## Philosophy
 
-**Operational code fails in production only.** No unit test catches an unpinned action's supply-chain compromise or a leaked deploy key; the review is frequently the only gate this code passes through. Security findings here are cheap to fix pre-merge and brutally expensive after.
+Operational code fails in production only. No unit test catches an unpinned action's compromise or a leaked deploy key, so the review is often the one gate this code passes — and a finding costs a line before merge and a rotation after.
 
-**When reviewing infrastructure code:**
+Ceremony scales with blast radius: a production deploy path earns strictness, a lint workflow that deploys nothing does not. Read the diff against what it reaches —
 
-- Scan for secrets before reading for style - the highest-severity class takes seconds to check
-- Treat every third-party reference (action, image, module) as an attack surface: is it pinned to something immutable?
-- Cross-reference the diff's blast radius: a new env var must exist everywhere the app runs; a renamed job must update everything that `needs` it
-- Ask what happens when this pipeline runs on a fork PR, on a re-run, and on two branches at once
+- A new env var must exist in every environment the app runs in; a renamed job or output must change everywhere that `needs` or reads it.
+- Ask what the pipeline does on a fork PR, on a re-run, and on two branches at once.
 
-**When NOT to flag:**
+**Don't flag:**
 
-- Don't demand k8s-grade ceremony (probes, resource limits, rollback strategy) for a docs site or an internal workflow that deploys nothing
-- Don't demand multi-stage builds for a CI-only image where size is irrelevant
-- Don't flag missing caching in a job that runs in seconds
-- Don't require a vault migration in a diff that just consumes an existing secret the established way
-
-**Core principles:**
-
-- **Secrets and supply chain are non-negotiable**: always blocking, in any diff, at any scale
-- **Pin everything external**: mutable references delegate your security to strangers
-- **Least privilege by default**: a workflow gets the permissions it needs, not the ones it inherits
-- **Ceremony proportional to blast radius**: production deployment paths earn strictness; a lint workflow does not
+- Probes, resource limits or rollback strategy on a docs site or a workflow that deploys nothing
+- A multi-stage build for a CI-only image whose size nothing depends on
+- Missing caching in a job that runs in seconds
+- A vault migration in a diff that consumes an existing secret the established way
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Supply-Chain Pinning
-
-Every external reference resolves to something immutable.
-
-```markdown
-## Pinning Review
-
-For EACH external reference the diff adds or changes:
-
-- [ ] Third-party GitHub Actions pinned to a full commit SHA (comment may carry the version)
-- [ ] First-party actions (actions/\*) at minimum major-version pinned
-- [ ] Base images pinned to a digest or a specific version tag - never `latest`
-- [ ] Dependency installs in CI use the lockfile (`npm ci`, `bun install --frozen-lockfile`), and the lockfile is committed
-- [ ] Terraform/Pulumi providers and modules carry version constraints
-```
-
-```yaml
-# Must Fix: mutable tag - the action's owner (or their attacker) can rewrite v4 tomorrow
-- uses: some-org/deploy-action@v4
-
-# Good: immutable SHA, human-readable version alongside
-- uses: some-org/deploy-action@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v4.1.2
-```
-
-**Why this matters:** A mutable tag is remote code execution deferred: whoever controls that ref controls your CI, with your secrets in scope. Tag-rewriting attacks on popular actions are documented, recurring events.
-
----
-
-### Pattern 2: Secret Exposure
-
-Secrets reach the process that needs them and nothing else.
-
-```markdown
-## Secret Review
-
-- [ ] No literal tokens, keys, passwords, or connection strings anywhere in the diff
-- [ ] Secrets arrive via the platform's secret store (secrets context, env from vault) - not committed files
-- [ ] No secret passes through a Docker build arg (build args persist in image history)
-- [ ] No echo/printf/debug line prints a secret; secret-bearing env is not dumped wholesale (`env | sort`)
-- [ ] Uploaded artifacts and caches cannot contain secret-bearing files (.env, credentials)
-- [ ] .gitignore / .dockerignore cover .env files and credential paths the diff introduces
-```
-
-```dockerfile
-# Must Fix: the token is baked into image history - docker history shows it
-ARG NPM_TOKEN
-RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && npm ci
-
-# Good: secret mount exists only for the one RUN
-RUN --mount=type=secret,id=npm_token \
-    NPM_TOKEN=$(cat /run/secrets/npm_token) npm ci
-```
-
-**Why this matters:** A leaked secret is a full compromise of whatever it guards, and build-arg/log leaks are invisible until someone pulls the image or reads the log archive.
-
----
-
-### Pattern 3: Dockerfile Hygiene
-
-The image is minimal, cache-friendly, and unprivileged.
-
-```markdown
-## Dockerfile Review
-
-When the diff adds or changes a Dockerfile:
-
-- [ ] Production stage sets a non-root USER
-- [ ] Multi-stage build separates build tooling from the runtime image (when the image ships to production)
-- [ ] Dependency manifests are COPYed and installed BEFORE the source copy (layer caching)
-- [ ] .dockerignore exists and excludes node_modules, .git, .env
-- [ ] Base image is minimal for the job (slim/alpine/distroless where compatible)
-```
-
-```dockerfile
-# Should Fix: source copy first - every code change busts the dependency cache
-COPY . .
-RUN npm ci && npm run build
-
-# Good: manifest layer caches until dependencies actually change
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-```
-
-**Why this matters:** Root containers turn any app compromise into a container-escape attempt; bad layer order turns every commit into a full rebuild, which teams then "fix" by caching less safely.
-
----
-
-### Pattern 4: CI/CD Permissions and Pipeline Correctness
-
-The workflow can do its job and nothing more, and its jobs compose correctly.
-
-```markdown
-## Workflow Review
-
-- [ ] `permissions:` is declared at workflow or job level - read-all default, write scopes named individually
-- [ ] `pull_request_target` (if present) does not check out and execute PR head code with secrets in scope
-- [ ] Job `needs:` ordering matches real dependencies - deploy waits for test
-- [ ] Concurrency groups guard deploy jobs against overlapping runs
-- [ ] Cache keys include the lockfile hash - not a static string that never invalidates
-- [ ] When the diff renames jobs/outputs, everything that references them is updated in the same diff
-```
-
-```yaml
-# Must Fix: inherited write-all - a compromised step can push code and rewrite releases
-on: pull_request
-
-# Good: the job names exactly what it may touch
-permissions:
-  contents: read
-  pull-requests: write
-```
-
-**Why this matters:** Default token permissions turn "a test step got compromised" into "the repository got compromised". `pull_request_target` with a head checkout is the classic secrets-exfiltration footgun.
-
----
-
-### Pattern 5: Deployment Safety - Scoped to the Diff
-
-When the diff touches how production runs, verify it can fail safely.
-
-```markdown
-## Deployment Review (when the diff touches deployment config)
-
-- [ ] Health/readiness checks exist for services behind a load balancer or orchestrator
-- [ ] Resource limits accompany new containers on shared clusters
-- [ ] The app handles SIGTERM (finish in-flight work, then exit) when the platform does rolling restarts
-- [ ] New env vars/secrets the diff introduces exist in EVERY environment the app deploys to
-- [ ] IaC state changes (backend, locking) are deliberate; `terraform plan` output accompanies risky changes
-```
-
-**Why this matters:** A missing readiness check means the balancer routes traffic to a booting container; a missing env var in one environment is the deploy that fails only in production, at deploy time.
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
+## Severity for infrastructure findings
 
-### Severity Classification for Infra Issues
+Must Fix blocks approval. Should Fix travels with the approval, for the author to fix before merging, and needs a cost concrete in this diff. Nice to Have is the author's to take or leave.
 
 ```
-Is this a security defect the diff introduces?
-├─ Hardcoded secret, or secret through build arg/log/artifact → MUST FIX
-├─ Third-party action on a mutable tag → MUST FIX
-├─ pull_request_target executing PR head code with secrets → MUST FIX
-├─ Write-all permissions on a workflow that needs read → MUST FIX
-├─ Production container running as root → MUST FIX
+Does the diff introduce a security defect?
+├─ Credential literal, or a secret through ARG/ENV, a log line or an artifact → MUST FIX
+├─ Third-party action on a tag, or any action on a branch (@v3, @main) → MUST FIX
+├─ ${{ }} of outsider-controlled input inside run: → MUST FIX
+├─ pull_request_target / workflow_run that checks out or runs PR head code → MUST FIX
+├─ Write scopes a job doesn't use, or no permissions: on a workflow fed untrusted input → MUST FIX
+├─ Production image without a non-root USER → MUST FIX
 └─ NO → Is it an operational-correctness gap?
-    ├─ Base image on `latest` / installs ignoring the lockfile → SHOULD FIX
-    ├─ Deploy job without concurrency guard → SHOULD FIX
+    ├─ GitHub's own action (actions/*) on a version tag instead of a full SHA → SHOULD FIX
+    ├─ Base image on latest or untagged, or without a digest on a deploy path; CI install that ignores the lockfile → SHOULD FIX
+    ├─ No permissions: block on any other workflow → SHOULD FIX
+    ├─ Debug output beside secret use (set -x, env dumps) → SHOULD FIX
+    ├─ Deploy job without a concurrency group, or not waiting on the tests → SHOULD FIX
     ├─ New env var missing from one environment → SHOULD FIX
-    ├─ Cache-hostile Dockerfile layer order → SHOULD FIX
-    ├─ New production service without health checks or limits → SHOULD FIX
+    ├─ Cache key that never changes; cache-hostile Dockerfile layer order → SHOULD FIX
+    ├─ New Dockerfile without .dockerignore; shell-form CMD or CMD via npm → SHOULD FIX
+    ├─ New production service without a readiness check, resource requests or limits → SHOULD FIX
     └─ NO → Is it a genuine enhancement?
         ├─ Slimmer base image where size demonstrably matters → NICE TO HAVE
-        ├─ Faster caching for an already-fast job → DON'T MENTION
-        ├─ K8s-grade ceremony for a workflow that deploys nothing → DON'T MENTION
-        └─ Tool preferences (compose vs k8s, npm vs bun) → DON'T MENTION
+        ├─ Faster caching for an already-fast job → don't write it
+        ├─ Production ceremony on a workflow that deploys nothing → don't write it
+        └─ Tool preference (compose vs Kubernetes, one package manager over another) → don't write it
 ```
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues (Must Fix):**
+### Pattern 1: Supply-Chain Pinning
 
-- Any credential literal in the diff (grep for `token`, `key`, `password`, `secret`, connection-string shapes)
-- `uses: third-party/action@v3` / `@main` / `@master`
-- `ARG`/`ENV` carrying secrets in a Dockerfile
-- Missing `permissions:` on workflows that handle untrusted input
-- `pull_request_target` + `actions/checkout` of the PR head
-- Production Dockerfile with no `USER` directive
+Every external reference resolves to something immutable, and the record of it is committed.
 
-**Medium Priority Issues (Should Fix):**
+- Third-party actions on a full 40-character commit SHA from the action's own repository, not a fork; a trailing `# vX.Y.Z` comment keeps it readable
+- GitHub's own `actions/*` on a full SHA as well — GitHub's secure-use guidance makes no first-party exception, and an organisation's SHA-pinning policy fails any unpinned action at job setup. A version tag here is Should Fix rather than Must Fix, because GitHub is a smaller trust grant than a third party
+- Base images on a version tag at minimum, and on a digest on deploy paths — `latest` changes the build with no diff to review, and a publisher can re-point any tag; a digest is the only immutable form
+- CI installs from the committed lockfile and fails on drift (`npm ci`, or the package manager's frozen-lockfile mode)
+- Terraform providers and modules carry version constraints, and `.terraform.lock.hcl` is committed
 
-- `FROM node:latest` or digest-less base images on deploy paths
-- `npm install` in CI where `npm ci` belongs
-- Static cache keys that never invalidate
-- Deploy steps with no concurrency group
-- Missing .dockerignore alongside a new Dockerfile
-- Debug steps that `env`-dump or `set -x` around secret use
+```yaml
+# Must Fix: whoever controls this repository's tags decides what runs next
+- uses: some-org/deploy-action@v4
 
-**Common Mistakes:**
+# Good: immutable; the comment keeps it readable
+- uses: some-org/deploy-action@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v4.1.2
+```
 
-- Pinning first-party actions to SHA while leaving the third-party one on a tag (backwards priority)
-- Adding a secret to one environment and assuming the others inherit it
-- Copying source before manifests and "fixing" slow builds by skipping the lockfile
-- `needs:` chains that let deploy start when only lint passed
-- Treating `terraform apply` in CI as safe because plan passed locally against different state
+Full code: [examples/core.md](examples/core.md#pattern-1-supply-chain-pinning)
 
-**Gotchas & Edge Cases:**
+### Pattern 2: Secret Exposure
 
-- Docker build args persist in `docker history` even when unset afterwards
-- Rewritten tags pass `uses:` resolution - only SHAs are immutable
-- Composite actions inherit and can leak the caller's env
-- GITHUB_TOKEN default permissions differ per org setting - declaring them is the only portable truth
-- Alpine images lack glibc; native modules that built fine on debian-slim fail there at runtime
-- SIGKILL follows SIGTERM after the grace period - cleanup that takes longer than the grace period never finishes
+Secrets reach the process that needs them and nothing else.
 
-</red_flags>
+- No literal tokens, keys, passwords or connection strings — grep for `token`, `key`, `secret`, `password` and `://user:pass@` shapes
+- Secrets come from the platform's secret store, never a committed file
+- No secret in a Dockerfile `ARG` or `ENV` — a secret mount exists for one `RUN` and in no layer
+- No secret in workflow- or job-level `env:` when one step uses it — scope it to that step
+- No line prints a secret or a value derived from one; derived values are registered with `::add-mask::`
+- Artifacts and caches cannot contain `.env` files, credentials, Terraform state or saved plans
+- `.gitignore` and `.dockerignore` cover the `.env` and credential paths the diff introduces
+
+```dockerfile
+# Must Fix: the token is in `docker history` and in the .npmrc layer
+ARG NPM_TOKEN
+RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && npm ci
+
+# Good: the credentials file is mounted for this one RUN
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-2-secret-exposure)
+
+### Pattern 3: Workflow Trust Boundaries
+
+What a workflow can reach is set by its trigger and its `permissions:`; what an outsider can make it do is set by where their input lands.
+
+- `permissions:` read-only (or `{}`) at workflow level, write scopes granted per job
+- `pull_request_target` and `workflow_run` only where the job needs the base repository's secrets or write token, and never checking out or running PR head code
+- Under those triggers: no `allow-unsafe-pr-checkout: true`, no `actions/checkout` older than v7, no manual fetch of the PR head — v7's refusal guards only its own default path
+- Outsider-set values — `github` context fields ending in `title`, `body`, `head_ref`, `label`, `message`, `name`, `email` or `ref` — reach `run:` through `env:`, never as `${{ }}` in the script
+
+```yaml
+# Must Fix: the title is pasted into the script before bash parses it
+- run: echo "Checking ${{ github.event.pull_request.title }}"
+
+# Good: the shell receives data, not script
+- env:
+    PR_TITLE: ${{ github.event.pull_request.title }}
+  run: echo "Checking $PR_TITLE"
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-3-workflow-trust-boundaries)
+
+### Pattern 4: Dockerfile Hygiene
+
+The image is minimal, cache-friendly and unprivileged.
+
+- Production stage ends on a non-root `USER`
+- A multi-stage build keeps compilers and dev dependencies out of the image that ships
+- Dependency manifests are copied and installed before the source, or every code change reinstalls everything
+- `.dockerignore` excludes `.git`, `.env` and local dependency folders — `COPY . .` copies whatever the context holds
+- Base image minimal for the job (slim, alpine, distroless) where the app's native dependencies allow
+
+```dockerfile
+# Should Fix: every source change busts the dependency layer
+COPY . .
+RUN npm ci && npm run build
+
+# Good: the install layer is reused until a manifest changes
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-4-dockerfile-hygiene)
+
+### Pattern 5: Pipeline Correctness
+
+The jobs compose the way the author thinks they do.
+
+- `needs:` matches real dependencies — deploy waits for every test job, not only lint
+- Deploy jobs share a `concurrency` group, so two quick merges cannot deploy out of order
+- Cache keys include a lockfile hash (`hashFiles(...)`); a static key never invalidates
+- A renamed job, output or env var is renamed at every reference in the same diff
+
+```yaml
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    needs: [lint, test, e2e]
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-5-pipeline-correctness)
+
+### Pattern 6: Deployment Safety, Scoped to the Diff
+
+When the diff changes how production runs, check it can fail safely.
+
+- Services behind a load balancer or orchestrator have a readiness check — without one, traffic reaches a container still booting
+- New containers on a shared cluster declare resource requests and limits — requests are what the scheduler places by, and a memory limit makes a leak kill its own container rather than starve its neighbours
+- The app receives SIGTERM and finishes in-flight work inside the grace period: exec-form `CMD`, not shell form or `npm start`, and a handler or an init process, because PID 1 gets no default signal behaviour
+- Every env var and secret the diff introduces exists in every environment the app deploys to
+- IaC backend and locking changes are deliberate, a risky change (a backend move, a destroy or a replace) comes with its `terraform plan` output so the reviewer sees what the apply will do, and `apply` in CI runs the plan CI produced against the real state
+
+```dockerfile
+# Should Fix: /bin/sh -c is PID 1 and does not pass SIGTERM on
+CMD node dist/server.js
+
+# Good: the app receives the signal itself
+CMD ["node", "dist/server.js"]
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-6-deployment-safety-scoped-to-the-diff)
+
+</patterns>
 
 ---
 
-<critical_reminders>
+<red_flags>
 
-## CRITICAL REMINDERS
+## Red flags
 
-> **All code must follow project conventions in CLAUDE.md**
+**Common mistakes:**
 
-**(You MUST verify no secrets are hardcoded - scan the diff for tokens, API keys, passwords, and connection strings)**
+- SHA-pinning `actions/*` while a third-party action stays on a tag — backwards, since the third party is the larger trust grant
+- Asking only for a leaked secret's removal from the diff — it is already pushed, so ask for revocation
+- "Fixing" a slow image build by dropping the lockfile instead of reordering the layers
+- Approving an `apply` in CI because a plan passed locally — against different state it proves nothing about this run
 
-**(You MUST verify third-party CI actions are pinned to full SHA hashes, not mutable tags like `@v4` or `@main`)**
+**Surprising behaviour:**
 
-**(You MUST verify secrets never pass through build args, echo/log lines, or uploaded artifacts)**
+- Build-arg values appear in `docker history` and in max-mode provenance attestations.
+- Log masking redacts the exact registered value; a base64, URL-encoded or substring form prints in clear, and a secret stored as a JSON blob is not reliably masked.
+- Every step in a job sees workflow- and job-level `env:`, third-party actions included.
+- A job's `permissions:` block is that job's whole grant: every scope it omits is `none`, whatever the workflow level said.
+- `GITHUB_TOKEN`'s default comes from organisation and repository settings the diff doesn't show; fork PRs get read-only unless the repository sends write tokens to forks.
+- Since 8 December 2025, `pull_request_target` runs the default branch's copy of the workflow, so a PR editing that workflow is not exercised by its own run.
+- In a repository with a workflow dependency lockfile, the run executes the commit the lockfile records, so a `uses:` tag is not mutable there; review the lockfile's changed `commit` entries instead.
+- In `image:tag@sha256:…` the digest decides and the tag is a label.
+- `.terraform.lock.hcl` locks providers only; a module floats within its version constraint unless the constraint is exact.
+- `sensitive = true` hides a Terraform value from CLI output, not from state or plan files, which hold it in plaintext — a plan uploaded as an artifact ships the secret.
+- Alpine uses musl: a native module compiled in a glibc build stage fails to load in an Alpine runtime stage.
+- Cleanup that outlasts the grace period never finishes — the platform sends SIGKILL (Kubernetes' default is 30 seconds, `preStop` time included).
 
-**(You MUST verify production Dockerfiles the diff adds or changes set a non-root USER and pin their base image)**
-
-**(You MUST verify workflow permissions are declared least-privilege, not inherited write-all)**
-
-**Failure to catch these issues will result in leaked credentials, supply-chain compromise executing in CI with secrets in scope, and deploys that fail only in production.**
-
-</critical_reminders>
+</red_flags>

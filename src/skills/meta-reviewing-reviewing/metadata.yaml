@@ -5,4 +5,4 @@ domain: meta
 author: "@vince"
 displayName: Code Review
 cliDescription: Code review guidance
-usageGuidance: Use when reviewing code, PRs, or making approval/rejection decisions.
+usageGuidance: Use when reviewing a diff or PR, writing review findings, or deciding whether to approve or request changes.

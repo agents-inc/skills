@@ -4,5 +4,5 @@ slug: cli-reviewing
 domain: meta
 author: "@vince"
 displayName: CLI Reviewing
-cliDescription: CLI code review patterns for Commander.js and @clack/prompts
-usageGuidance: Use when reviewing CLI applications built with Commander.js, @clack/prompts, or similar tools. Covers exit codes, signal handling, cancellation, error messages, spinners, and testing adequacy.
+cliDescription: Review exit codes, signals, streams and prompts in CLIs
+usageGuidance: Use when reviewing a command-line tool's commands, entry point, prompts, output or tests, whichever parser or prompt library it uses. Covers exit codes, cancellation and signals, non-TTY behaviour, the stdout/stderr split, error text, config precedence, subprocess safety and test adequacy.

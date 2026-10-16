@@ -5,4 +5,4 @@ domain: meta
 author: "@vince"
 displayName: API Reviewing
 cliDescription: Injection, boundary validation, authorization, data exposure
-usageGuidance: Use when reviewing diffs that touch API routes, database queries, auth middleware, or server utilities. Covers injection, input validation at boundaries, authn/authz coverage, secret and PII exposure, error leakage, and query patterns.
+usageGuidance: Use when reviewing a diff that adds or changes API routes or handlers, database queries, authentication or authorization middleware, or server code that reads files, starts processes or fetches URLs using request data.

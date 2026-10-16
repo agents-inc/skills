@@ -5,4 +5,4 @@ domain: meta
 author: "@vince"
 displayName: Web Reviewing
 cliDescription: React hooks, accessibility, and render performance
-usageGuidance: Use when reviewing diffs that touch UI components - React/JSX files, hooks, props and state, styling, or accessibility. Covers rules of hooks, effect cleanup, render performance, list keys, and ARIA/keyboard patterns.
+usageGuidance: Use when reviewing a diff that adds or changes React components or custom hooks — hook order and dependency arrays, effect and ref cleanup, derived state, list keys and component identity, controlled inputs, memoization claims, and keyboard and screen-reader access for the elements the diff adds.
