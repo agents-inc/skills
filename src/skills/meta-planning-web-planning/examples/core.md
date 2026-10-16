@@ -1,166 +1,144 @@
-# Web Planning - Spec Fragments and Worked Example
+# Web Planning — Core Examples
 
-> Good/bad specification fragments for frontend work, and a complete worked example. See [../SKILL.md](../SKILL.md) for the frameworks behind each.
+> Bad and good spec fragments for the patterns in [SKILL.md](../SKILL.md). The feature throughout is profile editing: users change their name, email and bio in a dialog opened from their profile page. Read in order, the good fragments are that spec's web sections — the worked example. Its goal, context, requirement tiers and handoffs come from the spec's own format.
 
 ---
 
-## UI States — specified vs delegated to chance
+## Pattern 1: UI-State Completeness
+
+A list surface, where all four states and a refresh apply:
 
 ```
 BAD:  "Show the user's projects on the dashboard"
 
-GOOD: "Projects panel states:
-       - Loading: 3 skeleton rows matching ProjectCard dimensions
-       - Error: inline 'Could not load projects' with a Retry button; no toast
-       - Empty: 'No projects yet' with a 'Create project' button
-       - Success: ProjectCard grid, newest first, 20 per page with Load More"
+GOOD: "Projects panel:
+       - Loading: 3 skeleton rows sized like a ProjectCard, shown once
+         loading passes 1 second
+       - Error: inline 'Could not load projects' with Retry; no toast
+       - Empty, no projects: 'No projects yet' with a 'Create project' button
+       - Empty, filtered: 'No projects match these filters' with 'Clear filters'
+       - Success: ProjectCard grid, newest first, 20 per page with Load more
+       - Refresh: current cards stay while reloading; a failed refresh keeps
+         them and shows 'Showing saved results. Retry?'"
 ```
 
-The BAD version specifies one of four states. The other three get invented during implementation and discovered in review — or production.
+The bad version specifies one state. The rest are invented during implementation and found in review, or in production.
+
+The profile dialog, where two states are ruled out rather than skipped:
+
+```
+GOOD: "Edit-profile dialog:
+       - Loading: ruled out — fields fill from the user store, already loaded
+       - Saving: Save disabled with 'Saving…'; fields disabled
+       - Error: per the form contract — a 422 and a network failure both keep
+         the entered values
+       - Empty: ruled out — a signed-in user always has a profile
+       - Success: 'Profile updated', the dialog closes, the page shows the new
+         values"
+```
+
+**Indicator timing, for the numbers a spec states:** no indicator under about a second, since it only flashes; a looped indicator for waits of a few seconds; a percent-done indicator past about ten. Guidelines agree on that shape and differ on the exact switch-over points, so the spec states its own.
 
 ---
 
-## Form Contract — field by field
+## Pattern 2: Component Boundaries
+
+```
+BAD:  "Follow our standard modal and form patterns"
+
+GOOD: "- Edit dialog: reuse components/modals/modal-container.tsx:12-78 —
+         overlay, focus trap, Escape and onClose come with it
+       - Form: follow components/settings/settings-form.tsx:45-89 — validation
+         timing, error display and success message
+       - Bio field: extend components/form/text-area.tsx:8-40 with an optional
+         character counter; text-area.tsx joins the modified files, and its
+         other consumers pass no counter and render unchanged
+       - Save request: lib/user-service.ts:34-56, the apiClient.put() wrapper
+       - Store action: stores/user-store.ts:23-34, shaped like updateUser()"
+```
+
+Every reference names a file and lines that were read, and what it supplies. "Follow our patterns" with no path means nobody checked one exists, and a "create" with no line on why nothing existing fits reads as nobody having looked.
+
+---
+
+## Pattern 3: Form Contracts
 
 ```
 BAD:  "Add an edit-profile form with validation"
 
 GOOD: "Fields:
-       - name: text, required, initial = current name. Empty on submit: 'Name is required'
-       - email: text, required, format-validated on blur. Invalid: 'Enter a valid
+       - name: text, required, initial = current name. Empty on submit:
+         'Name is required'
+       - email: email, required, format checked when the field loses focus and
+         re-checked as the user types once flagged. Invalid: 'Enter a valid
          email address' below the field
-       - bio: textarea, optional, max 500 chars, counter shown from 400
+       - bio: textarea, optional, 500 characters max, counter shown from 400
 
-       Submission: PUT /api/users/:id via the apiClient pattern (lib/user-service.ts:34-56).
-       Save disabled while pending. Success: 'Profile updated' message, modal closes.
-       Server 422: field errors mapped back to inputs, entered values preserved.
-       Network failure: 'Could not save. Retry?' — values preserved."
+       Submission: PUT /api/users/:id through lib/user-service.ts:34-56.
+       Save disabled with 'Saving…' while pending.
+       Success: 'Profile updated', the dialog closes.
+       Server 422: each field error shown at its input; values kept.
+       Network failure: 'Could not save. Retry?' above the actions; values kept.
+       Unsaved changes: closing with edits asks 'Discard changes?'"
 ```
+
+The email timing follows the codebase's existing convention — flag on leaving the field, clear on the first valid keystroke. A codebase that validates on submit instead gets an error summary that takes focus and links to each field, worded the same as the message at the field.
 
 ---
 
-## Pattern References — verified, not vibes
+## Pattern 4: State Ownership
 
 ```
-BAD:  "Follow our standard modal and form patterns"
+BAD:  "Store the form values, the profile and the projects list in UserStore"
 
-GOOD: "1. Modal: components/modals/UpdateAllProjects.tsx:12-78 — ModalContainer wrapper,
-          overlay and positioning provided, onClose prop
-       2. Form: components/settings/SettingsForm.tsx:45-89 — validation approach,
-          error display, success messaging
-       3. API: lib/user-service.ts:34-56 — apiClient.put() pattern
-       4. Store: stores/UserStore.ts:23-34 — updateUser() action shape"
+GOOD: "- Draft form values: ProfileEditDialog local state, discarded on close
+       - Saved profile: stores/user-store.ts — add updateProfile() only; the
+         store's existing shape is unchanged
+       - Bio character count: derived from the draft bio, not stored
+       - Projects list: read through the data-access layer, not copied
+       - Project filter and page: the URL params status and page"
 ```
 
-Every reference names a file and lines that were actually read. "Follow our patterns" with no path means no pattern was verified to exist.
+The draft lives in the dialog because nothing outside it reads it; copied into the store, a cancelled edit would leave a stale draft for the next open to find.
 
 ---
 
-## Scope Fence — both directions
+## Pattern 5: Fencing the Shared UI Surface
 
 ```
 BAD:  "Don't break anything"
 
-GOOD: "Modify:  components/profile/UserProfile.tsx (add button and modal state),
-                stores/UserStore.ts (add updateProfile action only)
-       Create:  components/profile/ProfileEditModal.tsx
-       Do NOT touch: authentication system, stores/ structure, components/shared/
-       Verify:  git diff -- components/shared/ returns empty"
+GOOD: "Do not modify: auth/ — session handling for every page;
+       components/shared/ — rendered across the app; styles/ — global
+       styles and tokens.
+       Partly fenced: stores/user-store.ts — add updateProfile() only; the
+       header and settings page read its existing fields.
+       Verify: git diff -- auth/ components/shared/ styles/ is empty."
 ```
+
+Each entry says who depends on it, so a developer who finds a reason to cross the line knows what they would break.
 
 ---
 
-## Worked example — user profile editing
+## Pattern 6: Observable Success Criteria
 
-```markdown
-# User Profile Editing
-
-## Goal
-
-Add profile editing so users can update their name, email, and bio.
-
-## Context
-
-**Why:** Top customer request (Issue #123). Users can't modify profile after signup.
-
-**Current State:**
-
-- Profile display: `components/profile/UserProfile.tsx`
-- Profile data: `stores/UserStore.ts`
-- API endpoint: `PUT /api/users/:id`
-
-**Desired State:** User clicks "Edit Profile" -> modal opens -> edits fields -> saves -> profile updates
-
-## Patterns to Follow
-
-Developer agent MUST read these files before implementation:
-
-1. **Modal:** `components/modals/UpdateAllProjects.tsx:12-78` - ModalContainer wrapper
-2. **Forms:** `components/settings/SettingsForm.tsx:45-89` - Validation and errors
-3. **API:** `lib/user-service.ts:34-56` - apiClient.put() pattern
-4. **Store:** `stores/UserStore.ts:23-34` - updateUser() action
-
-## UI States
-
-- Loading (initial open): fields pre-filled from store; no spinner needed (data is local)
-- Saving: Save button disabled with pending label; fields remain editable? No — disabled
-- Error (server 422): field errors mapped to inputs, values preserved
-- Error (network): 'Could not save. Retry?' inline; values preserved
-- Success: 'Profile updated' message, modal closes, profile re-renders with new values
-
-## Requirements
-
-**Must Have:**
-
-1. "Edit Profile" button in UserProfile component
-2. Modal with fields: name, email, bio
-3. Validation: email format, required fields
-4. Save button disabled during submission
-5. Success/error messages
-6. Profile refreshes after save
-
-**Must NOT:**
-
-- Modify authentication system
-- Change UserStore structure
-- Add new dependencies
-
-## Files
-
-**Modify:**
-
-- `components/profile/UserProfile.tsx` - Add button and modal state
-- `stores/UserStore.ts` - Add updateProfile action
-
-**Create:**
-
-- `components/profile/ProfileEditModal.tsx`
-
-**Do NOT Modify:**
-
-- Authentication system
-- Shared components outside profile/
-
-## Success Criteria
-
-**Functional:**
-
-1. Modal opens with current values on "Edit Profile" click
-2. Save updates profile within 2 seconds
-3. Invalid email shows error message
-4. Network errors show retry message; entered values preserved
-5. Focus returns to the "Edit Profile" button when the modal closes
-
-**Technical:**
-
-1. All tests in profile/ pass
-2. New tests cover: happy path, validation, network errors
-3. Code follows SettingsForm.tsx pattern
-4. No changes outside profile/ directory
-
-**Verify:**
-
-- Manual test: Edit and verify persistence
-- Run: `npm test components/profile/`
-- Check: `git diff -- components/shared/` (should be empty)
 ```
+BAD:  - Feature works well
+      - Good user experience
+      - No bugs
+
+GOOD: 1. Clicking "Edit profile" opens the dialog with the current name,
+         email and bio — manual check
+      2. An invalid email shows "Enter a valid email address"; correcting it
+         clears the message — component test
+      3. Save updates the profile and shows "Profile updated" within
+         2 seconds — component test
+      4. A network failure shows "Could not save. Retry?" and keeps the
+         entered values — component test with a failing request
+      5. Every control is reachable by Tab, Escape closes the dialog, and
+         focus returns to "Edit profile" — keyboard check
+      6. "Profile updated" is announced by a screen reader — screen-reader check
+      7. git diff -- auth/ components/shared/ styles/ is empty — command
+```
+
+Each good criterion can fail, and says how someone finds out that it did.
