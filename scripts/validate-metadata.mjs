@@ -1,6 +1,6 @@
 // Validates every src/skills/*/metadata.yaml against the structural limits of the
 // metadata schema each file declares in its yaml-language-server header
-// (agents-inc/cli — src/schemas/metadata.schema.json). The category and slug
+// (agents-inc/agents-inc — packages/cli/src/schemas/metadata.schema.json). The category and slug
 // vocabularies are owned by the CLI and enforced by its build, so this check
 // only requires them to be present; everything else mirrors the schema exactly.
 
