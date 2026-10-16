@@ -1,280 +1,300 @@
 # Research Methodology - Core Examples
 
-> Essential patterns and templates for research methodology. Always loaded.
-
-**Navigation:** [Back to SKILL.md](../SKILL.md) | [Reference](../reference.md)
+> Full shapes for the patterns in [SKILL.md](../SKILL.md). What each search tool skips, and the pre-report checklist, are in [reference.md](../reference.md).
 
 ---
 
-## Pattern 1: Investigation Flow
+## Pattern 1: Locate, Narrow, Read
 
-### Good Example - Systematic Investigation
+### Good Example - Each Step Feeds the Next
 
-```markdown
-**Step 1: Find candidate files**
-Glob("packages/ui/src/\*_/_.tsx") -> Found 47 component files
+```text
+Question: how does this codebase define its error types?
 
-**Step 2: Search for pattern**
-Grep("forwardRef", "packages/ui/src/") -> 23 matches
+1. Locate by name
+   Glob "src/**/*error*"                     → 6 files
 
-**Step 3: Read exemplary files**
-Read("/packages/ui/src/button/button.tsx") -> Lines 12-45 show pattern
+2. Narrow by content
+   Grep "class \w+ extends" in those files   → 5 files declare a class
+   Grep "extends AppError" in src/ (count)   → 4 matches in 4 files
+
+3. Read the file the others depend on
+   Read src/errors/app-error.ts              → class AppError, lines 8–31
 ```
+
+The same steps where the session has no Glob or Grep tool:
+
+```bash
+find src -name '*error*'
+grep -rn 'extends AppError' src
+```
+
+The two do not filter alike — the Grep tool skips gitignored files, and a shell search follows its own defaults — so record which one produced a count.
+
+**Why good:** each step narrows what the next one costs, and each leaves a result the reader can rerun.
 
 ### Bad Example - Speculation Without Investigation
 
-```markdown
-"Based on typical React patterns, this codebase probably uses..."
-[NO FILES WERE READ - THIS IS SPECULATION]
+```text
+"Based on typical patterns, this codebase probably uses custom error classes..."
+[no file was opened]
 ```
 
-**Why the good example works:** Glob finds files efficiently, Grep narrows to relevant content, Read provides complete understanding. Each step builds on the previous and produces verifiable evidence.
-
-**Why the bad example fails:** No actual files were examined. Claims are based on assumptions about "typical" patterns rather than evidence from the specific codebase.
+**Why bad:** it describes what codebases usually do. Nothing in it came from this one.
 
 ---
 
 ## Pattern 2: Evidence-Based Claims
 
-### Good Evidence Structure
+### Good Example - One Claim, One Location
 
 ````markdown
-## Pattern: [Pattern Name]
+## Pattern: AppError base class
 
-**File:** `/path/to/file.tsx:12-45`
-**Usage Count:** X instances found via Grep
-
-**Code Example:**
+**Location:** `src/errors/app-error.ts:8-31` — `class AppError`
+**Usage:** 4 subclasses (Grep `extends AppError` in `src/`, count mode → 4)
 
 ```typescript
-// From /path/to/file.tsx:15-25
-[Actual code from the file]
+// src/errors/app-error.ts:8-31
+[the code exactly as it reads at those lines]
 ```
 
-**Verification:** Read file confirmed pattern exists at stated location
+**Verified:** read at the range above, in this session
 ````
 
-### Bad Evidence Structure
+**Why good:** the reader can open the range, see the code, and judge from the count whether this is a convention or a one-off. If an edit has moved the lines, `class AppError` finds them again.
+
+### Bad Example - A Claim With Nothing to Check
 
 ```markdown
-## Pattern: [Pattern Name]
+## Pattern: Error handling
 
-The codebase uses this pattern for handling X.
-[NO FILE PATH, NO LINE NUMBERS, NO EVIDENCE]
+The codebase uses custom error classes for handling errors.
 ```
 
-**Why the good example works:** Every claim has a specific file path, line numbers, and actual code. Consuming agents can verify and reference the exact location.
-
-**Why the bad example fails:** No way for consuming agents to verify the claim or find the actual implementation. Vague references lead to wasted investigation time.
+**Why bad:** true or not, the reader has to redo the investigation to find out.
 
 ---
 
-## Pattern 3: Structured Output Format
+## Pattern 3: Structured Findings
 
-### Complete Research Output Template
+Use this where the instructions you are working under give no report shape of their own.
 
 ```markdown
 ## Research Summary
 
-- Topic: [What was researched]
+- Question: [what was asked]
 - Type: [Pattern Discovery | Inventory | Implementation Research]
-- Files Examined: [count]
-- Paths Verified: [Yes/No]
+- Files examined: [count, and how many were read in full]
+- Paths verified: [Yes, or which were not]
 
 ## Patterns Found
 
-### Pattern 1: [Name]
+### [Pattern name]
 
-- File: [path:lines]
-- Description: [Brief explanation]
-- Usage Count: [X instances]
-- Code Example: [Actual code block]
-
-### Pattern 2: [Name]
-
-- File: [path:lines]
-- Description: [Brief explanation]
-- Usage Count: [X instances]
-- Code Example: [Actual code block]
+- Location: [path:lines] — [symbol]
+- Description: [one line]
+- Usage: [count, and the search that produced it]
+- Code: [the lines as they read]
 
 ## Files to Reference
 
-| Priority | File                | Lines   | Why Reference        |
-| -------- | ------------------- | ------- | -------------------- |
-| 1        | [/path/to/best.tsx] | [12-45] | Best example         |
-| 2        | [/path/to/alt.tsx]  | [8-30]  | Alternative approach |
+| Priority | File   | Lines   | Why read it          |
+| -------- | ------ | ------- | -------------------- |
+| 1        | [path] | [12-45] | Fullest example      |
+| 2        | [path] | [8-30]  | Alternative approach |
 
 ## Recommended Approach
 
-1. [Step 1 with file reference]
-2. [Step 2 with file reference]
-3. [Step 3 with file reference]
+1. [A step, and the existing file to follow for it]
+2. [The next step, and its file]
+
+## Gaps
+
+- [What the codebase did not settle, or "none"]
 
 ## Verification Checklist
 
-| Finding | Verification   | Status          |
-| ------- | -------------- | --------------- |
-| [Claim] | [How verified] | Verified/Failed |
+| Finding | How verified                 | Status   |
+| ------- | ---------------------------- | -------- |
+| [claim] | [the read or search, as run] | Verified |
 ```
+
+Recommended Approach names existing code to follow; it carries no new code. A claim that fails verification leaves Patterns Found and is listed under Gaps instead.
 
 ---
 
-## Pattern 4: Path Verification Protocol
+## Pattern 4: Verifying Paths and Absences
 
-### Verification Process
+### Paths
 
-```markdown
-# Step 1: Read the file
-
-Read("/path/to/file.tsx")
-
-# Step 2: If file exists, include path
-
-Yes File exists -> Include in findings with line numbers
-
-# Step 3: If file doesn't exist, note the error
-
-No File not found -> Do NOT include in findings
-Report: "Could not locate [expected file]"
+```text
+Read src/utils/formatDate.ts        → file not found
+Glob "**/*date*"                   → src/lib/time/format-date.ts
+Read src/lib/time/format-date.ts   → formatDate, lines 12–45
+Finding cites: src/lib/time/format-date.ts:12-45
 ```
 
-### Common Verification Failures
+A file that cannot be found stays out of the findings and goes under Gaps as "Could not locate [the expected file]". The usual ways a wrong path gets in:
 
-- Path guessed from convention without checking
-- Line numbers assumed from similar files
-- Directory structure inferred instead of verified
+- the path was guessed from convention
+- the line numbers were carried over from a similar file
+- the directory layout was inferred rather than listed
 
-**Why verify:** False paths waste developer time and erode trust in research findings.
+### Absences
+
+```text
+Grep "jwt" -i in src/       → 0 matches
+Grep "session" -i in src/   → 12 matches   (control: the same path and filters find text)
+Finding: no JWT handling in src/ — gitignored files were not searched
+```
+
+The control rules out a pattern the tool rejected, a path it could not read, and a scope that holds nothing; the closing note says what the search could not see. [reference.md](../reference.md#what-each-search-skips) lists what each tool skips.
 
 ---
 
-## Pattern 5: Research Scope Management
+## Pattern 5: Scope to the Question
 
-### Scope Rules
+### Good Example - The Answer and Nothing Around It
 
-```
-What was asked?
-+-- "How does X work?" -> Focus on X, not everything related
-+-- "What components exist?" -> Catalog components, not all patterns
-+-- "Find similar to Y" -> Find similar, not comprehensive analysis
-+-- "How should I implement Z?" -> Implementation guidance, not alternatives
+```text
+Question: How does the API authenticate requests?
+Answer:   the session flow, the route guard, the two files to read first
+Gaps:     the client's login form matched the name search and was not read — the question is about the API
 ```
 
-### Scope Anti-Patterns
+### Bad Example - Scope Creep
 
-- Researching tangentially related topics
-- Providing unsolicited architecture opinions
-- Expanding simple questions into comprehensive audits
-- Recommending changes when asked for research only
+```text
+Question: How does the API authenticate requests?
+Answer:   [the auth flow, then the database schema, deployment, test setup, ...]
+```
 
-**Why scope matters:** Research is preparation for action. Unfocused research delays the actual work.
+**Why bad:** the reader has to find the answer inside the survey, and the survey filled the context the work needs.
+
+### Bad Example - Implementation Instead of Research
+
+```text
+"Here's how to implement the feature:
+export const NewComponent = () => { ... }"
+```
+
+### Good Example - The Code to Follow
+
+```text
+Similar implementations:
+1. src/features/invoices/invoice-list.ts:12-45 — closest match
+2. src/features/orders/order-list.ts:8-30 — same shape, paginated on the server
+```
+
+**Why good:** the implementer starts from code the codebase already accepted, with the context to adapt it.
+
+The scope failures to watch for:
+
+- researching topics next to the question rather than the question
+- offering architecture opinions nobody asked for
+- turning a simple question into an audit
+- recommending changes when the task was research
 
 ---
 
-## Pattern 6: Progress Tracking for Complex Research
+## Pattern 6: Progress Notes for Long Research
 
-When research spans multiple packages or directories, track progress systematically.
-
-### Progress Tracking Template
+Keep this note when the research spans several packages, when it turns out more complex than expected, or when it may be paused, compacted or handed over.
 
 ```markdown
 ## Research Progress
 
-**Topic:** [area being researched]
+**Question:** [what is being researched]
 **Status:** [In Progress | Complete]
 
-**Files Examined:**
+**Files examined:**
 
-- [x] /path/to/file1.tsx - Pattern X found
-- [x] /path/to/file2.tsx - No relevant patterns
-- [ ] /path/to/file3.tsx - Not yet examined
+- [x] src/auth/session.ts — session creation found
+- [x] src/auth/tokens.ts — nothing relevant
+- [ ] src/auth/oauth.ts — not yet read
 
-**Patterns Found:**
+**Patterns found:**
 
-1. [Pattern A] - 12 instances
-2. [Pattern B] - 3 instances
+1. [Pattern A] — 12 instances (Grep "...", count mode)
+2. [Pattern B] — 3 instances
 
-**Gaps Identified:**
+**Gaps:**
 
-- Could not find [expected pattern]
-- [Area] has inconsistent patterns
+- Could not find [the expected pattern]
+- [Area] follows two inconsistent patterns
 ```
-
-**When to use progress tracking:**
-
-- Research spans multiple packages/directories
-- Investigation reveals unexpected complexity
-- You need to pause and resume research
 
 ---
 
-## Pattern 7: End-to-End Research Example
+## Worked Example: Authentication Research
 
-Demonstrates the full investigation flow from question to structured output.
+The full sequence, from question to findings.
 
-### Investigation: Authentication Patterns
+### Investigation
 
-```bash
-# Step 1: Glob for Auth Files
-Glob("**/auth*.ts") -> Found:
-- /packages/api/src/routes/auth.ts
-- /packages/api/src/middleware/auth-middleware.ts
-- /apps/web/src/lib/auth.ts
-- /apps/web/src/hooks/use-auth.ts
+```text
+Question: how does the API authenticate requests?
 
-# Step 2: Grep for Specific Patterns
-Grep("session", "**/auth*.ts") -> 12 matches
-Grep("jwt", "**/auth*.ts") -> 0 matches
+1. Locate
+   Glob "**/*auth*.ts" → packages/api/src/routes/auth.ts
+                         packages/api/src/middleware/auth-middleware.ts
+                         apps/web/src/lib/auth.ts
+                         apps/web/src/lib/auth-client.ts
+
+2. Narrow
+   Grep "session" -i in those files (count) → 12 matches in 3 files
+   Grep "jwt" -i in those files             → 0 matches
+
+3. Read
+   Read packages/api/src/routes/auth.ts
+     → createSession 12–30, endSession 89–102
+   Read packages/api/src/middleware/auth-middleware.ts
+     → requireSession 15–40
+   Grep "requireSession" in packages/api/src/routes/ (count) → 9 matches
 ```
 
-**Finding:** Session-based auth, not JWT
-
-```markdown
-# Step 3: Read Key Files
-
-Read("/packages/api/src/routes/auth.ts")
-
-**Lines 12-30:** Session creation flow
-**Lines 45-67:** Session validation middleware
-**Lines 89-102:** Logout handler
-```
-
-### Final Output
+### Findings
 
 ```markdown
 ## Research Summary
 
-- Topic: Authentication patterns
+- Question: how does the API authenticate requests?
 - Type: Implementation Research
-- Files Examined: 4
-- Paths Verified: Yes
+- Files examined: 4 located, 2 read in full
+- Paths verified: Yes
 
 ## Patterns Found
 
-### Session-Based Authentication
+### Session-based authentication
 
-- File: `/packages/api/src/routes/auth.ts:12-30`
-- Description: Uses server-side sessions with secure cookies
-- Usage: All auth flows use this pattern
+- Location: `packages/api/src/routes/auth.ts:12-30` — `createSession`
+- Description: a server-side session, referenced from a secure cookie
+- Usage: the login and signup routes both call it (Grep `createSession` → 3 matches: the definition and 2 calls)
 
-### Auth Middleware
+### Session check on protected routes
 
-- File: `/packages/api/src/middleware/auth-middleware.ts:15-40`
-- Description: Validates session on protected routes
-- Usage: Applied via route middleware
+- Location: `packages/api/src/middleware/auth-middleware.ts:15-40` — `requireSession`
+- Description: rejects a request without a valid session before its handler runs
+- Usage: 9 routes (Grep `requireSession` in `packages/api/src/routes/`, count mode → 9)
 
 ## Files to Reference
 
-| Priority | File                                            | Lines  | Why Reference                |
-| -------- | ----------------------------------------------- | ------ | ---------------------------- |
-| 1        | /packages/api/src/routes/auth.ts                | 12-102 | Complete auth implementation |
-| 2        | /packages/api/src/middleware/auth-middleware.ts | 15-40  | Middleware pattern           |
+| Priority | File                                           | Lines  | Why read it                   |
+| -------- | ---------------------------------------------- | ------ | ----------------------------- |
+| 1        | packages/api/src/routes/auth.ts                | 12-102 | Creating and ending a session |
+| 2        | packages/api/src/middleware/auth-middleware.ts | 15-40  | How a route is protected      |
+
+## Gaps
+
+- `apps/web/src/lib/auth.ts` and `apps/web/src/lib/auth-client.ts` matched the name search and were not read; the question is about the API.
 
 ## Verification Checklist
 
-| Finding            | Verification                  | Status   |
-| ------------------ | ----------------------------- | -------- |
-| Session-based auth | Read auth.ts:12-30            | Verified |
-| No JWT usage       | Grep "jwt" -> 0 results       | Verified |
-| Middleware pattern | Read auth-middleware.ts:15-40 | Verified |
+| Finding            | How verified                     | Status   |
+| ------------------ | -------------------------------- | -------- |
+| Session-based auth | Read auth.ts:12-30               | Verified |
+| No JWT handling    | Grep jwt 0, session 12 (control) | Verified |
+| Route protection   | Read auth-middleware.ts:15-40    | Verified |
+| 9 protected routes | Grep requireSession, count mode  | Verified |
 ```

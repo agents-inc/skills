@@ -13,8 +13,6 @@ description: Serverless MySQL platform with branching, deploy requests, and edge
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `conn.execute(sql, params)` with parameterized queries -- never interpolate user input into SQL strings)**
 
 **(You MUST use deploy requests for ALL schema changes on production branches with safe migrations enabled -- direct DDL is rejected)**
@@ -344,8 +342,6 @@ Do you need foreign key constraints?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `conn.execute(sql, params)` with parameterized queries -- never interpolate user input into SQL strings)**
 

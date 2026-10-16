@@ -13,8 +13,6 @@ description: Speech-to-text transcription and translation via OpenAI Audio API -
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST choose the correct model for the use case -- `gpt-4o-transcribe` for accuracy, `whisper-1` for timestamps/SRT/VTT output, `gpt-4o-transcribe-diarize` for speaker labels)**
 
 **(You MUST chunk audio files larger than 25 MB before sending to the API -- the API rejects files exceeding this limit)**
@@ -310,8 +308,6 @@ Is the audio in English?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST choose the correct model for the use case -- `gpt-4o-transcribe` for accuracy, `whisper-1` for timestamps/SRT/VTT output, `gpt-4o-transcribe-diarize` for speaker labels)**
 

@@ -13,8 +13,6 @@ description: Electron Forge build toolchain -- makers, publishers, code signing,
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST place `electron` in `devDependencies` -- Forge provides the Electron binary during packaging; placing it in `dependencies` bloats the app by ~200MB)**
 
 **(You MUST code-sign macOS builds with `osxSign` and `osxNotarize` in `packagerConfig` -- unsigned apps are blocked by Gatekeeper on macOS 10.15+)**
@@ -415,8 +413,6 @@ Which maker for your platform?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST place `electron` in `devDependencies` -- Forge provides the Electron binary during packaging; placing it in `dependencies` bloats the app by ~200MB)**
 

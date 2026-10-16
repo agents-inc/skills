@@ -1,6 +1,6 @@
 {
   "name": "desktop-security-electron",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Electron fuses, ASAR integrity, sandbox hardening, CSP, permission handling, navigation restrictions",
   "author": {

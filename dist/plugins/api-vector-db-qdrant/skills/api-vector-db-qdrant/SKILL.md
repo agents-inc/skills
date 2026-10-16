@@ -13,8 +13,6 @@ description: Qdrant vector database -- collection management, point operations, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST create payload indexes with `createPayloadIndex()` for any field used in filters -- unindexed fields cause full scans that degrade linearly with collection size)**
 
 **(You MUST use `must`/`should`/`must_not` filter syntax -- Qdrant does NOT use `$eq`/`$and`/`$or` operators like Pinecone)**
@@ -397,8 +395,6 @@ Should I create a payload index?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST create payload indexes with `createPayloadIndex()` for any field used in filters -- unindexed fields cause full scans that degrade linearly with collection size)**
 

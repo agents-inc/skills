@@ -13,8 +13,6 @@ description: Deep linking patterns - Universal Links (iOS), App Links (Android),
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use Universal Links (iOS) and App Links (Android) for production apps -- custom URI schemes have no fallback and can be hijacked by other apps)**
 
 **(You MUST host AASA and assetlinks.json over HTTPS at `/.well-known/` -- Apple and Google will reject HTTP or incorrectly hosted files)**
@@ -344,8 +342,6 @@ Which router are you using?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use Universal Links (iOS) and App Links (Android) for production apps -- custom URI schemes have no fallback and can be hijacked by other apps)**
 

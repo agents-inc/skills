@@ -1,6 +1,6 @@
 # meta-reviewing-reviewing
 
-Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
+Code review process — reading order, findings, severity, scope and the approval decision. Load when reviewing a diff or PR, writing review comments, or deciding whether to approve or request changes.
 
 ## Installation
 

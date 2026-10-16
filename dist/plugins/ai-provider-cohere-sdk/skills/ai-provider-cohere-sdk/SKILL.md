@@ -13,8 +13,6 @@ description: Official Cohere TypeScript SDK patterns -- CohereClientV2, chat, em
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `CohereClientV2` (not `CohereClient`) for all new code -- V2 is the current API with required `model` parameter)**
 
 **(You MUST specify `inputType` on every embed call -- `search_document` for indexing, `search_query` for querying -- mismatched types produce garbage similarity scores)**
@@ -540,8 +538,6 @@ Do you need grounded answers with citations?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `CohereClientV2` (not `CohereClient`) for all new code -- V2 is the current API with required `model` parameter)**
 

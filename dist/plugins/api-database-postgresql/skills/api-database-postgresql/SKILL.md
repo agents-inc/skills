@@ -13,8 +13,6 @@ description: Direct PostgreSQL access with node-postgres (pg) -- connection pool
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use parameterized queries (`$1`, `$2`, ...) for ALL values -- NEVER concatenate or interpolate user input into SQL strings)**
 
 **(You MUST use `Pool` for all database access -- NEVER create standalone `Client` instances in application code)**
@@ -420,8 +418,6 @@ How many rows will the query return?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use parameterized queries (`$1`, `$2`, ...) for ALL values -- NEVER concatenate or interpolate user input into SQL strings)**
 

@@ -15,8 +15,6 @@ Xquik is an independent third-party service. Not affiliated with X Corp. "Twitte
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST keep Xquik credentials in environment variables or secret stores and send them only in request headers)**
 
 **(You MUST verify every method, path, parameter, and response shape against `https://xquik.com/openapi.json` before implementing a workflow)**
@@ -369,8 +367,6 @@ What does the workflow need?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST keep Xquik credentials in environment variables or secret stores and send them only in request headers)**
 

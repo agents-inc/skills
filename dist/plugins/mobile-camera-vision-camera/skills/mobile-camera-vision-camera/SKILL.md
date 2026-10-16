@@ -13,8 +13,6 @@ description: VisionCamera v4+ - photo/video capture, QR/barcode scanning, real-t
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST set `isActive` based on screen focus AND app state -- camera must pause when backgrounded or navigated away)**
 
 **(You MUST request permissions before rendering the Camera -- `useCameraPermission` returns `hasPermission` and `requestPermission`)**
@@ -424,8 +422,6 @@ Which camera?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST set `isActive` based on screen focus AND app state -- camera must pause when backgrounded or navigated away)**
 

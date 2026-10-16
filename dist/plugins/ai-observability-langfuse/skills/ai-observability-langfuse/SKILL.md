@@ -13,8 +13,6 @@ description: LLM observability with Langfuse — OpenTelemetry-based tracing, ev
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST import and register `instrumentation.ts` at the top of your entry point BEFORE any other imports -- OpenTelemetry must instrument modules before they are loaded)**
 
 **(You MUST call `forceFlush()` or `sdk.shutdown()` in short-lived processes (serverless, scripts, CLI tools) -- events are batched and will be lost without explicit flushing)**
@@ -482,8 +480,6 @@ What is this observation?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST import and register `instrumentation.ts` at the top of your entry point BEFORE any other imports -- OpenTelemetry must instrument modules before they are loaded)**
 

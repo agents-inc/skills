@@ -1,6 +1,6 @@
 {
   "name": "desktop-updates-electron-updater",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Cross-platform auto-update patterns with electron-updater (electron-builder ecosystem)",
   "author": {

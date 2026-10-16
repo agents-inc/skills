@@ -13,8 +13,6 @@ description: Bun-native HTTP framework — routing, TypeBox validation, Eden Tre
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use method chaining on the Elysia instance -- separate `.get()` calls break type inference for Eden Treaty)**
 
 **(You MUST use `status()` for error responses -- `error()` is deprecated since 1.3, prefer `status()`)**
@@ -277,8 +275,6 @@ See [examples/eden-treaty.md](examples/eden-treaty.md) for response handling, fi
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use method chaining on the Elysia instance -- separate `.get()` calls break type inference for Eden Treaty)**
 

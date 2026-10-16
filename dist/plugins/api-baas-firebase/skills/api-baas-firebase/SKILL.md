@@ -13,8 +13,6 @@ description: Firebase backend-as-a-service — Firestore, Authentication, Cloud 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the modular Firebase SDK imports (`firebase/app`, `firebase/firestore`, `firebase/auth`) -- NEVER use the deprecated `firebase/compat` namespace API)**
 
 **(You MUST write Firestore security rules for EVERY collection -- a collection without rules is wide open in production)**
@@ -549,8 +547,6 @@ What kind of files?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the modular Firebase SDK imports (`firebase/app`, `firebase/firestore`, `firebase/auth`) -- NEVER use the deprecated `firebase/compat` namespace API)**
 

@@ -26,8 +26,6 @@ description: Pino, Axiom, Sentry installation - one-time project setup for loggi
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST create separate Axiom datasets for each environment - development, staging, production)**
 
 **(You MUST configure all three Sentry config files - `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`)**
@@ -301,8 +299,6 @@ See [reference.md](reference.md#red-flags) for complete list.
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST create separate Axiom datasets for each environment - development, staging, production)**
 

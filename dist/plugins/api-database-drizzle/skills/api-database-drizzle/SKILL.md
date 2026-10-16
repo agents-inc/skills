@@ -13,8 +13,6 @@ description: Drizzle ORM, queries, migrations
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST set `casing: 'snake_case'` in Drizzle config to map camelCase JS to snake_case SQL)**
 
 **(You MUST use `tx` parameter (NOT `db`) inside transaction callbacks to ensure atomicity)**
@@ -170,8 +168,6 @@ For the complete list of anti-patterns and gotchas, see [reference.md](reference
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST set `casing: 'snake_case'` in Drizzle config to map camelCase JS to snake_case SQL)**
 

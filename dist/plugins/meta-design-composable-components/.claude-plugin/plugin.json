@@ -1,8 +1,8 @@
 {
   "name": "meta-design-composable-components",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
-  "description": "Composable component APIs — parts, state, polymorphism",
+  "description": "Composable component APIs — parts, state, polymorphism. Load when designing a reusable component's API, or aligning one that has grown boolean, renderX or style props.",
   "author": {
     "name": "@vince"
   },

@@ -13,8 +13,6 @@ description: React Native performance profiling, optimization, and monitoring - 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST profile BEFORE optimizing -- use React Native DevTools Profiler or platform tools to identify actual bottlenecks, never optimize blindly)**
 
 **(You MUST test performance in RELEASE builds -- dev mode adds significant overhead that masks real performance characteristics)**
@@ -481,8 +479,6 @@ What type of animation?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST profile BEFORE optimizing -- use React Native DevTools Profiler or platform tools to identify actual bottlenecks, never optimize blindly)**
 

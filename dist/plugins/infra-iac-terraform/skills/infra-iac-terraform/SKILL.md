@@ -13,8 +13,6 @@ description: Infrastructure as Code with HashiCorp Terraform
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md**
-
 **(You MUST pin provider versions with constraints in `required_providers` and commit `.terraform.lock.hcl` to version control)**
 
 **(You MUST use a remote backend with state locking for any shared or production infrastructure)**
@@ -432,8 +430,6 @@ See [examples/patterns.md](examples/patterns.md) for dynamic block patterns with
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST pin provider versions with constraints in `required_providers` and commit `.terraform.lock.hcl` to version control)**
 

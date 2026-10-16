@@ -13,8 +13,6 @@ description: Prisma ORM, type-safe queries, migrations, relations
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the singleton pattern for PrismaClient in development to prevent connection exhaustion from hot reloading)**
 
 **(You MUST use `tx` parameter (NOT `prisma`) inside interactive transaction callbacks to ensure atomicity)**
@@ -307,8 +305,6 @@ Handle `$disconnect()` on `beforeExit` to prevent connection leaks. For serverle
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use the singleton pattern for PrismaClient in development to prevent connection exhaustion from hot reloading)**
 

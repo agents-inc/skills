@@ -13,8 +13,6 @@ description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST run `wrangler types` to generate your Env interface — NEVER hand-write binding types)**
 
 **(You MUST use `wrangler.jsonc` for new projects — Cloudflare recommends JSON config and some features are JSON-only)**
@@ -452,8 +450,6 @@ Use `@cloudflare/vitest-pool-workers` to run tests inside the actual Workers run
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST run `wrangler types` to generate your Env interface — NEVER hand-write binding types)**
 

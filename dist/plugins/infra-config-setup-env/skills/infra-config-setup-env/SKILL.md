@@ -13,8 +13,6 @@ description: Environment configuration, Zod validation
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST validate ALL environment variables with Zod at application startup)**
 
 **(You MUST use framework-specific prefixes for client-side variables - `NEXT_PUBLIC_*` for Next.js, `VITE_*` for Vite)**
@@ -266,8 +264,6 @@ See [reference.md](reference.md) for complete RED FLAGS, anti-patterns, and chec
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST validate ALL environment variables with Zod at application startup)**
 

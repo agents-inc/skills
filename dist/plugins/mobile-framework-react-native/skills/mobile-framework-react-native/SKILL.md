@@ -13,8 +13,6 @@ description: React Native mobile development patterns - New Architecture (Fabric
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use FlashList (preferred) or FlatList for lists with more than 20 items - NEVER ScrollView with .map() for long lists)**
 
 **(You MUST memoize renderItem callbacks and use stable keyExtractor functions - avoid key props on FlashList items as it breaks recycling)**
@@ -287,8 +285,6 @@ function Input({ ref, placeholder, onChangeText }: InputProps) {
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use FlashList (preferred) or FlatList for lists with more than 20 items - NEVER ScrollView with .map() for long lists)**
 

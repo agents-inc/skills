@@ -13,8 +13,6 @@ description: Provider-agnostic patterns for LLM function calling, tool loops, an
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST guard every tool loop with a maximum step limit -- unbounded loops risk infinite API calls and runaway costs)**
 
 **(You MUST validate all tool input arguments before execution -- LLM-generated arguments are untrusted input)**
@@ -400,8 +398,6 @@ Tool execution failed. What to do?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST guard every tool loop with a maximum step limit -- unbounded loops risk infinite API calls and runaway costs)**
 

@@ -13,8 +13,6 @@ description: SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL -- fluen
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST initialize the knex instance ONCE per application and reuse it -- creating multiple instances leaks connection pools)**
 
 **(You MUST use parameterized bindings (`?` for values, `??` for identifiers) in ALL `knex.raw()` calls -- string interpolation causes SQL injection)**
@@ -418,8 +416,6 @@ Which database are you targeting?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST initialize the knex instance ONCE per application and reuse it -- creating multiple instances leaks connection pools)**
 

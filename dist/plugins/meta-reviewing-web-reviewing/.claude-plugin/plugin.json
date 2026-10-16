@@ -1,8 +1,8 @@
 {
   "name": "meta-reviewing-web-reviewing",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
-  "description": "UI component review patterns. Use when reviewing React components, hooks, props, state, styling, and accessibility. Covers rules of hooks, effect cleanup, render performance, list keys, keyboard and ARIA patterns.",
+  "description": "React component review — hook rules, effect cleanup, derived state, keys, memoization evidence and keyboard access. Load when reviewing a diff that adds or changes React components or hooks.",
   "author": {
     "name": "@vince"
   },

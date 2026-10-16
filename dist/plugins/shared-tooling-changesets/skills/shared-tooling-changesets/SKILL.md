@@ -13,8 +13,6 @@ description: Versioning and changelog management with @changesets/cli — adding
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST add a changeset via `changeset` or `changeset add` for every user-facing change -- documentation-only or CI-only changes use `changeset --empty`)**
 
 **(You MUST run `changeset version` before `changeset publish` -- version consumes changesets and bumps package.json, publish reads the bumped versions)**
@@ -332,8 +330,6 @@ Need to test unreleased changes?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST add a changeset via `changeset` or `changeset add` for every user-facing change -- documentation-only or CI-only changes use `changeset --empty`)**
 

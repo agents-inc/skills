@@ -13,8 +13,6 @@ description: Tamagui universal UI - styled(), tokens, themes, optimizing compile
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `$`-prefixed token values in style props (`$4`, `$color.blue`) -- raw pixel values bypass the token system and break theme consistency)**
 
 **(You MUST keep the `transition` prop present in JSX when using animations -- conditionally removing it causes expensive hook teardown; pass `null` to disable instead)**
@@ -349,8 +347,6 @@ Need bottom sheet on mobile?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use `$`-prefixed token values in style props (`$4`, `$color.blue`) -- raw pixel values bypass the token system and break theme consistency)**
 

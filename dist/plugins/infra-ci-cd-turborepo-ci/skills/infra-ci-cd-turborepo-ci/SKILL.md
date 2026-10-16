@@ -13,8 +13,6 @@ description: Turborepo CI pipelines with remote caching and affected detection
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST declare `outputs` for every cacheable task in turbo.json -- missing outputs means cached results restore without build artifacts)**
 
 **(You MUST list environment variables that affect task output in `env` (task-level) or `globalEnv` (all tasks) -- omitting them causes cross-environment cache hits with wrong values)**
@@ -439,8 +437,6 @@ Building Docker images from monorepo?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST declare `outputs` for every cacheable task in turbo.json -- missing outputs means cached results restore without build artifacts)**
 

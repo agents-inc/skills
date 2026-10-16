@@ -13,8 +13,6 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
 **(You MUST use the feature flags secure API key (phs\_\*) for server-side local evaluation - personal API keys are deprecated for this use)**
@@ -255,8 +253,6 @@ See [examples/core.md](examples/core.md#pattern-7-flag-cleanup-and-lifecycle-man
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 

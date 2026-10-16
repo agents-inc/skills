@@ -1,6 +1,6 @@
 {
   "name": "desktop-ui-electron",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Frameless windows, custom title bars, tray, menus, dock badges, vibrancy, kiosk mode, window state persistence",
   "author": {

@@ -1,6 +1,6 @@
 {
   "name": "shared-tooling-changesets",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Versioning and changelog management with @changesets/cli — adding changesets, version bumping, changelog generation, monorepo publishing, pre-release modes, and CI automation",
   "author": {

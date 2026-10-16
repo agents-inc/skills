@@ -13,8 +13,6 @@ description: Beautiful interactive CLI prompts with @clack/prompts and custom pr
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST check `isCancel()` after EVERY prompt call -- skipping this causes silent crashes when users press Ctrl+C)**
 
 **(You MUST exit the process after `cancel()` -- the cancel message prints but execution continues otherwise)**
@@ -377,8 +375,6 @@ Need styled output?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST check `isCancel()` after EVERY prompt call -- skipping this causes silent crashes when users press Ctrl+C)**
 

@@ -1,6 +1,6 @@
 # meta-design-expressive-typescript
 
-Readable functional patterns — orchestrators, pure functions, named abstractions
+Readable TypeScript functions — orchestrators over pure helpers, named predicates and transforms, guard clauses, exhaustive unions. Load when writing or refactoring a function that mixes validation, transformation and assembly, or when deciding whether an expression should be extracted.
 
 ## Installation
 

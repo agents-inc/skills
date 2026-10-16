@@ -1,6 +1,6 @@
 # meta-reviewing-api-reviewing
 
-Backend code review patterns. Use when reviewing API routes, database operations, auth middleware, and server utilities. Covers injection, boundary validation, authorization coverage, secret/PII exposure, error leakage, and query patterns.
+Backend code review — injection and SSRF, boundary validation, object-level authorization, mass assignment and data exposure, error leakage, N+1 and unbounded queries. Use when a diff touches API routes or handlers, database access, auth middleware, or server code that reads files, starts processes or fetches URLs.
 
 ## Installation
 

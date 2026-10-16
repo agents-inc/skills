@@ -15,8 +15,6 @@ description: ESLint 9/10 flat config with defineConfig(), Prettier v3.0+ shared 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use ESLint 9+ flat config with `defineConfig()` from `eslint/config` - NOT legacy .eslintrc)**
 
 **(You MUST use `globalIgnores()` for explicit global ignore patterns - NOT bare `ignores` property)**
@@ -319,8 +317,6 @@ What Prettier config format to use?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use ESLint 9+ flat config with `defineConfig()` from `eslint/config` - NOT legacy .eslintrc)**
 

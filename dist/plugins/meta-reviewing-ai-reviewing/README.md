@@ -1,6 +1,6 @@
 # meta-reviewing-ai-reviewing
 
-AI integration review patterns. Use when reviewing model API calls, prompt construction, LLM output handling, RAG pipelines, and tool-calling code. Covers prompt-injection call-chain tracing, output validation, token budgets, retry/timeout handling, streaming, and key/PII exposure.
+AI integration review patterns. Use when reviewing model API calls, prompt construction, LLM output handling, RAG pipelines, and tool-calling code. Covers prompt-injection call-chain tracing, output validation, stop reasons, token budgets, retry and timeout handling, streaming, and key/PII exposure.
 
 ## Installation
 

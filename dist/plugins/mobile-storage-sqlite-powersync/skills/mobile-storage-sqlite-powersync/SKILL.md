@@ -13,8 +13,6 @@ description: PowerSync offline-first sync engine on SQLite for React Native - sc
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define schemas with `new Table({ ... })` using `column.text`, `column.integer`, `column.real` -- NEVER declare an `id` column, PowerSync creates it automatically)**
 
 **(You MUST call `powersync.connect(connector)` after `init()` to start syncing -- without it the database is local-only with no sync)**
@@ -456,8 +454,6 @@ What kind of data are you storing?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST define schemas with `new Table({ ... })` using `column.text`, `column.integer`, `column.real` -- NEVER declare an `id` column, PowerSync creates it automatically)**
 

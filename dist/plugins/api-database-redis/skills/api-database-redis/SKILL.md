@@ -13,8 +13,6 @@ description: Redis in-memory data store patterns with ioredis and node-redis -- 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use a SEPARATE Redis connection for Pub/Sub subscribers -- a subscribed connection enters a special mode and cannot execute other commands)**
 
 **(You MUST set `maxRetriesPerRequest: null` on any ioredis connection passed to BullMQ -- BullMQ requires infinite retries and will throw if this is not set)**
@@ -497,8 +495,6 @@ Do I need atomicity across multiple commands?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use a SEPARATE Redis connection for Pub/Sub subscribers -- a subscribed connection enters a special mode and cannot execute other commands)**
 

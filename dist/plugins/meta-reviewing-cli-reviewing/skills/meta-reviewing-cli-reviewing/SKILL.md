@@ -1,65 +1,55 @@
 ---
 name: meta-reviewing-cli-reviewing
-description: CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.
+description: CLI code review — exit codes, cancellation and signals, non-TTY behaviour, the stdout/stderr split, error text, config precedence, subprocess safety and test adequacy. Load when reviewing a command-line tool's commands, entry point, prompts, output or tests, whichever parser or prompt library it uses.
 ---
 
-# CLI Code Review Patterns
+# CLI Review Patterns
 
-> **Quick Guide:** When reviewing CLI code, verify SIGINT handling, p.isCancel() checks, exit code constants, parseAsync() usage, and user feedback (spinners, clear errors). Check config hierarchy, help text quality, and dry-run support. Distinguish severity (Must Fix vs Should Fix vs Nice to Have) and explain WHY each issue matters.
+> **Quick Guide:** A CLI's contract is its exit code, its two output streams and what it does without a terminal — scripts and CI branch on those and never read the wording. Review every terminating path for the code it produces, every prompt for its cancel path and its non-interactive twin, and every write for the stream it lands on. Three Node facts decide verdicts: `process.exit()` abandons writes still pending to a pipe, so piped output arrives truncated; installing a `SIGINT` listener removes Node's default exit with 130; and while a prompt holds the terminal in raw mode, Ctrl+C is a keypress rather than a signal.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — before-and-after code for each pattern, a spawned contract test, and a worked review
+- [reference.md](reference.md) — review checklists by area, exit-code conventions, the shapes a prompt cancel takes
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Reviewing CLI Code
+## Before reviewing CLI code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Trace every terminating path to the exit code it produces.** Scripts and CI branch on the number, not the message, so a failure that exits 0 — a catch block that only logs, a cancelled prompt that returns — reports success to every `&&` chained after it.
 
-**(You MUST verify SIGINT (Ctrl+C) handling exists in CLI entry point)**
+**Find out what the prompt library does on Ctrl+C, then check that path at every prompt.** A prompt holds the terminal in raw mode, where Ctrl+C is a keypress rather than `SIGINT`, so no signal handler sees it; the library returns a cancel value, rejects, or drops the field, and an unchecked call carries that into the next line as data.
 
-**(You MUST verify p.isCancel() is called after EVERY @clack/prompts call)**
+**Check that every prompted value has a flag or config twin, and that a prompt reached without a TTY fails with a usage error naming it.** CI has no terminal on stdin, so an unguarded prompt waits for input that never arrives, or a component that needs raw mode throws.
 
-**(You MUST verify exit codes use named constants - flag ANY magic numbers in process.exit())**
+**Check which stream every write lands on.** stdout is the payload a pipe consumer parses; progress, warnings and errors belong on stderr, and spinners and colour only where their stream is a TTY — one spinner frame on stdout corrupts the consumer's input.
 
-**(You MUST verify parseAsync() is used for async actions, not parse())**
+**Check that every spinner is stopped before anything else is written to the terminal, on the error path as well as on success.** A spinner redraws its line on a timer, so a log line or error written while it animates can be overwritten or split by its frames, and the message the user needed arrives garbled.
 
-**(You MUST verify spinners are stopped before any console output or error handling)**
+**Check that the entry point awaits async command handlers inside one top-level handler that turns any failure into a message and an exit code.** A handler the parser does not await rejects outside that path, so Node prints a raw stack trace and exits 1 whatever the failure was.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** review CLI, check CLI code, CLI PR review, Commander.js review, @clack/prompts review, CLI quality, CLI error handling review, exit codes review
+**Auto-detection:** review CLI, CLI PR review, command-line tool review, exit code, process.exitCode, process.exit, SIGINT, SIGTERM, Ctrl+C handling, process.stdin.isTTY, process.stdout.isTTY, setRawMode, NO_COLOR, stdout vs stderr, --json output, --no-input, --dry-run, child_process, execFile, shell injection, config precedence, CLI tests
 
-**When to use:**
+**Applies to:**
 
-- Reviewing CLI applications built with Commander.js
-- Reviewing interactive prompts using @clack/prompts
-- Checking CLI error handling and exit code patterns
-- Evaluating CLI user experience (help text, spinners, feedback)
-- Verifying CLI testing adequacy
-- Reviewing configuration management patterns
+- Reviewing a command, the entry point, or how commands are dispatched
+- Reviewing prompts, confirmations and key-driven terminal UI
+- Reviewing output for piped, CI and `--json` callers
+- Reviewing config resolution, error text and help
+- Reviewing code that spawns processes or handles credentials
+- Judging whether a CLI's tests reach its contracts
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- When implementing CLI code (use the relevant CLI implementation skill)
-- For general code review not specific to CLI concerns
-- For backend API review
-
-**Key patterns covered:**
-
-- CLI-specific review checklist
-- Exit code and signal handling verification
-- User experience review criteria
-- Error message quality assessment
-- Testing adequacy checklist
-- Configuration hierarchy review
-- Command structure and organization review
-- Severity classification for CLI issues
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Example review output format, CLI test review patterns
+- Severity definitions, feedback style and the approve-or-request-changes decision — the general review process owns those; this skill says only where CLI defects land
+- Choosing the contract — which flags, exit codes and output modes a feature should have is decided when it is specified, and review checks the code against that decision
+- A given parser's, prompt library's or terminal renderer's API — this skill names the behaviour to check, and the library's own documentation names the call that provides it
 
 ---
 
@@ -67,500 +57,243 @@ description: CLI code review patterns. Use when reviewing CLI applications built
 
 ## Philosophy
 
-**CLI UX is critical.** Unlike web apps with visual feedback, CLI tools communicate entirely through text. Poor error messages, missing progress indicators, or unexpected exits destroy user trust. Review with empathy for the end user.
+A CLI has three callers. A person at a terminal sees colour, spinners and prompts. A script piping the output sees stdout and the exit code, and nothing else. CI has no terminal at all: no prompt can be answered and no keypress arrives. Code that works when its author runs it by hand fails the other two silently, which is why these checks are about codes, streams and TTYs before wording.
 
-**When reviewing CLI code:**
-
-- Verify all paths to process.exit() use named constants
-- Check that every async operation has visual feedback (spinners)
-- Ensure cancellation is handled gracefully everywhere
-- Validate error messages explain WHAT failed and HOW to fix it
-- Confirm help text is useful and examples are included
-
-**When NOT to be harsh:**
-
-- Don't block PRs for help text wording if functionality is correct
-- Don't require spinners for operations under 500ms
-- Don't nitpick color choices if they follow existing patterns
-- Don't request verbose mode if the CLI is simple enough
-
-**Core principles:**
-
-- **Safety First**: Exit codes and signal handling are non-negotiable
-- **User Empathy**: Every error should guide users to resolution
-- **Consistency**: All commands should follow the same patterns
-- **Testability**: CLI code should be testable without spawning processes
+Weigh findings by caller. A defect a script or CI can observe blocks, and so does output garbled on the terminal; one that otherwise costs only a person at a terminal is a Should Fix that travels with the approval; help wording and colour choices that match the existing commands are not findings. Don't require a spinner for an operation under 500 ms, or a verbose mode in a CLI simple enough to need none.
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: CLI Review Checklist
-
-Use this comprehensive checklist for every CLI code review.
-
-#### Entry Point Verification
-
-```markdown
-## CLI Entry Point Review
-
-**Signal Handling:**
-
-- [ ] SIGINT handler exists in entry point
-- [ ] SIGINT calls process.exit with EXIT_CODES.CANCELLED
-- [ ] Other relevant signals handled (SIGTERM for containers)
-
-**Command Registration:**
-
-- [ ] Commands imported and registered cleanly
-- [ ] parseAsync() used (not parse()) for async actions
-- [ ] Global error handler with catch() on main()
-- [ ] configureOutput() used for colored errors
-- [ ] showHelpAfterError(true) enabled
-
-**Global Options:**
-
-- [ ] --dry-run supported for destructive operations
-- [ ] --verbose supported for debug output
-- [ ] --help generates useful output
-- [ ] --version displays correct version
-```
-
-**Why this matters:** Entry point issues affect every command. Missing SIGINT handling leaves users unable to cancel, missing parseAsync swallows errors silently.
-
----
-
-### Pattern 2: Exit Code Review
-
-Verify all exit paths use named constants.
-
-#### Exit Code Verification Checklist
-
-```markdown
-## Exit Codes Review
-
-**Named Constants:**
-
-- [ ] Exit codes defined as named constants (e.g., EXIT_CODES object)
-- [ ] All exit codes have JSDoc descriptions
-- [ ] Uses `as const` for type inference
-
-**Usage Audit:**
-
-- [ ] No magic numbers in process.exit() calls
-- [ ] Correct exit code for each scenario:
-  - Success: EXIT_CODES.SUCCESS (0)
-  - General error: EXIT_CODES.ERROR (1)
-  - Invalid args: EXIT_CODES.INVALID_ARGS (2)
-  - User cancelled: EXIT_CODES.CANCELLED
-  - Validation failed: EXIT_CODES.VALIDATION_ERROR
-```
-
-```typescript
-// Must Fix: Magic number exit code
-process.exit(1); // What does 1 mean?
-
-// Good: Named constant
-process.exit(EXIT_CODES.VALIDATION_ERROR);
-```
-
-**Why this matters:** Magic exit codes are unmaintainable. Scripts that depend on your CLI need predictable, documented exit codes.
-
----
-
-### Pattern 3: Prompt Cancellation Review
-
-Every @clack/prompts call must check for cancellation.
-
-#### Cancellation Handling Audit
-
-```typescript
-// Must Fix: Missing isCancel check
-const name = await p.text({ message: "Name:" });
-// User presses Ctrl+C - name is Symbol, code continues with garbage
-
-// Good: Proper cancellation handling
-const name = await p.text({ message: "Name:" });
-if (p.isCancel(name)) {
-  p.cancel("Setup cancelled");
-  process.exit(EXIT_CODES.CANCELLED);
-}
-```
-
-**Review Checklist:**
-
-```markdown
-## Prompt Cancellation Review
-
-For EACH @clack/prompts call (p.text, p.select, p.confirm, p.multiselect):
-
-- [ ] p.isCancel() check immediately follows
-- [ ] p.cancel() called with descriptive message
-- [ ] process.exit() called with EXIT_CODES.CANCELLED
-- [ ] No code executes after isCancel returns true
-```
-
-**Why this matters:** Missing isCancel checks cause undefined behavior when users press Ctrl+C. The code continues with a Symbol value instead of the expected string/boolean.
-
----
-
-### Pattern 4: Async Operation Review
-
-Verify spinners and error handling for all async work.
-
-#### Spinner Usage Review
-
-```typescript
-// Must Fix: No feedback for long operation
-const data = await fetchRemoteConfig(); // User sees nothing
-
-// Good: Spinner with descriptive messages
-const s = p.spinner();
-s.start("Fetching configuration...");
-try {
-  const data = await fetchRemoteConfig();
-  s.stop(`Loaded ${data.items.length} items`);
-} catch (error) {
-  s.stop("Failed to fetch configuration");
-  p.log.error(error.message);
-  process.exit(EXIT_CODES.NETWORK_ERROR);
-}
-```
-
-**Review Checklist:**
-
-```markdown
-## Async Operations Review
-
-For EACH async operation (API calls, file operations, network):
-
-- [ ] Spinner started with descriptive message
-- [ ] Spinner stopped before any console output
-- [ ] Spinner stopped before error logging
-- [ ] Success message includes result info
-- [ ] Error handling exists with appropriate exit code
-```
-
-**Why this matters:** Users need feedback that something is happening. Silent operations feel broken.
-
----
-
-### Pattern 5: Error Message Quality Review
-
-Evaluate error messages for actionability.
-
-#### Error Message Criteria
-
-```markdown
-## Error Message Review
-
-For EACH error path:
-
-- [ ] Message explains WHAT failed (not just "Error")
-- [ ] Message explains WHY it failed (permission, network, validation)
-- [ ] Message suggests HOW to fix it (retry, check config, provide flag)
-- [ ] Uses picocolors consistently (red for errors, yellow for warnings)
-- [ ] Includes relevant context (file path, option name, command)
-```
-
-```typescript
-// Must Fix: Unhelpful error
-p.log.error("Failed");
-
-// Should Fix: Better but no resolution
-p.log.error(`Config file not found: ${configPath}`);
-
-// Good: Actionable error
-p.log.error(`Config file not found: ${configPath}`);
-p.log.info(`Run 'mycli init' to create one, or specify path with --config`);
-```
-
-**Why this matters:** Actionable errors reduce support burden and improve user experience. Users should never be stuck.
-
----
-
-### Pattern 6: Configuration Hierarchy Review
-
-Verify config resolution follows correct precedence.
-
-#### Config Precedence Checklist
-
-```markdown
-## Configuration Review
-
-**Precedence Order (highest to lowest):**
-
-1. [ ] CLI flags (--source, --config)
-2. [ ] Environment variables (MYAPP_SOURCE)
-3. [ ] Project config (.myapp/config.yaml in cwd)
-4. [ ] Global config (~/.myapp/config.yaml)
-5. [ ] Default values (hardcoded constants)
-
-**Implementation:**
-
-- [ ] resolveConfig function exists and follows precedence
-- [ ] Empty flag values handled (--source "" should error or skip)
-- [ ] Missing config files handled gracefully (no crash)
-- [ ] Source/origin tracked for debugging (--verbose shows where value came from)
-```
-
-**Why this matters:** Incorrect config precedence confuses users. If env var overrides flag, that's a bug.
-
----
-
-### Pattern 7: Help Text Review
-
-Evaluate command documentation quality.
-
-#### Help Text Checklist
-
-```markdown
-## Help Text Review
-
-**Command Documentation:**
-
-- [ ] Description is clear and concise
-- [ ] All options have descriptions
-- [ ] Required vs optional options clear
-- [ ] Default values documented in option descriptions
-
-**Examples Section:**
-
-- [ ] Common use cases shown
-- [ ] Examples are copy-paste ready
-- [ ] Complex options demonstrated
-
-**Consistency:**
-
-- [ ] Naming follows conventions (--dry-run not --dryRun)
-- [ ] Short flags used for common options (-f for --force)
-- [ ] Help shown after errors (showHelpAfterError enabled)
-```
-
----
-
-### Pattern 8: Testing Adequacy Review
-
-Verify CLI tests cover critical paths.
-
-#### CLI Testing Checklist
-
-```markdown
-## Testing Review
-
-**Command Testing:**
-
-- [ ] Happy path tested for each command
-- [ ] Invalid arguments tested (missing required, unknown options)
-- [ ] --help output tested
-- [ ] exitOverride() used to prevent process.exit in tests
-
-**Prompt Testing:**
-
-- [ ] @clack/prompts mocked properly
-- [ ] Cancellation flow tested (isCancel returns true)
-- [ ] Validation rejection tested
-- [ ] Multiple selection paths tested
-
-**File System Testing:**
-
-- [ ] In-memory filesystem used for isolated tests
-- [ ] Config loading tested (missing, invalid, valid)
-- [ ] File write operations tested
-
-**Exit Code Testing:**
-
-- [ ] Success exits with 0
-- [ ] Each error type returns correct non-zero code
-- [ ] Cancellation exits with CANCELLED code
-```
-
-See [examples/core.md](examples/core.md) for test code patterns to look for during review.
-
----
-
-### Pattern 9: Command Structure Review
-
-Verify command organization is logical.
-
-#### Structure Checklist
-
-```markdown
-## Command Structure Review
-
-**Organization:**
-
-- [ ] Related commands grouped as subcommands (config show, config set)
-- [ ] Each command in separate file
-- [ ] No god commands (> 200 lines)
-- [ ] Shared utilities extracted to lib/
-
-**Options:**
-
-- [ ] Global options defined on parent (--verbose, --dry-run)
-- [ ] optsWithGlobals() used to access parent options
-- [ ] Option names consistent across commands
-
-**Arguments:**
-
-- [ ] Positional arguments have clear names
-- [ ] Required vs optional arguments documented
-- [ ] Argument validation happens early in action
-```
-
----
-
-### Pattern 10: Security Review
-
-Check for CLI-specific security concerns.
-
-#### Security Checklist
-
-```markdown
-## CLI Security Review
-
-**Input Validation:**
-
-- [ ] No shell injection (user input not concatenated into shell commands)
-- [ ] File paths validated before operations
-- [ ] URLs validated before fetch
-
-**Secrets Handling:**
-
-- [ ] API keys/tokens not logged (even in verbose mode)
-- [ ] Sensitive options not shown in help output
-- [ ] Config files with secrets have appropriate permissions warning
-
-**Dependency Injection:**
-
-- [ ] Arguments not passed directly to child_process
-- [ ] execa or similar used instead of exec when needed
-```
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
+## Which checks a diff needs
 
-### Severity Classification for CLI Issues
+- **The entry point or dispatch** — Patterns 1 and 6
+- **A command's action** — Patterns 1, 5 and 7
+- **Prompts, confirmations or key-driven UI** — Patterns 2 and 4
+- **Long-running work, or anything that writes files or spawns children** — Patterns 3 and 9
+- **Logging, progress or a `--json` mode** — Pattern 5
+- **Config loading** — Pattern 8
+- **Tests** — Pattern 10, against the contracts the other patterns name
 
+## Severity for CLI findings
+
+```text
+Does it expose the user — input reaching a shell, a secret in ps output, history or logs?
+├─ YES → MUST FIX
+└─ NO → Can a script or CI observe it — wrong exit code, polluted or truncated stdout, a hang?
+    ├─ YES → MUST FIX
+    │   ├─ A failure or cancel that exits 0, or an exit code written as a literal
+    │   ├─ A prompt whose cancel path is unchecked, or that runs without a TTY guard
+    │   ├─ Diagnostics or animation on stdout
+    │   ├─ process.exit() after writing output
+    │   ├─ An async handler the dispatch does not await
+    │   ├─ A SIGINT or SIGTERM listener that does not end the process
+    │   ├─ Ctrl+C leaving partial files that break the next run
+    │   └─ Config precedence out of order, so a flag the caller passed is ignored
+    └─ NO → Does it garble what the terminal shows?
+        ├─ YES → MUST FIX
+        │   └─ A spinner still running while a log line or error is written
+        └─ NO → Does a person at the terminal lose something?
+            ├─ YES → SHOULD FIX
+            │   ├─ An error that names the failure but not the fix
+            │   ├─ A raw stack trace on an expected failure
+            │   ├─ A destructive command with no --dry-run
+            │   ├─ A destructive command with no confirmation
+            │   ├─ An operation likely to exceed 500 ms with no progress on stderr
+            │   ├─ A prompt that accepts any answer without validating it
+            │   └─ No --verbose or debug mode in a CLI with more than trivial behaviour
+            └─ NO → NICE TO HAVE, or leave it out
+                ├─ More help examples, richer --verbose output, --json for a command nobody scripts yet → NICE TO HAVE
+                └─ Help wording, colour choices matching existing commands → DON'T MENTION
 ```
-Is this a safety/correctness issue?
-├─ Missing SIGINT handler → MUST FIX
-├─ Missing p.isCancel() check → MUST FIX
-├─ Magic number exit code → MUST FIX
-├─ parse() instead of parseAsync() → MUST FIX
-├─ Missing error handling on async → MUST FIX
-└─ NO → Is it a user experience issue?
-    ├─ Missing spinner for >500ms operation → SHOULD FIX
-    ├─ Unhelpful error message → SHOULD FIX
-    ├─ Incorrect config precedence → SHOULD FIX
-    ├─ Missing --help descriptions → SHOULD FIX
-    └─ NO → Is it an enhancement?
-        ├─ Could add --json output → NICE TO HAVE
-        ├─ Could add more examples in help → NICE TO HAVE
-        ├─ Could improve verbose logging → NICE TO HAVE
-        └─ Style preference → DON'T MENTION
-```
 
-### Approval Decision Framework
-
-**APPROVE when:**
-
-- All SIGINT/cancellation handling verified
-- All exit codes use named constants
-- parseAsync() used for async commands
-- Error handling exists for async operations
-- Tests cover critical paths
-
-**REQUEST CHANGES when:**
-
-- Missing p.isCancel() checks (any prompt)
-- Magic numbers in process.exit()
-- parse() used with async actions
-- Missing spinner for long operations
-- Unhelpful error messages
-
-**MAJOR REVISIONS NEEDED when:**
-
-- No SIGINT handler in entry point
-- Systematic missing cancellation handling
-- No exit code constants defined
-- No error handling pattern established
-- Security vulnerabilities (shell injection)
+A defect found at every call site is one finding about the missing mechanism — no exit-code module, no top-level handler, no prompt wrapper — rather than one finding per site. The fix is the mechanism.
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues (Must Fix):**
+> The snippets are portable shapes. `askForName`, `isCancelled`, `reportCancelled`, `dispatch`, `reportFailure` and `UsageError` stand for your prompt library's, parser's and project's own names; Node's `process` and `child_process` APIs are named as themselves.
 
-- Missing `process.on("SIGINT", ...)` in entry point
-- Missing `p.isCancel()` after ANY prompt call
-- Using `process.exit(1)` or `process.exit(0)` instead of named constants
-- Using `program.parse()` instead of `program.parseAsync()` with async actions
-- Spinner not stopped before error logging (output corruption)
-- Shell injection vulnerability (user input in exec/spawn)
+### Pattern 1: Exit Codes on Every Path
 
-**Medium Priority Issues (Should Fix):**
+Every code is a named constant, cancellation has its own, and once output has been written the code is set with `process.exitCode` rather than `process.exit()`, so pending writes to a pipe still drain.
 
-- No spinner for operations likely to exceed 500ms
-- Error message says what failed but not how to fix it
-- Missing `--dry-run` support for destructive operations
-- No verbose mode for debugging
-- Config precedence incorrect (env overrides flag)
-- Missing validation for user input in prompts
-- No `showHelpAfterError(true)` configured
+```typescript
+export const EXIT_CODES = {
+  SUCCESS: 0,
+  ERROR: 1,
+  INVALID_ARGS: 2,
+  CANCELLED: 130, // 128 + SIGINT, what a shell reports for Ctrl+C
+} as const;
 
-**Common Mistakes:**
+process.exitCode = EXIT_CODES.INVALID_ARGS;
+```
 
-- Forgetting to call process.exit() after p.cancel()
-- Not using optsWithGlobals() to access parent command options
-- Logging before stopping spinner (garbled output)
-- Not handling empty string values for flags
-- YAML parse errors not caught
-- Async errors swallowed in .action() callbacks
+Full code: [examples/core.md](examples/core.md#pattern-1-exit-codes-on-every-path)
 
-**Gotchas & Edge Cases:**
+### Pattern 2: Prompt Cancellation
 
-- Commander auto-converts `--my-option` to `myOption` in options object
-- Spinner.stop() must be called even on error path
-- p.isCancel() returns true for Symbol values, not undefined
-- process.exit() in async context may not wait for pending I/O
-- Colors may not render in CI environments (check NO_COLOR env)
-- Config file might exist but be invalid YAML
+Ctrl+C during a prompt is a keypress the library reports in its own shape — a cancel value, a rejection, or a missing field. Each call handles it before the answer is used, and the run ends with the cancellation code.
 
-</red_flags>
+```typescript
+const name = await askForName();
+if (isCancelled(name)) {
+  reportCancelled("Setup cancelled; nothing was written.");
+  process.exitCode = EXIT_CODES.CANCELLED;
+  return;
+}
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-2-prompt-cancellation)
+
+### Pattern 3: Signal Handlers
+
+Without a listener, Node answers `SIGINT` and `SIGTERM` by restoring the terminal and exiting with 128 plus the signal number. A listener removes that default, so it earns its place only where there is something to clean up, and it ends the process itself.
+
+```typescript
+process.on("SIGINT", () => {
+  console.error("Interrupted; removing partial output.");
+  removePartialOutput();
+  process.exit(EXIT_CODES.CANCELLED);
+});
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-3-signal-handlers)
+
+### Pattern 4: A Non-Interactive Twin for Every Prompt
+
+A flag or config key supplies every value a prompt asks for, and the prompt runs only when stdin is a TTY.
+
+```typescript
+if (flags.region === undefined && !process.stdin.isTTY) {
+  throw new UsageError("--region is required when stdin is not a terminal");
+}
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-4-a-non-interactive-twin-for-every-prompt)
+
+### Pattern 5: Stream Split and Decoration
+
+stdout carries the payload and nothing else; progress, warnings and errors go to stderr. Animation and colour depend on their stream being a TTY and on `NO_COLOR` being unset or empty.
+
+```typescript
+const decorate =
+  process.stderr.isTTY && !process.env.NO_COLOR && process.env.TERM !== "dumb";
+
+process.stderr.write("Fetching records\n");
+process.stdout.write(`${JSON.stringify(records)}\n`);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-5-stream-split-and-decoration)
+
+### Pattern 6: Awaited Dispatch and One Error Handler
+
+The entry point awaits the parser's asynchronous dispatch inside one handler that turns any failure into a message and a code. Where a parser offers both a synchronous and an asynchronous entry point, async handlers need the asynchronous one.
+
+```typescript
+try {
+  await dispatch(process.argv.slice(2));
+} catch (error) {
+  process.exitCode = reportFailure(error);
+}
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-6-awaited-dispatch-and-one-error-handler)
+
+### Pattern 7: Actionable Error Text
+
+What failed, why, how to fix it, and where to look — on stderr, with the stack trace behind a debug flag.
+
+```text
+BAD:  Error: ENOENT
+GOOD: Config file not found at ./tool.config.json.
+      Run 'tool init' to create one, or pass --config <path>.
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-7-actionable-error-text)
+
+### Pattern 8: Config Precedence
+
+Flag, then environment, then project config, then user config, then default — per key. `??` lets an explicit empty value win and `||` skips it; either can be right, and the choice is part of the contract.
+
+```typescript
+const region =
+  flags.region ??
+  process.env.TOOL_REGION ??
+  projectConfig.region ??
+  userConfig.region ??
+  DEFAULT_REGION;
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-8-config-precedence)
+
+### Pattern 9: Subprocesses Without a Shell
+
+User input reaches a child process as one element of an argument array, with no shell in between. An array passed with `shell: true` is joined with spaces, not escaped.
+
+```typescript
+import { execFile } from "node:child_process";
+
+execFile("git", ["checkout", branch], onDone);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-9-subprocesses-without-a-shell)
+
+### Pattern 10: Tests That Reach the Contract
+
+In-process tests cover logic. The exit code, the stream split and the non-TTY path are properties of a real process, so at least one test per contract spawns the built CLI with piped stdio.
+
+```typescript
+const run = spawnSync(process.execPath, [CLI_ENTRY, "deploy"], {
+  encoding: "utf8",
+});
+
+equal(run.status, EXIT_CODES.INVALID_ARGS);
+equal(run.stdout, "");
+match(run.stderr, /--region is required/);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-10-tests-that-reach-the-contract)
+
+</patterns>
 
 ---
 
-<critical_reminders>
+<red_flags>
 
-## CRITICAL REMINDERS
+## Red flags
 
-> **All code must follow project conventions in CLAUDE.md**
+**Breaks at runtime:**
 
-**(You MUST verify SIGINT (Ctrl+C) handling exists in CLI entry point)**
+- `process.exit()` straight after writing output — writes to a pipe are asynchronous on POSIX and the exit abandons them, so `tool --json | jq` receives a stream cut short, typically at the 64 KiB pipe buffer. Set `process.exitCode` and return.
+- A catch block that logs and returns — the process exits 0, and everything chained with `&&` runs as though the command succeeded.
+- A prompt answer used without its cancel check — a cancel value flows on as input, a rejection escapes as a stack trace, a dropped field arrives as `undefined`.
+- A `SIGINT` or `SIGTERM` listener that cleans up and returns — it replaced Node's default exit, so the process keeps running, and a supervisor that sent `SIGTERM` waits out its grace period and kills it.
+- Async cleanup started in a signal listener and not awaited before `process.exit()` — the exit cuts it off half done.
+- An async command handler the dispatch does not await — the rejection skips the CLI's error handler, and Node prints the raw stack and exits 1.
+- A prompt with no TTY guard — in CI it waits forever, or a component that needs raw mode throws.
+- A log line or error written before the spinner is stopped — the spinner's next frame overwrites or splits it, so the output is garbled. Stop the spinner first, on every path.
+- A log line or spinner frame on stdout in a `--json` command — every consumer's parse fails. Where a framework suppresses its own logger under `--json`, a direct `console.log` is not suppressed.
+- User input in an `exec` string, or in an argument array passed with `shell: true` — both reach a shell unescaped. Use `execFile` or `spawn` with an array and no shell.
+- A config file parsed without a catch — a typo in the user's config surfaces as a stack trace instead of the path and what is wrong with it.
 
-**(You MUST verify p.isCancel() is called after EVERY @clack/prompts call)**
+**Surprising behaviour:**
 
-**(You MUST verify exit codes use named constants - flag ANY magic numbers in process.exit())**
+- A `SIGINT` listener never fires while a prompt or key-reading component is open — raw mode turns Ctrl+C into input the library handles.
+- Synchronous work under a spinner or key-reading component delays Ctrl+C until it finishes, because the library re-handles the keypress on the event loop.
+- `process.stdin.isTTY` is defined only on a terminal stream — test it for truthiness; `=== false` never matches a pipe.
+- Many parsers store a multi-word flag under a camelCase key — `--dry-run` arrives as `dryRun` — so reading it under the kebab-case key returns `undefined` with no error. Check each option is read under the key the parser actually produces.
+- `NO_COLOR` set to an empty string leaves colour on — the convention keys on present and non-empty, and an explicit flag or user config overrides it.
+- Argument parsers exit the process themselves on `--help`, `--version` and usage errors, so an in-process test without the parser's exit override ends the test run.
+- On Windows, spawning a `.cmd` or `.bat` file — package-manager shims among them — without a shell throws `EINVAL`, and the usual workaround, `shell: true`, routes every argument through `cmd.exe`.
+- A process ended by a signal it does not handle exits with 128 plus the signal number — 130 for `SIGINT`, 143 for `SIGTERM` — and that is the code a wrapper script sees.
+- A secret passed as a flag value is readable in `ps` output and shell history even when the CLI never prints it — take a file path or stdin instead.
 
-**(You MUST verify parseAsync() is used for async actions, not parse())**
-
-**(You MUST verify spinners are stopped before any console output or error handling)**
-
-**Failure to catch these issues will result in CLIs that crash on Ctrl+C, have undocumented exit codes, and silently swallow errors.**
-
-</critical_reminders>
+</red_flags>

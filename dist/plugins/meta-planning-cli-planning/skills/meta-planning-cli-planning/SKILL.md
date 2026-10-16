@@ -1,67 +1,66 @@
 ---
 name: meta-planning-cli-planning
-description: CLI specification planning frameworks. Use when a spec touches a command surface, an interactive flow, config precedence, exit codes, or output modes. Covers flag contracts, prompt flow design, precedence tables, exit-code taxonomy, TTY/piped/JSON output, error text, signals, and cross-platform concerns.
+description: CLI specification frameworks — flag contracts, prompt flows, config precedence, exit codes, output per context (TTY, piped, JSON), error and help text, signals and cross-platform behaviour. Use when a spec adds or changes a command surface, an interactive flow, a config key, an exit path or what a command prints.
 ---
 
-# CLI Planning Frameworks
+# CLI Planning Patterns
 
-> **Quick Guide:** Specify each contract the feature actually touches — the full flag table for a new surface, the per-step prompt table for an interactive flow, a precedence table per config key, an exit code for every terminating path, and output behaviour per context (TTY, piped, `--json`, quiet, verbose). Apply a framework only when the spec touches its artifact class; a config-only change needs no prompt-flow section.
+> **Quick Guide:** A command's flags, exit codes, output streams and config keys are contracts that humans, scripts and CI all branch on, so the spec states each one the feature touches — user-facing text verbatim — and leaves out the sections it does not touch. Four facts change the answer more often than taste does: a secret never takes a flag value; Ctrl+C at a key-reading prompt is a keypress, not a signal; exiting 130 is not the same as dying by SIGINT; and prompts render on stdout unless the spec moves them.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — a fill-in template for each section below, and a worked specification for a deploy command that uses them
+
+---
+
+## Which sections the spec needs
+
+Each section governs one kind of contract. Include it only when the spec touches that contract — a section filled with placeholders reads as a decision nobody made.
+
+- **Adds or changes a command, argument or flag** — Command Surface, Exit-Code Contract and Output Contract (Patterns 1, 4 and 5).
+- **Adds or changes a prompt or a wizard step** — Interactive Flow (Pattern 2).
+- **Adds or changes a config key** — Configuration Precedence (Pattern 3), one table per key.
+- **Changes only messages, help or diagnostics** — Error Messages and Help Text (Pattern 6).
+- **Runs longer than an instant, or writes anything** — Signal Handling and Cancellation (Pattern 7), on top of whatever else applies.
+- **Touches paths, files or terminal capabilities** — Cross-Platform Concerns (Pattern 8).
+
+When none of these holds, the feature has no CLI contract and the spec carries no CLI section.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Specifying CLI Contracts
+## Before specifying a CLI change
 
-> **All specifications must be grounded in the codebase's real commands, prompts, resolvers, and constants** — reference specific files with line numbers
+**Read the closest existing command first, and reuse its flag names, prompt helpers, config resolver, exit-code constants and output helpers.** They are the vocabulary the spec has to speak; a spec that invents its own ships a CLI with two conventions, and leaves the developer to pick which one is wrong.
 
-**(You MUST give every prompted value a non-interactive twin — a flag or config key — and state what happens with no TTY and no flag)**
+**Give every prompted value a non-interactive twin, and state what happens with no TTY and no twin.** A value only a prompt can supply makes the command unusable in CI, and nobody finds out until a pipeline hangs.
 
-**(You MUST give every terminating path an exit code named as a constant, with cancellation distinct from failure)**
+**Give every terminating path an exit code, named by its constant, with cancellation kept apart from failure.** Scripts branch on the code, so a path the spec leaves open exits with a number the developer chose and nobody documented.
 
-**(You MUST specify output per context — TTY, piped, `--json`, quiet, verbose — and state which stream carries payload versus diagnostics)**
+**Specify output for every context — TTY, piped, `--json`, quiet, verbose — and which stream carries the payload.** stdout is what a pipe captures, so anything else written there corrupts the consumer's input.
 
-**(You MUST state config precedence per key as a table with merge semantics — "merged" without a rule is not a rule)**
-
-**(You MUST apply each framework only when the spec touches its artifact class — an unused section is omitted, never filled with placeholders)**
+**State config precedence per key as a table, with the merge rule for arrays and objects.** "Merged" without a rule gets implemented as replace in one place and concatenate in another.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** CLI spec, command surface design, flag contract, subcommand, interactive wizard spec, prompt flow, config precedence, exit codes, JSON output mode, help text spec, signal handling spec
+**Auto-detection:** CLI spec, command surface, subcommand design, flag contract, `--json` output, `--dry-run`, `--yes`, `--no-input`, non-interactive mode, prompt flow, wizard step, exit codes, exit status 130, SIGINT, SIGTERM, `NO_COLOR`, `FORCE_COLOR`, config precedence, help text, flag deprecation
 
-**When to use:**
+**Applies to:**
 
-- Specifying a new command or subcommand surface (arguments, flags, aliases)
-- Specifying an interactive flow (prompt sequence, keybindings, cancellation)
-- Specifying configuration keys and their resolution order
-- Specifying output contracts (TTY, piped, `--json`, quiet, verbose)
-- Specifying exit codes, error messages, help text, or signal handling
-- Changing an existing surface (backward compatibility, deprecation path)
+- Specifying a new command or subcommand — arguments, flags, aliases, help
+- Specifying an interactive flow — prompt order, keys, cancellation, the non-interactive path
+- Config keys and the order they resolve in
+- Exit codes, output per context, error text and signal behaviour
+- Changing an existing surface without breaking the scripts that call it
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- When implementing CLI code (use the relevant CLI implementation skill)
-- For backend API or frontend UI specifications (use the api/web planning skills)
-- For the planning PROCESS itself — research, scope fencing, success criteria — which the PM agent carries
-
-**Key patterns covered:**
-
-- Command surface design (argument vs flag vs subcommand vs prompt)
-- Per-flag contract fields and naming rules
-- Interactive flow design (when to prompt, per-step specification)
-- Configuration precedence tables and merge semantics
-- Exit-code contract rules
-- Output contract per context, stream split, `--json` shape
-- Error-message anatomy and help-text requirements
-- Signal handling and cancellation invariants
-- Cross-platform concerns
-- Common CLI spec failures
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Per-artifact spec section templates and a worked example specification
+- Implementing the command — parser declarations, prompt code and rendering belong to the implementation; this skill fixes the contract they implement.
+- The spec's general sections — goal, scope fence, file references and success criteria — belong to whoever writes the spec; this skill supplies the CLI sections that sit inside it.
+- Contracts for an HTTP API or a UI — status codes, request shapes and UI states are planned with frameworks of their own.
 
 ---
 
@@ -69,203 +68,183 @@ description: CLI specification planning frameworks. Use when a spec touches a co
 
 ## Philosophy
 
-**A CLI's public API is bigger than its code.** Flags, exit codes, output streams, and config keys are contracts that humans, scripts, and CI all branch on. A spec that leaves one of them implicit forces the developer to invent it — and an invented contract is one nobody documented.
+A CLI's public API is bigger than its code. Flags, exit codes, output streams and config keys are what humans, scripts and CI branch on, and a contract the spec leaves implicit is one the developer invents and nobody documents.
 
-**When specifying CLI work:**
+So the spec answers three callers at once: a human at a TTY, a script piping the output, and CI with no TTY at all. User-facing text is written verbatim, because approximate wording produces a CLI that words one failure five ways. Cancellation and cleanup are stated as invariants a tester can assert, not as intentions.
 
-- Read the closest existing command first; its flag names, exit constants, and output helpers are the vocabulary the spec must reuse
-- Specify for all three callers at once: a human at a TTY, a script piping output, and CI with no TTY at all
-- Write user-facing text verbatim — approximate wording produces an inconsistent CLI
-- State cancellation and cleanup as invariants a tester can assert ("after SIGINT during upload, no `.tmp` files remain and exit code is 130")
-
-**When NOT to specify:**
-
-- Don't fill a framework section the feature never touches — a flag-only change needs no interactive-flow table
-- Don't propose a new exit code when an existing failure class fits
-- Don't design a subcommand when a flag on an existing command achieves the goal
-- Don't specify implementation (handler bodies, parser wiring) — contracts, not code
-
-**Core principles:**
-
-- **Every prompt has a flag twin**: a value only a prompt can supply makes the command unusable in CI
-- **One code per actionable failure class**: two failures a script handles identically need one code
-- **stdout is payload, stderr is everything else**: progress must survive piping without polluting the pipe
-- **Proportionality**: the spec's size follows the surface it changes, not the framework list
+The spec's size follows the surface it changes. A flag-only change needs no prompt-flow table, a new exit code is proposed only when no existing class fits, and a new subcommand only when a flag on an existing command cannot do the job. Handler bodies and parser wiring stay out — the spec fixes contracts, not code.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Argument, flag, subcommand or prompt
+
+Decided by the value's role, not by preference:
+
+```
+Is the value the thing the command acts on, and supplied in almost every call?
+├─ YES → positional argument (app deploy <environment>)
+└─ NO  → Does it change how the command behaves?
+    ├─ YES → flag (--dry-run, --force, --concurrency=4)
+    └─ NO  → Does it select a different operation altogether?
+        ├─ YES → subcommand (app config get | app config set)
+        └─ NO  → Can only the human at the terminal supply it?
+            ├─ YES → prompt, with a twin that supplies the same value
+            └─ NO  → derive it from config or the filesystem; do not ask
+```
+
+## Prompt, derive or refuse
+
+```
+Can the value come from a flag, config or the filesystem?
+├─ YES → derive it; do not prompt
+└─ NO  → Is stdin a TTY, with prompting not switched off?
+    ├─ NO  → usage error naming the twin that supplies the value
+    └─ YES → Is the action destructive or expensive?
+        ├─ YES → confirm, skippable with --yes
+        └─ NO  → prompt, pre-filled with the best default
+```
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Command Surface Design
+### Pattern 1: Command Surface
 
-Argument, flag, subcommand, or prompt — decided by role, not preference.
+Each flag is a row carrying what its parser declaration needs: long and short name, type and unit, default, env var, and conflicts — the combinations that are a usage error rather than a silent winner. Whether it is required, which flags it implies and whether help hides it go with it where they apply.
 
-```
-Is the value the thing the command acts ON, and required in almost every call?
-├─ YES -> positional argument (app deploy <environment>)
-└─ NO  -> Does it modify HOW the command behaves?
-    ├─ YES -> flag (--dry-run, --force, --concurrency=4)
-    └─ NO  -> Does it select a fundamentally different operation?
-        ├─ YES -> subcommand (app config get | app config set)
-        └─ NO  -> Is it only knowable by asking the human?
-            ├─ YES -> prompt, with a flag that supplies the same value non-interactively
-            └─ NO  -> derive it from config or the filesystem; do not ask
+```markdown
+| Long        | Short | Type    | Default | Env Var       | Conflicts | Description                    |
+| ----------- | ----- | ------- | ------- | ------------- | --------- | ------------------------------ |
+| `--dry-run` | -n    | boolean | false   | —             | —         | Print the plan, change nothing |
+| `--timeout` | —     | seconds | 300     | `APP_TIMEOUT` | —         | Per-phase timeout              |
 ```
 
-**Naming rules to specify:**
+The spec also states:
 
-| Rule             | Specify as                                                             |
-| ---------------- | ---------------------------------------------------------------------- |
-| Command names    | Lowercase verb or noun-verb, matching the vocabulary already in use    |
-| Subcommand depth | Two levels maximum unless the codebase already goes deeper             |
-| Long flags       | `--kebab-case`, spelled out, no abbreviations                          |
-| Short flags      | Only for flags used constantly; never invent a new one-letter conflict |
-| Boolean flags    | Default false; provide `--no-<flag>` only when the default is true     |
-| Value flags      | Name the type and unit (`--timeout <seconds>`, not `--timeout`)        |
-| Repeatable flags | State explicitly that repetition accumulates (`--tag a --tag b`)       |
-| Aliases          | List them, and state which name is canonical in help output            |
+- **Short flags** only for flags used constantly, checked against every sibling command — a one-letter collision is found by a user, not a reviewer.
+- **Booleans** default to false; `--no-<flag>` exists only where the default is true.
+- **Repetition** — whether `--tag a --tag b` accumulates or the last one wins.
+- **Aliases**, with the canonical name help shows.
+- **Prefix matching** — whether the parser accepts an unambiguous prefix of a long flag.
+- **Names and depth** — commands lowercase, in the codebase's existing verb or noun-verb form; long flags spelled out in kebab-case; subcommands at most two levels deep (noun, then verb) unless the existing commands already go deeper.
+- **Compatibility**, for every renamed or removed flag: what old invocations do now, the deprecation warning on stderr, the release that drops the alias, and whether the exit code changes.
 
-**Per-flag contract the spec must carry:**
+Template: [examples/core.md](examples/core.md#pattern-1-command-surface)
 
-| Field      | Why the developer needs it                                       |
-| ---------- | ---------------------------------------------------------------- |
-| Long name  | The parser declaration                                           |
-| Short name | Conflict checking against sibling commands                       |
-| Type       | Parser coercion and validation                                   |
-| Default    | Whether the value is optional downstream                         |
-| Required   | Whether a missing value is a usage error                         |
-| Env var    | Which layer of precedence it participates in                     |
-| Conflicts  | Which combinations are a usage error rather than a silent winner |
-| Requires   | Which flags imply other flags                                    |
-| Hidden     | Whether it appears in help                                       |
+### Pattern 2: Interactive Flow
 
-**Backward compatibility.** When changing an existing surface, state for every removed or renamed flag: what old invocations do now, whether a deprecation warning is emitted on stderr, which release removes the alias, and whether the exit code changes. A silently changed flag breaks scripts that nobody will report.
+Prompt only for what cannot be derived, and give each step a table that ends in its non-interactive twin.
 
-**Why this matters:** an undefined flag contract makes the developer invent a parser declaration, and every invention is a convention the CLI does not have.
-
----
-
-### Pattern 2: Interactive Flow Design
-
-Prompt only what cannot be derived, and give every step a complete contract.
-
-```
-Can the value be derived from config, a flag, or the filesystem?
-├─ YES -> derive it; do not prompt
-└─ NO  -> Is stdin a TTY?
-    ├─ NO  -> fail with a usage error naming the flag that supplies it
-    └─ YES -> Is the action destructive or expensive?
-        ├─ YES -> prompt for confirmation, skippable with --yes
-        └─ NO  -> prompt for the value, pre-filled with the best default
+```markdown
+| Element      | Specification                                     |
+| ------------ | ------------------------------------------------- |
+| Reached when | No environment from the argument or config        |
+| Prompt type  | select                                            |
+| Message      | `Deploy to which environment?`                    |
+| On cancel    | stderr `Cancelled.`, exit 130, nothing written    |
+| Twin         | positional `environment`, or `defaultEnvironment` |
 ```
 
-**Per-step specification:**
+The spec also states:
 
-| Element              | Specify                                                                        |
-| -------------------- | ------------------------------------------------------------------------------ |
-| Step name and order  | Where it sits in the sequence and what makes it reachable                      |
-| Prompt type          | Text, select, multi-select, confirm, path, password                            |
-| Message text         | The exact string shown                                                         |
-| Initial value        | Default, and where the default comes from                                      |
-| Options              | For selects: the option list, labels, hints, and ordering rule                 |
-| Validation           | The rule, when it fires (per keystroke or on submit), and the exact error text |
-| Empty state          | What renders when there is nothing to choose                                   |
-| Keybindings          | Any key beyond the framework defaults, and what it does                        |
-| Back and forward     | Whether the step is revisitable and what is preserved on return                |
-| Cancellation         | What Ctrl+C at this step leaves behind on disk                                 |
-| Non-interactive twin | The flag or config key that supplies the same value                            |
+- **A secret's twin** — stdin or a file (`--password-file`), never a flag value. Whether an environment variable is accepted as well is a decision to write down: CI tooling expects one, and every child process can read it.
+- **The switch that turns prompting off** even at a TTY — `--no-input`, or the codebase's existing equivalent.
+- **Accelerator keys** — whether they are case sensitive, and whether they go inert while a text input or filter has focus; a live accelerator swallows the characters the field needed.
+- **Keys** — when a step adds any beyond the defaults, what arrows, Space, Enter, Tab, Escape, Ctrl+C and any single-letter accelerator do there; a key the spec leaves out does whatever the prompt code happens to do.
+- **Terminal size** — the minimum usable width, what degrades first — for a grid or table, the order its columns drop in — and whether the flow redraws on resize.
+- **Back and forward** — which steps are revisitable, and what survives the return.
+- **Resumability** — whether partial progress persists, where, and what a re-run does with it. "Nothing persisted" is a decision; leaving the line out is not.
 
-**Keyboard interactions to specify explicitly** when a step adds any beyond the defaults: arrow keys, Space, Enter, Tab, Escape, Ctrl+C, and any single-letter accelerator. State whether accelerators are case sensitive, and whether they are inert when a filter or text input has focus. An accelerator that swallows a keystroke a text field needed is the classic wizard bug.
-
-**Terminal-size constraints:** state the minimum usable width and what degrades first (truncate labels, drop hint column, stack instead of columns). State whether the flow redraws on resize. If the flow renders a grid or table, give the column priority order for narrow terminals.
-
-**Resumability:** state whether partial progress is persisted, where, and what a re-run does with it — resume silently, prompt to resume, or discard. If nothing is persisted, say so; that is a decision, not an omission.
-
----
+Template: [examples/core.md](examples/core.md#pattern-2-interactive-flow)
 
 ### Pattern 3: Configuration Precedence
 
-Specify config as a table per key, never as prose. The resolution order is the contract:
+Config is a table per key, because the resolution order is the contract and prose leaves it to be inferred.
 
-| Layer       | Source               | Example                     |
-| ----------- | -------------------- | --------------------------- |
-| 1 (highest) | Command-line flag    | `--region eu-west-1`        |
-| 2           | Environment variable | `APP_REGION=eu-west-1`      |
-| 3           | Project config file  | `./app.config.ts`           |
-| 4           | User config file     | `~/.config/app/config.json` |
-| 5 (lowest)  | Built-in default     | `us-east-1`                 |
+```markdown
+| Precedence  | Source               | Identifier                              |
+| ----------- | -------------------- | --------------------------------------- |
+| 1 (highest) | Flag                 | `--region`                              |
+| 2           | Environment variable | `APP_REGION`                            |
+| 3           | Project config       | `region` in `./app.config.ts`           |
+| 4           | User config          | `region` in `~/.config/app/config.json` |
+| 5 (lowest)  | Built-in default     | `us-east-1`                             |
+```
 
-**Rules the spec must state:**
+The spec also states, per key:
 
-- **Per-key layer participation.** Not every key exists at every layer. Name the layers each key participates in, and the exact key or flag name at each.
-- **Merge semantics.** Scalars: first non-undefined wins. Arrays and objects: state replace or merge explicitly, per key. "Merge" without a rule is the most common source of config bugs.
-- **Absent versus empty.** State whether an explicitly empty value (`--tag ""`, `tags: []`) overrides a lower layer or is treated as unset.
-- **Discovery.** For project config: which filenames, searched from where, walking up how far, and what happens when two match.
-- **Validation timing.** Whether the config is validated on load or on use, and which exit code an invalid config produces.
-- **Write-back.** If the command writes config, state which file and layer it writes, whether it preserves comments and key order, and whether it writes atomically.
+- **The layers it participates in** — not every key exists at every layer.
+- **Merge semantics** — scalars take the highest layer that sets them; arrays and objects say replace, concatenate, or shallow or deep merge.
+- **Absent versus empty** — whether `--tag ""` or `tags: []` overrides a lower layer or counts as unset.
+- **Discovery** — which filenames, searched from where, how far up, and the tie-break when two match.
+- **Validation** — on load or on use, and the exit code an invalid value produces.
+- **Write-back** — which file and layer a write lands in, whether comments and key order survive, and whether the write is atomic.
 
----
+Template: [examples/core.md](examples/core.md#pattern-3-configuration-precedence)
 
 ### Pattern 4: Exit-Code Contract
 
-Every terminating path gets a code, and every code gets a documented meaning. Scripts branch on these; they are as much a public API as the flags.
+Every terminating path gets a code and every code a documented meaning; scripts branch on them as they do on flags.
 
-| Code    | Conventional meaning                            |
-| ------- | ----------------------------------------------- |
-| 0       | Success                                         |
-| 1       | Generic runtime failure                         |
-| 2       | Usage error (bad flag, missing argument)        |
-| 130     | Terminated by SIGINT (Ctrl+C)                   |
-| 143     | Terminated by SIGTERM                           |
-| Project | Domain-specific classes defined by the codebase |
+```markdown
+| Code     | Meaning                                                              |
+| -------- | -------------------------------------------------------------------- |
+| 0        | Success                                                              |
+| 1        | Generic runtime failure                                              |
+| 2        | Usage error — bad flag, missing argument                             |
+| 3–125    | Domain classes the codebase defines                                  |
+| 126, 127 | Set by the shell: found but not executable, not found                |
+| 128+N    | Set by the shell: killed by signal N — 130 is SIGINT, 143 is SIGTERM |
+```
 
-**Rules the spec must state:**
+Domain codes stay inside 3–125: a status is truncated to its low 8 bits, and the shell already gives 126 and above a meaning of its own.
 
-- Read the codebase's existing exit-code constants first and reuse them. Propose a new code only when no existing class fits, and say what it means.
-- One code per failure class the caller can act on differently. Two failures a script would handle identically do not need two codes.
-- Cancellation is not an error. Ctrl+C and a declined confirmation get their own codes, distinct from failure.
-- Partial success needs an explicit decision: fail the whole run, or succeed with a warning and a code that says "some items failed".
-- `--dry-run` exits 0 when the plan is valid, and the same failure code as a real run when it is not.
-- Name the constant, not the number, when the codebase has constants.
+The spec also states:
 
----
+- **Existing constants reused** — a new code only where no class fits, named by its constant rather than its number.
+- **One code per failure class a caller acts on differently** — two failures a script handles alike share a code.
+- **Cancellation apart from failure** — Ctrl+C and a declined confirmation exit with a code no failure uses.
+- **Partial success** — fail the run, or succeed with a code that says some items failed; either way, decided.
+- **`--dry-run`** exits 0 on a valid plan and with the real run's failure code otherwise, or CI cannot trust a passing dry run.
+
+Template: [examples/core.md](examples/core.md#pattern-4-exit-code-contract)
 
 ### Pattern 5: Output Contract
 
-**Stream split:** stdout carries the data the caller asked for. stderr carries everything else — progress, warnings, diagnostics, prompts. A command whose output is piped must still show its progress, and must not pollute the pipe with it.
+stdout carries the data the caller asked for; stderr carries everything else — progress, warnings, diagnostics and prompts — so progress survives piping without corrupting the pipe.
 
-**Mode matrix to fill in per command:**
+```markdown
+| Context         | Progress            | Colour  | Payload                          |
+| --------------- | ------------------- | ------- | -------------------------------- |
+| TTY, default    | Spinner or progress | Yes     | Human-readable summary, stdout   |
+| Piped (non-TTY) | Plain lines, stderr | No ANSI | Same payload, no decoration      |
+| `--json`        | None                | None    | One JSON document, stdout        |
+| `--quiet`       | None                | None    | Payload only; errors still shown |
+| `--verbose`     | Per-step detail     | On TTY  | Payload plus diagnostics         |
+```
 
-| Context         | Progress            | Colour and symbols | Payload                        |
-| --------------- | ------------------- | ------------------ | ------------------------------ |
-| TTY, default    | Spinner or progress | Yes                | Human-readable summary, stdout |
-| Piped (non-TTY) | Plain lines, stderr | No ANSI            | Same payload, no decoration    |
-| `--json`        | None                | None               | One JSON document, stdout      |
-| `--quiet`       | None                | Suppressed         | Payload only, errors only      |
-| `--verbose`     | Per-step detail     | Yes on TTY         | Payload plus diagnostics       |
+The spec also states:
 
-**Rules the spec must state:**
+- **The `--json` shape**, the error shape included — valid JSON on failure too, and nothing else on stdout.
+- **Colour** — off when the stream is not a TTY, `TERM` is `dumb`, `--no-color` is passed, or `NO_COLOR` is set to a non-empty value; a flag or user config overrides `NO_COLOR`. `FORCE_COLOR` is a convention rather than a standard — Node, for one, lets it override `NO_COLOR` — so the spec says which wins when both are set.
+- **The quiet and verbose ladder** — what each level suppresses or adds, whether each combines with `--json`, and which wins when they do not.
+- **Progress** — which operations show it and what each phase says: a spinner for waits of a few seconds, a count or percentage for longer ones.
+- **No-op output** — the exact message when a re-run has nothing to do, or silence written down as the decision. A short message such as `Already up to date.` is usually the better default, because silence leaves the user unsure whether anything ran.
+- **A closed pipe** — what the command does when the reader exits early (`app list | head -1`), and with which code.
 
-- **`--json` schema.** Give the exact object shape, including the error shape. `--json` must emit valid JSON on failure too, and must never interleave log lines into stdout.
-- **Colour detection.** Honour `NO_COLOR` and `FORCE_COLOR` and the TTY check. State the fallback glyphs when Unicode is unavailable.
-- **Quiet and verbose ladder.** State exactly which messages each level suppresses or adds. Whether they combine with `--json` and which wins.
-- **Progress thresholds.** Which operations warrant a spinner (typically anything over ~500ms), and what the spinner says at each phase.
-- **Idempotent re-runs.** State what the output says when there is nothing to do — silence is a decision, "Already up to date." is usually better.
-
----
+Template: [examples/core.md](examples/core.md#pattern-5-output-contract)
 
 ### Pattern 6: Error Messages and Help Text
 
-**Message anatomy** — specify all four parts, verbatim:
-
-1. **What failed** — the operation, named the way the user named it
-2. **Why** — the underlying cause, in the user's vocabulary, not the exception's
-3. **How to fix** — a concrete next command or edit
-4. **Where to look** — the file path, config key, or doc reference when one exists
+Each error has four parts, written verbatim: what failed, named as the user named it; why, in the user's vocabulary; how to fix it, as a concrete command or edit; and where to look, when a file, config key or doc page is involved.
 
 ```
 BAD:  Error: ENOENT
@@ -273,148 +252,77 @@ GOOD: Error: config file not found at ./app.config.ts.
       Run 'app init' to create one, or pass --config <path>.
 ```
 
-**Rules the spec must state:**
+The spec also states:
 
-- Errors go to stderr; never to stdout.
-- Never print a raw stack trace by default. State which flag or env var reveals it.
-- Unknown command or flag: state whether a "did you mean" suggestion is offered and the matching rule.
-- Validation errors name the offending value and the accepted set.
-- Errors caused by another tool quote that tool's message rather than paraphrasing it.
+- **Errors on stderr**, with no stack trace by default — and the flag or env var that reveals one.
+- **Unknown commands and flags** — whether a "did you mean" suggestion appears, and its matching rule. It suggests; it never runs the guess.
+- **Validation errors** naming the offending value and the accepted set.
+- **Another tool's failure** quoted as that tool reported it, not paraphrased.
+- **Help per command** — summary, usage line with argument arity, arguments, grouped flags, at least two real invocations and related commands, reachable as `--help`, `-h` and `help <command>`.
 
-**Help text to specify per command:** one-line summary, usage line with argument arity, argument descriptions, flags grouped and ordered, at least two worked examples of real invocations, and any related commands. State whether the command's help is reachable as `--help`, `-h`, and `help <command>`.
-
----
+Template: [examples/core.md](examples/core.md#pattern-6-error-messages-and-help-text)
 
 ### Pattern 7: Signal Handling and Cancellation
 
-Specify for every command that runs longer than an instant, or writes anything:
+For a command that runs longer than an instant or writes anything, cleanup is an invariant a tester can assert:
 
-| Concern              | Specify                                                                           |
-| -------------------- | --------------------------------------------------------------------------------- |
-| SIGINT (Ctrl+C)      | The message shown, the exit code, and how quickly it returns                      |
-| SIGTERM              | Whether it is handled distinctly from SIGINT                                      |
-| In-flight work       | Whether the current step finishes, is abandoned, or is rolled back                |
-| Partial writes       | Which files may be half-written and how a re-run recovers (atomic write, or lock) |
-| Terminal restoration | Cursor visibility, raw mode, alternate screen, and colour reset on exit           |
-| Cleanup              | Temp files, lock files, child processes, and open handles                         |
-| Second Ctrl+C        | Whether it forces an immediate exit while cleanup is running                      |
-| Prompt cancellation  | What a cancelled prompt does — same path as SIGINT, or a distinct message         |
+```markdown
+After SIGINT during upload, no `.staging/` prefix remains under the target,
+and the caller sees the process killed by SIGINT (status 130).
+```
 
-State cleanup as an invariant the tester can assert: "after SIGINT during upload, no `.tmp` files remain under the target directory and exit code is 130."
+The spec settles each of:
 
----
+- **SIGINT** — the message, how fast it returns, and the exit status: a code, or the signal re-raised after cleanup.
+- **SIGTERM** — the same path as SIGINT, or a distinct one.
+- **In-flight work** — finished, abandoned or rolled back.
+- **Partial writes** — which files can be left half-written, and how a re-run recovers (atomic rename, lock file).
+- **Terminal restoration** — cursor, raw mode, alternate screen, colour reset.
+- **Cleanup** — temp files, lock files, child processes, open handles.
+- **A second Ctrl+C** — skips cleanup and exits now, or is ignored; the first one says which.
+- **Prompt cancellation** — what a cancelled prompt does: the same message and exit as SIGINT, or its own. A prompt that reads single keys has to be routed there explicitly, because raw mode turns Ctrl+C into a keypress the SIGINT handler never sees.
+
+Template: [examples/core.md](examples/core.md#pattern-7-signal-handling-and-cancellation)
 
 ### Pattern 8: Cross-Platform Concerns
 
-Include the ones that apply; state explicitly when a concern is out of scope:
+Include the ones that apply, and name the ones deliberately out of scope.
 
-- **Paths:** join with the platform separator, never string concatenation. State whether user-supplied paths are resolved relative to CWD or the config file.
-- **Home directory:** resolve via the platform API, not `$HOME`. State the config location per platform when they differ.
-- **Case sensitivity:** whether a name collision that is distinct on Linux and identical on macOS is an error.
-- **Line endings:** what the command writes, and whether it preserves what it reads.
-- **Shell quoting:** any example in help text must be valid in the shells the project supports.
-- **Executable permissions:** any file the command creates that must be executable.
-- **Long paths and reserved names:** relevant on Windows for generated file names.
-- **Colour and Unicode support:** the fallback for terminals that lack them.
+- **Paths** joined with the platform separator; user-supplied paths resolved against the cwd or against the config file, stated.
+- **Home and config directories** from the platform API, which reads `USERPROFILE` on Windows and `HOME` elsewhere; the config location per platform where they differ.
+- **Case** — whether two names differing only by case collide: distinct on Linux, one file by default on macOS and Windows.
+- **Line endings** written, and whether input endings survive.
+- **Shell quoting** in help examples, valid in every shell the project supports.
+- **Executable bits** on any file the command creates that has to run.
+- **Long paths and reserved names** for generated file names on Windows.
+- **Unicode** — the fallback glyphs where the terminal lacks it.
+
+Template: [examples/core.md](examples/core.md#pattern-8-cross-platform-concerns)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Which Spec Sections Does This Feature Need?
-
-Apply a framework only when the spec touches its artifact class. The per-artifact section templates live in [examples/core.md](examples/core.md).
-
-```
-Does the spec add or change a command, argument, or flag?
-├─ YES → Command Surface section (Pattern 1) + Exit Codes (Pattern 4) + Output Contract (Pattern 5)
-└─ Does it add or change prompts or a wizard step?
-    ├─ YES → Interactive Flow section (Pattern 2), each prompt with its flag twin
-    └─ Does it add or change config keys?
-        ├─ YES → Configuration Resolution section (Pattern 3), one table per key
-        └─ Does it only change messages, help, or diagnostics?
-            ├─ YES → Error Messages / Help Text section (Pattern 6) with verbatim text
-            └─ NO  → None of these frameworks applies; do not force one in
-```
-
-Always applicable when the command runs long or writes: Signal Handling (Pattern 7). Always worth a pass when files or paths are involved: Cross-Platform (Pattern 8).
-
-### Common Spec Failures
-
-| Failure                            | Consequence                                                             |
-| ---------------------------------- | ----------------------------------------------------------------------- |
-| Prompt with no flag twin           | Command is unusable in CI; discovered only after release                |
-| Undefined exit code for a path     | The developer invents one; scripts branch on a number nobody documented |
-| Output specified for TTY only      | Piped output carries ANSI escapes and spinner frames into the consumer  |
-| Config precedence left as "merged" | Arrays merge in one place and replace in another                        |
-| Paraphrased error text             | Every command words the same failure differently                        |
-| No cancellation requirement        | Ctrl+C leaves half-written files and a hidden cursor                    |
-| Flag renamed without a plan        | Existing scripts break silently                                         |
-| "Follows existing patterns"        | No file reference means no pattern was verified to exist                |
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues (a spec with one of these is incomplete):**
+**Breaks at runtime:**
 
-- A prompted value with no flag or config twin
-- A terminating path with no exit code, or a magic number instead of a constant
-- Output described only for the TTY case
-- A config key whose merge semantics are "merged"
-- Error or prompt text described rather than written verbatim
-- A long-running or writing command with no cancellation invariant
+- A secret accepted as a flag value — it lands in `ps` output and shell history. Read it from stdin or a file.
+- Prompts left on their default stream — prompt libraries and line-input builtins commonly render on stdout, so `app init > plan.txt` writes the questions into the file and leaves the user at a blank wait. Name stderr in the spec.
+- Prompt cancellation specified as "handled by the SIGINT handler" — a prompt that reads single keys puts the terminal in raw mode, where Ctrl+C arrives as a byte and no signal fires. Give the prompt's cancel its own path.
+- Exiting 130 after catching SIGINT, in a command that scripts call — a normal exit with 130 is not a death by SIGINT, so the calling shell script runs its next command. Specify re-raising the signal after cleanup.
+- A domain exit code above 125 — 126, 127 and 128+N already mean something to the shell, and the status is truncated to 8 bits, so 256 reads as success. Keep domain codes within 3–125.
+- A closed pipe left unspecified — the next write fails with EPIPE, a runtime that ignores SIGPIPE raises it as an error, and `app list | head` prints a stack trace. State the quiet exit.
+- A `--json` mode with no error shape — the consumer's parser fails on exactly the run it most needs to read.
+- A flag renamed or removed with no deprecation path — the scripts that used it break, and nobody reports it.
+- A writing command with no cancellation invariant — Ctrl+C leaves half-written files and a hidden cursor.
+- "Follows existing patterns" with no file reference — nothing verified the pattern exists, so the developer invents one and the CLI gains a second convention.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- A new exit code where an existing failure class fits
-- A new subcommand where a flag on an existing command would do
-- A renamed or removed flag with no deprecation path
-- Help text without worked examples
-- A `--json` mode with no error shape
-
-**Common Mistakes:**
-
-- Designing flags without reading sibling commands (short-form collisions)
-- Treating cancellation as an error instead of its own exit class
-- Specifying spinner text but not the piped-output equivalent
-- Leaving "nothing to do" output unspecified on idempotent re-runs
-
-**Gotchas & Edge Cases:**
-
-- An accelerator key that is live while a text input has focus swallows typed characters
-- `--dry-run` must share the real run's failure codes or CI cannot trust it
-- An explicitly empty value (`--tag ""`) and an absent one are different inputs; decide which wins
-- Second Ctrl+C during cleanup needs its own answer
+- `NO_COLOR` set to an empty string leaves colour on; only a non-empty value disables it.
+- A parser that accepts unambiguous long-flag prefixes makes each new flag a potential break: `--verb` resolves to `--verbose` until `--verbatim` ships, and then it is an ambiguity error in every script that used it.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All specifications must be grounded in the codebase's real commands, prompts, resolvers, and constants**
-
-**(You MUST give every prompted value a non-interactive twin — a flag or config key — and state what happens with no TTY and no flag)**
-
-**(You MUST give every terminating path an exit code named as a constant, with cancellation distinct from failure)**
-
-**(You MUST specify output per context — TTY, piped, `--json`, quiet, verbose — and state which stream carries payload versus diagnostics)**
-
-**(You MUST state config precedence per key as a table with merge semantics)**
-
-**(You MUST apply each framework only when the spec touches its artifact class — an unused section is omitted, never filled)**
-
-**Failure to specify these contracts produces CLIs whose developers invent flags, guess exit codes, break piped and CI callers, and leave half-written files behind on Ctrl+C.**
-
-</critical_reminders>

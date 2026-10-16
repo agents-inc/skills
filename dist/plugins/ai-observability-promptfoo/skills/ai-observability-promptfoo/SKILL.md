@@ -13,8 +13,6 @@ description: Testing and evaluation framework for LLM prompts and applications -
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define test cases with explicit `assert` arrays -- tests without assertions only capture output without validating it)**
 
 **(You MUST use `llm-rubric` for subjective quality evaluation -- do NOT rely solely on deterministic assertions for natural language output)**
@@ -456,8 +454,6 @@ How does your LLM integration work?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST define test cases with explicit `assert` arrays -- tests without assertions only capture output without validating it)**
 

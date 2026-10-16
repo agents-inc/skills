@@ -1,62 +1,54 @@
 ---
 name: meta-reviewing-ai-reviewing
-description: AI integration review patterns. Use when reviewing model API calls, prompt construction, LLM output handling, RAG pipelines, and tool-calling code. Covers prompt-injection call-chain tracing, output validation, token budgets, retry/timeout handling, streaming, and key/PII exposure.
+description: AI integration review patterns. Use when reviewing model API calls, prompt construction, LLM output handling, RAG pipelines, and tool-calling code. Covers prompt-injection call-chain tracing, output validation, stop reasons, token budgets, retry and timeout handling, streaming, and key/PII exposure.
 ---
 
 # AI Code Review Patterns
 
-> **Quick Guide:** When a diff touches model calls, trace every user-controlled string from its entry point into the prompt it lands in - that chain is the injection surface. Verify model output is validated before it drives control flow or storage, context growth is bounded, model calls carry timeouts and typed failure handling, and no keys or PII ride along in prompts or logs.
+> **Quick Guide:** A model call is untrusted in both directions, so the review follows every user-controlled string into the prompt it lands in, and every response out to whatever it drives. Four facts about current providers change what counts as a defect. The Anthropic and OpenAI SDKs retry twice and time out after ten minutes by default, so a call with no options is protected but too patient for a person waiting, and a retry wrapper around it multiplies attempts. A response cut off at the token limit, or refused, arrives as a successful call. A stream can fail after its 200. And current reasoning models reject a non-default `temperature`, so setting one buys a 400 rather than determinism.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — the defect and its fix for each pattern below
+- [reference.md](reference.md) — per-provider lookup: SDK retry and timeout defaults, stop and finish reasons, structured-output parameters, sampling parameters, history rules
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Reviewing AI Code
+## Before reviewing AI code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Trace every value interpolated into a prompt back to where it entered — retrieved documents and tool results included.** Injection is a property of the chain rather than the line: input sanitised at the entry point and spliced raw at a later join is still injected, and a fetched page is as hostile as anything a user types.
 
-**(You MUST trace every path where user-controlled input enters a prompt - through variables, retrieved documents, and tool results alike)**
+**Find what each model response is allowed to do, and check it is validated before it does it.** A response that picks a handler, fills tool arguments, is stored, or is shown to another user is untrusted input; models return malformed and adversarial output at some rate forever, and the check between response and action decides what that rate costs.
 
-**(You MUST verify every model response used in control flow, stored, or shown to other users is validated before use)**
+**Find the ceiling on everything that grows — history, retrieved context, retries, and loops that call the model.** Every token is billed on every call, so an unbounded one costs more each turn until it fails at the context limit, first for the most engaged user.
 
-**(You MUST check that conversation history and retrieved context are bounded - no accumulation without truncation)**
+**Establish the timeout and retry policy each call actually runs with, SDK defaults included, and check failure reaches the caller as failure.** A call with no options gets ten minutes and two retries, timeouts included, so it can hang for half an hour; and a failure swallowed into an empty answer reads downstream as the model having nothing to say.
 
-**(You MUST verify model calls carry a timeout and handle failure distinctly from success - transient errors retried or surfaced, never swallowed)**
-
-**(You MUST verify no API keys, credentials, or PII appear in prompts, logs, or error messages the diff adds)**
+**Check that keys stay out of prompts and client bundles, and user content out of logs and error messages.** Anyone who talks to the model can extract its system prompt, and one debug line that logs a prompt ships every user's message to wherever logs go.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** review AI code, LLM PR review, prompt review, model call review, RAG review, tool calling review, agent loop review, completion handling review
+**Auto-detection:** AI code review, LLM PR review, `messages.create`, `messages.stream`, `chat.completions.create`, `responses.create`, `stop_reason`, `finish_reason`, `max_tokens`, `maxRetries`, `tool_use`, `tool_calls`, `output_config`, `response_format`, system prompt, prompt template, retrieved chunks, embeddings, agent loop
 
-**When to use:**
+**Applies to:**
 
-- Reviewing diffs containing model API calls (Anthropic, OpenAI, or other provider SDKs)
-- Reviewing prompt construction, templates, or system prompt changes
-- Reviewing parsing/consumption of LLM responses, including streaming
-- Reviewing RAG retrieval pipelines or embedding code
-- Reviewing agent orchestration and tool-calling loops
+- Diffs that add or change a model call, its options, or the client it runs on
+- Prompt assembly — templates, system prompts, retrieved context, tool results fed back
+- Code that consumes a response — parsing, tool dispatch, storage, display, streaming
+- Agent and tool-calling loops
+- Grading the AI-specific findings by severity
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- When implementing AI features (use the relevant AI implementation skill)
-- For plain REST/database code in the same diff (use the API reviewing skill)
-- For prompt-quality tuning with no code change
-
-**Key patterns covered:**
-
-- Prompt-injection call-chain tracing
-- Output validation before control flow and storage
-- Token budget and context-growth review
-- Failure handling around model calls (timeout, retry, typed errors)
-- Streaming and partial-response handling
-- Key/PII hygiene and model pinning
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Good/bad AI integration patterns to look for during review
+- Building the integration — choosing the provider and writing the prompts and client code is implementation; this skill finds what the diff gets wrong.
+- Budgets, eval thresholds and the output contract — decided when the feature is specified; review checks the diff against whatever was decided.
+- The code around the call — the handler, the database write and the auth check are reviewed as that layer's code; this skill covers the model boundary.
+- Prompt wording with no code change — whether an instruction works is answered by an eval, not by reading the diff.
+- Running and writing up the review — reading order, file:line evidence, tone and the approval decision belong to the general review process.
 
 ---
 
@@ -64,283 +56,189 @@ description: AI integration review patterns. Use when reviewing model API calls,
 
 ## Philosophy
 
-**A model call is an untrusted boundary in both directions.** What goes in can carry an attacker's instructions; what comes out is a guess shaped like an answer. The review's job is to find the places the diff treats either direction as trusted.
+**A model call is an untrusted boundary in both directions.** What goes in can carry an attacker's instructions; what comes out is a guess shaped like an answer. The review finds the places the diff treats either direction as trusted.
 
-**When reviewing AI code:**
+Map the chain before reading lines: input entry → prompt assembly → API call → response checks → consumption. Findings live at the joints — the fetch was fine, the embedding was fine, and the splice between them is where the injection lands.
 
-- Map the call chain first: input entry → prompt assembly → API call → response parsing → consumption. Findings live at the joints.
-- Treat retrieved documents and tool outputs as user-controlled - injection via a fetched page is still injection
-- Ask of every response use: "what happens when the model returns garbage that parses?"
-- Cost is a correctness concern: an unbounded loop of model calls is a defect even when every call succeeds
+Ask of every response use what happens when the model returns garbage that parses — a valid label that is the wrong one, a well-formed refund for the wrong amount. Every check in Pattern 2 passes it, because a schema checks shape and never truth.
 
-**When NOT to flag:**
+Cost is a correctness concern. An unbounded loop of model calls is a defect even when every call succeeds.
 
-- Don't demand fallback model chains for internal tooling or batch jobs where failing loudly is fine
-- Don't demand prompt caching or cost optimization the spec never asked for
-- Don't flag deterministic-output assumptions in throwaway scripts the way you would in a user-facing pipeline
-- Don't demand eval harnesses in a diff that only rewords a prompt - note it and move on
+**Leave these unflagged:**
 
-**Core principles:**
-
-- **The chain is the unit of review**: a sanitized entry point means nothing if a later join splices raw input
-- **Validation before consumption**: a schema between the model and your control flow
-- **Bounded everything**: history, retrieval, retries, and loops all need a ceiling
-- **Failure is a first-class path**: model APIs fail often enough that unhandled rejection is a design decision, not an oversight
+- Fallback model chains for internal tooling or batch jobs, where failing loudly is fine
+- Prompt caching or cost optimisation the spec never asked for
+- A missing `temperature: 0` — current reasoning models reject it, and where it is accepted it does not make output repeatable
+- Eval harnesses in a diff that only rewords a prompt — note it and move on
+- Throwaway scripts held to the standard of a user-facing pipeline
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Prompt-Injection Call-Chain Tracing
-
-Follow every user-controlled string to the prompt it lands in.
-
-```markdown
-## Injection Trace
-
-For EACH prompt the diff constructs or changes:
-
-- [ ] List every interpolated value and classify it: static, developer-controlled, or user-controlled
-- [ ] User-controlled values are delimited/structured (tagged blocks, separate messages), not spliced into instructions
-- [ ] Retrieved documents and tool results are treated as user-controlled
-- [ ] System-prompt content (rules, secrets, tool definitions) is never echoed into user-visible output paths
-- [ ] Instructions and data are separated - the prompt never asks the model to obey text it also lets the user write
-```
-
-```typescript
-// Must Fix: user text spliced into the instruction channel
-const prompt = `You are a support agent. ${userMessage}. Use the refund tool if appropriate.`;
-
-// Good: instructions and untrusted data are separate, and the data is fenced
-const messages = [
-  { role: "system", content: SUPPORT_AGENT_RULES },
-  {
-    role: "user",
-    content: `<customer_message>${userMessage}</customer_message>`,
-  },
-];
-```
-
-**Why this matters:** Injection is a chain property, not a line property. The one splice you don't trace is the one that lets a pasted email operate your tools.
-
----
-
-### Pattern 2: Output Validation Before Consumption
-
-A model response is a guess - validate it before it acts.
-
-```markdown
-## Output Validation Review
-
-For EACH place the diff consumes a model response:
-
-- [ ] Structured output is schema-parsed (Zod or equivalent), not JSON.parse-and-trust
-- [ ] Parse failures have a handling path: retry, repair, or explicit error - never undefined flowing on
-- [ ] Responses driving control flow (classifications, tool choices) are checked against the allowed set
-- [ ] Model output stored or shown to OTHER users is treated as untrusted content (escaped/sanitized per sink)
-- [ ] Tool-call arguments from the model are validated like user input before execution
-```
-
-```typescript
-// Must Fix: control flow on unvalidated output
-const action = JSON.parse(response.text).action;
-await handlers[action](payload); // model typo = property lookup on undefined; hostile output = arbitrary handler
-
-// Good: the model chooses from a contract, not a namespace
-const parsed = actionSchema.safeParse(JSON.parse(response.text));
-if (!parsed.success) return retryWithRepair(response.text, parsed.error);
-await handlers[parsed.data.action](parsed.data.payload);
-```
-
-**Why this matters:** LLMs produce plausible malformed output at some rate forever. Unvalidated consumption converts that rate directly into production incidents.
-
----
-
-### Pattern 3: Token Budget and Context Growth
-
-Everything appended needs a ceiling.
-
-```markdown
-## Context Growth Review
-
-When the diff touches history, retrieval, or prompt assembly:
-
-- [ ] Conversation history has a truncation/windowing strategy, not unbounded push
-- [ ] Retrieved chunks are capped in count and size before joining into the prompt
-- [ ] max_tokens is set deliberately for the call's purpose
-- [ ] Loops that call the model (agents, retries, map-over-items) have an iteration or budget cap
-```
-
-```typescript
-// Should Fix: history grows until the context overflows - cost climbs every turn until then
-messages.push(userTurn, assistantTurn);
-
-// Good: bounded window
-messages = [...messages, userTurn, assistantTurn].slice(-MAX_TURNS);
-```
-
-**Why this matters:** Unbounded context fails twice: rising cost per request on the way up, then hard context-length errors at the top - usually first hit by your most engaged user.
-
----
-
-### Pattern 4: Failure Handling Around Model Calls
-
-Model APIs fail routinely; the diff must decide what that means.
-
-```markdown
-## Failure Path Review
-
-For EACH model call the diff adds:
-
-- [ ] A timeout exists - SDK default or explicit - and suits the caller (interactive vs batch)
-- [ ] Transient failures (429, 5xx, timeouts) are retried with backoff OR deliberately surfaced - not swallowed
-- [ ] Non-transient failures (400, content filter, context overflow) are NOT retried blindly
-- [ ] The caller can distinguish "model failed" from "model answered badly" - different handling, different logging
-- [ ] Where the spec demands availability: a degraded path exists (fallback model, cached answer, honest error)
-```
-
-```typescript
-// Must Fix: one 429 during a traffic spike kills the request; a hang holds it forever
-const response = await client.messages.create({ model, messages });
-
-// Good: bounded patience, typed failure
-const response = await withRetry(
-  () => client.messages.create({ model, messages }, { timeout: 30_000 }),
-  { retries: 3, retryOn: isTransient, backoff: "exponential" },
-);
-```
-
-**Why this matters:** Rate limits and provider incidents are weekly events, not edge cases. Code that treats a model call like a local function call outages with its provider.
-
----
-
-### Pattern 5: Streaming and Partial Responses
-
-A stream can die mid-token; the consumer must stay coherent.
-
-```markdown
-## Streaming Review
-
-When the diff handles streamed output:
-
-- [ ] Mid-stream errors/disconnects are handled - partial text is discarded or clearly marked, not silently kept as complete
-- [ ] Accumulation is complete before parse/persist steps that need the whole response
-- [ ] Client disconnect aborts the upstream model request (no orphaned paid streams)
-- [ ] UI state distinguishes "streaming", "done", and "failed mid-stream"
-```
-
-**Why this matters:** A stream that dies at 80% looks like a short answer. Persisting or acting on it silently corrupts downstream data with truncated content.
-
----
-
-### Pattern 6: Keys, PII, and Model Pinning
-
-The operational hygiene around the call.
-
-```markdown
-## Hygiene Review
-
-- [ ] API keys come from config/env - never literal in the diff, never logged
-- [ ] Prompts containing user PII are not dumped wholesale into logs or error messages
-- [ ] Model identifiers are named constants - pinned versions, not scattered string literals
-- [ ] Temperature/params are deliberate for the task (deterministic tasks near 0)
-```
-
-**Why this matters:** Prompt logging is the quiet PII leak: one debug line ships every user's message content to the log platform. Scattered model strings make the next migration a grep-and-pray.
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
-
-### Severity Classification for AI Issues
+## Severity
 
 ```
-Is this a safety or correctness defect the diff introduces?
+Is it a safety or correctness defect the diff introduces?
 ├─ User-controlled text spliced into the instruction channel → MUST FIX
-├─ Unvalidated model output driving control flow, tools, or storage → MUST FIX
-├─ Keys or PII in prompts, logs, or error messages → MUST FIX
-├─ Unbounded model-call loop (agent/retry without a cap) → MUST FIX
+├─ Private data + untrusted input + an outbound or mutating tool, with no person confirming the action → MUST FIX
+├─ Unvalidated model output driving control flow, tools, storage, or other users' screens → MUST FIX
+├─ Keys in prompts or client bundles; prompts or user content in logs or errors → MUST FIX
+├─ User data the task does not need in a prompt, or a prompt sent to a model or provider the spec does not allow → MUST FIX
+├─ A loop that calls the model (agent, retry, map-over-items) with no ceiling → MUST FIX
+├─ A request parameter the model rejects, so every call returns a 400 → MUST FIX
 └─ NO → Is it a robustness or cost gap?
-    ├─ No timeout / transient failures unhandled on a production path → SHOULD FIX
-    ├─ Unbounded history or retrieval growth → SHOULD FIX
-    ├─ Partial stream treated as complete → SHOULD FIX
-    ├─ Model ids as scattered string literals → SHOULD FIX
+    ├─ Timeout unsuited to the caller, or failure swallowed, on a production path → SHOULD FIX
+    ├─ Retries stacked on the SDK's own, or retrying what cannot succeed → SHOULD FIX
+    ├─ History or retrieval with no ceiling → SHOULD FIX
+    ├─ Truncated, refused or broken-stream response consumed as complete → SHOULD FIX
+    ├─ A record asked for as JSON in prose where the provider offers a schema-constrained mode → SHOULD FIX
+    ├─ A model id literal where the codebase already names its models in one place → SHOULD FIX
     └─ NO → Is it a genuine enhancement?
         ├─ Tightening an already-safe output schema → NICE TO HAVE
-        ├─ Fallback model chain for internal tooling → DON'T MENTION
-        ├─ Prompt-wording preferences → DON'T MENTION
-        └─ Cost optimizations the spec never asked for → DON'T MENTION
+        ├─ Fallback model chain for internal tooling → don't write it
+        ├─ Prompt-wording preferences → don't write it
+        └─ Cost optimisations the spec never asked for → don't write it
 ```
+
+User content a task needs is not a finding in its prompt — summarising a user's email needs the email. Anything beyond that need is: everything a prompt carries leaves for the provider and can come back in a reply, so a whole customer record interpolated where only the name is used is a Must Fix. So is user content in a log line or an error message, and any prompt sent to a model or provider the spec does not allow.
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues (Must Fix):**
+### Pattern 1: Prompt-Injection Call-Chain Tracing
 
-- Template literals splicing user text directly into system/instruction prompts
-- `JSON.parse(response)` with no schema and no failure path
-- Model-chosen strings indexing into handler/tool maps unchecked
-- `while` agent loops with no iteration cap
-- API keys hardcoded or logged; full prompts with PII logged
-- Tool-call arguments executed without validation
+Follow every user-controlled string to the prompt it lands in, then to what the model can do after reading it. Delimiting untrusted text and instructing the model to ignore commands inside it lower how often an injection is obeyed without preventing it, so what the output can reach is the control that holds. Three legs in one path are therefore a Must Fix: private data, untrusted input reaching the model, and an outbound or mutating tool — an image or link the client renders counts, because loading it sends data out — with no person confirming the action. Drop one leg, or put a person in front of the action. Sources are in [reference.md](reference.md#external-references-by-finding-class).
 
-**Medium Priority Issues (Should Fix):**
+```markdown
+For each prompt the diff builds or changes:
 
-- Model calls with no timeout on request paths
-- Retry-on-everything (including 400s and content filters)
-- History arrays that only ever grow
-- Streaming handlers with no mid-stream error branch
-- Unpinned or scattered model identifiers
+- [ ] Every interpolated value is classified: static, developer-controlled, or user-controlled
+- [ ] Retrieved documents and tool results count as user-controlled
+- [ ] User-controlled text sits in its own message or block, delimited — never spliced into the instructions
+- [ ] Nothing in the system prompt would cause harm if a user read it: no secrets, no access rule the code does not also enforce
+- [ ] Private data, untrusted input and an outbound or mutating tool never meet in one path unless a person confirms the action first
+```
 
-**Common Mistakes:**
+Full code: [examples/core.md](examples/core.md#pattern-1-prompt-injection-call-chain-tracing)
 
-- Sanitizing direct user input but splicing retrieved documents raw (indirect injection)
-- Validating happy-path JSON but letting the parse-failure branch return undefined
-- Retrying a context-overflow error with the same oversized prompt
-- Treating temperature 0 as deterministic enough to skip output validation
-- Logging "the whole request for debugging" on a path that carries user content
+### Pattern 2: Output Validation Before Consumption
 
-**Gotchas & Edge Cases:**
+A response is a guess. Check that it finished, then that it has the right shape, then that its choices are allowed — before it acts.
 
-- Models emit markdown-fenced JSON (` ```json `) - parsers that don't strip fences fail intermittently
-- Token counts differ per model family - a budget tuned for one model overflows on another
-- Content-filter responses can arrive as successful completions with refusal text, not errors
-- Streamed tool-call arguments arrive fragmented; parsing before the stream closes sees half a JSON object
-- Provider SDK retries can stack with your own retry wrapper - multiplying worst-case latency
+```markdown
+For each place the diff consumes a model response:
 
-</red_flags>
+- [ ] The stop reason is checked first — a truncated or refused response arrives as a success, and a refusal is surfaced or sent to a documented fallback, never repaired or retried
+- [ ] A record comes from the provider's schema-constrained output mode where it offers one, not JSON asked for in prose
+- [ ] Structured output is still parsed against a runtime schema on receipt, not `JSON.parse`-and-trust
+- [ ] A parse failure has a path — repair once, reject, or raise — never `undefined` flowing on
+- [ ] A choice that drives control flow (a label, an action, a tool name) is checked against the allowed set
+- [ ] Tool-call arguments are validated like user input before the tool runs
+- [ ] Output stored or shown to other users is encoded for its sink — HTML, SQL, shell
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-2-output-validation-before-consumption)
+
+### Pattern 3: Token Budget and Context Growth
+
+Everything appended needs a ceiling, and the trim has to land where the API accepts it.
+
+```markdown
+When the diff touches history, retrieval, or prompt assembly:
+
+- [ ] Conversation history has a ceiling — a window, a summary, or the provider's compaction
+- [ ] A trim never leaves a tool result without the tool call before it
+- [ ] Retrieved chunks are capped in count and size before joining the prompt
+- [ ] `max_tokens` is set for the call's purpose
+- [ ] Loops that call the model — agents, retries, map-over-items — have an iteration or budget cap
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-3-token-budget-and-context-growth)
+
+### Pattern 4: Failure Handling Around Model Calls
+
+Model APIs fail routinely, and the diff decides what each failure means.
+
+```markdown
+For each model call the diff adds:
+
+- [ ] The timeout it runs with is known — SDK default or explicit — and an interactive path sets its own
+- [ ] Retries live in one layer: the SDK's `maxRetries`, or a wrapper driving a client set to 0 — and a hand-written layer backs off exponentially and honours `retry-after`, because a 429 retried at once lands in the same rate-limit window
+- [ ] Nothing that cannot succeed on retry is retried — 400s, auth errors, context overflow, refusals
+- [ ] The caller can tell "the call failed" from "the model answered badly", and handles and logs them differently
+- [ ] Where the spec demands availability, a degraded path exists: fallback model, cached answer, honest error
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-4-failure-handling-around-model-calls)
+
+### Pattern 5: Streamed Responses
+
+A stream can fail after its 200 and can end early; the consumer stays coherent either way.
+
+```markdown
+When the diff handles streamed output:
+
+- [ ] A mid-stream error or disconnect is handled — partial text is discarded or marked, never kept as complete
+- [ ] Parse and persist steps wait for the end of the stream and check its stop reason
+- [ ] Streamed tool-call arguments are parsed only once their block closes
+- [ ] A client disconnect aborts the upstream request, so no paid stream runs on for nobody
+- [ ] The UI distinguishes streaming, done, and failed mid-stream
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-5-streamed-responses)
+
+### Pattern 6: Keys, PII, and Model Pinning
+
+The operational hygiene around the call. Prompt logging is the quiet leak, and scattered model strings make the next migration a search-and-hope.
+
+```markdown
+- [ ] API keys come from configuration — never a literal in the diff, never logged, never in a browser bundle
+- [ ] Prompts and responses carrying user content stay out of logs and errors — log ids, counts and the model, not bodies
+- [ ] A prompt carries only the user data its task needs, and goes only to models and providers the spec allows
+- [ ] Where the codebase already names its models in one place, model ids come from there rather than as literals; where a provider's alias can move to a newer snapshot, the dated snapshot
+- [ ] Sampling parameters, where set, are ones the model accepts, and nothing downstream relies on them for repeatability
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-6-keys-pii-and-model-pinning)
+
+</patterns>
 
 ---
 
-<critical_reminders>
+<red_flags>
 
-## CRITICAL REMINDERS
+## Red flags
 
-> **All code must follow project conventions in CLAUDE.md**
+**Breaks at runtime:**
 
-**(You MUST trace every path where user-controlled input enters a prompt - through variables, retrieved documents, and tool results alike)**
+- A retry wrapper around an SDK call that keeps its own retries — each wrapper attempt is up to three SDK attempts, so `retries: 3` is up to twelve requests. Drive the wrapper with a client built with `maxRetries: 0`, or drop the wrapper.
+- `JSON.parse` on response text with no schema and no failure branch — malformed output throws, or flows on as `undefined`. Parse against a schema and give the failure a path.
+- A model-chosen string indexing a handler map, or model-written arguments passed straight to a tool — a typo calls `undefined`, and a hostile reply reaches anything the map holds. Check the choice against the allowed set and the arguments against the tool's schema.
+- Response text read without the stop reason — truncation (`max_tokens`, `length`) and refusals arrive as HTTP 200, so truncated JSON fails to parse and a refusal is stored as the answer.
+- `temperature`, `top_p` or `top_k` set on a current reasoning model — most current Claude models and OpenAI's reasoning models reject non-default values with a 400; [reference.md](reference.md) lists which.
+- `while (true)` around an agent step — the model decides when to stop, and a loop of tool calls bills until something outside cuts it off. The ceiling belongs in code.
+- `messages.push` with no trim anywhere — each turn costs more than the last until the context limit turns it into an error. A plain `slice` is no cure: it can cut a tool call away from its result, which the API rejects.
+- Retrying everything — a context-overflow 400 retried with the same prompt fails identically every time, and a retried refusal reads as an attempt to get around it.
+- A literal key, or `dangerouslyAllowBrowser: true`, in code that ships — the key reaches every visitor. Calls go through a server.
+- A log line carrying the prompt or response body, or the SDK's debug log level in deployed config — at `debug` the Anthropic TypeScript SDK logs request and response bodies.
 
-**(You MUST verify every model response used in control flow, stored, or shown to other users is validated before use)**
+**Surprising behaviour:**
 
-**(You MUST check that conversation history and retrieved context are bounded - no accumulation without truncation)**
+- Delimiting untrusted text in tags or a separate message lowers how often injected instructions are obeyed; it does not stop them, and a document can contain the closing tag.
+- Sanitising the user's input while splicing retrieved documents raw leaves the door open — indirect injection arrives through the fetch, not the form.
+- The Anthropic API can send an `error` event (`overloaded_error`, for one) after a stream has returned 200, so handling keyed on HTTP status never sees it.
+- Streamed tool-call arguments arrive as partial JSON fragments; parsing before the block closes sees half an object.
+- Timeouts are retried. With SDK defaults the caller can wait three times the timeout — thirty minutes — before hearing of a failure.
+- Models wrap JSON in markdown fences when it is asked for in prose. A provider's schema-constrained output mode does not, so a fence-stripper in the diff says that mode is not in use.
+- `temperature: 0` is not deterministic: the same prompt yields different completions as server batch sizes vary. It is never a reason to skip validation.
+- Token counts differ by tokenizer, so a budget tuned on one model can overflow on another — Anthropic's tokenizer from Claude Opus 4.7 on uses up to 1.35× as many tokens as the one before.
 
-**(You MUST verify model calls carry a timeout and handle failure distinctly from success - transient errors retried or surfaced, never swallowed)**
-
-**(You MUST verify no API keys, credentials, or PII appear in prompts, logs, or error messages the diff adds)**
-
-**Failure to catch these issues will result in injectable prompts, garbage output driving real actions, runaway token spend, and user data sitting in logs.**
-
-</critical_reminders>
+</red_flags>

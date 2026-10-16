@@ -1,61 +1,51 @@
 ---
 name: meta-reviewing-api-reviewing
-description: Backend code review patterns. Use when reviewing API routes, database operations, auth middleware, and server utilities. Covers injection, boundary validation, authorization coverage, secret/PII exposure, error leakage, and query patterns.
+description: Backend code review — injection and SSRF, boundary validation, object-level authorization, mass assignment and data exposure, error leakage, N+1 and unbounded queries. Use when a diff touches API routes or handlers, database access, auth middleware, or server code that reads files, starts processes or fetches URLs.
 ---
 
 # API Code Review Patterns
 
-> **Quick Guide:** When a diff touches server code, trace every external input to where it is used - it must pass schema validation at the boundary and never reach a query or shell as a concatenated string. Verify every new route names its auth expectation and checks object-level access. Check what errors and logs expose. Security findings outrank everything else in the diff.
+> **Quick Guide:** Review a backend diff's inputs and outputs before anything else in it: what enters without a schema, what reaches an interpreter or an outbound request as part of a string, which route answers without checking whose row it returns, and which fields leave in a response, a log or an error. Those are Must Fix and block approval; error text and query shape are Should Fix, addressed before merge without blocking it; the rest of the codebase's habits are not this diff's findings. Two facts change the verdict often enough to hold up front: a tagged `sql` template binds its interpolated values, so the injection is the untagged template literal; and an argument array keeps the shell out but not the program's own option parser.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — before-and-after code for each pattern below, under the same headings
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Reviewing API Code
+## Before reviewing API code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Follow every value the diff reads from a request — body, params, query, headers, cookies — to the line that uses it.** The defect lives at the use: a handler that parses its body and then reads `limit` raw from the query string is unvalidated exactly where it matters.
 
-**(You MUST trace every external input in the diff - body, params, query, headers - to its use, verifying schema validation at the boundary)**
+**Treat request data reaching SQL, a shell, a file path or an outbound URL as Must Fix unless it arrives as a bound parameter, an argument-array element that cannot start with `-`, a path confirmed inside its base directory, or an allowlisted value.** Spliced into a string something else parses, data becomes instructions, and nothing downstream can tell the two apart.
 
-**(You MUST verify no user input is concatenated into SQL, shell commands, or file paths - parameterized queries and validated paths only)**
+**For every route the diff adds or changes, find the guard that authenticates the caller and the condition that ties the row to them.** Authentication says who is asking; without the ownership condition, changing the id in the URL returns someone else's row.
 
-**(You MUST verify every route the diff adds declares its authentication requirement and checks authorization for the object it touches)**
-
-**(You MUST check that secrets, tokens, passwords, and PII do not reach logs, error responses, or client payloads)**
-
-**(You MUST verify error handling in the diff returns intentional messages - no stack traces or raw driver errors to the client)**
+**Read each response body, write, log line and error message the diff adds field by field.** A serialized row carries every column, a write bound to the request body accepts every column, and a logged request carries its credentials to everyone who reads the logs.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** review API, backend PR review, route review, endpoint review, database query review, auth middleware review, server code review
+**Auto-detection:** API review, backend PR review, endpoint review, route handler review, SQL injection, command injection, argument injection, path traversal, SSRF, IDOR, BOLA, broken object level authorization, mass assignment, excessive data exposure, error leakage, secrets in logs, N+1 query, unbounded query
 
-**When to use:**
+**Applies to:**
 
-- Reviewing diffs containing API routes or handlers
-- Reviewing database queries, schema changes, or ORM usage
-- Reviewing authentication/authorization middleware or session handling
-- Reviewing server utilities that touch external input, files, or child processes
+- A diff that adds or changes route handlers, middleware, the queries behind them, database schema changes, or ORM usage
+- Authentication, role checks and row ownership
+- Server code that reads files, starts processes or fetches URLs using request data
+- What responses, log lines and error messages carry out of the server
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- When implementing backend code (use the relevant API implementation skill)
-- For UI components in the same diff (use the web reviewing skill)
-- For CI/CD pipelines and deployment configs (use the infra reviewing skill)
-
-**Key patterns covered:**
-
-- Injection review: SQL, shell, and path traversal
-- Boundary validation with schemas
-- Authentication and object-level authorization coverage
-- Secret and PII exposure in logs and responses
-- Error responses that don't leak internals
-- Query patterns: N+1 and unbounded reads the diff introduces
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Good/bad backend patterns to look for during review
+- Severity vocabulary, the cost gate and the approval decision — the general review discipline; this skill only places API defects on it.
+- UI in the same diff — rendering, client state and accessibility.
+- Pipelines, container images and deployment configuration, including the secrets they hold.
+- Model calls, prompt assembly and handling of model output.
+- How the config module itself loads and validates the environment.
+- Throughput work the diff's workload does not call for — caching layers, rate limits, query plans on tables that stay small.
 
 ---
 
@@ -63,301 +53,212 @@ description: Backend code review patterns. Use when reviewing API routes, databa
 
 ## Philosophy
 
-**Server code is the trust boundary.** A UI bug annoys one user; an injection or authorization gap exposes every user's data. Review the diff's inputs and outputs before its style: what enters unvalidated, and what leaves that shouldn't.
-
-**When reviewing API code:**
-
-- Follow the data: entry point → validation → use → response, for each input the diff adds
-- Assume every request is hostile until a schema says otherwise
-- Ask "who may call this?" and "may they touch THIS row?" for every new route - the second question is the one that gets missed
-- Read the error paths as carefully as the happy path; that is where internals leak
-
-**When NOT to flag:**
-
-- Don't demand rate limiting, caching, or pagination the spec never asked for on an internal or low-traffic endpoint
-- Don't demand a repository/service layer around a query the codebase writes inline everywhere else
-- Don't flag missing observability on code following the file's existing logging pattern
-- Don't rank a hypothetical scale problem above a real correctness issue in the same diff
-
-**Core principles:**
-
-- **Validate at the boundary**: inside the handler, data is typed and trusted because the schema ran, not because the client is polite
-- **Authorization is per-object**: authentication says who you are; the query must still scope to what you own
-- **Errors are API surface**: what a failure returns is part of the contract
-- **Performance findings need a workload**: an N+1 in a loop over user data is real; a missing index on a ten-row table is not
+A UI defect reaches the user who triggers it; a server defect reaches every row the server can read. So a backend diff's inputs and outputs are reviewed before its structure, and each route gets two questions asked separately — who may call this, and may they touch this row — because the second is the one that goes missing. Error paths get the same reading as the happy path: what a failure returns is part of the contract, and it is where internals leak.
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Injection Review
-
-No external input reaches an interpreter as a string fragment.
-
-```markdown
-## Injection Review
-
-For EACH place the diff sends data to SQL, a shell, or the filesystem:
-
-- [ ] SQL uses parameterized queries or the ORM's binding - no template literals with user input
-- [ ] Shell commands use argument arrays (execFile/spawn), never string-built exec with input
-- [ ] File paths derived from input are validated against a base directory (no ../ traversal)
-- [ ] Dynamic column/table names come from an allowlist, not from the request
-```
-
-```typescript
-// Must Fix: classic injection
-const rows = await db.query(
-  `SELECT * FROM users WHERE name = '${req.query.name}'`,
-);
-
-// Good: parameterized
-const rows = await db.query("SELECT * FROM users WHERE name = $1", [
-  req.query.name,
-]);
-```
-
-**Why this matters:** String-built queries and commands turn any input field into an execution vector. This is always a blocking finding, regardless of how internal the endpoint seems.
-
----
-
-### Pattern 2: Boundary Validation
-
-Every input the diff reads gets a schema before it gets used.
-
-```markdown
-## Validation Review
-
-For EACH route or handler in the diff:
-
-- [ ] Body, params, and query are parsed through a schema (Zod or the codebase's equivalent) before use
-- [ ] Validation failures return 400 with a safe message - not a 500 from downstream
-- [ ] The schema is as narrow as the contract: enums for enums, bounds on numbers, formats on ids
-- [ ] Handler code reads the schema's OUTPUT type, not the raw request
-```
-
-```typescript
-// Should Fix: trusts the wire shape
-const { limit } = req.query;
-const items = await listItems(Number(limit));
-
-// Good: contract enforced at the edge
-const { limit } = listQuerySchema.parse(req.query); // z.coerce.number().int().min(1).max(100)
-const items = await listItems(limit);
-```
-
-**Why this matters:** Unvalidated input surfaces as NaN limits, negative offsets, and type confusion deep in the stack, where the error message no longer names the cause.
-
----
-
-### Pattern 3: Authentication and Object-Level Authorization
-
-Who may call this - and may they touch this row?
-
-```markdown
-## Auth Review
-
-For EACH route the diff adds or changes:
-
-- [ ] The route's auth requirement is explicit (middleware or guard) - public routes are deliberately public
-- [ ] Queries for user-owned resources scope by the session's user id, not by an id the client sent
-- [ ] Mutations verify the resource belongs to the caller before writing (IDOR check)
-- [ ] Role/permission checks happen server-side even when the UI hides the action
-```
-
-```typescript
-// Must Fix: any authenticated user can read any invoice (IDOR)
-const invoice = await db.invoice.findUnique({ where: { id: req.params.id } });
-
-// Good: ownership is part of the query
-const invoice = await db.invoice.findFirst({
-  where: { id: req.params.id, userId: session.userId },
-});
-```
-
-**Why this matters:** Object-level authorization is the most common real-world API vulnerability. Authentication middleware passing does not mean the caller owns the row.
-
----
-
-### Pattern 4: Secret and PII Exposure
-
-What leaves the server is as important as what enters it.
-
-```markdown
-## Exposure Review
-
-- [ ] No credentials, API keys, or connection strings hardcoded in the diff
-- [ ] Logs added by the diff exclude passwords, tokens, session ids, and PII
-- [ ] Response payloads select fields explicitly - no serializing whole DB entities with hash/token columns
-- [ ] Env vars are read through the codebase's config module, not scattered process.env reads
-```
-
-```typescript
-// Must Fix: password hash and reset token ride along to the client
-return res.json(user);
-
-// Good: explicit projection
-return res.json({ id: user.id, name: user.name, email: user.email });
-```
-
-**Why this matters:** Serialize-the-entity is how hashes, tokens, and internal flags end up in browser devtools. Logging the request body "for debugging" is how credentials end up in log aggregators.
-
----
-
-### Pattern 5: Error Handling Without Leakage
-
-Errors are caught, mapped, and intentional.
-
-```markdown
-## Error Path Review
-
-- [ ] Async handlers cannot reject unhandled - errors reach the error middleware or a catch
-- [ ] Client-facing messages are written for the client; internals (stack, SQL, paths) stay in server logs
-- [ ] Status codes match semantics: 400 invalid, 401 unauthenticated, 403 forbidden, 404 absent, 409 conflict
-- [ ] Failures the caller can act on (duplicate email) are distinguished from failures they cannot (DB down)
-```
-
-```typescript
-// Should Fix: raw driver error to the client - leaks schema and dialect
-catch (error) {
-  res.status(500).json({ error: String(error) });
-}
-
-// Good: intentional message out, full detail logged
-catch (error) {
-  logger.error({ err: error }, "createUser failed");
-  res.status(500).json({ error: "Could not create user" });
-}
-```
-
-**Why this matters:** Raw errors hand attackers a map of the schema and stack, and hand legitimate clients a message they can't act on.
-
----
-
-### Pattern 6: Query Patterns the Diff Introduces
-
-Review the shape of data access the change creates.
-
-```markdown
-## Query Review
-
-When the diff adds queries or loops around them:
-
-- [ ] No query inside a loop over records that a join/include or IN-list would satisfy (N+1)
-- [ ] List endpoints the diff adds bound their result set when the table grows with usage
-- [ ] Multi-write operations that must succeed together run in a transaction
-- [ ] When the diff adds a WHERE on a new column of a large, growing table, an index accompanies it
-```
-
-```typescript
-// Should Fix: one query per order - N+1
-const orders = await db.order.findMany({ where: { userId } });
-for (const order of orders) {
-  order.items = await db.item.findMany({ where: { orderId: order.id } });
-}
-
-// Good: one round trip
-const orders = await db.order.findMany({
-  where: { userId },
-  include: { items: true },
-});
-```
-
-**Why this matters:** N+1s and unbounded reads pass every test on seed data and fall over on production volume - the review is the last place the shape is visible.
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
-
-### Severity Classification for API Issues
+## Severity for API findings
 
 ```
-Is this a security defect the diff introduces?
-├─ User input concatenated into SQL/shell/path → MUST FIX
-├─ Route missing auth, or query missing ownership scoping (IDOR) → MUST FIX
-├─ Secrets/PII in logs, responses, or hardcoded in source → MUST FIX
-├─ External input used with no boundary validation → MUST FIX
-└─ NO → Is it a correctness or robustness gap?
-    ├─ Raw internals in client-facing errors → SHOULD FIX
-    ├─ N+1 or unbounded query on a growth path → SHOULD FIX
-    ├─ Related writes without a transaction → SHOULD FIX
-    ├─ Wrong status code for the failure's semantics → SHOULD FIX
-    └─ NO → Is it a genuine enhancement?
-        ├─ Narrowing an already-safe schema further → NICE TO HAVE
-        ├─ Rate limiting/caching the spec never asked for → DON'T MENTION
-        ├─ Layer/abstraction preference over working inline code → DON'T MENTION
-        └─ Hypothetical scale concerns on internal tooling → DON'T MENTION
+Does request data reach an interpreter, an outbound request, or another user's data —
+or can a failure escape the error handler?
+├─ Spliced into SQL, a shell command, a file path or a fetched URL → Must Fix
+├─ A route with no guard, or a query with no ownership condition → Must Fix
+├─ A write bound to the request body rather than to named fields → Must Fix
+├─ Secrets, tokens or personal data in a response, a log line or source → Must Fix
+├─ Request data used with no schema at the boundary → Must Fix
+├─ A promise the handler neither awaits, returns nor gives its own .catch → Must Fix
+│     (a task detached on purpose with its own .catch, or through the
+│      codebase's documented fire-and-forget helper, is fine)
+└─ NO → Does it fail under real input or real volume?
+    ├─ Stack, SQL or driver text in a client-facing error → Should Fix
+    ├─ A query per row in a loop over records that grow with usage → Should Fix
+    ├─ A list endpoint with no bound on a growing table → Should Fix
+    ├─ Writes that must land together, outside a transaction → Should Fix
+    ├─ A status that contradicts the failure (200 wrapping an error, 500 for bad input) → Should Fix
+    └─ NO → Is it an improvement the diff's purpose supports?
+        ├─ Narrowing a schema that is already safe → Nice to Have
+        └─ Rate limits, caching, a repository layer, an index on a table that stays small → don't write it
 ```
+
+A performance finding names the workload that makes it real: a query per row over a user's orders grows with every order, and a missing index on a twelve-row lookup table never will.
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues (Must Fix):**
+### Pattern 1: Injection and Server-Side Requests
 
-- Template literals or string concatenation building SQL with request data
-- `exec(userInput)` or string-built shell commands
-- Route handlers reading `req.body`/params with no schema parse
-- `findUnique({ where: { id: params.id } })` on user-owned resources with no ownership check
-- `res.json(entity)` where the entity carries hash/token/internal columns
-- Hardcoded credentials, tokens, or connection strings
+Nothing that parses — the database, a shell, a program's option parser, the filesystem, an HTTP client — receives request data as part of its instructions.
 
-**Medium Priority Issues (Should Fix):**
+- SQL binds request values: placeholders, the data layer's query builder, or a tagged `sql` template. An untagged template literal or `+` produces one string, and the database parses all of it.
+- Methods named `raw`, `unsafe` or `literal` receive no request data; they hand their string to the database verbatim, by design.
+- Column names, table names and sort directions come from an allowlist, because a placeholder binds values and cannot bind an identifier.
+- A process starts from an executable and an argument array, with no `shell: true`. A request value in that array is refused if it starts with `-`, or placed after `--` where the program honours it.
+- A file path built from request data is resolved against its base directory and checked to start with that base plus a separator. Stripping `../` misses encoded and nested forms.
+- A URL the server fetches on the client's behalf matches an allowlist of hosts, and redirects are refused.
 
-- `catch` blocks that stringify the error into the response
-- Queries inside loops over query results
-- New list endpoints with no bound on a growing table
-- Sequential dependent writes with no transaction
-- `console.log` of request bodies on auth or payment paths
+```typescript
+// Must Fix: the search term is parsed as SQL
+await db.query(`SELECT id FROM posts WHERE title = '${query.q}'`);
 
-**Common Mistakes:**
+// Bound: the value travels separately from the statement
+await db.query("SELECT id FROM posts WHERE title = $1", [query.q]);
+await sql`SELECT id FROM posts WHERE title = ${query.q}`;
+```
 
-- Validating the body but not params or query
-- Checking authentication and calling it authorization
-- Trusting an id because it "comes from our own frontend"
-- Returning 200 with an error object in the body
-- Catch-and-continue that swallows the failure and corrupts later state
+Full code: [examples/core.md](examples/core.md#pattern-1-injection-and-server-side-requests)
 
-**Gotchas & Edge Cases:**
+### Pattern 2: Boundary Validation
 
-- ORM raw-query escape hatches (`$queryRawUnsafe`, `sequelize.query`) reintroduce injection the ORM normally prevents
-- Zod `.parse` throws - a handler without the codebase's error boundary turns validation into a 500
-- Middleware order matters: a validator after the handler runs never
-- Soft-deleted rows still satisfy ownership checks unless the query filters them
-- JSON.stringify on circular DB entities throws at serialization, after the status was already sent
+Every value the handler uses has passed a schema, and the handler reads what the schema returned.
 
-</red_flags>
+- Body, params, query and headers each pass a schema; validating the body leaves the rest raw.
+- The handler reads the parse result. Going back to the raw request discards what the schema guaranteed.
+- The schema is as narrow as the contract — enums, bounds on numbers, a format on ids. A `limit` with no maximum turns a list endpoint into a full-table read.
+- A failed parse answers 400 or 422, whichever the codebase uses. A throwing parse that no error handler maps answers 500.
+
+```typescript
+// Must Fix: "abc" becomes NaN, and nothing caps the page size
+const items = await listItems(Number(query.limit));
+
+// The handler reads the parsed output: an integer from 1 to 100
+const { limit } = listQuerySchema.parse(query);
+const items = await listItems(limit);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-2-boundary-validation)
+
+### Pattern 3: Authentication and Object-Level Authorization
+
+Who may call this, and may they touch this row. OWASP's API Security Top 10 (2023) ranks broken object-level authorization first.
+
+- The route's auth requirement is explicit; a public route is public by a decision visible in the diff.
+- Reads and writes of user-owned rows carry an ownership condition taken from the session, never from an id the client sent.
+- Role-gated functions check the role on the server; hiding the button in the UI checks nothing.
+- A row the caller may not see answers like a missing one. RFC 9110 permits 404 in place of 403, and the difference between them lets a caller probe which ids exist.
+
+```typescript
+// Must Fix: any signed-in user reads any invoice by changing the id
+await db.query("SELECT id, total FROM invoices WHERE id = $1", [params.id]);
+
+// Ownership is part of the query
+await db.query(
+  "SELECT id, total FROM invoices WHERE id = $1 AND owner_id = $2",
+  [params.id, session.userId],
+);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-3-authentication-and-object-level-authorization)
+
+### Pattern 4: Property-Level Exposure
+
+Fields leave and enter by name. OWASP's API3:2023 merges excessive data exposure and mass assignment into one category, because both are an entity's shape crossing the boundary unfiltered.
+
+- Responses name their fields. A whole row ships every column — password hashes, reset tokens, internal flags.
+- Writes name their fields. A write bound to the request body lets the caller set `role`, `ownerId` or `verified`. Where the body passed a schema, check its unknown-key mode: some libraries strip undeclared keys by default, some keep them, and every loose or passthrough mode keeps them.
+- Log lines the diff adds leave out passwords, tokens, session ids, connection strings and personal data; logs are read by more people, and kept longer, than the rows they describe.
+- Credentials, keys and connection strings stay out of source.
+- Environment values are read through the codebase's config module, not through scattered `process.env` reads in handlers. A direct read skips whatever validation the module does, so a missing or malformed value surfaces as a failed request rather than a failed start.
+
+```typescript
+// Must Fix: sending { "role": "admin" } promotes the caller
+await users.update(session.userId, body);
+
+// The write names what a user may change
+const { name, email } = profileSchema.parse(body);
+await users.update(session.userId, { name, email });
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-4-property-level-exposure)
+
+### Pattern 5: Error Paths
+
+What a failure returns is part of the contract.
+
+- Every promise a handler starts is awaited, returned, or given its own `.catch`; one that is none of these is Must Fix. The framework's error handler never sees its rejection, so the client gets no error response, and under Node's default `--unhandled-rejections=throw` (since v15) the rejection becomes an uncaught exception that ends the process. A task detached on purpose — with its own `.catch`, or through the codebase's documented fire-and-forget helper — is fine.
+- Client-facing messages are written for the client; stacks, SQL, file paths and driver text stay in the server log.
+- Status codes carry what callers branch on: 400 or 422 for bad input, 401 for missing or invalid credentials, 403 for refused, 404 for absent, 409 for a conflict with current state. A 200 wrapping an error, or a 500 for bad input, sends callers down the wrong branch.
+- A failure the caller can act on — the email is taken — is told apart from one they cannot — the database is down.
+- No catch swallows a failure, logged or not, and lets later code run as if it had succeeded — that code then works on state that was never written or never read.
+
+```typescript
+// Should Fix: dialect, table names and stack frames reach the client
+return { status: 500, body: { error: String(error) } };
+
+// The log gets the detail; the client gets a message written for it
+logServerError("signup failed", error);
+return { status: 500, body: { error: "Could not create account" } };
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-5-error-paths)
+
+### Pattern 6: Query Shape
+
+Read the data access at production volume; seed data hides every one of these.
+
+- No query runs inside a loop over rows that one join, one query over all their ids, or one multi-row write would answer.
+- A list endpoint the diff adds bounds its result set when the table grows with usage.
+- Writes that must land together share a transaction; a failure between them leaves half the change.
+- A new filter on a large, growing table has an index, in this diff or already.
+
+```typescript
+// Should Fix: one round trip per order
+for (const order of orders) {
+  order.items = await db.query(
+    "SELECT sku, quantity FROM order_items WHERE order_id = $1",
+    [order.id],
+  );
+}
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-6-query-shape)
+
+</patterns>
 
 ---
 
-<critical_reminders>
+<red_flags>
 
-## CRITICAL REMINDERS
+## Red flags
 
-> **All code must follow project conventions in CLAUDE.md**
+**Grep the diff for these, then read each hit against its pattern:**
 
-**(You MUST trace every external input in the diff - body, params, query, headers - to its use, verifying schema validation at the boundary)**
+- A template literal or `+` around `SELECT`, `INSERT`, `UPDATE`, `DELETE` or `WHERE` (Pattern 1)
+- Query methods named `raw`, `unsafe` or `literal` (Pattern 1)
+- `exec(`, `execSync(` and `shell: true` (Pattern 1)
+- `readFile`, `createReadStream`, `unlink` or `path.join` given request data (Pattern 1)
+- `fetch(` or another HTTP client given a URL from the request (Pattern 1)
+- The request body, or a spread of it, passed to a write (Pattern 4)
+- A loaded row or entity returned as the response body (Pattern 4)
+- A log call given the request, its body or its headers (Pattern 4)
+- `String(error)`, `error.message` or `.stack` in a response body (Pattern 5)
+- A promise-returning call with no `await`, `return` or `.catch` in a handler — Must Fix; a detached task with its own `.catch`, or the codebase's documented fire-and-forget helper, is fine (Pattern 5)
+- `await` inside a `for` over the results of another query (Pattern 6)
 
-**(You MUST verify no user input is concatenated into SQL, shell commands, or file paths - parameterized queries and validated paths only)**
+**Looks safe, isn't:**
 
-**(You MUST verify every route the diff adds declares its authentication requirement and checks authorization for the object it touches)**
+- An argument array — git still reads `--upload-pack=…` as an option when the request value starts with `-`. Refuse option-shaped values, or put `--` before the positionals.
+- `resolved.startsWith(base)` — with no trailing separator it also admits the sibling directory `uploads-old`.
+- A schema on the body — params and query stay raw unless they get their own.
+- Authentication middleware on the router — it identifies the caller and says nothing about whose row the query returns.
+- A guard or validator registered after a route — where middleware runs in registration order, it never runs for that route, so the request arrives unauthenticated or unvalidated.
+- An ownership check on a soft-deleting table — deleted rows still pass unless the query filters them out.
+- An id that comes from "our own frontend" — it arrives in a request like any other input.
+- A denylist of private addresses for outbound requests — alternate IP spellings and a redirect from an allowed host both get past it.
 
-**(You MUST check that secrets, tokens, passwords, and PII do not reach logs, error responses, or client payloads)**
+**Looks unsafe, isn't:**
 
-**(You MUST verify error handling in the diff returns intentional messages - no stack traces or raw driver errors to the client)**
+- A tagged `sql` template interpolating a request value — the tag binds it as a parameter. The same text with no tag in front is the injection.
+- 422 for a validation failure — RFC 9110 defines it and frameworks use it. The finding is a 5xx for bad input, not the choice between 400 and 422.
+- A query written inline where the codebase writes queries inline — a missing repository layer is not this diff's defect.
 
-**Failure to catch these issues will result in APIs with injection vectors, cross-tenant data access, and credentials sitting in logs and client payloads.**
-
-</critical_reminders>
+</red_flags>

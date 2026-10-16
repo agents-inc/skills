@@ -13,8 +13,6 @@ description: TypeScript-native Infrastructure as Code with Pulumi
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST pass `{ parent: this }` to ALL child resources inside a ComponentResource -- omitting it breaks the resource tree and state tracking)**
 
 **(You MUST use `pulumi.interpolate` for string building with Outputs -- string concatenation silently produces `[object Object]`)**
@@ -369,8 +367,6 @@ See [examples/advanced.md](examples/advanced.md) for preview, destroy, local pro
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST pass `{ parent: this }` to ALL child resources inside a ComponentResource -- omitting it breaks the resource tree and state tracking)**
 

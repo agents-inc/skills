@@ -1,6 +1,6 @@
 # meta-reviewing-cli-reviewing
 
-CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.
+CLI code review — exit codes, cancellation and signals, non-TTY behaviour, the stdout/stderr split, error text, config precedence, subprocess safety and test adequacy. Load when reviewing a command-line tool's commands, entry point, prompts, output or tests, whichever parser or prompt library it uses.
 
 ## Installation
 

@@ -1,6 +1,6 @@
 {
   "name": "web-ui-radix-ui",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
   "description": "Unstyled accessible UI primitives",
   "author": {

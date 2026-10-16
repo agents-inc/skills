@@ -13,8 +13,6 @@ description: File-based routing and navigation for Expo/React Native
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define navigation structure in `_layout.tsx` files -- screens without a layout parent default to a basic Stack)**
 
 **(You MUST use `Stack.Protected` with `guard` prop for authentication flows in SDK 53+ -- NOT imperative redirects in useEffect)**
@@ -388,8 +386,6 @@ Expo Router provides multiple navigation patterns. The key decisions:
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST define navigation structure in `_layout.tsx` files -- screens without a layout parent default to a basic Stack)**
 

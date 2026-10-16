@@ -13,8 +13,6 @@ description: BLE scanning/connecting/GATT operations with react-native-ble-plx, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST call `destroy()` on BleManager when deallocating resources -- leaking the manager causes native memory leaks and zombie listeners)**
 
 **(You MUST call `discoverAllServicesAndCharacteristics()` after connecting before any read/write/monitor operations -- GATT structure is not available until discovered)**
@@ -491,8 +489,6 @@ What kind of NFC tag?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST call `destroy()` on BleManager when deallocating resources -- leaking the manager causes native memory leaks and zombie listeners)**
 

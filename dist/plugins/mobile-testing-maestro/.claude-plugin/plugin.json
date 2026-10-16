@@ -1,6 +1,6 @@
 {
   "name": "mobile-testing-maestro",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Maestro mobile E2E testing - YAML flows, selectors, flow control, environment variables, JavaScript expressions, device interactions, Maestro Studio, Maestro Cloud CI, tags, test suites",
   "author": {

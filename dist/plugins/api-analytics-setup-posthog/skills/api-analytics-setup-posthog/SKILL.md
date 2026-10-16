@@ -13,8 +13,6 @@ description: PostHog analytics and feature flags setup
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST initialize posthog-js only in a client/browser context - it requires browser APIs like window and localStorage)**
 
 **(You MUST call `posthog.shutdown()`, `posthog.flush()`, or use `captureImmediate()` after server-side event capture to prevent lost events)**
@@ -166,8 +164,6 @@ See [examples/server.md](examples/server.md) for singleton setup, API route usag
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST initialize posthog-js only in a client/browser context - it requires browser APIs like window and localStorage)**
 

@@ -22,8 +22,6 @@ description: PostHog event tracking, user identification, group analytics for B2
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST call `posthog.identify()` ONLY when a user signs up or logs in - never on every page load)**
 
 **(You MUST include the user's database ID as `distinct_id` in ALL server-side events)**
@@ -288,8 +286,6 @@ posthog.init(POSTHOG_KEY, {
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST call `posthog.identify()` ONLY when a user signs up or logs in - never on every page load)**
 

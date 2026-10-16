@@ -13,8 +13,6 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define task dependencies using `dependsOn: ["^build"]` in turbo.json to ensure topological ordering)**
 
 **(You MUST declare all environment variables in the `env` array of turbo.json tasks for proper cache invalidation)**
@@ -250,8 +248,6 @@ For detailed anti-patterns and checklists, see [reference.md](reference.md).
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST define task dependencies using `dependsOn: ["^build"]` in turbo.json to ensure topological ordering)**
 

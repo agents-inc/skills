@@ -13,8 +13,6 @@ description: Clerk managed authentication - ClerkProvider, middleware, pre-built
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `@clerk/nextjs/server` for ALL server-side imports -- NEVER import server helpers from `@clerk/nextjs`)**
 
 **(You MUST verify webhooks using Clerk's `verifyWebhook` helper -- NEVER trust unverified webhook payloads)**
@@ -385,8 +383,6 @@ What auth UI do you need?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `@clerk/nextjs/server` for ALL server-side imports -- NEVER import server helpers from `@clerk/nextjs`)**
 

@@ -1,6 +1,6 @@
 {
   "name": "mobile-ui-components-react-native-paper",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "React Native Paper v5+ - Material Design 3 theming, PaperProvider, key components, dynamic color, accessibility, tree-shaking, custom fonts, navigation integration",
   "author": {

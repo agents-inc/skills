@@ -13,8 +13,6 @@ description: Resend + React Email templates
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST await `render()` before passing HTML to resend.emails.send() - render returns a Promise)**
 
 **(You MUST handle Resend API errors and implement retry logic for transient failures)**
@@ -291,8 +289,6 @@ See [examples/preferences.md](examples/preferences.md) for preference schema, ch
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST await `render()` before passing HTML to resend.emails.send() - render returns a Promise)**
 

@@ -1,6 +1,6 @@
 {
   "name": "mobile-storage-mmkv",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "MMKV high-performance key-value storage for React Native - synchronous JSI-based reads/writes, encryption, typed hooks, multiple instances, listeners, persistence middleware adapters",
   "author": {

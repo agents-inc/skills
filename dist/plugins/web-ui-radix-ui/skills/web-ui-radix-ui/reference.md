@@ -1,7 +1,7 @@
 # Radix UI Reference
 
 > Anti-patterns with code, checklists and API lookup. See [SKILL.md](SKILL.md) for the decisions and
-> [examples/](examples/) for full implementations. Current major: v1.4.x.
+> [examples/](examples/) for full implementations. Current release: v1.8.x.
 
 ---
 
@@ -171,7 +171,7 @@ number on the content.
 
 - [ ] `Portal` wraps `Overlay` and `Content`
 - [ ] `Title` present, visually hidden where the design has no heading
-- [ ] `Description` present, or `aria-describedby={undefined}` on `Content`
+- [ ] `Description` present, or deliberately omitted (no `aria-describedby` workaround since v1.6.3)
 - [ ] AlertDialog, not Dialog, for anything destructive
 - [ ] Destructive dialogs open focused on Cancel via `onOpenAutoFocus`
 - [ ] A glyph-only `Close` carries an `aria-label` — otherwise it is announced as an empty button
@@ -217,19 +217,19 @@ Root                    # state and context
 | Tooltip      | `--radix-tooltip-content-transform-origin`       | Transform origin                |
 | DropdownMenu | `--radix-dropdown-menu-content-transform-origin` | Transform origin                |
 
-### v1.4.x changes
+### Notable changes through v1.8.x
 
-| Change                 | Effect                                                           |
-| ---------------------- | ---------------------------------------------------------------- |
-| React 19 support       | `ref` is an ordinary prop; `forwardRef` wrappers are optional    |
-| RSC compatibility      | Primitives load under React Server Components                    |
-| Escape key capture     | Escape is captured before reaching browser hotkeys               |
-| Dialog console output  | Error for a missing `Title`, warning for a missing `Description` |
-| `hideWhenDetached`     | Blocks interaction once the anchor has left the viewport         |
-| Progress indeterminate | `value={undefined}` is explicitly supported                      |
-| CSP `nonce`            | `Select` and `ScrollArea` accept a `nonce` for inline styles     |
-| Form bubble inputs     | Form controls render through the shared Primitive component      |
-| Avatar `crossOrigin`   | `crossOrigin` forwarded to the underlying image                  |
+| Change                 | Effect                                                         |
+| ---------------------- | -------------------------------------------------------------- |
+| React 19 support       | `ref` is an ordinary prop; `forwardRef` wrappers are optional  |
+| RSC compatibility      | Primitives load under React Server Components                  |
+| Escape key capture     | Escape is captured before reaching browser hotkeys             |
+| Dialog console output  | Nothing logged for a missing `Title` or `Description` (v1.6.0) |
+| `hideWhenDetached`     | Blocks interaction once the anchor has left the viewport       |
+| Progress indeterminate | `value={undefined}` is explicitly supported                    |
+| CSP `nonce`            | `Select` and `ScrollArea` accept a `nonce` for inline styles   |
+| Form bubble inputs     | Form controls render through the shared Primitive component    |
+| Avatar `crossOrigin`   | `crossOrigin` forwarded to the underlying image                |
 
 ### Preview primitives
 

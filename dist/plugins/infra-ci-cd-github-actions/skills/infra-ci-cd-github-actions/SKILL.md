@@ -13,8 +13,6 @@ description: GitHub Actions, pipelines, deployment
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use affected/changed-package detection for PR builds - NEVER run full test suite on PRs)**
 
 **(You MUST cache package manager dependencies and build outputs - CI without caching wastes 70% of runtime)**
@@ -259,8 +257,6 @@ See [examples/core.md](examples/core.md) for implementation examples.
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use affected/changed-package detection for PR builds - NEVER run full test suite on PRs)**
 

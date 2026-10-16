@@ -13,8 +13,6 @@ description: LiteLLM proxy server setup, TypeScript client patterns via OpenAI S
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the `provider/model-name` format in `litellm_params.model` -- e.g., `anthropic/claude-sonnet-4-20250514`, `openai/gpt-4o`, `azure/my-deployment` -- the provider prefix is how LiteLLM routes to the correct API)**
 
 **(You MUST set `model_name` as the user-facing alias that clients request -- this is NOT the provider model ID, it is the name your TypeScript client passes as `model`)**
@@ -385,8 +383,6 @@ Do you have multiple teams or users?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the `provider/model-name` format in `litellm_params.model` -- e.g., `anthropic/claude-sonnet-4-20250514`, `openai/gpt-4o`, `azure/my-deployment` -- the provider prefix is how LiteLLM routes to the correct API)**
 

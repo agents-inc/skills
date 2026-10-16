@@ -13,8 +13,6 @@ description: Direct MySQL database access with mysql2 driver -- connection pools
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `execute()` with `?` placeholders for ALL queries containing user input -- NEVER interpolate values into SQL strings with template literals or string concatenation)**
 
 **(You MUST use `pool.getConnection()` for transactions and release the connection in a `finally` block -- pool convenience methods (`pool.execute()`) use a different connection per call and cannot maintain transaction state)**
@@ -424,8 +422,6 @@ What MySQL error did I get?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `execute()` with `?` placeholders for ALL queries containing user input -- NEVER interpolate values into SQL strings with template literals or string concatenation)**
 

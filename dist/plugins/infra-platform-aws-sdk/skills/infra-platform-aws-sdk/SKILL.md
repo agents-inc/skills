@@ -13,8 +13,6 @@ description: AWS SDK v3 for TypeScript — modular clients, command pattern, S3,
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use AWS SDK v3 modular packages (`@aws-sdk/client-*`) — NEVER the monolithic `aws-sdk` v2 package)**
 
 **(You MUST use the command pattern: `client.send(new XxxCommand({...}))` — NEVER call methods directly on the client)**
@@ -407,8 +405,6 @@ Where is this code running?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use AWS SDK v3 modular packages (`@aws-sdk/client-*`) — NEVER the monolithic `aws-sdk` v2 package)**
 

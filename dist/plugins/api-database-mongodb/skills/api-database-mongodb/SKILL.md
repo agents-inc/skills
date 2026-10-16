@@ -13,8 +13,6 @@ description: Native MongoDB driver (the mongodb npm package) - MongoClient lifec
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST create exactly ONE `MongoClient` per process and reuse it -- the client owns a connection pool, so constructing one per request opens a new pool per request and exhausts the server's connection limit)**
 
 **(You MUST pass `{ session }` to EVERY operation inside a transaction -- an operation without it silently runs outside the transaction and is not rolled back)**
@@ -455,8 +453,6 @@ Getting the order wrong still produces an index, and it still gets ignored.
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST create exactly ONE `MongoClient` per process and reuse it -- the client owns a connection pool, so constructing one per request opens a new pool per request and exhausts the server's connection limit)**
 

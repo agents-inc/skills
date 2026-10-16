@@ -13,8 +13,6 @@ description: Unistyles 3.0 styling - C++ powered StyleSheet superset with zero r
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST import `StyleSheet` from `react-native-unistyles`, NOT from `react-native` -- the Unistyles version is a superset that enables all features)**
 
 **(You MUST call `StyleSheet.configure()` BEFORE any `StyleSheet.create()` -- configure in your entry file before importing components)**
@@ -370,8 +368,6 @@ Is this a third-party component that doesn't work with Unistyles styles?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST import `StyleSheet` from `react-native-unistyles`, NOT from `react-native` -- the Unistyles version is a superset that enables all features)**
 

@@ -13,8 +13,6 @@ description: E2E testing with Playwright, main process unit testing, IPC testing
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST `await electronApp.close()` in test teardown -- leaked Electron processes break CI and consume resources)**
 
 **(You MUST mock the `electron` module in unit tests -- Electron APIs are only available inside the Electron runtime)**
@@ -408,8 +406,6 @@ Does your code import from "electron"?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST `await electronApp.close()` in test teardown -- leaked Electron processes break CI and consume resources)**
 

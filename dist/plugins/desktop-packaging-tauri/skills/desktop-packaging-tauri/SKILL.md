@@ -15,8 +15,6 @@ description: Tauri 2.x bundling, code signing, auto-updater, platform installers
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST set `TAURI_SIGNING_PRIVATE_KEY` as an environment variable at build time for updater artifacts -- never commit the private key)**
 
 **(You MUST configure code signing for macOS distribution -- unsigned apps are blocked by Gatekeeper)**
@@ -386,8 +384,6 @@ Need auto-updates?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST set `TAURI_SIGNING_PRIVATE_KEY` as an environment variable at build time for updater artifacts -- never commit the private key)**
 

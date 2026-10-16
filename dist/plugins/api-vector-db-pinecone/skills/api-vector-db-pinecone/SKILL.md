@@ -13,8 +13,6 @@ description: Pinecone serverless vector database -- index management, vector ope
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST target indexes by host URL, not by name -- `pc.index({ host })` is the v7 API; `pc.index('name')` is deprecated)**
 
 **(You MUST batch upserts to max 1,000 records or 2 MB per request -- exceeding either limit causes a 400 error)**
@@ -396,8 +394,6 @@ How should I generate embeddings?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST target indexes by host URL, not by name -- `pc.index({ host })` is the v7 API; `pc.index('name')` is deprecated)**
 

@@ -1,6 +1,6 @@
 {
   "name": "mobile-navigation-react-navigation",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "React Navigation 7+ patterns - static and dynamic APIs, type-safe navigation, stack/tab/drawer navigators, deep linking, authentication flows, screen preloading, header customization",
   "author": {

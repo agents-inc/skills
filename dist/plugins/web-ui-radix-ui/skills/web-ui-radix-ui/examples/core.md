@@ -198,7 +198,7 @@ export type ButtonProps = React.ComponentProps<"button"> & {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ asChild = false, variant = "default", size = "md", className, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+    const Comp = asChild ? Slot.Root : "button";
     return (
       <Comp
         ref={ref}
@@ -234,7 +234,7 @@ styling hook survives the swap.
 
 ```typescript
 import { forwardRef } from "react";
-import { Slot, Slottable } from "radix-ui";
+import { Slot } from "radix-ui";
 
 export type IconButtonProps = React.ComponentProps<"button"> & {
   asChild?: boolean;
@@ -244,11 +244,11 @@ export type IconButtonProps = React.ComponentProps<"button"> & {
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ asChild = false, leftIcon, rightIcon, children, className, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+    const Comp = asChild ? Slot.Root : "button";
     return (
       <Comp ref={ref} className={className} {...props}>
         {leftIcon}
-        <Slottable>{children}</Slottable>
+        <Slot.Slottable>{children}</Slot.Slottable>
         {rightIcon}
       </Comp>
     );
@@ -261,6 +261,78 @@ IconButton.displayName = "IconButton";
 </IconButton>
 ```
 
-**Why good:** without `Slottable`, `Slot` treats the whole children array as the element to merge
-onto and throws, because there is more than one child. `Slottable` marks which child is the merge
-target and leaves the icons as ordinary siblings inside it.
+**Why good:** without `Slot.Slottable`, `Slot.Root` treats the whole children array as the element
+to merge onto and throws, because there is more than one child. `Slot.Slottable` marks which child
+is the merge target and leaves the icons as ordinary siblings inside it.
+
+### Good Example - Wrapping the Slotted Child's Content
+
+```typescript
+import { forwardRef } from "react";
+import { Slot } from "radix-ui";
+
+export type ButtonProps = React.ComponentProps<"button"> & {
+  asChild?: boolean;
+};
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ asChild = false, children, ...props }, ref) => {
+    const Comp = asChild ? Slot.Root : "button";
+    return (
+      <Comp ref={ref} {...props}>
+        <Slot.Slottable child={children}>
+          {(content) => <span className="button-label">{content}</span>}
+        </Slot.Slottable>
+      </Comp>
+    );
+  }
+);
+Button.displayName = "Button";
+
+// <button><span class="button-label">Save</span></button>
+<Button>Save</Button>
+
+// <a href="/page"><span class="button-label">Navigate</span></a>, the <a> carrying the merged props
+<Button asChild>
+  <a href="/page">Navigate</a>
+</Button>
+```
+
+**Why good:** the render function receives the child's own content, so the wrapper renders inside
+whichever element ends up on the page — the `<a>` keeps the merged props and ref, and both branches
+produce the same inner markup. Wrapping `{children}` in a `<span>` inside a plain `Slot.Slottable`
+would make the span the merge target instead. Needs v1.5.0 or later.
+
+### Good Example - A Slot Named for Its Owner
+
+```typescript
+import { forwardRef } from "react";
+import { Slot } from "radix-ui";
+
+type NativeButtonProps = React.ComponentPropsWithoutRef<"button">;
+
+const ButtonSlot = Slot.createSlot<HTMLButtonElement, NativeButtonProps>("Button");
+
+export type ButtonProps = NativeButtonProps & {
+  asChild?: boolean;
+};
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ asChild = false, ...props }, ref) => {
+    const Comp = asChild ? ButtonSlot : "button";
+    return <Comp ref={ref} {...props} />;
+  }
+);
+Button.displayName = "Button";
+
+// Throws "Button failed to slot onto its children" — two children and no Slottable
+<Button asChild>
+  <SearchIcon />
+  <a href="/search">Search</a>
+</Button>
+```
+
+**Why good:** the error names the component the misuse is in, where `Slot.Root` reports only `Slot`.
+The type arguments type the slot's props and ref as a button's rather than a generic
+`HTMLElement`'s. `ButtonSlot` is created once at module scope — a call inside the render would make
+a new component type on every render and remount the child. Type arguments need v1.6.0 or later.

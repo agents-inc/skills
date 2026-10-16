@@ -13,8 +13,6 @@ description: React Navigation 7+ patterns - static and dynamic APIs, type-safe n
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST declare a global `ReactNavigation.RootParamList` interface so `useNavigation` is type-safe without manual annotation)**
 
 **(You MUST use `createNativeStackNavigator` for production apps -- the JS stack (`@react-navigation/stack`) is significantly slower and only needed for highly custom transitions)**
@@ -460,8 +458,6 @@ How to move between screens?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST declare a global `ReactNavigation.RootParamList` interface so `useNavigation` is type-safe without manual annotation)**
 

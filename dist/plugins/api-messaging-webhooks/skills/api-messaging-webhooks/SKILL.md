@@ -13,8 +13,6 @@ description: Webhook patterns — receiving, sending, signature verification, an
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST verify signatures against the RAW request body -- never parsed/re-serialized JSON)**
 
 **(You MUST use `crypto.timingSafeEqual` for signature comparison -- never `===` which leaks timing information)**
@@ -373,8 +371,6 @@ Need to notify external consumers of events?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST verify signatures against the RAW request body -- never parsed/re-serialized JSON)**
 

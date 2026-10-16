@@ -24,8 +24,6 @@ description: Secrets management, XSS prevention, CSRF protection, dependency sca
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST NEVER commit secrets to the repository - use .env.local and CI secrets only)**
 
 **(You MUST sanitize ALL user input before rendering raw HTML - use DOMPurify before any HTML injection)**
@@ -260,8 +258,6 @@ See [reference.md](reference.md) for common mistakes, anti-patterns with code ex
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST NEVER commit secrets to the repository - use .env.local and CI secrets only)**
 

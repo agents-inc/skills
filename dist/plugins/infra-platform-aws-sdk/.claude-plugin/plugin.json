@@ -1,6 +1,6 @@
 {
   "name": "infra-platform-aws-sdk",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "AWS SDK v3 for TypeScript — modular clients, command pattern, S3, DynamoDB, SQS, Lambda, SNS, Secrets Manager",
   "author": {

@@ -13,8 +13,6 @@ description: Multi-window management, WebContentsView, BaseWindow, window lifecy
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST close `webContents` explicitly when destroying a `BaseWindow` -- it does not auto-cleanup like `BrowserWindow`, causing memory leaks)**
 
 **(You MUST use `WebContentsView` instead of `BrowserView` -- `BrowserView` is deprecated since Electron 30)**
@@ -405,8 +403,6 @@ What is the relationship between windows?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST close `webContents` explicitly when destroying a `BaseWindow` -- it does not auto-cleanup like `BrowserWindow`, causing memory leaks)**
 

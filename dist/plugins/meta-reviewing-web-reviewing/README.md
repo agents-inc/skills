@@ -1,6 +1,6 @@
 # meta-reviewing-web-reviewing
 
-UI component review patterns. Use when reviewing React components, hooks, props, state, styling, and accessibility. Covers rules of hooks, effect cleanup, render performance, list keys, keyboard and ARIA patterns.
+React component review — hook rules, effect cleanup, derived state, keys, memoization evidence and keyboard access. Load when reviewing a diff that adds or changes React components or hooks.
 
 ## Installation
 

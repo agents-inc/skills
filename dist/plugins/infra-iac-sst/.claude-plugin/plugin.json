@@ -1,6 +1,6 @@
 {
   "name": "infra-iac-sst",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "SST (Ion) infrastructure-as-code — TypeScript-first serverless on AWS with Pulumi, resource linking, and live Lambda dev",
   "author": {

@@ -1,63 +1,56 @@
 ---
 name: meta-reviewing-web-reviewing
-description: UI component review patterns. Use when reviewing React components, hooks, props, state, styling, and accessibility. Covers rules of hooks, effect cleanup, render performance, list keys, keyboard and ARIA patterns.
+description: React component review — hook rules, effect cleanup, derived state, keys, memoization evidence and keyboard access. Load when reviewing a diff that adds or changes React components or hooks.
 ---
 
-# Web Code Review Patterns
+# React Component Review Patterns
 
-> **Quick Guide:** When a diff touches UI components, verify hooks obey the rules of hooks with complete dependency arrays, effects clean up what they set up, list keys are stable, and interactive elements the diff adds are reachable by keyboard with accessible names. Judge performance concerns against evidence in the diff, not against a memoize-everything ideal.
+> **Quick Guide:** Trace what changes between renders — dependency arrays, cleanups, keys, component identity — before judging what one render shows. Accessibility is checked for the elements the diff adds. A performance finding names a cost the diff creates, and where React Compiler is on, memoization is the compiler's job. Three version facts change a finding: `use()` may be called conditionally (React 19), `useEffectEvent` takes event logic out of an effect's dependencies (React 19.2), and since React 18 setting state after unmount is silent.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — each pattern's defect and its fix, as a reviewer meets them in a diff
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Reviewing Web Code
+## Before reviewing a React diff
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Trace each hook's dependency array against what its callback reads.** A value read but not listed stays pinned to the render that created the callback, so the UI shows stale data once that value changes, and nothing errors.
 
-**(You MUST verify hooks are called unconditionally at top level, with dependency arrays that name every value the callback reads)**
+**Pair everything an effect or ref callback starts with a cleanup that stops it.** Without one, each re-run adds another listener, timer or subscription, and the last one outlives the component.
 
-**(You MUST verify every effect that subscribes, registers a listener, or starts a timer returns a cleanup function)**
+**Check that every interactive element the diff adds is reachable and operable by keyboard, shows where focus is, and has an accessible name.** A native `<button>` or `<a href>` brings focus, keyboard activation and a role, and an `onClick` on a `<div>` brings none of them; a style that removes the focus outline leaves a keyboard user unable to see where they are.
 
-**(You MUST check every interactive element the diff adds for keyboard reachability and an accessible name)**
+**Check that list keys come from the data's identity.** React matches children across renders by key, so an index key hands one row's state to another when the list reorders, filters or inserts.
 
-**(You MUST verify list keys are stable identities, not array indexes on lists that can reorder)**
-
-**(You MUST check memoization against evidence: flag a missing memo only for a demonstrable cost in the diff, and flag speculative memo/useCallback wrapping as churn)**
+**Ask for memoization only where the diff creates a cost you can name.** Re-rendering is React's default rather than a defect, and a finding with no measured cost is one the author has no way to verify.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** review component, React PR review, hooks review, JSX diff, component code review, accessibility review, a11y check, re-render review
+**Auto-detection:** `useEffect`, `useLayoutEffect`, `useEffectEvent`, `useMemo`, `useCallback`, `React.memo`, `use()`, `react-hooks/exhaustive-deps`, `react-hooks/rules-of-hooks`, `key={index}`, `onClick` on a `div`, `htmlFor`, `aria-label`, `showModal`, `defaultValue`, `preventDefault`, `.tsx` diff, `.jsx` diff, React PR review, component review
 
-**When to use:**
+**Applies to:**
 
-- Reviewing diffs containing React components (`.tsx`/`.jsx` with JSX)
-- Reviewing custom hooks, effects, or state management inside components
-- Checking accessibility of new or changed interactive UI
-- Evaluating render-performance claims or concerns in a diff
-- Reviewing controlled form inputs and event handling
+- Diffs that add or change React components or custom hooks
+- Hook call order, dependency arrays, and suppressions of the hooks lint rules
+- Cleanup for effects and ref callbacks, and async results that arrive out of order
+- Props typing, and derived versus mirrored state
+- List keys and component identity
+- Controlled inputs and form submission handlers
+- Whether a render-performance finding has evidence behind it
+- Keyboard and screen-reader access for the elements the diff adds
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- When implementing components (use the relevant web implementation skill)
-- For server routes, configs, or build tooling in the same diff (use the API/infra reviewing skills)
-- For visual design judgments a spec does not define
-
-**Key patterns covered:**
-
-- Rules of hooks and dependency-array completeness
-- Effect cleanup for subscriptions, listeners, and timers
-- Props and state typing
-- Evidence-based render performance review
-- List keys and reconciliation
-- Controlled components and event handling
-- Accessibility for diff-added interactive elements
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Good/bad component patterns to look for during review
+- The severity scale, the approval decision and how a finding is written — the general review discipline; this skill only places React defects on that scale
+- Server routes, build configuration and CI changes in the same diff — each is reviewed against its own domain's checks
+- A full accessibility audit — contrast, live regions and the complete keyboard contract of complex widgets; this review covers what the diff adds
+- Visual design the spec does not define
+- The choice of styling approach — the file's existing one is the yardstick
 
 ---
 
@@ -65,307 +58,208 @@ description: UI component review patterns. Use when reviewing React components, 
 
 ## Philosophy
 
-**Review the component the diff builds, not the component you would have built.** React offers many valid shapes for the same UI; flag deviations from the codebase's established patterns and genuine defects, not alternatives.
+**Review the component the diff builds, not the one you would have built.** React allows many valid shapes for the same UI, so a finding is a defect or a departure from the codebase's own pattern — never an alternative.
 
-**When reviewing web code:**
-
-- Trace each hook's dependency array against what its callback actually reads
-- Trace each effect to its cleanup - what it starts, something must stop
-- Walk the keyboard path through any UI the diff adds: can you reach it, operate it, and see focus?
-- Treat state as the source of truth: derived values should be computed, not mirrored into more state
-
-**When NOT to flag:**
-
-- Don't demand `React.memo`, `useMemo`, or `useCallback` without a demonstrable cost in the diff - speculative memoization is churn that obscures the data flow
-- Don't demand component extraction for a component that is long but linear
-- Don't flag inline styles or styling choices that follow the file's existing approach
-- Don't request accessibility work on elements the diff did not touch
-
-**Core principles:**
-
-- **Correctness first**: stale closures and missing cleanup are bugs, not style
-- **Accessibility is scoped to the diff**: everything added must be operable; everything untouched is not this review's job
-- **Evidence over ideal**: performance feedback cites a cost the diff creates
-- **State minimalism**: the fewer sources of truth, the fewer ways to disagree
+React's defects live in time rather than in one render. A callback closing over an old value, a resource outliving its effect, state following a slot instead of an item: each reads correctly on the page in front of you and fails on the next render. That is why the checks below trace what changes between renders, and why a diff that looks right can still be wrong.
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Rules of Hooks and Dependency Arrays
-
-Hooks must be unconditional and their dependency arrays complete.
-
-```markdown
-## Hooks Review
-
-For EACH hook call in the diff:
-
-- [ ] Called at top level - not inside conditionals, loops, or early-return paths
-- [ ] Dependency array names every prop, state value, and function the callback reads
-- [ ] No dependency silenced with an eslint-disable that lacks a justifying comment
-- [ ] Functions used as dependencies are stable (defined outside, or wrapped where identity matters)
-```
-
-```typescript
-// Must Fix: stale closure - `filter` is read but not declared
-useEffect(() => {
-  fetchItems(filter).then(setItems);
-}, []); // runs once, forever using the first render's filter
-
-// Good: complete dependencies
-useEffect(() => {
-  fetchItems(filter).then(setItems);
-}, [filter]);
-```
-
-**Why this matters:** An incomplete dependency array pins the callback to stale values. The bug is invisible until the value changes, then the UI silently shows old data.
-
----
-
-### Pattern 2: Effect Cleanup
-
-What an effect starts, its cleanup must stop.
-
-```markdown
-## Effect Cleanup Review
-
-For EACH effect the diff adds or changes:
-
-- [ ] Subscriptions are unsubscribed in the returned cleanup
-- [ ] Event listeners added to window/document are removed
-- [ ] Timers (setTimeout/setInterval) are cleared
-- [ ] In-flight async work is guarded (AbortController or a cancelled flag) before setState
-```
-
-```typescript
-// Must Fix: listener leaks on every unmount/remount
-useEffect(() => {
-  window.addEventListener("resize", onResize);
-}, [onResize]);
-
-// Good: symmetric cleanup
-useEffect(() => {
-  window.addEventListener("resize", onResize);
-  return () => window.removeEventListener("resize", onResize);
-}, [onResize]);
-```
-
-**Why this matters:** Missing cleanup leaks listeners and timers, and setState after unmount throws warnings and hides real errors under noise.
-
----
-
-### Pattern 3: Props and State Typing
-
-Types should describe the component's real contract.
-
-```markdown
-## Props and State Review
-
-- [ ] Props interface/type is explicit - no `any`, no over-wide `object`/`Function`
-- [ ] Optional props are genuinely optional (component behaves without them)
-- [ ] State is minimal: values derivable from props/state are computed, not stored
-- [ ] Derived state is not mirrored with an effect that copies props into state
-```
-
-```typescript
-// Should Fix: mirrored state drifts from its source
-const [name, setName] = useState(user.name);
-useEffect(() => setName(user.name), [user.name]);
-
-// Good: derive it
-const name = user.name;
-```
-
-**Why this matters:** Every duplicated source of truth is a future inconsistency; effects that sync state are the classic source of render loops.
-
----
-
-### Pattern 4: Render Performance - Evidence Before Memoization
-
-Performance feedback must point at a cost the diff creates.
-
-```markdown
-## Performance Review
-
-Flag ONLY with evidence in the diff:
-
-- [ ] A genuinely expensive computation (large sort/filter/parse) running on every render → suggest useMemo
-- [ ] A new object/array/function literal passed to a memoized child, defeating its memo → stabilize it
-- [ ] State lifted so high that broad subtrees re-render on every keystroke → suggest lowering it
-
-Do NOT flag:
-
-- Plain components without React.memo - that is the default, not a defect
-- Inline handlers passed to plain DOM elements or non-memoized children
-- useMemo around cheap expressions
-```
-
-```typescript
-// Don't Mention: cheap derivation, memo would be noise
-const label = `${first} ${last}`;
-
-// Should Fix: expensive work re-runs on every keystroke of an unrelated input
-const ranked = rankResults(allResults); // 10k items, in render body
-// → const ranked = useMemo(() => rankResults(allResults), [allResults]);
-```
-
-**Why this matters:** Blanket memoization advice rewards volume over insight and adds indirection with no measured benefit. The review should catch real costs and equally catch speculative wrapping.
-
----
-
-### Pattern 5: List Keys and Reconciliation
-
-Keys are identities, not positions.
-
-```typescript
-// Must Fix: index keys on a reorderable/filterable list
-{items.map((item, i) => <Row key={i} item={item} />)}
-
-// Good: stable identity
-{items.map((item) => <Row key={item.id} item={item} />)}
-```
-
-**Why this matters:** Index keys make React reuse component state across different items when the list reorders - checkboxes stay checked on the wrong row.
-
----
-
-### Pattern 6: Controlled Components and Event Handling
-
-An input is controlled or uncontrolled - not both.
-
-```markdown
-## Controlled Input Review
-
-- [ ] `value` is always paired with `onChange` (or the input is deliberately uncontrolled via defaultValue)
-- [ ] The value passed is never undefined-then-defined across renders (controlled/uncontrolled flip)
-- [ ] Handlers receive typed events, not `any`
-- [ ] Form submission prevents default before async work
-```
-
-**Why this matters:** A controlled/uncontrolled flip throws warnings and drops user input; untyped handlers hide event misuse.
-
----
-
-### Pattern 7: Accessibility
-
-Everything interactive the diff adds must be operable without a mouse.
-
-```markdown
-## Accessibility Review (diff-added elements only)
-
-- [ ] Semantic elements used: button for actions, a for navigation - not onClick on div/span
-- [ ] Every form input has an associated label (htmlFor/id, wrapping label, or aria-label)
-- [ ] Icon-only buttons carry an accessible name (aria-label)
-- [ ] Custom interactive widgets are keyboard-operable and show focus
-- [ ] Focus is managed where the diff moves it: dialogs trap and restore focus on close
-- [ ] ARIA attributes added are valid and necessary - semantic HTML needs no aria-role restating
-```
-
-```tsx
-// Must Fix: unreachable by keyboard, no accessible name
-<div onClick={openSettings}><GearIcon /></div>
-
-// Good: semantic, named, focusable for free
-<button type="button" aria-label="Open settings" onClick={openSettings}>
-  <GearIcon />
-</button>
-```
-
-**Why this matters:** A `div` with onClick is invisible to keyboard and screen-reader users. Semantic elements deliver focus, activation, and naming for free - the review's job is to catch the places the diff opted out.
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
+## Where React findings land
 
-### Severity Classification for Web Issues
+These place React defects on the general severity scale. Nice to Have — tests beyond adequate, documentation, a labelled idea — has no React-specific case.
 
 ```
-Is this a correctness or accessibility defect the diff introduces?
-├─ Incomplete dependency array reading changing values → MUST FIX
-├─ Effect without cleanup for listener/timer/subscription → MUST FIX
-├─ Conditional hook call → MUST FIX
-├─ Index keys on a reorderable list → MUST FIX
-├─ Diff-added interactive element unreachable by keyboard or unnamed → MUST FIX
-└─ NO → Does it degrade maintainability or real performance?
-    ├─ Demonstrably expensive computation in render body → SHOULD FIX
-    ├─ Fresh literal defeating an existing memoized child → SHOULD FIX
-    ├─ Props mirrored into state with a sync effect → SHOULD FIX
-    ├─ Untyped props or `any` in handlers → SHOULD FIX
-    └─ NO → Is it a genuine enhancement?
-        ├─ Extracting a reusable hook two components now duplicate → NICE TO HAVE
-        ├─ React.memo without a measured re-render cost → DON'T MENTION
-        ├─ Component decomposition preference → DON'T MENTION
-        └─ Styling taste within the file's existing approach → DON'T MENTION
+Would leaving it break behaviour — a stale read, a leak, lost state or input,
+a control some users cannot operate?
+├─ A hook callback reads a changing value its array omits → MUST FIX
+├─ A hook called in a condition, loop or after an early return (use() excepted) → MUST FIX
+├─ A listener, timer, subscription or observer started with no cleanup → MUST FIX
+├─ An index or render-generated key on a list that reorders, filters or inserts → MUST FIX
+├─ A component defined inside another component's body → MUST FIX
+├─ value on an input with neither onChange nor readOnly → MUST FIX
+├─ An added control no keyboard reaches or no screen reader names → MUST FIX
+└─ NO → Is the cost concrete in this diff?
+    ├─ An async result set in an effect with no ignore flag or abort — a race → SHOULD FIX
+    ├─ Props copied into state by an effect — a stale render, then drift → SHOULD FIX
+    ├─ An input value that starts undefined or null — a mode switch React warns about → SHOULD FIX
+    ├─ Work measured near 1ms or more, re-run by updates unrelated to its inputs → SHOULD FIX
+    ├─ A fresh literal defeating a memo child the codebase placed (compiler off) → SHOULD FIX
+    ├─ A react-hooks suppression with no stated reason — a deviation in the changed lines → SHOULD FIX
+    ├─ any on props, events or refs — a wrong field access now compiles → SHOULD FIX
+    ├─ useMemo/useCallback the diff adds with no demonstrable cost to avoid — churn → SHOULD FIX
+    ├─ Hook logic two components in the diff now duplicate — the copies drift; extract a custom hook → SHOULD FIX
+    └─ NO → don't write it
+        ├─ No memoization, and no measured cost
+        ├─ Splitting a long component that reads top to bottom
+        ├─ Styling that follows the file's existing approach
+        └─ Accessibility of elements the diff did not touch
 ```
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues (Must Fix):**
+### Pattern 1: Rules of hooks and dependency arrays
 
-- `useEffect`/`useMemo`/`useCallback` with an empty or incomplete dependency array reading values that change
-- Listener, timer, or subscription started in an effect with no cleanup
-- Hook called inside a conditional, loop, or after an early return
-- `key={index}` on a list that can reorder, filter, or insert
-- `onClick` on non-interactive elements with no keyboard path
-- Form inputs with no associated label
+React identifies each hook by its call order, so a hook skipped on one render shifts every later hook onto another's state, or changes the count and makes React throw. The dependency array is the only way React learns what a callback reads.
 
-**Medium Priority Issues (Should Fix):**
+- Hooks run at the top level of a component or custom hook — never in a condition, loop, nested function or `try`/`catch`, or after an early `return`. `use()` is the exception: it may sit in a condition or loop, though not in `try`/`catch`.
+- Every prop, state value and function a hook's callback reads is in its array.
+- A suppressed `react-hooks/exhaustive-deps` or `react-hooks/rules-of-hooks` needs a stated reason. The linter can no longer check the next edit to that hook, and React Compiler skips the whole function. Where the project runs these rules, unsuppressed violations are already caught, so the suppressions are where review earns its time.
+- A value an effect reads but should not re-run for — the theme in a "connected" notice — moves into `useEffectEvent` (React 19.2+), not out of the array. An Effect Event is called only from effects and listed in no array, and using one to drop a dependency that should re-run the effect hides the stale read instead of fixing it.
 
-- setState after await with no unmount/abort guard
-- Props copied into state and synced with an effect
-- New object/array/function literal passed each render to a `React.memo` child
-- `any`-typed props, events, or refs
-- Controlled input whose value can be undefined on first render
+```typescript
+useEffect(() => {
+  fetchItems(filter).then(setItems);
+}, []); // Must Fix: reads `filter`, lists nothing, keeps the first render's value
+```
 
-**Common Mistakes:**
+Full code: [examples/core.md](examples/core.md#pattern-1-rules-of-hooks-and-dependency-arrays)
 
-- Silencing exhaustive-deps instead of restructuring the dependency
-- Deriving state in an effect when a plain expression would do
-- Treating `useCallback` as free - it costs a dependency array to maintain
-- Spreading unknown props onto DOM elements (leaks invalid attributes)
+### Pattern 2: Effect and ref cleanup
 
-**Gotchas & Edge Cases:**
+React runs an effect's cleanup with the old values before each re-run and once on unmount, and Strict Mode adds one setup-and-cleanup cycle in development to expose a missing one.
 
-- A function dependency re-created each render makes the effect run each render - the fix may belong at the definition site, not the array
-- Cleanup runs before every re-invocation, not only on unmount
-- StrictMode double-invokes effects in dev - "runs twice" is not a bug report
-- `aria-*` attributes on the wrong element are worse than none - verify against the pattern, don't just count them
+- Subscriptions unsubscribe, listeners on `window` or `document` are removed, timers are cleared and observers disconnect.
+- A ref callback that sets something up returns the cleanup that tears it down (React 19).
+- An async result set from an effect is guarded with an ignore flag or an `AbortController`. Responses arrive out of order, so a slow early one overwrites a fast later one — and React 18 removed the warning about setting state after unmount, so the console no longer hints at it.
 
-</red_flags>
+```typescript
+useEffect(() => {
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, [onResize]);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-2-effect-and-ref-cleanup)
+
+### Pattern 3: Props and state
+
+Types state the component's real contract, and every value has one source of truth.
+
+- Props are typed explicitly — no `any`, no over-wide `object` or `Function` — and an optional prop is one the component works without.
+- A value computable from props or state is computed during render. Copied into state by an effect, it renders once stale and again corrected, and the copies can drift; the `react-hooks/set-state-in-effect` lint rule flags the synchronous form.
+- State seeded from a prop and then edited — a draft — resets through a `key` on the component when the prop names a different item, not through an effect.
+
+```typescript
+// Should Fix: a second source of truth, corrected one render late
+const [fullName, setFullName] = useState("");
+useEffect(() => {
+  setFullName(`${user.first} ${user.last}`);
+}, [user.first, user.last]);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-3-props-and-state)
+
+### Pattern 4: Evidence before memoization
+
+A performance finding names a cost the diff creates, and which costs count depends on whether React Compiler is on — `babel-plugin-react-compiler` in the dependencies, or a framework's compiler option enabled.
+
+- **Compiler off.** Flag slow work in the render body — measured near 1ms or more, or looping over thousands of items — that updates unrelated to its inputs keep re-running; a fresh object, array or function passed to a `memo` child, which compares props by reference and so never skips; state lifted so high that a keystroke re-renders broad subtrees.
+- **Compiler on.** A missing `memo`, `useMemo` or `useCallback` is never a finding, because the compiler memoizes components and values itself. Manual memoization the diff adds is an escape hatch, earned where an effect dependency's identity has to hold still. Removing existing memoization can change the compiled output, so it needs evidence the behaviour held.
+- **Either way.** A component without `memo` and an inline handler on a DOM element or a non-memoized child are not findings. Flag a missing memo only for a demonstrable cost in the diff, and flag speculative `memo`/`useMemo`/`useCallback` wrapping the diff adds — `useMemo` around a cheap expression included — as churn, Should Fix: each wrapper adds a dependency array to keep correct and noise to read, for no measured gain.
+
+```typescript
+// Should Fix: a measured 10k-row sort, re-run by every keystroke in an unrelated input
+const ranked = rankResults(allResults);
+
+// Don't write it: cheap, so memoizing it buys nothing
+const label = `${first} ${last}`;
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-4-evidence-before-memoization)
+
+### Pattern 5: List keys and component identity
+
+React keeps state by position and component type; a key replaces position with identity.
+
+- Keys come from the data — `item.id`, not the index. On a list that reorders, filters or inserts, an index key gives one row's checkbox or half-typed input to the item that moves into its slot. An index is safe on a list whose order never changes.
+- Keys are never generated during render. `key={Math.random()}` matches nothing on the next render, so every row remounts and drops its input.
+- Components are defined at module level. One defined inside another's body is a new type on every render, so React discards its state and DOM whenever the parent renders; the `react-hooks/static-components` lint rule flags it.
+
+```typescript
+{items.map((item, i) => <Row key={i} item={item} />)} // Must Fix where the list reorders
+{items.map((item) => <Row key={item.id} item={item} />)}
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-5-list-keys-and-component-identity)
+
+### Pattern 6: Controlled inputs and form submission
+
+An input is controlled or uncontrolled for its whole life.
+
+- `value` comes with `onChange` or `readOnly`; without either React renders a field nobody can type into. An uncontrolled input takes `defaultValue`.
+- `value` is a string from the first render. One that starts `undefined` or `null` leaves the input uncontrolled until it becomes a string, and React warns at the switch; `value={draft ?? ""}` keeps it controlled.
+- `onChange` sets state synchronously — a deferred update makes the caret jump.
+- An `onSubmit` handler calls `preventDefault()` before its first `await`; by the time the await resumes, the browser has submitted. A function passed to `<form action>` needs no `preventDefault`, because React runs it in a transition (React 19).
+- Handlers take typed events rather than `any`. Current `@types/react` deprecates `FormEvent`: `onChange` takes `ChangeEvent` and `onSubmit` takes `SubmitEvent`.
+
+```typescript
+async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+  event.preventDefault(); // before any await, or the browser has already submitted
+  await save(new FormData(event.currentTarget));
+}
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-6-controlled-inputs-and-form-submission)
+
+### Pattern 7: Accessibility of what the diff adds
+
+Everything interactive the diff adds works without a mouse and announces a name.
+
+- Actions are `<button type="button">` and navigation is `<a href>`. An `onClick` on a `<div>` or `<span>` cannot take focus, ignores Enter and Space, and announces nothing.
+- Every input has an associated label — `htmlFor` and `id`, a wrapping `<label>`, or `aria-label`. A placeholder is not a label.
+- An icon-only button has an accessible name, and its icon is `aria-hidden`.
+- A custom widget handles its own keys and shows focus; an ARIA role supplies the word, never the behaviour.
+- Where the diff moves focus or removes the focused element — deleting a row, opening a menu, swapping a view — focus lands somewhere deliberate. A removed element drops focus to the document body, and a keyboard user starts again from the top.
+- A modal moves focus in on open, keeps it inside, closes on Escape and returns focus to its trigger. A native `<dialog>` opened with `showModal()` gets all four from the browser; a hand-built `role="dialog"` owes each one.
+- ARIA the diff adds is valid and necessary. A role restating the element's own semantics adds nothing, and a wrong one misdescribes the UI to a screen reader.
+
+```tsx
+// Must Fix: unreachable by keyboard, announced as nothing
+<div onClick={openSettings}><GearIcon /></div>
+
+// A native control brings focus, Enter and Space, and a role; the label brings the name
+<button type="button" aria-label="Open settings" onClick={openSettings}>
+  <GearIcon aria-hidden="true" />
+</button>
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-7-accessibility-of-what-the-diff-adds)
+
+</patterns>
 
 ---
 
-<critical_reminders>
+<red_flags>
 
-## CRITICAL REMINDERS
+## Red flags
 
-> **All code must follow project conventions in CLAUDE.md**
+**Breaks at runtime:**
 
-**(You MUST verify hooks are called unconditionally at top level, with dependency arrays that name every value the callback reads)**
+- `use()` inside `try`/`catch` — it throws to suspend, so the catch intercepts the suspension; a rejected promise belongs to an error boundary.
+- An Effect Event in a dependency array, passed to a child or called during render — its identity changes every render, so in an array it re-runs the effect each time; the hooks linter rejects all three.
+- An effect that sets state its own dependency array depends on — the update re-renders, the dependency changes and the effect runs again, without end. Effects that sync one piece of state into another are the usual source.
+- A `useRef` flag added so an effect "runs once" — it silences the missing cleanup Strict Mode exposed, and the resource still piles up across remounts. The cleanup is the fix.
+- A `<button>` inside a `<form>` without `type="button"` — the default type is `submit`, so clicking it submits the form.
+- `<dialog open>` — a dialog rendered open is non-modal: Tab still reaches the page behind it and Escape does nothing. Modal behaviour comes only from `showModal()`.
+- A whole props object spread onto a DOM element — props meant for the component reach the DOM, and React warns about each one it does not recognise.
 
-**(You MUST verify every effect that subscribes, registers a listener, or starts a timer returns a cleanup function)**
+**Surprising behaviour:**
 
-**(You MUST check every interactive element the diff adds for keyboard reachability and an accessible name)**
+- Cleanup runs before every re-run, not only on unmount, so a cleanup written as an unmount handler fires on each dependency change.
+- Strict Mode runs one extra setup and cleanup for every effect and ref callback in development. "Runs twice" is that check working, not a bug report.
+- A function recreated each render and listed as a dependency re-runs the effect each render. The fix sits at the definition — inside the effect, or outside the component — not in the array.
+- A native `<dialog>` closed by Escape closes without asking React, so state that tracks it as open has to follow its `close` event.
+- A suppressed `react-hooks` rule makes React Compiler skip the whole component or hook, so it loses automatic memoization along with the lint check.
+- `aria-*` on the wrong element misdescribes the UI, which is worse than leaving it off — check each attribute against the pattern it claims rather than counting them.
 
-**(You MUST verify list keys are stable identities, not array indexes on lists that can reorder)**
-
-**(You MUST check memoization against evidence: flag a missing memo only for a demonstrable cost in the diff, and flag speculative memo/useCallback wrapping as churn)**
-
-**Failure to catch these issues will result in components that leak listeners, render stale data, lose user input on reorder, and lock out keyboard users.**
-
-</critical_reminders>
+</red_flags>

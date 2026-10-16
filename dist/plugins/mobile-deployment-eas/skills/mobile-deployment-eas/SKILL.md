@@ -13,8 +13,6 @@ description: EAS Build, Update, Submit deployment patterns
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the `--environment` flag with `eas update` on SDK 55+ projects -- the `--channel` flag is replaced)**
 
 **(You MUST set `runtimeVersion` with `"fingerprint"` policy for projects with native dependencies -- mismatched runtime versions crash apps on OTA update)**
@@ -374,8 +372,6 @@ eas build --profile preview --platform ios
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use the `--environment` flag with `eas update` on SDK 55+ projects -- the `--channel` flag is replaced)**
 

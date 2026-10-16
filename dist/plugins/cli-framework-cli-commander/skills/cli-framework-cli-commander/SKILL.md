@@ -13,8 +13,6 @@ description: Node.js CLI development with Commander.js and @clack/prompts - comm
 
 ## CRITICAL: Before Building CLI Applications
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST handle SIGINT (Ctrl+C) gracefully and exit with appropriate codes)**
 
 **(You MUST use `p.isCancel()` to detect cancellation in ALL @clack/prompts calls and handle gracefully)**
@@ -377,8 +375,6 @@ Check in order, first defined wins:
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST handle SIGINT (Ctrl+C) gracefully and exit with appropriate codes)**
 

@@ -1,6 +1,6 @@
 # meta-config-stack-detect
 
-Inspect a codebase, a stack the user describes, or a description of what they want to build; map what is there to agents-inc catalog skills — or intent to candidate built-in stacks the user picks from — and emit a SeedPayload plus a human-readable proposal report. Use when seeding a configuration for a project that has none.
+Proposes an agents-inc configuration — a SeedPayload plus a report — from a repository, a stack the user describes, or a description of what they want to build. Load when seeding a configuration for a project that has none, or re-running one after its dependencies changed.
 
 ## Installation
 

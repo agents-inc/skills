@@ -1,16 +1,16 @@
-# Composable Components - Accessibility Structure
+# Composable Components — Accessibility Structure Examples
 
-> The accessibility work that is an API decision: generated ids wired across parts, focus ownership with consumer escape hatches, roving tabindex, and typeahead. See [SKILL.md](../SKILL.md) for the alignment checklist and [core.md](core.md) for the context and registry these build on.
+> Full code for Pattern 8 in [SKILL.md](../SKILL.md): the accessibility work that is an API decision — generated ids wired across parts, focus ownership with consumer escape hatches, roving tabindex, typeahead and Escape. The ARIA and keyboard contracts per widget are tables in [reference.md](../reference.md#aria-wiring-by-widget).
 
-**Prerequisites**: Understand context scoping and the descendant registry from [core.md](core.md) -- every pattern here is a `Root` publishing behavior that individual parts subscribe to.
-
-> **Scope:** this file covers accessibility that determines _what parts exist and what they share_. Conformance testing, contrast, alt text and audit workflows are a different domain.
+**Prerequisites:** context scoping and the descendant registry from [core.md](core.md) — every pattern here is a `Root` publishing behaviour that parts subscribe to. `useLatest` and `createChangeEventDetails` are in [state-contract.md](state-contract.md).
 
 ---
 
-## Id Wiring Through Context
+## Pattern 8: Structural Accessibility
 
-A relationship between two parts cannot be expressed by the consumer, because the consumer does not know the ids and should not have to. The `Root` owns them; the parts register and consume.
+### Id wiring through context
+
+A relationship between two parts cannot be expressed by the consumer, who does not know the ids and should not have to. The `Root` owns them; parts register and consume.
 
 ```tsx
 interface RegisteredIds {
@@ -34,33 +34,28 @@ function useRegisteredId(
 
   return id;
 }
-```
 
-```tsx
-const DialogDescription = forwardRef<
-  HTMLParagraphElement,
-  React.ComponentPropsWithoutRef<"p">
->(function DialogDescription(props, forwardedRef) {
+function DialogDescription({ ref, ...props }: React.ComponentProps<"p">) {
   const { registerDescriptionId } = useDialogContext("Description");
   const id = useRegisteredId(registerDescriptionId, props.id);
 
-  return <p {...props} ref={forwardedRef} id={id} />;
-});
+  return <p {...props} ref={ref} id={id} />;
+}
 ```
 
-**Why good:** The relationship survives every rearrangement, because it travels through context rather than through the JSX tree the consumer wrote. The attribute is `undefined` when the part is not rendered, so `aria-describedby` never points at an id that does not exist. A consumer-supplied `id` wins, which is what makes external `aria-controls` and form-label wiring possible.
+**Why good:** The relationship survives every rearrangement, because it travels through context rather than through the JSX the consumer wrote. The attribute is `undefined` while the part is not rendered, so `aria-describedby` never points at a missing id. A consumer-supplied `id` wins, which is what makes external `aria-controls` and form-label wiring possible.
 
-**Why generating the id in the popup is bad:**
+**Why guessing the id in the popup is bad:**
 
 ```tsx
-// BAD: the popup assumes a title exists and guesses its id
+// BAD: the popup assumes a title exists and derives its id
 const titleId = `${dialogId}-title`;
 <div role="dialog" aria-labelledby={titleId}>
 ```
 
-If no `Dialog.Title` is rendered, `aria-labelledby` points at nothing. Assistive technology follows the reference, finds no element, and reports no accessible name -- a strictly worse outcome than omitting the attribute, which would at least fall back to other naming sources.
+With no `Dialog.Title` rendered, `aria-labelledby` points at nothing and the dialog has no accessible name — worse than omitting the attribute, which would at least let other naming sources apply.
 
-### Require a Name, Don't Invent One
+### Require a name, don't invent one
 
 ```tsx
 useEffect(() => {
@@ -77,16 +72,14 @@ useEffect(() => {
 }, [labelId, ariaLabel, ariaLabelledBy]);
 ```
 
-**Why good:** The component knows the requirement and the two ways to satisfy it, so it states both. Development-only, so the check costs nothing in production. A component that silently ships unnamed dialogs has moved a requirement it understands onto a consumer who does not.
+**Why good:** The component knows the requirement and both ways to satisfy it, so it states both — in development only. A component that silently ships unnamed dialogs has moved a requirement it understands onto a consumer who does not.
 
----
+### Focus ownership
 
-## Focus Ownership
-
-A component that takes over the screen owns focus: where it goes on open, where it returns on close, and what happens to Tab in between. Consumers override through hooks, not by forking.
+A component that takes over the screen owns focus: where it goes on open, where it returns on close, and what Tab does in between. Consumers redirect it through hooks, not by forking.
 
 ```tsx
-const FOCUS_RESTORE_FRAME_DELAY = 0;
+const FOCUS_RESTORE_DELAY_MS = 0;
 
 interface UseFocusManagementParams {
   readonly open: boolean;
@@ -102,30 +95,34 @@ function useFocusManagement({
   onCloseAutoFocus,
 }: UseFocusManagementParams): void {
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  // Read through refs: a consumer's inline callback must not re-run the effect,
+  // which would hand focus back and take it again on every render.
+  const onOpenAutoFocusRef = useLatest(onOpenAutoFocus);
+  const onCloseAutoFocusRef = useLatest(onCloseAutoFocus);
 
   useEffect(() => {
     if (!open) return;
 
-    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+    const active = document.activeElement;
+    previouslyFocusedRef.current =
+      active instanceof HTMLElement ? active : null;
 
     const openEvent = new Event("openAutoFocus", { cancelable: true });
-    onOpenAutoFocus?.(openEvent);
-    if (!openEvent.defaultPrevented) {
-      focusFirstTabbable(popupRef.current);
-    }
+    onOpenAutoFocusRef.current?.(openEvent);
+    if (!openEvent.defaultPrevented) focusFirstTabbable(popupRef.current);
 
     return () => {
       const closeEvent = new Event("closeAutoFocus", { cancelable: true });
-      onCloseAutoFocus?.(closeEvent);
+      onCloseAutoFocusRef.current?.(closeEvent);
       if (closeEvent.defaultPrevented) return;
 
       const target = previouslyFocusedRef.current;
       window.setTimeout(
         () => target?.focus({ preventScroll: true }),
-        FOCUS_RESTORE_FRAME_DELAY,
+        FOCUS_RESTORE_DELAY_MS,
       );
     };
-  }, [open, popupRef, onOpenAutoFocus, onCloseAutoFocus]);
+  }, [open, popupRef, onOpenAutoFocusRef, onCloseAutoFocusRef]);
 }
 
 const TABBABLE_SELECTOR = [
@@ -140,11 +137,15 @@ const TABBABLE_SELECTOR = [
 
 function getTabbables(container: HTMLElement | null): readonly HTMLElement[] {
   if (container === null) return [];
-  const matches = [
-    ...container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR),
-  ];
-  return matches.filter(
-    (element) => element.offsetParent !== null && !element.closest("[inert]"),
+  return [...container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)].filter(
+    isTabbableNow,
+  );
+}
+
+function isTabbableNow(element: HTMLElement): boolean {
+  return (
+    element.checkVisibility({ visibilityProperty: true }) &&
+    element.closest("[inert]") === null
   );
 }
 
@@ -160,13 +161,13 @@ function focusFirstTabbable(container: HTMLElement | null): void {
 }
 ```
 
-**The visibility filter is not optional:** the selector matches elements inside `display: none` subtrees, inside `inert` regions and inside collapsed `<details>`, none of which are tabbable. A trap built on the unfiltered list sends focus to an invisible element and looks, to the user, like focus disappeared.
+**The visibility filter is not optional.** The selector matches elements inside `display: none` subtrees, a closed `<details>`, `visibility: hidden` regions and `inert` regions, none of which are tabbable; a trap built on the raw list sends focus to an invisible element, which looks to the user like focus disappeared. `checkVisibility()` is false for an element with no box or under a `content-visibility: hidden` ancestor, and `visibilityProperty` adds `visibility: hidden`. An `offsetParent !== null` check is the common substitute and is wrong here: it is also `null` for a visible `position: fixed` element.
 
-**Why good:** The cancelable-event escape hatch matches the escape hatch used everywhere else in a composable API -- `preventDefault()` on an event the component hands you. A consumer who wants focus on the second field, or wants focus to land on a newly created row instead of the trigger, does it in four lines and keeps every other behavior. The container fallback guarantees focus never escapes to `<body>`, which would strand the keyboard user at the top of the document.
+**Why good:** The cancelable event is the same escape hatch the rest of a composable API uses — `preventDefault()` on an event the component hands you — so a consumer who wants focus on the second field, or on a newly created row instead of the trigger, does it in a few lines and keeps every other behaviour. The container fallback guarantees focus never escapes to `<body>`, which would strand the keyboard user at the top of the document.
 
-**Why the deferred restore:** focusing synchronously during unmount competes with the browser's own focus handling and with any exit animation still holding the element. Deferring by a frame lets the DOM settle so the trigger actually receives focus.
+**Why the deferred restore:** focusing synchronously during unmount competes with the browser's own focus handling and with an exit animation still holding the element; deferring to the next task lets the DOM settle so the target actually receives focus.
 
-**Why "restore to `document.activeElement` at open" beats "restore to the trigger":** the component may have been opened programmatically from a menu item, a keyboard shortcut or a toast. Whatever had focus is what the user expects to return to.
+**Why restore to `document.activeElement` captured at open:** the component may have been opened from a menu item, a keyboard shortcut or a toast rather than its trigger, and whatever had focus is what the user expects to return to.
 
 ### Trapping Tab
 
@@ -196,15 +197,11 @@ function handleKeyDown(event: React.KeyboardEvent): void {
 }
 ```
 
-**Why good:** The list is recomputed on every Tab, so content that appears while the dialog is open is included. Trapping only at the boundaries leaves normal Tab behavior -- including the browser's own ordering rules -- untouched in between.
+**Why good:** The list is recomputed on every Tab, so content that appears while open is included, and trapping only at the boundaries leaves the browser's own ordering untouched in between. Gate the trap on the `modal` prop and default that prop to match the role.
 
-**Why a trap is only for modal surfaces:** trapping focus in a non-modal popover strands the user, who legitimately expects Tab to move on to the page. Gate the trap on the `modal` prop, and make that prop's default match the role.
+### Roving tabindex
 
----
-
-## Roving Tabindex
-
-In a composite widget -- listbox, menu, toolbar, tab list -- the whole widget is one tab stop, and arrow keys move within it.
+In a composite widget — listbox, menu, toolbar, tab list — the whole widget is one tab stop and arrow keys move within it.
 
 ```tsx
 type Orientation = "horizontal" | "vertical";
@@ -234,13 +231,8 @@ function useRovingFocus({
       if (items.length === 0) return;
 
       const currentIndex = items.findIndex((item) => item.id === activeId);
-      const nextIndex = resolveIndex(
-        direction,
-        currentIndex,
-        items.length,
-        loop,
-      );
-      const next = items[nextIndex];
+      const next =
+        items[resolveIndex(direction, currentIndex, items.length, loop)];
       if (next === undefined) return;
 
       setActiveId(next.id);
@@ -264,7 +256,7 @@ function useRovingFocus({
     [orientation, moveFocus],
   );
 
-  return { activeId, onKeyDown };
+  return { activeId, setActiveId, onKeyDown };
 }
 
 function resolveIndex(
@@ -283,42 +275,41 @@ function resolveIndex(
 }
 ```
 
-Each item is tabbable only when it is the active one:
+Each item is tabbable only while it is the active one, and a pointer press makes it active too:
 
 ```tsx
 <div
   role="option"
   tabIndex={isActive ? 0 : -1}
   data-highlighted={isActive ? "" : undefined}
+  onPointerDown={() => setActiveId(id)}
 />
 ```
 
-**Why good:** Tab enters and leaves the widget in one press regardless of item count. Disabled items are filtered before indexing, so they are skipped without a gap in the sequence. `preventDefault` runs only for keys that were handled, so unhandled keys still reach the consumer and the browser. `scrollIntoView({ block: "nearest" })` keeps the active item visible without yanking the viewport when it already is.
+**Why good:** Tab enters and leaves the widget in one press regardless of item count. Disabled items are filtered before indexing, so they are skipped without a gap. `preventDefault` runs only for handled keys, so the rest reach the consumer and the browser. `scrollIntoView({ block: "nearest" })` keeps the active item visible without yanking the viewport when it already is. Pointer and keyboard set the same state, so the next arrow key starts from the item the user clicked.
 
-**Why every-item-tabbable is bad:** a forty-option listbox becomes forty tab stops. Keyboard users cannot get past the widget, and screen reader users lose the "one control" mental model the role promises.
+**Why every-item-tabbable is bad:** a forty-option listbox becomes forty tab stops; keyboard users cannot get past it, and screen-reader users lose the "one control" model the role promises.
 
-**Why index state is bad:** storing the active _index_ rather than the active _id_ breaks the moment the list is filtered or reordered -- the index still points somewhere, just not at the item the user was on. Ids survive reordering.
+**Why an active index is bad:** an index still points somewhere after the list is filtered or reordered, just not at the item the user was on. Ids survive reordering.
 
-### Focus Versus `aria-activedescendant`
+### Focus versus `aria-activedescendant`
 
-| Approach                | Focus lives on  | Use when                                                          |
-| ----------------------- | --------------- | ----------------------------------------------------------------- |
-| Roving tabindex         | The active item | Items are the interactive elements (menu, toolbar, tab list)      |
-| `aria-activedescendant` | The container   | A text input must keep focus while a list is navigated (combobox) |
+| Approach                | DOM focus lives on | Use when                                                          |
+| ----------------------- | ------------------ | ----------------------------------------------------------------- |
+| Roving tabindex         | The active item    | Items are the interactive elements (menu, toolbar, tab list)      |
+| `aria-activedescendant` | The container      | A text input must keep focus while a list is navigated (combobox) |
 
-Pick per widget role. Mixing them -- moving DOM focus _and_ setting `aria-activedescendant` -- makes screen readers announce twice.
+Pick one per widget. With `aria-activedescendant`, DOM focus stays on the container and assistive technology treats the referenced item as focused, so moving DOM focus to the item as well contradicts the reference. Focusing an item can scroll it into view, but how far is the browser's choice — which is why the code above passes `preventScroll` and scrolls with `block: "nearest"` itself; with `aria-activedescendant` focus never moves, so the component always does the scrolling.
 
----
+### Typeahead
 
-## Typeahead
-
-Any list a user can navigate by arrow keys should also be navigable by typing.
+Any list navigable by arrow keys should also be navigable by typing.
 
 ```tsx
 const TYPEAHEAD_RESET_MS = 500;
 
 interface TypeaheadItem extends Descendant {
-  /** Registered by the ItemText part -- never read from element.textContent. */
+  /** Registered by the ItemText part — never read from element.textContent. */
   readonly textValue: string;
 }
 
@@ -390,13 +381,11 @@ function isPrintableCharacter(event: React.KeyboardEvent): boolean {
 }
 ```
 
-**Why good:** The buffer accumulates within the reset window, so "se" finds "Settings" rather than jumping to the first item starting with "e". Modifier combinations are excluded so `Ctrl+S` is not swallowed. The scan starts from the active item and wraps, so repeatedly typing "s" cycles through every item starting with "s" instead of pinning the first one. `preventDefault` fires only on a match, so a space that matched nothing still activates the focused item.
+**Why good:** The buffer accumulates within the reset window, so "se" finds "Settings" rather than jumping to the first item starting with "e". Modifier combinations are excluded, so `Ctrl+S` is not swallowed. The scan starts after the active item and wraps, so typing "s" repeatedly cycles through every item starting with "s". `preventDefault` fires only on a match, so a space that matched nothing still activates the focused item.
 
-**Where the text comes from:** the item's rendered content may include badges, icons and descriptions, so `element.textContent` is the wrong source. This is exactly why an `ItemText` part exists -- the consumer marks which text is the label, and typeahead reads that. Falling back to `textContent` makes typeahead match a badge.
+**Where the text comes from:** an item's content may include badges, icons and descriptions, so `element.textContent` would make typeahead match a badge. That is why an `ItemText` part exists — the consumer marks the label, and typeahead reads that.
 
----
-
-## Escape and Dismissal Ownership
+### Escape and dismissal ownership
 
 ```tsx
 useEffect(() => {
@@ -412,6 +401,6 @@ useEffect(() => {
 }, [open, setOpen]);
 ```
 
-**Why good:** The listener is on `document`, so Escape works even when focus is inside a portaled child or a nested iframe-free subtree. The change is routed through the same `setOpen` as every other dismissal, so it carries a reason and honors `cancel()`.
+**Why good:** The listener is on `document`, so Escape works while focus is inside portaled content. The change goes through the same `setOpen` as every other dismissal, so it carries a reason and honours `cancel()`.
 
-**The nesting problem:** two open layers both listening on `document` both close on one Escape. The fix is an ownership stack -- each layer registers on open, and only the top of the stack handles the key. Nesting is the normal case for dialogs containing selects, so a component that owns Escape must also own the stack.
+**The nesting problem:** two open layers listening on `document` both close on one Escape. The fix is an ownership stack — each layer registers on open, and only the top of the stack handles the key. Dialogs containing selects make nesting the normal case, so a component that owns Escape owns the stack too.

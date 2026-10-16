@@ -1,6 +1,6 @@
 {
   "name": "desktop-packaging-electron-forge",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Electron Forge build toolchain -- makers, publishers, code signing, fuses, hooks, CI/CD packaging",
   "author": {

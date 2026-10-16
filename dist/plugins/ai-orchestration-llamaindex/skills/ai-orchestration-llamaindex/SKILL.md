@@ -13,8 +13,6 @@ description: LlamaIndex.TS data framework for RAG, indexing, retrieval, query en
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST configure `Settings.llm` and `Settings.embedModel` before any indexing or querying -- the Settings singleton is lazily initialized and defaults to OpenAI, which will fail without an API key)**
 
 **(You MUST await all LlamaIndex operations -- `fromDocuments()`, `asQueryEngine()`, `query()`, `chat()`, `loadData()` are ALL async)**
@@ -458,8 +456,6 @@ What kind of documents are you indexing?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST configure `Settings.llm` and `Settings.embedModel` before any indexing or querying -- the Settings singleton is lazily initialized and defaults to OpenAI, which will fail without an API key)**
 

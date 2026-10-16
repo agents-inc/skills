@@ -13,8 +13,6 @@ description: GraphQL Yoga v5 server, Envelop plugins, subscriptions, error maski
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST import `GraphQLError` from `'graphql'`, NOT from `'graphql-yoga'` -- it is the standard graphql-js export)**
 
 **(You MUST prefer Yoga-specific plugins over Envelop equivalents -- Yoga plugins operate at the HTTP layer and can skip GraphQL execution entirely for cached/persisted results)**
@@ -342,8 +340,6 @@ Feature available as Yoga-specific plugin?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST import `GraphQLError` from `'graphql'`, NOT from `'graphql-yoga'` -- it is the standard graphql-js export)**
 

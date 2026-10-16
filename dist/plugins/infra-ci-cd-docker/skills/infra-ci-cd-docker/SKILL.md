@@ -13,8 +13,6 @@ description: Docker containerization patterns for Node.js/TypeScript development
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use multi-stage builds for production images - NEVER ship dev dependencies, TypeScript compiler, or source files in production)**
 
 **(You MUST run containers as non-root user - NEVER run production containers as root (default))**
@@ -463,8 +461,6 @@ Production images work with any container orchestrator. Health checks (`HEALTHCH
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use multi-stage builds for production images - NEVER ship dev dependencies, TypeScript compiler, or source files in production)**
 

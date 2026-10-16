@@ -13,8 +13,6 @@ description: Frameless windows, custom title bars, tray, menus, dock badges, vib
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST keep a module-level reference to `Tray` objects -- garbage collection silently destroys the tray icon with no error)**
 
 **(You MUST use `app-region: no-drag` on ALL interactive elements (buttons, inputs, links) inside a drag region -- draggable areas swallow all pointer events)**
@@ -421,8 +419,6 @@ Need notification count on app icon?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST keep a module-level reference to `Tray` objects -- garbage collection silently destroys the tray icon with no error)**
 

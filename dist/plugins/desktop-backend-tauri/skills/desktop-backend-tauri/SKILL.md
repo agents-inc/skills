@@ -15,8 +15,6 @@ description: Tauri 2.x Rust command patterns, state management, error handling, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST register every command in `tauri::generate_handler![]` -- unregistered commands compile fine but silently fail at runtime)**
 
 **(You MUST implement `serde::Serialize` on all error types returned from commands -- Tauri serializes errors across the IPC boundary)**
@@ -366,8 +364,6 @@ How should state be wrapped?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST register every command in `tauri::generate_handler![]` -- unregistered commands compile fine but silently fail at runtime)**
 

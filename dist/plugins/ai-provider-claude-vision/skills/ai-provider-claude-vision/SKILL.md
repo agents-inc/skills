@@ -13,8 +13,6 @@ description: Image understanding and document analysis with Claude's multimodal 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `type: "image"` for images and `type: "document"` for PDFs -- they are different content block types)**
 
 **(You MUST place images and documents BEFORE text in the content array -- Claude performs better with visual content first)**
@@ -412,8 +410,6 @@ What kind of analysis?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `type: "image"` for images and `type: "document"` for PDFs -- they are different content block types)**
 

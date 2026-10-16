@@ -13,8 +13,6 @@ description: Meilisearch search engine patterns -- client setup, indexing, searc
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST configure `filterableAttributes` on the index BEFORE using `filter` in search queries -- filters silently return no results if the attribute is not in `filterableAttributes`)**
 
 **(You MUST configure `sortableAttributes` on the index BEFORE using `sort` in search queries -- sort on unconfigured attributes is silently ignored)**
@@ -395,8 +393,6 @@ How should I handle async operations?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST configure `filterableAttributes` on the index BEFORE using `filter` in search queries -- filters silently return no results if the attribute is not in `filterableAttributes`)**
 

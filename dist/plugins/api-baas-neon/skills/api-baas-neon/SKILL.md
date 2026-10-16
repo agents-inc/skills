@@ -13,8 +13,6 @@ description: Serverless PostgreSQL with branching, autoscaling, and edge-compati
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the `neon()` HTTP function for single queries in edge/serverless runtimes -- it is 2-3x faster than WebSocket for one-shot operations)**
 
 **(You MUST close `Pool`/`Client` connections within the same request handler in serverless environments -- WebSocket connections cannot outlive a single request)**
@@ -448,8 +446,6 @@ What do you need the branch for?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the `neon()` HTTP function for single queries in edge/serverless runtimes -- it is 2-3x faster than WebSocket for one-shot operations)**
 

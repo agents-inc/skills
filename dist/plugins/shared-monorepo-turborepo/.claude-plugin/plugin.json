@@ -1,6 +1,6 @@
 {
   "name": "shared-monorepo-turborepo",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
   "author": {

@@ -13,8 +13,6 @@ description: Replicate SDK patterns for TypeScript/Node.js -- client setup, pred
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST never hardcode API tokens -- always use environment variables via `process.env.REPLICATE_API_TOKEN`)**
 
 **(You MUST handle `FileOutput` objects for models that return files -- do not assume outputs are plain strings or URLs)**
@@ -513,8 +511,6 @@ Are you running open-source models on serverless GPUs?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST never hardcode API tokens -- always use environment variables via `process.env.REPLICATE_API_TOKEN`)**
 

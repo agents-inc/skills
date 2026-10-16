@@ -13,8 +13,6 @@ description: Push notification patterns - expo-notifications (Expo) and @react-n
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST request notification permissions BEFORE retrieving push tokens -- calling getExpoPushTokenAsync or messaging().getToken() without permission will fail or return an unusable token)**
 
 **(You MUST create an Android notification channel BEFORE displaying any notification on Android 8+ -- notifications without a channel are silently dropped)**
@@ -370,8 +368,6 @@ See [reference.md](reference.md) for complete decision trees, platform differenc
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST request notification permissions BEFORE retrieving push tokens -- calling getExpoPushTokenAsync or messaging().getToken() without permission will fail or return an unusable token)**
 

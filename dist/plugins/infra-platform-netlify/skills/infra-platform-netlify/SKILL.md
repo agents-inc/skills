@@ -13,8 +13,6 @@ description: Netlify deployment platform — serverless functions, edge function
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `Netlify.env.get()` to access environment variables in functions — NOT `process.env` which is unavailable in the modern functions runtime)**
 
 **(You MUST use the `.mts` file extension for serverless functions to get ES module support — `.ts` defaults to CommonJS unless `"type": "module"` is in package.json)**
@@ -458,8 +456,6 @@ What kind of data?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `Netlify.env.get()` to access environment variables in functions — NOT `process.env` which is unavailable in the modern functions runtime)**
 

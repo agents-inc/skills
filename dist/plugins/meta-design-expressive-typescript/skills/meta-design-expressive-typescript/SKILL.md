@@ -1,357 +1,159 @@
 ---
 name: meta-design-expressive-typescript
-description: Readable functional patterns — orchestrators, pure functions, named abstractions
+description: Readable TypeScript functions — orchestrators over pure helpers, named predicates and transforms, guard clauses, exhaustive unions. Load when writing or refactoring a function that mixes validation, transformation and assembly, or when deciding whether an expression should be extracted.
 ---
 
-# Expressive TypeScript
+# Expressive TypeScript Patterns
 
-> **Quick Guide:** Write code that communicates its intent without requiring the reader to mentally simulate any of its parts. Apply the two-tier pattern: orchestrators at the top that read like pseudocode, pure functions at the bottom that each do one thing. Extract until the code reads like prose. Use utility libraries only when they genuinely improve readability over plain JS.
+> **Quick Guide:** One test decides every change: can a reader follow the flow without simulating any part of it? Where they cannot, the part they would simulate gets a name, and the function becomes an orchestrator — guards, named calls, assembly — over small pure helpers; where they can, the code stays inline. Two compiler checks carry the shape: a `never` default fails compilation when a union grows past its `switch`, and `as const satisfies` checks a config without widening its literals.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — orchestrator before/after, named predicates, transforms and constants, guard clauses, exhaustive unions, async orchestrators, `as const satisfies`
+- [examples/data-transforms.md](examples/data-transforms.md) — grouping, counting, partitioning and indexing by name; when `pipe` helps and when it hurts
+- [reference.md](reference.md) — refactoring moves at a glance, and what each compiler check needs
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing expressive TypeScript
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Write each orchestrator as guard clauses, then named calls, then the assembly of their results.** A reader learns what every step produces from its name; a transformation written inline has to be run in their head before the next line means anything.
 
-**(You MUST structure every non-trivial function as a two-tier orchestrator: guard clauses at the top, named function calls in the middle, assembly at the bottom -- NO inline data transformations in orchestrators)**
+**Extract what a reader would have to simulate, and leave what reads in one scan.** A name is the only thing extraction adds, so a helper whose name restates its single line adds a jump and nothing else.
 
-**(You MUST extract any expression that requires mental simulation to understand into a named function or named constant)**
+**Name a function for the fact it establishes — `isContentAddition(line)`, not `startsWithPlusButNotTriplePlus(line)`.** A name that describes the mechanism has to change whenever the mechanism does, and tells the reader nothing the body did not.
 
-**(You MUST name functions for WHAT they do, not HOW they do it -- `isContentAddition(line)` not `checkLineStartsWithPlusButNotTriplePlus(line)`)**
+**Pass every value an extracted helper reads as a parameter, or return the helper from a factory — `skills.filter(isRelevantTo(selection))`.** A helper that closes over its caller's locals cannot sit at the bottom of the file or be tested on its own, which is what extracting it was for.
 
-**(You MUST read the existing code before refactoring -- understand the current structure, then improve it)**
-
-**(You MUST prefer plain JS methods (`.map()`, `.filter()`, `.reduce()`) over utility libraries when they already read clearly)**
+**Use the plain array method where one call reads clearly, and an operation named for the concept where the manual version needs an accumulator.** `Object.groupBy(skills, (skill) => skill.category)` states what a loop over a mutable record makes the reader reconstruct; wrapping a single `.filter()` in a library call states nothing the method did not.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** orchestrator pattern, two-tier function, extract function, named predicate, named constant, readability refactor, expressive code, function decomposition, pure function extraction, readable TypeScript, guard clause, early return, flatten conditionals, discriminated union, exhaustive switch, as const satisfies, async orchestrator
+**Auto-detection:** orchestrator function, two-tier function, extract function, named predicate, named transform, guard clause, early return, arrow anti-pattern, nested if/else, discriminated union, exhaustive switch, `never` default, `as const satisfies`, sequential await, `Promise.all`, `Object.groupBy`, `pipe`, readability refactor, mental simulation
 
-**When to use:**
+**Applies to:**
 
-- Writing any function that mixes validation, transformation, and assembly logic
-- Refactoring a function where you need to mentally simulate steps to understand the flow
-- Naming predicates, constants, or transforms to communicate intent
-- Deciding whether to use a utility library function or plain JS
-- Decomposing a large function into orchestrator + pure helpers
-- Reviewing code and finding blocks that require mental simulation
-- Flattening deeply nested if/else blocks into guard clauses
-- Writing async functions that orchestrate multiple independent operations
-- Modeling state or events with discriminated unions for exhaustive handling
+- Splitting a function that validates, transforms and assembles into an orchestrator over pure helpers
+- Deciding whether an expression earns a name or stays inline
+- Flattening nested conditionals into guard clauses
+- Modelling a fixed set of states so the compiler checks every handler
+- Typing static configuration so its shape is checked and its literals kept
+- Ordering the awaits in an async orchestrator
+- Choosing between a plain array method, an operation named for the concept, and `pipe`
+- Reviewing code for blocks a reader would have to simulate
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Writing simple one-liner functions that are already clear
-- Academic functional programming (monads, functors, Either/Option types)
-- Point-free style where arguments are implicit
-- Over-extracting trivially simple expressions into named functions
-- Performance-critical hot paths where function call overhead matters
-
-**Key patterns covered:**
-
-- The two-tier pattern (orchestrator + pure functions)
-- The readability test ("can you understand without simulating?")
-- Named predicates, constants, and transforms
-- Guard clauses: flattening nested conditionals with early returns
-- Discriminated unions + exhaustive switch for type-safe control flow
-- Async orchestrators with `Promise.all` for independent operations
-- `as const satisfies` for intent-revealing configuration
-- The extraction decision framework
-- Utility library usage: the 80/20 rule
-
----
-
-## Detailed Resources
-
-- [examples/core.md](examples/core.md) - Two-tier pattern, guard clauses, named predicates, named constants, discriminated unions, async orchestrators
-- [examples/data-transforms.md](examples/data-transforms.md) - Data transformation patterns, when plain JS is enough, when utility libraries help
-- [reference.md](reference.md) - Quick-reference cheat sheet with decision tables
+- Failure as a return value — encoding a function's errors in its return type is a decision of its own; this skill shapes the code around whatever a function returns.
+- Where a collection operation comes from — which native method or library supplies `groupBy` or `partition`, and which runtimes have it, is settled by whatever owns the project's utilities; this skill asks only that the call site name the operation.
+- Formatting, import order and file naming — the project's formatter and lint configuration settle those.
 
 ---
 
 <philosophy>
 
-## Philosophy
+Expressive TypeScript is readability-first, practical functional programming. Two ideas carry it:
 
-Expressive TypeScript is **practical, 80/20 functional programming focused on readability**. The core test for any block of code:
+1. **Orchestrators read like pseudocode** — guards, named calls, assembly. Side effects belong here, where the reader can see them.
+2. **Helpers do one thing and are pure** — each named for its purpose, each testable with nothing but its arguments.
 
-> **"Can someone understand the code's flow without simulating any of its parts?"**
-
-If the answer is no, extract the part that requires simulation into a named function or constant. If the answer is yes, leave it alone -- even if it could theoretically be "cleaner."
-
-This is NOT:
-
-- **Monads, functors, or Either/Option types** -- those belong in a different skill
-- **Point-free style** -- implicit arguments obscure intent for most readers
-- **Religious functional purity** -- side effects in orchestrators are fine; the pure functions underneath are what matter
-- **Over-extraction** -- three similar lines of code is better than a premature abstraction
-
-**The two core ideas:**
-
-1. **Orchestrators read like pseudocode.** Guard clauses, named function calls, assembly. No inline logic that requires simulation.
-2. **Pure functions do one thing.** Each has a name that communicates its purpose. Each is independently testable.
-
-**When to apply this skill:**
-
-- Any function longer than ~15 lines that mixes concerns
-- Any expression where a reader would need to trace through logic to understand intent
-- Any repeated logic pattern that lacks a descriptive name
-
-**When NOT to apply:**
-
-- A single `.map()` or `.filter()` that already reads clearly
-- Functions that are already one level of abstraction
-- Trivially simple code where extraction would add noise
+What it is not: category theory (monads, functors, effect systems); composition with no named data, such as `compose(map(prop("name")), filter(isActive))` — passing a named function to `filter` is fine, a chain with no visible argument is not; or extraction for its own sake. Three similar lines beat a premature abstraction.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Extract, or leave inline
+
+```
+Does a reader have to simulate this block to know what it produces?
+├─ NO → Leave it inline. A one-expression lambda reading a named field is already named.
+└─ YES → Does the same logic appear in two or more places?
+    ├─ YES → Extract once, and call it from each.
+    └─ NO → Would a name say something the expression does not?
+        ├─ YES → Extract. The name is the documentation.
+        └─ NO → Leave it. selectedIds.has(item.id) needs no isItemSelected.
+```
+
+## Orchestrator, or leave the function alone
+
+A function earns the two-tier shape when it mixes concerns — validating, transforming, assembling — or when it runs past about fifteen lines in clear steps. Past that length with no clear steps, split it by responsibility first; under it, with one concern, leave it alone. A hot path where a profile shows the extra calls matter is the one place readability yields.
+
+## Array method, named operation, or `pipe`
+
+```
+One map, filter, find or some, or a simple sum?
+├─ YES → The array method. It already reads in one scan.
+└─ NO → Is the manual version a loop or reduce building groups, counts, a lookup or two partitions?
+    ├─ YES → A function named for the operation: native where the platform has one
+    │        (Object.groupBy), otherwise from the project's existing utilities.
+    └─ NO → Three or more steps whose intermediate values only feed the next step?
+        ├─ YES → pipe, if the project already uses one; otherwise named intermediates.
+        └─ NO → Named intermediates.
+```
+
+Named intermediates earn their place when a later line reads them again — Pattern 1's `validUsers` feeds the `rejected` count. Read once, by the next line, they are plumbing.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: The Two-Tier Pattern
+### Pattern 1: Orchestrator Over Pure Functions
 
-Every non-trivial function follows the same structure: an **orchestrator** at the top that reads like pseudocode, calling **pure functions** at the bottom that each do one thing.
-
-#### The Orchestrator (Top Tier)
+Guards, named calls, and the assembly of their results; anything a reader would have to simulate lives in a helper below, named for what it produces. An orchestrator that keeps growing is doing transformation work inline — push it down until each line is one named step.
 
 ```typescript
-// Orchestrator: reads like a step-by-step plan
 function processUserImport(rawData: RawImportData): ImportResult {
-  // 1. Guard clauses
-  if (!rawData.users.length) {
-    return { imported: 0, skipped: 0, errors: [] };
-  }
+  if (rawData.users.length === 0) return EMPTY_IMPORT_RESULT;
 
-  // 2. Named function calls for each step
-  const validated = rawData.users.filter(isValidUser);
-  const normalized = validated.map(normalizeUserRecord);
-  const deduped = removeDuplicatesByEmail(normalized);
-  const { existing, newUsers } = separateExistingUsers(deduped);
+  const validUsers = rawData.users.filter(isValidUser);
+  const uniqueUsers = removeDuplicatesByEmail(validUsers.map(toUserRecord));
+  const { existing, newUsers } = separateExistingUsers(uniqueUsers);
 
-  // 3. Assembly
   return {
     imported: newUsers.length,
     skipped: existing.length,
-    errors: rawData.users.length - validated.length,
+    rejected: rawData.users.length - validUsers.length,
   };
 }
 ```
 
-**Why good:** Each line communicates intent through its function name. A reader knows WHAT happens at each step without reading HOW any step works. Guard clauses are at the top. No inline lambdas obscure the flow.
+Full code: [examples/core.md](examples/core.md#pattern-1-orchestrator-over-pure-functions)
 
-#### The Pure Functions (Bottom Tier)
+### Pattern 2: Named Predicates, Transforms and Constants
 
-```typescript
-// Pure function: one job, named for purpose
-function isValidUser(user: RawUser): boolean {
-  return user.email.includes("@") && user.name.trim().length > 0;
-}
-
-function normalizeUserRecord(user: RawUser): NormalizedUser {
-  return {
-    email: user.email.toLowerCase().trim(),
-    name: user.name.trim(),
-    role: user.role ?? DEFAULT_ROLE,
-  };
-}
-
-function removeDuplicatesByEmail(users: NormalizedUser[]): NormalizedUser[] {
-  const seen = new Set<string>();
-  return users.filter((user) => {
-    if (seen.has(user.email)) return false;
-    seen.add(user.email);
-    return true;
-  });
-}
-```
-
-**Why good:** Each function does one thing, has a descriptive name, and is testable in isolation without mocks or state setup.
-
-> **Full before/after examples:** See [examples/core.md](examples/core.md) for complete orchestrator transformations.
-
----
-
-### Pattern 2: The Readability Test
-
-Before extracting or refactoring, apply this test to any block of code:
-
-> **"Can someone understand the code's flow without mentally simulating any of its parts?"**
+Where an expression has to be simulated, a name replaces the simulation. A lambda whose body is one self-describing field is already named, and stays.
 
 ```typescript
-// Fails the readability test -- requires simulation
-const result = items
-  .filter(
-    (item) =>
-      item.status === "active" &&
-      item.createdAt > cutoffDate &&
-      !excludedIds.has(item.id),
-  )
-  .map((item) => ({
-    ...item,
-    displayName: item.firstName + " " + item.lastName,
-    age: Math.floor((Date.now() - item.birthDate.getTime()) / MS_PER_YEAR),
-  }));
-```
-
-**Why bad:** A reader must mentally execute the filter predicate and the map transform to understand what this produces. The intent is buried in implementation.
-
-```typescript
-// Passes the readability test -- intent is clear from names
-const activeItems = items.filter(isActiveAfterCutoff);
-const displayRecords = activeItems.map(toDisplayRecord);
-```
-
-**Why good:** Each step communicates intent. A reader knows the filter selects active items after a cutoff and the map creates display records -- without reading either function's body.
-
-#### When the Test Says "Leave It Alone"
-
-```typescript
-// Already passes -- don't over-extract
-const names = users.map((user) => user.name);
-const activeUsers = users.filter((user) => user.isActive);
-const total = prices.reduce((sum, price) => sum + price, 0);
-```
-
-**Why good:** These are already clear single-expression operations. Extracting `getName`, `isActive`, or `sumPrices` would add indirection without improving clarity.
-
----
-
-### Pattern 3: Named Abstractions
-
-When an expression requires simulation, give it a name that communicates intent.
-
-#### Named Predicates
-
-```typescript
-// Before: requires simulation to understand filter criteria
-const lines = diff.filter(
+// Simulated: the reader runs the predicate to learn what it selects
+const additions = diff.filter(
   (line) => line.startsWith("+") && !line.startsWith("+++"),
 );
 
-// After: name communicates intent
-const lines = diff.filter(isContentAddition);
+// Named: the reader is told
+const contentAdditions = diff.filter(isContentAddition);
 
-function isContentAddition(line: string): boolean {
-  return line.startsWith("+") && !line.startsWith("+++");
-}
+// Already named by the field it reads: leave it inline
+const activeUsers = users.filter((user) => user.isActive);
 ```
 
-**Why good:** `isContentAddition` tells the reader WHAT is being checked. The implementation (startsWith logic) is available but not required to understand the flow.
+Full code: [examples/core.md](examples/core.md#pattern-2-named-predicates-transforms-and-constants)
 
-#### Named Constants
+### Pattern 3: Guard Clauses
+
+Invert each precondition and return early. The happy path then runs at zero nesting, and every line below the guards can assume them.
 
 ```typescript
-// Before: magic setup with no context
-const skill = createMockSkill("react", {
-  conflictsWith: ["vue", "angular"],
-  requires: ["typescript"],
-});
-
-// After: name communicates purpose
-const REACT_WITH_FRAMEWORK_CONFLICTS = createMockSkill("react", {
-  conflictsWith: ["vue", "angular"],
-  requires: ["typescript"],
-});
-```
-
-**Why good:** When this constant appears in a test, the reader knows its purpose without scrolling to its definition. The name encodes the relevant characteristics.
-
-#### Named Transforms
-
-```typescript
-// Before: inline formatting logic obscures orchestrator flow
-const message = results
-  .map((r) =>
-    r.success ? `  Installed ${r.name}` : `  Failed ${r.name}: ${r.error}`,
-  )
-  .join("\n");
-
-// After: name communicates intent
-const message = results.map(formatInstallResult).join("\n");
-
-function formatInstallResult(result: InstallResult): string {
-  if (result.success) return `  Installed ${result.name}`;
-  return `  Failed ${result.name}: ${result.error}`;
-}
-```
-
-**Why good:** The orchestrator reads as "format each result, join with newlines." The formatting details are available but not in the way.
-
-> **More examples:** See [examples/core.md](examples/core.md) for before/after named abstraction patterns.
-
----
-
-### Pattern 4: The Extraction Decision Framework
-
-Not every expression should be extracted. Use this decision tree:
-
-```
-Does this block require mental simulation to understand?
-|-- NO -> Leave it inline. Don't over-extract.
-+-- YES -> Does the same logic appear in 2+ places?
-    |-- YES -> Extract to shared function (DRY + readability).
-    +-- NO -> Would a named function communicate intent the expression doesn't?
-        |-- YES -> Extract. The name adds value.
-        +-- NO -> Leave it. Extraction would just move code without adding clarity.
-```
-
-#### Extract: Block Requires Simulation
-
-```typescript
-// Before: simulation required to understand what this produces
-const categories = Object.entries(skills).reduce<Record<string, Skill[]>>(
-  (acc, [id, skill]) => {
-    const cat = skill.category;
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(skill);
-    return acc;
-  },
-  {},
-);
-
-// After: intent is clear from the name
-const categories = groupSkillsByCategory(skills);
-```
-
-#### Don't Extract: Already Clear
-
-```typescript
-// Already clear -- extracting would just move one line
-const ids = skills.map((skill) => skill.id);
-const hasConflicts = conflicts.length > 0;
-const displayName = `${firstName} ${lastName}`;
-```
-
-**Why good:** These are trivially understandable. A function named `getIds`, `checkHasConflicts`, or `buildDisplayName` would add indirection without improving readability.
-
-#### Don't Extract: Name Would Be As Complex As Implementation
-
-```typescript
-// Don't extract this:
-const isSelected = selectedIds.has(item.id);
-
-// Because the extraction would be:
-function isItemSelected(item: Item, selectedIds: Set<string>): boolean {
-  return selectedIds.has(item.id);
-}
-// The name doesn't communicate more than the expression itself
-```
-
----
-
-### Pattern 5: Guard Clauses (Flatten Nested Conditionals)
-
-Deeply nested if/else blocks force a reader to maintain a mental stack of conditions. Guard clauses invert conditions and return early, keeping the happy path un-nested.
-
-```typescript
-// Flat: each guard exits early, happy path has zero nesting
 function getDiscount(user: User, cart: Cart): number {
   if (!user.isActive) return 0;
   if (cart.items.length === 0) return 0;
@@ -361,201 +163,106 @@ function getDiscount(user: User, cart: Cart): number {
 }
 ```
 
-**Why good:** Each guard clause handles one concern and exits. The reader never needs to track which `else` branch they are in. The final line is the happy path, visible at a glance.
+Full code: [examples/core.md](examples/core.md#pattern-3-guard-clauses)
 
-> **Full before/after transformation:** See [examples/core.md](examples/core.md) for deeply nested code flattened to guard clauses.
+### Pattern 4: Discriminated Unions With an Exhaustive Switch
 
----
-
-### Pattern 6: Discriminated Unions + Exhaustive Switch
-
-When a value can be one of several states, a discriminated union with an exhaustive switch makes the type system enforce that every case is handled. Adding a new variant causes a compile error wherever handling is missing.
+Give each state its own variant carrying only its own fields, and end the `switch` with a `never` default. A new variant then fails compilation at every switch that does not handle it, and the error names the variant.
 
 ```typescript
-type TaskStatus = "pending" | "running" | "completed" | "failed";
-
-function getStatusMessage(status: TaskStatus): string {
-  switch (status) {
-    case "pending":
-      return "Waiting to start";
-    case "running":
-      return "In progress...";
-    case "completed":
-      return "Done";
+function handleTaskEvent(event: TaskEvent): void {
+  switch (event.kind) {
+    case "started":
+      return markRunning(event.startedAt);
     case "failed":
-      return "Something went wrong";
+      return reportFailure(event.error);
     default: {
-      const _exhaustive: never = status;
-      return _exhaustive;
+      const unhandled: never = event;
+      return unhandled;
     }
   }
 }
 ```
 
-**Why good:** The `never` default guarantees compile-time exhaustiveness. If a fifth status is added to the union, this switch will error until the new case is handled.
+Full code: [examples/core.md](examples/core.md#pattern-4-discriminated-unions-with-an-exhaustive-switch)
 
-> **Full pattern with discriminated object unions:** See [examples/core.md](examples/core.md) for the complete discriminated union pattern.
+### Pattern 5: Async Orchestrators
 
----
-
-### Pattern 7: Async Orchestrators
-
-The two-tier pattern applies equally to async code. Async orchestrators `await` named functions in sequence for dependent steps and use `Promise.all` for independent steps.
+Await in sequence only where a step reads the previous step's result, and start independent steps together with `Promise.all`. The code then says which steps depend on which, and the wait is the longest step rather than the sum of them.
 
 ```typescript
 async function onboardNewUser(input: OnboardInput): Promise<OnboardResult> {
   const user = await createUserRecord(input);
 
-  // Independent operations -- run in parallel
   const [profile, settings] = await Promise.all([
     initializeProfile(user.id, input.preferences),
     applyDefaultSettings(user.id),
   ]);
 
   await sendWelcomeEmail(user.email, profile.displayName);
-
   return { user, profile, settings };
 }
 ```
 
-**Why good:** The orchestrator reads as a step-by-step plan. Independent operations are grouped in `Promise.all` -- signaling to the reader that they don't depend on each other. Each called function is a pure async operation named for its purpose.
+Full code: [examples/core.md](examples/core.md#pattern-5-async-orchestrators)
 
-> **Full before/after example:** See [examples/core.md](examples/core.md) for an async function decomposed from mixed-concern code.
+### Pattern 6: `as const satisfies` for Configuration
 
----
-
-### Pattern 8: `as const satisfies` for Configuration
-
-When defining static configuration objects, `as const satisfies Shape` preserves literal types (for autocompletion and `typeof`/`keyof` usage) while validating the shape at compile time.
+`as const` keeps every literal; `satisfies` then checks the shape without widening it. A misspelled field fails compilation, and `ROUTES.home.path` types as `"/"` rather than `string`.
 
 ```typescript
-interface RouteConfig {
-  path: string;
-  auth: boolean;
-}
-
 const ROUTES = {
   home: { path: "/", auth: false },
   dashboard: { path: "/dashboard", auth: true },
-  settings: { path: "/settings", auth: true },
 } as const satisfies Record<string, RouteConfig>;
 
-// Type of ROUTES.home.path is "/", not string
-// typeof ROUTES gives you the full literal structure for keyof usage
+type RouteName = keyof typeof ROUTES; // "home" | "dashboard"
 ```
 
-**Why good:** The `satisfies` operator catches typos and missing fields at compile time. The `as const` preserves exact literal types so downstream code benefits from precise inference. Without `satisfies`, a typo like `{ pth: "/" }` would silently pass.
+Full code: [examples/core.md](examples/core.md#pattern-6-as-const-satisfies-for-configuration)
+
+### Pattern 7: Collection Operations Named for the Concept
+
+Where the manual version is a loop with an accumulator, call a function whose name is the operation. Where one array method already reads, keep the method.
+
+```typescript
+// Named for the operation a manual loop would hide
+const byCategory = Object.groupBy(skills, (skill) => skill.category);
+
+// One method, already clear: no helper and no library
+const names = skills.map((skill) => skill.name);
+```
+
+Full code: [examples/data-transforms.md](examples/data-transforms.md#pattern-7-collection-operations-named-for-the-concept)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### When to Apply the Two-Tier Pattern
-
-```
-Is this function > ~15 lines?
-|-- NO -> Is it mixing multiple concerns (validate + transform + assemble)?
-|   |-- YES -> Apply two-tier pattern
-|   +-- NO -> Leave it. Short single-concern functions are fine as-is.
-+-- YES -> Does it have clear logical steps?
-    |-- YES -> Apply two-tier pattern: orchestrator calls named functions
-    +-- NO -> Consider breaking into separate functions by responsibility first
-```
-
-### When to Use a Utility Library vs Plain JS
-
-```
-Is this a single .map(), .filter(), or .reduce()?
-|-- YES -> Use plain JS. A utility library adds dependency without clarity.
-+-- NO -> Is the operation a known concept (group-by, count-by, set-difference)?
-    |-- YES -> Does the utility library name match the concept?
-    |   |-- YES -> Use the library. groupBy(skills, s => s.category) is
-    |   |          clearer than a manual reduce.
-    |   +-- NO -> Use plain JS with a named function.
-    +-- NO -> Are there 3+ chained transformations?
-        |-- YES -> Consider pipe() if intermediate variables would obscure flow.
-        +-- NO -> Use plain JS with named intermediate variables.
-```
-
-### The 80/20 Rule for Utility Libraries
-
-Use utility functions when the **function name IS the documentation**:
-
-| Use utility library                         | Use plain JS                               |
-| ------------------------------------------- | ------------------------------------------ |
-| `groupBy(items, fn)` -- groups by key       | `items.map(fn)` -- single transform        |
-| `countBy(items, fn)` -- counts per category | `items.filter(fn)` -- single filter        |
-| `difference(a, b)` -- set subtraction       | `items.find(fn)` -- single lookup          |
-| `partition(items, fn)` -- split into two    | `items.some(fn)` / `items.every(fn)`       |
-| `indexBy(items, fn)` -- array to lookup map | `items.reduce(fn, init)` -- simple sum     |
-| `pipe(data, ...fns)` -- 3+ chained ops      | One or two chained `.map().filter()` calls |
-
-> **Full data transformation examples:** See [examples/data-transforms.md](examples/data-transforms.md)
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- An orchestrator function contains inline lambdas longer than a single expression -- extract to named functions
-- A function mixes guard clauses, data transformation, side effects, and return assembly without clear separation
-- Variable names describe implementation (`filteredMappedItems`) instead of intent (`activeDisplayRecords`)
-- Code uses `.reduce()` to build a lookup object when `groupBy` or `indexBy` communicates intent directly
-- Deeply nested if/else blocks (3+ levels) instead of guard clauses with early returns
-- A switch on a union type is missing the `default: never` exhaustiveness check -- adding a new variant will silently fall through
+- Passing a function reference to `map`, `filter` or `forEach` when the function takes an optional second parameter — the array method calls it with `(element, index, array)`, so `["1", "2", "3"].map(parseInt)` is `[1, NaN, NaN]`, and TypeScript accepts it. Pass a reference only to a helper written for that array; wrap anything else: `.map((value) => parseInt(value, 10))`.
+- Helpers below their caller written as `const` arrow functions, with the orchestrator called while the module is still loading — a `const` cannot be read before its line has run, so the call throws `ReferenceError`. `function` declarations are hoisted, which is what lets them sit at the bottom of the file.
+- `Promise.all` where every outcome matters — it rejects with the first rejection, the other operations keep running, and their later failures are dropped. Use `Promise.allSettled` when the caller needs each result.
+- A `never` default that returns the value, on data that was asserted into its type rather than validated — the compiler's guarantee stops at the assertion, so at runtime the unexpected value is handed back to the caller. Throw from the default there.
+- A `switch` over a union with no `never` default — a new variant falls through silently. The compiler reports it only when every case returns from a function with an annotated return type (TS2366, which names the missing return rather than the variant); a `void` handler, a switch that assigns or calls before the function returns, and an unannotated function without `noImplicitReturns` all compile. End every such switch with the `never` default.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using a utility library for a single `.map()` or `.filter()` that already reads clearly
-- Extracting trivially simple expressions into named functions (over-extraction)
-- Using `pipe()` for one or two operations where a variable would be clearer
-- Named constants that are as complex as what they replace
+- A `default` that returns a fallback in place of the `never` check — every new variant lands in the fallback, so the compiler has nothing to report.
+- `satisfies Shape as const` does not compile — a const assertion applies only to a literal, and a `satisfies` expression is not one. Write `as const satisfies Shape`.
+- Assigning the `never` value without reading it — `noUnusedLocals` and unused-variable lint rules report it. Returning it is a read.
+- `Object.groupBy` returns a null-prototype object whose keys are all optional, so each group types as `T[] | undefined`.
 
-**Common Mistakes:**
+**Costs the reader:**
 
-- Applying point-free style (`items.filter(isActive)`) when the predicate needs context that point-free obscures -- use an explicit lambda if the predicate needs closure variables
-- Extracting a function that is used exactly once and whose name is just a restatement of the single line it contains
-- Creating a "utils" file that becomes a dumping ground -- group extracted functions by domain, near their callers
-
-**Gotchas & Edge Cases:**
-
-- A well-named inline lambda IS a named abstraction: `.filter((user) => user.isActive)` is already clear because `isActive` is self-documenting. Don't extract this to a separate function.
-- Utility library `pipe()` can HURT readability when the reader doesn't know the library -- consider your team's familiarity
-- Guard clauses should return early, not wrap the entire function body in an `if` block
-- When extracting pure functions, place them at the bottom of the file or in a shared module -- not interspersed with the orchestrators they serve
-- `as const satisfies Shape` -- order matters. `satisfies Shape as const` does not work. Lock literals first, then validate shape.
-- In async orchestrators, sequential `await` on independent operations is a hidden performance bug -- use `Promise.all` when steps don't depend on each other's results
-- The `never` exhaustiveness trick requires `noUnusedLocals` to not flag the variable -- use `return _exhaustive` instead of just assigning to avoid lint warnings
+- A variable named for how it was made (`filteredMappedItems`) rather than what it holds (`activeDisplayRecords`) — the reader re-derives the meaning the name could have stated.
+- A function body wrapped in one `if` — invert it into a guard that returns, and the body loses a level.
+- A shared `utils` file — it becomes the place nothing belongs. Put a helper at the bottom of the file whose orchestrator it serves or, when several files call it, in a module named for its domain beside those callers — never interspersed with the orchestrators it serves.
+- A named constant as complex as the expression it replaces.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
-**(You MUST structure every non-trivial function as a two-tier orchestrator: guard clauses at the top, named function calls in the middle, assembly at the bottom -- NO inline data transformations in orchestrators)**
-
-**(You MUST extract any expression that requires mental simulation to understand into a named function or named constant)**
-
-**(You MUST name functions for WHAT they do, not HOW they do it -- `isContentAddition(line)` not `checkLineStartsWithPlusButNotTriplePlus(line)`)**
-
-**(You MUST read the existing code before refactoring -- understand the current structure, then improve it)**
-
-**(You MUST prefer plain JS methods (`.map()`, `.filter()`, `.reduce()`) over utility libraries when they already read clearly)**
-
-**Failure to follow these rules will produce code that requires mental simulation to understand -- the exact opposite of expressive TypeScript.**
-
-</critical_reminders>

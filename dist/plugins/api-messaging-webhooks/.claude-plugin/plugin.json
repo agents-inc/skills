@@ -1,6 +1,6 @@
 {
   "name": "api-messaging-webhooks",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Webhook patterns — receiving, sending, signature verification, and retry logic",
   "author": {

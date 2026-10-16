@@ -1,6 +1,6 @@
 # meta-reviewing-infra-reviewing
 
-Infrastructure code review patterns. Use when reviewing CI/CD workflows, Dockerfiles, deployment configs, and IaC. Covers supply-chain pinning, secret exposure, container hygiene, least-privilege permissions, and deployment safety.
+Infrastructure code review — supply-chain pinning, secret exposure, workflow triggers and untrusted input, container hygiene, deployment safety. Load when reviewing a diff that touches CI/CD workflows, Dockerfiles, deployment configs or IaC.
 
 ## Installation
 

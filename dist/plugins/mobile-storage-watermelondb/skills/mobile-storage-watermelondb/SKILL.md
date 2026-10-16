@@ -13,8 +13,6 @@ description: WatermelonDB reactive local database for React Native - schema, mod
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST wrap ALL database modifications in `@writer` methods or `database.write()` -- writes outside a writer throw at runtime)**
 
 **(You MUST keep schema version and migration `toVersion` in sync -- migrations cannot be newer than the schema version)**
@@ -540,8 +538,6 @@ What kind of local data do you need?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST wrap ALL database modifications in `@writer` methods or `database.write()` -- writes outside a writer throw at runtime)**
 

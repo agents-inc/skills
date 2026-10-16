@@ -15,8 +15,6 @@ description: Biome v2 unified linter, formatter, and import organizer — single
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `biome.json` or `biome.jsonc` for ALL configuration — Biome does not use JavaScript config files)**
 
 **(You MUST pin Biome to an exact version with `--save-exact` — Biome formatting can change between versions)**
@@ -464,8 +462,6 @@ How to configure Biome?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `biome.json` or `biome.jsonc` for ALL configuration — Biome does not use JavaScript config files)**
 

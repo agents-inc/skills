@@ -13,8 +13,6 @@ description: SST (Ion) infrastructure-as-code — TypeScript-first serverless on
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use resource linking (`link` + `Resource.*`) to connect components — NEVER hardcode ARNs, table names, or bucket names)**
 
 **(You MUST use `$app.stage` for environment isolation — NEVER share resources across stages without explicit intent)**
@@ -414,8 +412,6 @@ Need to set a property on an SST component?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use resource linking (`link` + `Resource.*`) to connect components — NEVER hardcode ARNs, table names, or bucket names)**
 

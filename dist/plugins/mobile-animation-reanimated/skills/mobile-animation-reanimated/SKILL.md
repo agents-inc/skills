@@ -13,8 +13,6 @@ description: React Native Reanimated 4 - shared values, animated styles, spring/
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use Animated components (`Animated.View`, `Animated.Text`, etc.) for any animated styles -- passing animated styles to regular components causes errors)**
 
 **(You MUST keep static styles in `StyleSheet.create` and only animate dynamic properties in `useAnimatedStyle` -- animating static values wastes UI thread resources)**
@@ -466,8 +464,6 @@ const PULSE_DURATION = 1000;
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use Animated components (`Animated.View`, `Animated.Text`, etc.) for any animated styles -- passing animated styles to regular components causes errors)**
 

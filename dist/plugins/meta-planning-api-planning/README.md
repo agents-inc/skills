@@ -1,6 +1,6 @@
 # meta-planning-api-planning
 
-Backend specification planning frameworks. Use when a spec touches API endpoints, database schema, middleware, or auth. Covers endpoint contracts with request/response shapes, error catalogs, auth per endpoint, schema design with constraints and indexes, migration strategy, and middleware pipeline ordering.
+Backend specification frameworks — endpoint contracts, error catalogs, auth per endpoint, schema with constraints and indexes, migration strategy, middleware order. Load when a spec adds or changes an API endpoint, a database table, or a request pipeline.
 
 ## Installation
 

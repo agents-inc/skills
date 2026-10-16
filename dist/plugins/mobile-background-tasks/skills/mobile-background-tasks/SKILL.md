@@ -13,8 +13,6 @@ description: Background fetch, processing tasks, background location, headless J
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define tasks in the top-level scope (global) -- tasks defined inside React components or lifecycle methods will NOT be registered when the app starts from the background)**
 
 **(You MUST call `finish(taskId)` or return a `BackgroundTaskResult` when task execution completes -- failing to signal completion causes the OS to penalize or kill your app)**
@@ -363,8 +361,6 @@ What kind of background work do you need?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST define tasks in the top-level scope (global) -- tasks defined inside React components or lifecycle methods will NOT be registered when the app starts from the background)**
 

@@ -13,8 +13,6 @@ description: Payload CMS v3 — TypeScript-native headless CMS with code-first c
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define access control on every collection — open collections are a security risk)**
 
 **(You MUST use the Local API (`payload.find`, `payload.create`) for server-side data operations — it is zero-latency and fully typed)**
@@ -361,8 +359,6 @@ What do you need to do?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST define access control on every collection — open collections are a security risk)**
 

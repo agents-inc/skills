@@ -1,6 +1,6 @@
 # meta-planning-ai-planning
 
-AI specification planning frameworks. Use when a spec touches model calls, prompts, retrieval, tool calling, agentic loops, or evals. Covers approach selection, model and provider choice, structured output contracts, loop guards, budgets, failure modes, and eval design.
+Specification frameworks for features that call a model — approach tier, model pinning, output contracts, budgets, failure modes and eval design. Load when a spec touches model calls, prompts, retrieval, tool calling, agent loops or evals.
 
 ## Installation
 

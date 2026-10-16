@@ -15,8 +15,6 @@ description: Graph-relational database with EdgeQL query language, code-first sc
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST run `npx @gel/generate edgeql-js` after every `gel migrate` -- the generated query builder is based on the database schema and becomes stale after migrations)**
 
 **(You MUST cast empty sets explicitly (`<str>{}`, `<int64>{}`) -- bare `{}` is a syntax error because EdgeQL is strongly typed and cannot infer the type of an empty set)**
@@ -234,8 +232,6 @@ See [examples/core.md](examples/core.md) for transaction patterns and [examples/
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST run `npx @gel/generate edgeql-js` after every `gel migrate` -- the generated query builder is based on the database schema and becomes stale after migrations)**
 

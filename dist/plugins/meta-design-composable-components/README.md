@@ -1,6 +1,6 @@
 # meta-design-composable-components
 
-Composable component APIs — parts, state, polymorphism
+Composable component APIs — parts, state, polymorphism. Load when designing a reusable component's API, or aligning one that has grown boolean, renderX or style props.
 
 ## Installation
 

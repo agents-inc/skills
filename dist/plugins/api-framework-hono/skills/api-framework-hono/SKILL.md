@@ -13,8 +13,6 @@ description: Hono routes, OpenAPI, Zod validation
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST import `z` from `@hono/zod-openapi`, NOT from `zod` -- this gives Zod the `.openapi()` method)**
 
 **(You MUST export the `app` instance for OpenAPI spec generation)**
@@ -248,8 +246,6 @@ See [examples/middleware.md](examples/middleware.md) for complete auth middlewar
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST import `z` from `@hono/zod-openapi`, NOT from `zod` -- this gives Zod the `.openapi()` method)**
 

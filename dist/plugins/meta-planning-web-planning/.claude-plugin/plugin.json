@@ -1,6 +1,6 @@
 {
   "name": "meta-planning-web-planning",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Frontend specification planning frameworks. Use when a spec touches UI components, forms, client state, or user-facing flows. Covers UI-state completeness (loading, error, empty, success), component boundaries, form validation contracts, state ownership, and measurable UI success criteria.",
   "author": {

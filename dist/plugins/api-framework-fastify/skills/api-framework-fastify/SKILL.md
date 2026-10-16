@@ -13,8 +13,6 @@ description: Fastify routes, JSON Schema validation, plugin system, TypeScript t
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `withTypeProvider<>()` for type-safe request/response handling)**
 
 **(You MUST wrap shared plugins with `fastify-plugin` to expose decorators to parent scope)**
@@ -417,8 +415,6 @@ it("should list users", async () => {
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use `withTypeProvider<>()` for type-safe request/response handling)**
 

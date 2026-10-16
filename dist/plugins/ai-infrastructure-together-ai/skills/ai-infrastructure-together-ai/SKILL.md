@@ -13,8 +13,6 @@ description: Together AI SDK patterns for TypeScript — client setup, chat comp
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the `together-ai` package (`import Together from "together-ai"`) -- NOT the OpenAI SDK -- unless explicitly building an OpenAI-compatible integration)**
 
 **(You MUST include the JSON schema in BOTH the `response_format` parameter AND the system prompt when using structured output -- the model needs both)**
@@ -504,8 +502,6 @@ Is the response user-facing?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the `together-ai` package (`import Together from "together-ai"`) -- NOT the OpenAI SDK -- unless explicitly building an OpenAI-compatible integration)**
 
