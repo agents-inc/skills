@@ -8,20 +8,20 @@ description: Unstyled accessible UI primitives
 > **Quick Guide:** Radix ships unstyled primitives that carry the behaviour and accessibility of a
 > component and none of its appearance. Every primitive is a compound component — `Root`, `Trigger`,
 > `Portal`, `Content` — sharing context; `asChild` merges a primitive's behaviour onto your own
-> element; `data-state` attributes drive CSS animation. Current major is v1.4.x: React 19 and RSC
+> element; `data-state` attributes drive CSS animation. Current release is v1.8.x: React 19 and RSC
 > compatible, `forwardRef` no longer required, and `radix-ui` is the unified package that replaces
 > the individual `@radix-ui/react-*` ones.
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) — Dialog, `asChild`, `Slot` and `Slottable`
+- [examples/core.md](examples/core.md) — Dialog, `asChild`, `Slot.Root`, `Slot.Slottable` and `Slot.createSlot`
 - [examples/overlays.md](examples/overlays.md) — AlertDialog, controlled Dialog with async work
 - [examples/menus.md](examples/menus.md) — DropdownMenu, submenus, checkable and radio items
 - [examples/forms.md](examples/forms.md) — Select, CSP `nonce`, indeterminate Progress
 - [examples/navigation.md](examples/navigation.md) — Accordion and Tabs
 - [examples/animation.md](examples/animation.md) — `data-state` keyframes and height animation
 - [examples/preview.md](examples/preview.md) — `unstable_` primitives: OTP field, password toggle, Form
-- [reference.md](reference.md) — anti-patterns with code, checklists, CSS variable table, v1.4.x changes
+- [reference.md](reference.md) — anti-patterns with code, checklists, CSS variable table, notable changes through v1.8.x
 
 ---
 
@@ -54,7 +54,7 @@ rather than just its markup.
 `overflow: hidden` and stacking context, so a dialog inside a scrolling panel is clipped by it.
 
 **Give every Dialog and AlertDialog a `Title`.** It is what a screen reader announces on open, and
-Radix logs a console error when it is missing (a warning for a missing `Description`).
+since v1.6.0 Radix no longer logs an error when it is missing.
 
 **Forward the ref and spread every prop on a component used with `asChild`.** The ref is how Radix
 positions floating content and returns focus on close; the spread is how the ARIA attributes and
@@ -199,15 +199,20 @@ Full code: [examples/core.md](examples/core.md)
 ### Pattern 4: Building your own `asChild` components with `Slot`
 
 `Slot` is the merging machinery `asChild` uses, exposed for your own components. Swap the rendered
-element for `Slot` when `asChild` is set. `Slottable` marks where the child's content belongs when
-the component also renders fixed decoration around it.
+element for `Slot.Root` when `asChild` is set. `Slot.Slottable` marks where the child's content
+belongs when the component also renders fixed decoration around it.
 
 ```tsx
 function Button({ asChild = false, ...props }: ButtonProps) {
-  const Comp = asChild ? Slot : "button";
+  const Comp = asChild ? Slot.Root : "button";
   return <Comp {...props} />;
 }
 ```
+
+`Slot.Slottable` with `child={children}` and a render function as its children wraps the child's
+content in your own markup, while the child itself keeps the merged props.
+`Slot.createSlot("Button")` returns a `Slot` whose error messages name `Button`, and takes type
+arguments for the rendered element and its props.
 
 Full code: [examples/core.md](examples/core.md)
 
@@ -275,8 +280,8 @@ element and hide it visually — removing it removes the announcement, not just 
 </VisuallyHidden>
 ```
 
-Set `aria-describedby={undefined}` on `Content` when there is deliberately no `Description`, which
-silences the warning without inventing text.
+Leaving out `Description` needs no workaround: since v1.6.3 Radix sets `aria-describedby` only when
+one renders.
 
 Full code: [examples/core.md](examples/core.md)
 
@@ -297,7 +302,7 @@ Full code: [examples/core.md](examples/core.md)
   ARIA attributes are dropped, leaving a trigger that looks right and does nothing
 - Overlay content outside `Portal` — clipped by any ancestor with `overflow: hidden`, and layered
   against the wrong stacking context
-- A Dialog without `Title` — no accessible name, and a console error on every open
+- A Dialog without `Title` — no accessible name, and since v1.6.0 no console error to flag it
 - `transition` used for an exit animation — unmount is not delayed, so the element disappears before
   anything animates; use `@keyframes`
 - Mounting content with a JavaScript animation runtime but no `forceMount` — Radix unmounts it the
