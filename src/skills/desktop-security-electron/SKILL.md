@@ -13,8 +13,6 @@ description: Electron fuses, ASAR integrity, sandbox hardening, CSP, permission 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST flip fuses BEFORE code signing -- the OS enforces fuse state after signing, so flipping after signing invalidates the signature)**
 
 **(You MUST disable `RunAsNode`, `EnableNodeOptionsEnvironmentVariable`, `EnableNodeCliInspectArguments`, and `GrantFileProtocolExtraPrivileges` fuses in production builds -- these are the most commonly exploited attack vectors)**
@@ -395,8 +393,6 @@ What content does your renderer load?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST flip fuses BEFORE code signing -- the OS enforces fuse state after signing, so flipping after signing invalidates the signature)**
 

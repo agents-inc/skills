@@ -13,8 +13,6 @@ description: OpenAPI 3.1 specification, schema design, code generation
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use OpenAPI 3.1 syntax -- `type: ["string", "null"]` NOT the 3.0 `nullable: true` keyword)**
 
 **(You MUST define reusable schemas in `components/schemas` and reference with `$ref` -- NO inline schema duplication)**
@@ -367,8 +365,6 @@ Need to share fields across schemas?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use OpenAPI 3.1 syntax -- `type: ["string", "null"]` NOT the 3.0 `nullable: true` keyword)**
 

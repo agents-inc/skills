@@ -15,8 +15,6 @@ description: Tauri 2.x commands, IPC bridge, permission system, plugins, window 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the Tauri 2.x capability/permission system -- the v1 allowlist is removed)**
 
 **(You MUST register every command in `tauri::generate_handler![]` -- unregistered commands silently fail on invoke)**
@@ -376,8 +374,6 @@ See [reference.md](reference.md) for CLI commands and config reference.
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the Tauri 2.x capability/permission system -- the v1 allowlist is removed)**
 

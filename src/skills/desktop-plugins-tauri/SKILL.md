@@ -15,8 +15,6 @@ description: Tauri 2.x official plugin ecosystem, plugin APIs, permissions, and 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST complete ALL four installation steps for every plugin: 1) cargo add crate, 2) npm install bindings, 3) `.plugin()` registration in Rust, 4) permissions in capability file -- missing any step causes runtime errors)**
 
 **(You MUST scope plugin permissions in capability files -- never grant unscoped `fs:allow-read-text-file` or `http:default` without URL restrictions)**
@@ -381,8 +379,6 @@ Is this a reusable capability shared across projects?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST complete ALL four installation steps for every plugin: 1) cargo add crate, 2) npm install bindings, 3) `.plugin()` registration in Rust, 4) permissions in capability file -- missing any step causes runtime errors)**
 

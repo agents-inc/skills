@@ -13,8 +13,6 @@ description: Husky v9 setup, lint-staged v16 patterns, commitlint with conventio
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `"prepare": "husky"` in package.json - NOT the deprecated `"husky install"`)**
 
 **(You MUST only lint staged files via lint-staged - NEVER lint the entire codebase in pre-commit)**
@@ -299,8 +297,6 @@ See [reference.md](reference.md) for Husky vs alternatives comparison.
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use `"prepare": "husky"` in package.json - NOT the deprecated `"husky install"`)**
 

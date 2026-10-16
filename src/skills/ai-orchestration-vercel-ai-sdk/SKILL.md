@@ -13,8 +13,6 @@ description: Vercel AI SDK patterns - providers, text generation, streaming, str
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the `ai` package (v6) with `Output.object()` / `Output.array()` for structured output -- NOT the deprecated `generateObject` / `streamObject` functions)**
 
 **(You MUST define tool input schemas with `z.object()` and use `.describe()` on each property to help the model understand expected inputs)**
@@ -385,8 +383,6 @@ What is your primary concern?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the `ai` package (v6) with `Output.object()` / `Output.array()` for structured output -- NOT the deprecated `generateObject` / `streamObject` functions)**
 

@@ -13,8 +13,6 @@ description: MongoDB ODM with schemas, validation, middleware, and TypeScript su
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define all middleware (pre/post hooks) BEFORE calling `model()` -- hooks registered after model compilation are silently ignored with no error)**
 
 **(You MUST pass `{ session }` to EVERY operation inside a transaction -- missing session causes that operation to run outside the transaction silently)**
@@ -262,8 +260,6 @@ See [examples/core.md](examples/core.md) Pattern 2 for complete validation schem
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST define all middleware (pre/post hooks) BEFORE calling `model()` -- hooks registered after model compilation are silently ignored with no error)**
 

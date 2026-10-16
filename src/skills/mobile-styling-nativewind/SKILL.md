@@ -13,8 +13,6 @@ description: NativeWind v4+ - Tailwind CSS utility classes for React Native, cla
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always declare BOTH light and dark styles -- `className="text-black dark:text-white"` not just `className="dark:text-white"` -- React Native has no CSS cascade)**
 
 **(You MUST use `remapProps` for third-party components with multiple style props and `cssInterop` ONLY when style attributes need extraction to props -- NEVER use either for your own custom components)**
@@ -414,8 +412,6 @@ See [reference.md](reference.md) for full API cheat sheet, dark mode strategy tr
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST always declare BOTH light and dark styles -- `className="text-black dark:text-white"` not just `className="dark:text-white"` -- React Native has no CSS cascade)**
 

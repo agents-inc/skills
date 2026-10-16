@@ -13,8 +13,6 @@ description: Supabase backend-as-a-service — Auth, Database, Realtime, Storage
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST enable Row Level Security (RLS) on EVERY table in an exposed schema — no exceptions)**
 
 **(You MUST use the `Database` generic type with `createClient<Database>()` for type-safe queries)**
@@ -346,8 +344,6 @@ Does the operation need server-side logic?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST enable Row Level Security (RLS) on EVERY table in an exposed schema — no exceptions)**
 

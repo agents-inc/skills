@@ -13,8 +13,6 @@ description: Serverless Redis-compatible key-value store via Upstash REST API --
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `@upstash/redis` for new projects -- `@vercel/kv` was deprecated in December 2024 and all stores were migrated to Upstash Redis)**
 
 **(You MUST set TTLs on all cached data -- serverless Redis is billed per command and has storage limits per plan)**
@@ -223,8 +221,6 @@ How should I batch commands?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `@upstash/redis` for new projects -- `@vercel/kv` was deprecated in December 2024 and all stores were migrated to Upstash Redis)**
 

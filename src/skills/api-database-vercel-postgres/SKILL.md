@@ -13,8 +13,6 @@ description: Serverless PostgreSQL on Vercel with edge-compatible SDK
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the `sql` tagged template for one-shot queries -- it auto-connects from `POSTGRES_URL` and handles pooling)**
 
 **(You MUST call `client.release()` after using a client obtained from `sql.connect()` or `pool.connect()` -- leaked clients exhaust the connection pool)**
@@ -223,8 +221,6 @@ What is the workload?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the `sql` tagged template for one-shot queries -- it auto-connects from `POSTGRES_URL` and handles pooling)**
 

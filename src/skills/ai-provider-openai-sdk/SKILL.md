@@ -13,8 +13,6 @@ description: Official OpenAI SDK patterns for TypeScript/Node.js — client setu
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use the Responses API (`client.responses.create()`) for new projects -- it provides better performance, built-in tools, and server-side conversation state)**
 
 **(You MUST use `zodResponseFormat()` from `openai/helpers/zod` for structured outputs -- do NOT manually construct JSON schemas)**
@@ -490,8 +488,6 @@ Do you need multiple LLM providers (OpenAI + others)?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use the Responses API (`client.responses.create()`) for new projects -- it provides better performance, built-in tools, and server-side conversation state)**
 

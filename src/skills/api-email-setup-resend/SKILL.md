@@ -13,8 +13,6 @@ description: Resend email setup, domain verification
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `RESEND_API_KEY` environment variable -- NEVER hardcode API keys)**
 
 **(You MUST verify your sending domain in Resend dashboard before production -- unverified domains only send to your own email)**

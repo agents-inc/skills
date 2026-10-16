@@ -13,8 +13,6 @@ description: Express.js routes, middleware, error handling, request/response pat
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define error-handling middleware with 4 arguments: `(err, req, res, next)` - Express identifies error handlers by arity)**
 
 **(You MUST register error handlers AFTER all routes and other middleware)**
@@ -348,8 +346,6 @@ Express 5 is the default on npm since March 2025. Key changes from Express 4:
 ## CRITICAL REMINDERS
 
 **Before implementing ANY Express route, verify these requirements are met:**
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST define error-handling middleware with 4 arguments: `(err, req, res, next)` - Express identifies error handlers by arity)**
 

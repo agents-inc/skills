@@ -13,8 +13,6 @@ description: NestJS backend framework - modules, controllers, services, DI, guar
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `@Injectable()` on every service and register it in the module `providers` array)**
 
 **(You MUST enable `ValidationPipe` globally with `whitelist: true` and `forbidNonWhitelisted: true`)**
@@ -376,8 +374,6 @@ Is this a cross-cutting concern (auth, config, logging)?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `@Injectable()` on every service and register it in the module `providers` array)**
 

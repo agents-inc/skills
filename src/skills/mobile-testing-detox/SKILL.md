@@ -13,8 +13,6 @@ description: Detox E2E gray-box testing for React Native - matchers, actions, ex
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST add `testID` props to every interactive element and forward them to native components -- Detox cannot find custom components without forwarded testID)**
 
 **(You MUST use `by.id()` as the primary matcher -- it is locale-agnostic, stable across UI changes, and decoupled from display text)**
@@ -454,8 +452,6 @@ How to reset between tests?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST add `testID` props to every interactive element and forward them to native components -- Detox cannot find custom components without forwarded testID)**
 

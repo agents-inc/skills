@@ -13,8 +13,6 @@ description: Official Mistral AI TypeScript SDK patterns — client setup, chat 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `responseFormat` (camelCase) in SDK calls -- NOT `response_format` (snake_case). The SDK uses camelCase property names throughout.)**
 
 **(You MUST configure retries explicitly -- the SDK defaults to `strategy: "none"` (no retries), unlike OpenAI's SDK which retries automatically)**
@@ -568,8 +566,6 @@ Do you need multiple LLM providers (Mistral + others)?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `responseFormat` (camelCase) in SDK calls -- NOT `response_format` (snake_case). The SDK uses camelCase property names throughout.)**
 

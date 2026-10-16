@@ -13,8 +13,6 @@ description: Edge-hosted SQLite database with libSQL driver and embedded replica
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `batch()` with a transaction mode for multi-statement atomic operations -- it is faster and safer than interactive `transaction()` because it executes in a single round trip)**
 
 **(You MUST import from `@libsql/client/web` in edge/serverless runtimes that lack filesystem access (Cloudflare Workers, Vercel Edge Functions) -- the base `@libsql/client` import pulls in native bindings that fail in these environments)**
@@ -292,8 +290,6 @@ What operations will the batch/transaction perform?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `batch()` with a transaction mode for multi-statement atomic operations -- it is faster and safer than interactive `transaction()` because it executes in a single round trip)**
 

@@ -15,8 +15,6 @@ description: Tauri 2.x multi-window creation, event system, window state persist
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST give every window a unique label -- labels identify windows for event targeting, permissions, and retrieval)**
 
 **(You MUST always call the unlisten function returned by `listen()` / `once()` -- leaked listeners cause memory leaks in long-running apps)**
@@ -394,8 +392,6 @@ See [reference.md](reference.md) for the complete API quick reference.
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST give every window a unique label -- labels identify windows for event targeting, permissions, and retrieval)**
 

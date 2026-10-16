@@ -13,8 +13,6 @@ description: Auth.js (NextAuth v5) authentication patterns - configuration, prov
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST configure Auth.js in a root `auth.ts` file and export `{ auth, handlers, signIn, signOut }` from `NextAuth()`)**
 
 **(You MUST use the unified `auth()` function for server-side session access - NOT the deprecated `getServerSession()`, `getSession()`, or `getToken()`)**
@@ -285,8 +283,6 @@ See [reference.md](reference.md) for the complete anti-pattern list, gotchas, an
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST configure Auth.js in a root `auth.ts` file and export `{ auth, handlers, signIn, signOut }` from `NextAuth()`)**
 

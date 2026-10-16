@@ -13,8 +13,6 @@ description: Upstash serverless Redis -- REST-based client, auto-serialization, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `Redis.fromEnv()` for initialization in production code -- never hardcode `UPSTASH_REDIS_REST_URL` or `UPSTASH_REDIS_REST_TOKEN` values)**
 
 **(You MUST handle the `pending` promise from `@upstash/ratelimit` responses in edge runtimes -- use `context.waitUntil(pending)` on Vercel Edge/Cloudflare Workers or analytics data is lost)**
@@ -395,8 +393,6 @@ Should I use Upstash Global Database?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `Redis.fromEnv()` for initialization in production code -- never hardcode `UPSTASH_REDIS_REST_URL` or `UPSTASH_REDIS_REST_TOKEN` values)**
 

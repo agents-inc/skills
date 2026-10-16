@@ -13,8 +13,6 @@ description: React Native Paper v5+ - Material Design 3 theming, PaperProvider, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST wrap your app root in `PaperProvider` - all Paper components require the provider context to function)**
 
 **(You MUST wrap Dialog, Menu, and similar overlay components in `Portal` - without it they render inline instead of above other content)**
@@ -341,8 +339,6 @@ Do you need to bridge Paper + React Navigation themes?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST wrap your app root in `PaperProvider` - all Paper components require the provider context to function)**
 

@@ -13,8 +13,6 @@ description: Elasticsearch patterns -- client setup, index management, search DS
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define explicit index mappings BEFORE indexing documents -- dynamic mapping infers types from the first document, and if a later document sends a different type for the same field, indexing fails with a `mapper_parsing_exception` that CANNOT be fixed without reindexing into a new index)**
 
 **(You MUST use the `bulk` API for batch operations -- looping individual `client.index()` calls is orders of magnitude slower and can overwhelm the cluster with HTTP connections)**
@@ -432,8 +430,6 @@ Does relevance scoring matter for this clause?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST define explicit index mappings BEFORE indexing documents -- dynamic mapping infers types from the first document, and if a later document sends a different type for the same field, indexing fails with a `mapper_parsing_exception` that CANNOT be fixed without reindexing into a new index)**
 

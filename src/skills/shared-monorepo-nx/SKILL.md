@@ -13,8 +13,6 @@ description: Nx monorepo build system — workspace configuration, project graph
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST enable caching with `"cache": true` on cacheable targets — builds, tests, linting — and set `"cache": false` or omit for side-effect tasks like `serve`)**
 
 **(You MUST define `dependsOn: ["^build"]` in targetDefaults for build tasks to ensure topological ordering across the project graph)**
@@ -473,8 +471,6 @@ Nx integrates with your tools through its **plugin system**. Each `@nx/*` plugin
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST enable caching with `"cache": true` on cacheable targets — builds, tests, linting — and set `"cache": false` or omit for side-effect tasks like `serve`)**
 

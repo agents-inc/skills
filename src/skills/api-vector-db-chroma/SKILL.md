@@ -13,8 +13,6 @@ description: Chroma vector database -- collection management, automatic embeddin
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST install `@chroma-core/default-embed` alongside `chromadb` -- the default embedding function ships as a separate package since v3)**
 
 **(You MUST access query results as nested arrays -- `results.ids[0]`, `results.documents[0]` -- because Chroma batches queries and returns `string[][]` not `string[]`)**
@@ -272,8 +270,6 @@ Which client should I use?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST install `@chroma-core/default-embed` alongside `chromadb` -- the default embedding function ships as a separate package since v3)**
 

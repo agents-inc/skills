@@ -13,8 +13,6 @@ description: pnpm workspace protocol, filtering, catalogs, shared dependencies, 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `workspace:*` protocol for ALL internal package dependencies -- never hardcode versions)**
 
 **(You MUST use `--frozen-lockfile` in CI -- pnpm enables this by default in CI environments)**
@@ -489,8 +487,6 @@ Need zero-config PnP (no node_modules)?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `workspace:*` protocol for ALL internal package dependencies -- never hardcode versions)**
 

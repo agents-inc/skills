@@ -13,8 +13,6 @@ description: Secure storage, certificate pinning, biometric auth, jailbreak dete
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST NEVER store tokens, passwords, API keys, or PII in AsyncStorage or plain-text files -- use hardware-backed secure storage)**
 
 **(You MUST use at least two public key hashes for certificate pinning on iOS -- TrustKit/iOS enforces this and will throw if only one is provided)**
@@ -434,8 +432,6 @@ High security (banking, healthcare, fintech):
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST NEVER store tokens, passwords, API keys, or PII in AsyncStorage or plain-text files -- use hardware-backed secure storage)**
 

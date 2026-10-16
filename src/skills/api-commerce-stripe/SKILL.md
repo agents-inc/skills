@@ -13,8 +13,6 @@ description: Stripe payment processing — Checkout Sessions, Payment Intents, s
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST NEVER expose `STRIPE_SECRET_KEY` in client-side code — it stays on the server only)**
 
 **(You MUST verify webhook signatures with `stripe.webhooks.constructEvent()` using the RAW request body — never parsed JSON)**
@@ -243,8 +241,6 @@ if (error instanceof Stripe.errors.StripeCardError) {
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST NEVER expose `STRIPE_SECRET_KEY` in client-side code — it stays on the server only)**
 

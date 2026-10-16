@@ -13,8 +13,6 @@ description: Persistent storage, SQLite databases, and credential management in 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `safeStorage.encryptString()` / `safeStorage.decryptString()` for secrets -- never store tokens, API keys, or passwords in plain text or in electron-store without OS-level encryption)**
 
 **(You MUST store all persistent data under `app.getPath("userData")` -- never write to the app installation directory, which is replaced on updates)**
@@ -365,8 +363,6 @@ What kind of data?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `safeStorage.encryptString()` / `safeStorage.decryptString()` for secrets -- never store tokens, API keys, or passwords in plain text or in electron-store without OS-level encryption)**
 

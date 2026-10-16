@@ -13,8 +13,6 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST include correlation ID in ALL log statements for request tracing)**
 
 **(You MUST use structured logging with required fields: level, message, correlationId, timestamp)**
@@ -286,8 +284,6 @@ For comprehensive anti-patterns and red flags, see [reference.md](reference.md#r
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST include correlation ID in ALL log statements for request tracing)**
 

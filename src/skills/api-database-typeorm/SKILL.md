@@ -13,8 +13,6 @@ description: Decorator-based ORM for TypeScript with Active Record and Data Mapp
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST NEVER use `synchronize: true` in production - it can drop columns and lose data when entities change)**
 
 **(You MUST use `insert()`/`update()` instead of `save()` when the operation type is known - `save()` always runs an extra SELECT query)**
@@ -445,8 +443,6 @@ await AppDataSource.transaction(async (manager) => {
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST NEVER use `synchronize: true` in production - it can drop columns and lose data when entities change)**
 

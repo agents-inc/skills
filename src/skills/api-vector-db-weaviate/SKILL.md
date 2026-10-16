@@ -13,8 +13,6 @@ description: Weaviate vector database patterns with weaviate-client v3 -- collec
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST call `client.close()` when done with the Weaviate client -- it maintains persistent gRPC connections that will leak if not closed)**
 
 **(You MUST configure vectorizers at the COLLECTION level during `client.collections.create()` -- you cannot add a vectorizer after creation, only add new named vectors)**
@@ -349,8 +347,6 @@ Do I need data isolation?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST call `client.close()` when done with the Weaviate client -- it maintains persistent gRPC connections that will leak if not closed)**
 

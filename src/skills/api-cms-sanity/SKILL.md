@@ -13,8 +13,6 @@ description: Structured content platform — GROQ queries, schema definitions, @
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always set `apiVersion` on `createClient` to a dated string like `'2025-02-19'` — omitting it uses a legacy API that may break)**
 
 **(You MUST use `useCdn: true` for public read queries and `useCdn: false` when using a token or needing fresh data)**
@@ -363,8 +361,6 @@ What operation do you need?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST always set `apiVersion` on `createClient` to a dated string like `'2025-02-19'` — omitting it uses a legacy API that may break)**
 

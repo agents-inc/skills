@@ -13,8 +13,6 @@ description: Query optimization, caching, indexing, connection pooling, async pa
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always release database connections back to the pool using `finally` blocks)**
 
 **(You MUST use eager loading or batching (DataLoader) to prevent N+1 queries -- never lazy load in loops)**
@@ -353,8 +351,6 @@ See [examples/core.md](examples/core.md) for full TypeScript implementations of 
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST always release database connections back to the pool using `finally` blocks)**
 

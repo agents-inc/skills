@@ -13,8 +13,6 @@ description: MMKV high-performance key-value storage for React Native - synchron
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST reuse a single MMKV instance per concern -- NEVER call `createMMKV()` on every render or in component bodies)**
 
 **(You MUST use typed getters (`getString`, `getNumber`, `getBoolean`) -- NEVER parse the return value of the wrong getter)**
@@ -365,8 +363,6 @@ What kind of data are you storing?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST reuse a single MMKV instance per concern -- NEVER call `createMMKV()` on every render or in component bodies)**
 

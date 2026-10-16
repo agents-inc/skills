@@ -13,8 +13,6 @@ description: Maestro mobile E2E testing - YAML flows, selectors, flow control, e
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `id` selectors (accessibility identifiers) as primary selectors - text selectors break with localization or copy changes)**
 
 **(You MUST use `runFlow` for reusable sequences (login, onboarding) - NEVER duplicate steps across flow files)**
@@ -414,8 +412,6 @@ Need a dynamic value (timestamp, random ID)?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use `id` selectors (accessibility identifiers) as primary selectors - text selectors break with localization or copy changes)**
 

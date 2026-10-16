@@ -13,8 +13,6 @@ description: Job queues, background processing, and task scheduling with BullMQ 
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST pass a `connection` object to every Queue, Worker, QueueEvents, and FlowProducer constructor -- BullMQ v5 throws if connection is missing)**
 
 **(You MUST set `maxRetriesPerRequest: null` on ioredis connections used by Workers -- BullMQ requires infinite retries and throws without this setting)**
@@ -428,8 +426,6 @@ Is the processor CPU-intensive?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST pass a `connection` object to every Queue, Worker, QueueEvents, and FlowProducer constructor -- BullMQ v5 throws if connection is missing)**
 

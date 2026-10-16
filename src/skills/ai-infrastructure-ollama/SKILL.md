@@ -13,8 +13,6 @@ description: Local LLM inference with the Ollama JavaScript client -- chat, stre
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `ollama.chat()` for conversations and `ollama.generate()` for single-prompt completions -- they have different parameter shapes)**
 
 **(You MUST handle model loading delays -- the first request after a model is loaded takes significantly longer due to model initialization)**
@@ -516,8 +514,6 @@ What is your task?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `ollama.chat()` for conversations and `ollama.generate()` for single-prompt completions -- they have different parameter shapes)**
 

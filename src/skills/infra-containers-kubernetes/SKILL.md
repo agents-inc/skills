@@ -13,8 +13,6 @@ description: Kubernetes manifests, Helm charts, Kustomize overlays, and resource
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST set resource requests AND limits on every container -- pods without requests are unschedulable under resource pressure and pods without limits can OOM-kill neighbors)**
 
 **(You MUST set securityContext with runAsNonRoot: true, allowPrivilegeEscalation: false, drop ALL capabilities, and readOnlyRootFilesystem: true on every container)**
@@ -526,8 +524,6 @@ What QoS class do you need?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST set resource requests AND limits on every container -- pods without requests are unschedulable under resource pressure and pods without limits can OOM-kill neighbors)**
 

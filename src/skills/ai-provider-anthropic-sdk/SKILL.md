@@ -13,8 +13,6 @@ description: Official Anthropic SDK patterns for TypeScript/Node.js — client s
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always provide `max_tokens` in every `messages.create()` / `messages.stream()` call -- it is required and has no default)**
 
 **(You MUST handle the `stop_reason` field to detect `end_turn`, `max_tokens`, `tool_use`, and `stop_sequence` -- ignoring it causes silent truncation or broken tool loops)**
@@ -588,8 +586,6 @@ Does the task require multi-step reasoning?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST always provide `max_tokens` in every `messages.create()` / `messages.stream()` call -- it is required and has no default)**
 

@@ -13,8 +13,6 @@ description: Modern CLI development combining oclif's command framework with Ink
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST `await waitUntilExit()` after `render()` in oclif commands -- without it the process exits before the UI completes)**
 
 **(You MUST use `this.log()` / `this.warn()` / `this.error()` in commands -- `console.log` breaks `--json` mode and test capture)**
@@ -349,8 +347,6 @@ src/
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST `await waitUntilExit()` after `render()` in oclif commands -- without it the process exits before the UI completes)**
 

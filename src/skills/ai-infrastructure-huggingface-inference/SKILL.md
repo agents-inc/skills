@@ -13,8 +13,6 @@ description: Hugging Face Inference SDK patterns for TypeScript/Node.js — Infe
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always pass an access token to `InferenceClient` -- never deploy without authentication)**
 
 **(You MUST use `chatCompletion()` / `chatCompletionStream()` for conversational LLM tasks -- these follow the OpenAI-compatible message format)**
@@ -453,8 +451,6 @@ Do you need access to 200k+ open-source models?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST always pass an access token to `InferenceClient` -- never deploy without authentication)**
 

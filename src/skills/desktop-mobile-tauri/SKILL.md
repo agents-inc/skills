@@ -15,8 +15,6 @@ description: Tauri 2.x mobile development - iOS via WKWebView, Android via Andro
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `#[cfg(mobile)]` when registering mobile-only plugins -- registering them unconditionally breaks desktop builds)**
 
 **(You MUST add platform permissions (Info.plist on iOS, AndroidManifest.xml on Android) in ADDITION to Tauri capability file permissions -- missing platform permissions cause silent failures or runtime crashes)**
@@ -393,8 +391,6 @@ See [reference.md](reference.md) for CLI command reference and mobile prerequisi
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `#[cfg(mobile)]` when registering mobile-only plugins -- registering them unconditionally breaks desktop builds)**
 

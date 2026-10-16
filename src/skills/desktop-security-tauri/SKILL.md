@@ -15,8 +15,6 @@ description: Tauri 2.x deny-by-default security model, capabilities, permissions
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST create at least one capability file in `src-tauri/capabilities/` -- without it, ALL plugin and core API calls fail at runtime)**
 
 **(You MUST include `core:default` in every capability -- without it, basic app lifecycle commands fail)**
@@ -350,8 +348,6 @@ Is the scope for a built-in plugin?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST create at least one capability file in `src-tauri/capabilities/` -- without it, ALL plugin and core API calls fail at runtime)**
 

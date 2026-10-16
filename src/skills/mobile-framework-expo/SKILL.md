@@ -13,8 +13,6 @@ description: Expo managed workflow
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use development builds for production testing - Expo Go is for prototyping only)**
 
 **(You MUST update runtimeVersion when making native dependency changes to prevent OTA update crashes)**
@@ -204,8 +202,6 @@ SplashScreen.preventAutoHideAsync();
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use development builds for production testing - Expo Go is for prototyping only)**
 

@@ -13,8 +13,6 @@ description: Cross-platform auto-update patterns with electron-updater (electron
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST guard update checks with `app.isPackaged` -- calling `checkForUpdates()` in development causes confusing errors and network calls to non-existent endpoints)**
 
 **(You MUST handle the `error` event on the updater -- unhandled update errors crash the main process)**
@@ -329,8 +327,6 @@ Should updates download automatically?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST guard update checks with `app.isPackaged` -- calling `checkForUpdates()` in development causes confusing errors and network calls to non-existent endpoints)**
 

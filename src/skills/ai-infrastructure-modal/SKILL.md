@@ -13,8 +13,6 @@ description: Serverless GPU compute platform for AI model deployment — web end
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define Modal functions in Python -- the TypeScript SDK can call functions and manage resources but cannot define them)**
 
 **(You MUST use `@modal.fastapi_endpoint` (not the old `@modal.web_endpoint`) for simple web endpoints -- renamed in Modal 1.0)**
@@ -396,8 +394,6 @@ How should TypeScript call Modal?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST define Modal functions in Python -- the TypeScript SDK can call functions and manage resources but cannot define them)**
 

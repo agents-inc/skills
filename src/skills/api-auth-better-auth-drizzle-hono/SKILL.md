@@ -13,8 +13,6 @@ description: Better Auth patterns, sessions, OAuth
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST mount Better Auth handler on the auth route BEFORE any other middleware that depends on session)**
 
 **(You MUST configure CORS middleware BEFORE auth routes when client and server are on different origins)**
@@ -299,8 +297,6 @@ See [reference.md](reference.md) for anti-patterns with code examples, decision 
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST mount Better Auth handler on the auth route BEFORE any other middleware that depends on session)**
 

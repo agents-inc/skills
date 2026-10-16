@@ -13,8 +13,6 @@ description: GraphQL API server with Apollo Server — schema, resolvers, contex
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST import from `@apollo/server` -- NOT the deprecated `apollo-server` or `apollo-server-express` packages)**
 
 **(You MUST create new data source and DataLoader instances per request in the context function -- sharing across requests causes data leaks)**
@@ -343,8 +341,6 @@ See [examples/advanced.md](examples/advanced.md) for federation schema and refer
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST import from `@apollo/server` -- NOT the deprecated `apollo-server` or `apollo-server-express` packages)**
 

@@ -13,8 +13,6 @@ description: LangChain.js patterns for building LLM applications — chat models
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use LCEL pipe composition (`prompt.pipe(model).pipe(parser)`) for all chains -- never use legacy `LLMChain`, `ConversationChain`, or `SequentialChain`)**
 
 **(You MUST ensure all `@langchain/*` packages depend on the same version of `@langchain/core` -- version mismatches cause cryptic runtime errors)**
@@ -481,8 +479,6 @@ Are you writing new code?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use LCEL pipe composition (`prompt.pipe(model).pipe(parser)`) for all chains -- never use legacy `LLMChain`, `ConversationChain`, or `SequentialChain`)**
 

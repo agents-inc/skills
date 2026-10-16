@@ -13,8 +13,6 @@ description: SurrealDB multi-model database - SurrealQL queries, record links, g
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use parameterized queries with `$variables` for ALL user input -- string interpolation in SurrealQL enables injection attacks)**
 
 **(You MUST use `new RecordId("table", "id")` in SDK v2 -- plain `"table:id"` strings are NOT automatically parsed as record IDs)**
@@ -232,8 +230,6 @@ Full graph patterns (typed relations, edge metadata, recursive traversal): [exam
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use parameterized queries with `$variables` for ALL user input -- string interpolation in SurrealQL enables injection attacks)**
 

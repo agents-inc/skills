@@ -13,8 +13,6 @@ description: Electron process architecture, IPC patterns, preload security, nati
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST keep `contextIsolation: true` (the default) -- disabling it exposes the entire preload scope to untrusted renderer code)**
 
 **(You MUST use `contextBridge.exposeInMainWorld()` in preload scripts -- never expose `ipcRenderer` directly)**
@@ -285,8 +283,6 @@ How many windows?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST keep `contextIsolation: true` (the default) -- disabling it exposes the entire preload scope to untrusted renderer code)**
 

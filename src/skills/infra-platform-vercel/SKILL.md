@@ -13,8 +13,6 @@ description: Vercel deployment platform — project configuration, serverless/ed
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST always include `"$schema": "https://openapi.vercel.sh/vercel.json"` in vercel.json for IDE validation)**
 
 **(You MUST place functions in a region close to your data source -- the default `iad1` may add latency if your database is elsewhere)**
@@ -455,8 +453,6 @@ Is your configuration static and predictable?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST always include `"$schema": "https://openapi.vercel.sh/vercel.json"` in vercel.json for IDE validation)**
 

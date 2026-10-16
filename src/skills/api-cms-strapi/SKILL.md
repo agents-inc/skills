@@ -13,8 +13,6 @@ description: Open-source headless CMS — content type schemas, REST API, Docume
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `strapi.documents('api::content-type.content-type')` (Document Service API) for all back-end data access in Strapi v5 -- the Entity Service API is removed)**
 
 **(You MUST always pass `populate` when you need relations, media, components, or dynamic zones -- Strapi returns NO relations by default)**
@@ -431,8 +429,6 @@ Who is consuming the API?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `strapi.documents('api::content-type.content-type')` (Document Service API) for all back-end data access in Strapi v5 -- the Entity Service API is removed)**
 

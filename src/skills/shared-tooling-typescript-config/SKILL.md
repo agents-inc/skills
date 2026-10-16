@@ -13,8 +13,6 @@ description: TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSynt
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST enable TypeScript strict mode (`strict: true`) in ALL tsconfig.json files - non-negotiable)**
 
 **(You MUST use `verbatimModuleSyntax: true` to enforce explicit `import type` - replaces deprecated `importsNotUsedAsValues`)**
@@ -378,8 +376,6 @@ See [reference.md](reference.md) for additional decision frameworks (shared vs l
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST enable TypeScript strict mode (`strict: true`) in ALL tsconfig.json files - non-negotiable)**
 

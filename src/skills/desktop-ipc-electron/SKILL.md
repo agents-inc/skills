@@ -13,8 +13,6 @@ description: Type-safe Electron IPC patterns with typed channels, electron-trpc,
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST validate and sanitize ALL data received via IPC in the main process -- treat renderer messages as untrusted input)**
 
 **(You MUST use `contextBridge.exposeInMainWorld()` in preload scripts -- never expose `ipcRenderer` directly)**
@@ -416,8 +414,6 @@ CPU-intensive background work?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST validate and sanitize ALL data received via IPC in the main process -- treat renderer messages as untrusted input)**
 

@@ -13,8 +13,6 @@ description: React Native Gesture Handler - gesture types, GestureDetector, gest
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST wrap the app root in `GestureHandlerRootView` -- gestures will silently fail without it)**
 
 **(You MUST use `GestureDetector` with the builder API (`Gesture.Pan()`, etc.) -- NOT the legacy `PanGestureHandler` components)**
@@ -367,8 +365,6 @@ How are you using the gesture position data?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST wrap the app root in `GestureHandlerRootView` -- gestures will silently fail without it)**
 

@@ -13,8 +13,6 @@ description: Sequelize ORM, model definitions, associations, queries, transactio
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `declare` on all model class properties to prevent TypeScript from emitting class fields that conflict with Sequelize's internal attribute storage)**
 
 **(You MUST pass `{ transaction: t }` to every query inside a transaction callback --- missing this causes operations to run outside the transaction and skip rollback)**
@@ -383,8 +381,6 @@ const allPosts = await Post.findAll({ paranoid: false });
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST use `declare` on all model class properties to prevent TypeScript from emitting class fields that conflict with Sequelize's internal attribute storage)**
 

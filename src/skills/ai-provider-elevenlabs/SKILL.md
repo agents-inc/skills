@@ -13,8 +13,6 @@ description: ElevenLabs voice AI SDK patterns for TypeScript/Node.js -- text-to-
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `@elevenlabs/elevenlabs-js` for server-side TTS, voice management, and speech-to-speech -- use `@elevenlabs/client` only for conversational AI agents)**
 
 **(You MUST never hardcode API keys -- always use environment variables via `process.env.ELEVENLABS_API_KEY` which the SDK reads automatically)**
@@ -498,8 +496,6 @@ What is the audio destination?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `@elevenlabs/elevenlabs-js` for server-side TTS, voice management, and speech-to-speech -- use `@elevenlabs/client` only for conversational AI agents)**
 

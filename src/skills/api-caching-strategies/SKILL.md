@@ -13,8 +13,6 @@ description: Application-level caching strategies, HTTP caching, cache invalidat
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST set TTL on ALL cached data -- cache without TTL leads to memory exhaustion and infinitely stale data)**
 
 **(You MUST use namespaced cache keys with a consistent prefix -- generic keys cause collisions across data types)**
@@ -435,8 +433,6 @@ Is the response public (same for all users)?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST set TTL on ALL cached data -- cache without TTL leads to memory exhaustion and infinitely stale data)**
 

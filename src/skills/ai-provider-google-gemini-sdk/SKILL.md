@@ -13,8 +13,6 @@ description: Official TypeScript SDK for Google Gemini — client setup, text ge
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST use `@google/genai` (the new unified SDK) -- NOT the deprecated `@google/generative-ai` package)**
 
 **(You MUST access response text via `response.text` (a property) -- NOT `response.text()` (the old SDK used a method call))**
@@ -525,8 +523,6 @@ Are you sending the same large prefix repeatedly?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST use `@google/genai` (the new unified SDK) -- NOT the deprecated `@google/generative-ai` package)**
 

@@ -13,8 +13,6 @@ description: Appwrite backend-as-a-service — Auth, TablesDB, Storage, Function
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST set permissions explicitly on every row and file — Appwrite grants NO access by default, so omitting permissions makes data inaccessible)**
 
 **(You MUST use `node-appwrite` with API key auth on the server and `appwrite` with session auth on the client — NEVER expose API keys in client bundles)**
@@ -593,8 +591,6 @@ Who should see the files?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST set permissions explicitly on every row and file — Appwrite grants NO access by default, so omitting permissions makes data inaccessible)**
 

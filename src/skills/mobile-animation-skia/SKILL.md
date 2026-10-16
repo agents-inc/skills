@@ -13,8 +13,6 @@ description: React Native Skia GPU-accelerated 2D graphics - Canvas, declarative
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST pass Reanimated shared values directly as Skia component props -- do NOT use createAnimatedComponent or useAnimatedProps)**
 
 **(You MUST use `interpolateColors` from `@shopify/react-native-skia` for color animations -- Reanimated's `interpolateColor` uses a different internal color format and produces wrong results)**
@@ -507,8 +505,6 @@ Need simple single-style text?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST pass Reanimated shared values directly as Skia component props -- do NOT use createAnimatedComponent or useAnimatedProps)**
 

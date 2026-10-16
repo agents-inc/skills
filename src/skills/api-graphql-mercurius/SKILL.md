@@ -13,8 +13,6 @@ description: GraphQL server for Fastify with Mercurius — loaders, subscription
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST define loaders for any field that fetches related data — loaders solve the N+1 problem automatically through batching)**
 
 **(You MUST use named constants for all numeric values — JIT thresholds, query depth limits, port numbers)**
@@ -405,8 +403,6 @@ app.register(mercurius, {
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST define loaders for any field that fetches related data — loaders solve the N+1 problem automatically through batching)**
 

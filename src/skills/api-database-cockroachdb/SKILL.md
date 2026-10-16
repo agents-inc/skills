@@ -13,8 +13,6 @@ description: CockroachDB distributed SQL -- transaction retries, multi-region, o
 
 ## CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
-
 **(You MUST implement transaction retry logic for SQLSTATE `40001` errors -- CockroachDB WILL return serialization errors under normal operation, unlike PostgreSQL where they are rare)**
 
 **(You MUST use `UUID` with `gen_random_uuid()` for primary keys -- NEVER use `SERIAL` or sequential IDs, which cause distributed write hotspots)**
@@ -404,8 +402,6 @@ How to run DDL?
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST implement transaction retry logic for SQLSTATE `40001` errors -- CockroachDB WILL return serialization errors under normal operation, unlike PostgreSQL where they are rare)**
 
