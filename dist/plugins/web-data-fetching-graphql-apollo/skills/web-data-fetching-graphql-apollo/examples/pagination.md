@@ -10,10 +10,18 @@
 
 ```typescript
 // components/infinite-post-list.tsx
-import { useQuery, gql, NetworkStatus } from "@apollo/client";
+import { gql, NetworkStatus, type TypedDocumentNode } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useCallback, useRef, useEffect } from "react";
+import type {
+  GetPostsConnectionQuery,
+  GetPostsConnectionQueryVariables,
+} from "../generated/graphql";
 
-const GET_POSTS_CONNECTION = gql`
+const GET_POSTS_CONNECTION: TypedDocumentNode<
+  GetPostsConnectionQuery,
+  GetPostsConnectionQueryVariables
+> = gql`
   query GetPostsConnection($first: Int!, $after: String, $filter: PostFilter) {
     postsConnection(first: $first, after: $after, filter: $filter) {
       edges {

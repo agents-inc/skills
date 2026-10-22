@@ -117,11 +117,12 @@ const t = useTranslations("Page");
 
 ### t() on a message with markup
 
-`t()` returns a string, so the tags render as literal text.
+`t()` cannot format tags. Development reports a `FORMATTING_ERROR` and returns the `namespace.key`
+fallback; in production a call without values returns the tags as literal text.
 
 ```typescript
 // WRONG
-const message = t("terms"); // "<link>Terms</link>"
+const message = t("terms");
 
 // CORRECT
 const message = t.rich("terms", {

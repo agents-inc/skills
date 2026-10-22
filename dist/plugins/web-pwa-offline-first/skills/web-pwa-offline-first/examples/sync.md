@@ -586,6 +586,7 @@ so the `online` listener is the mechanism everywhere else and this is the enhanc
 ```typescript
 // service-worker/sync-handler.ts
 const SYNC_TAG_PREFIX = "sync-";
+const MAX_RETRY_ATTEMPTS = 5; // same ceiling as the client queue
 
 async function registerBackgroundSync(collection: string): Promise<void> {
   if (!("sync" in self.registration)) return;
@@ -622,7 +623,7 @@ async function processSyncQueue(collection: string): Promise<void> {
       });
 
       // exhausted operations stay queued for manual handling
-      if (op.retryCount >= 4) continue;
+      if (op.retryCount >= MAX_RETRY_ATTEMPTS) continue;
       throw error;
     }
   }
@@ -651,6 +652,9 @@ declare global {
   }
   interface SyncManager {
     register(tag: string): Promise<void>;
+  }
+  interface ServiceWorkerGlobalScopeEventMap {
+    sync: SyncEvent;
   }
   interface SyncEvent extends ExtendableEvent {
     readonly tag: string;
@@ -705,13 +709,17 @@ interface SyncResult {
   errors: string[];
 }
 
+interface ConflictStrategy<T> {
+  resolve(local: T, server: T): Promise<T | null>;
+}
+
 const SYNC_BATCH_SIZE = 50;
 
 class PullPushSync<T extends SyncableEntity> {
   constructor(
     private readonly localDb: LocalTable<T>,
     private readonly apiEndpoint: string,
-    private readonly conflictResolver: ConflictResolver<T>,
+    private readonly conflictResolver: ConflictStrategy<T>,
   ) {}
 
   async sync(): Promise<SyncResult> {

@@ -35,7 +35,7 @@ as pixels.
 
 | Criterion                    | Level | Requirement                                         |
 | ---------------------------- | ----- | --------------------------------------------------- |
-| 2.5.8 Target Size (Minimum)  | AA    | 24×24 CSS px, or 24px clear spacing between targets |
+| 2.5.8 Target Size (Minimum)  | AA    | 24×24 CSS px, or spacing meeting a 24px-circle test |
 | 2.5.5 Target Size (Enhanced) | AAA   | 44×44 CSS px                                        |
 
 Exempt: inline links within a sentence, browser-supplied controls, and cases where the size is

@@ -1,6 +1,6 @@
 {
   "name": "web-testing-visual-regression",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Visual regression testing — screenshot baselines, determinism, diff review, baseline custody and CI wiring. Load when adding, reviewing or debugging tests that compare a rendered subject against an approved image.",
   "author": {

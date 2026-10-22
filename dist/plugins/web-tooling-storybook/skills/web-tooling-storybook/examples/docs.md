@@ -34,7 +34,7 @@ JSDoc on the component and its props feeds that props table directly — `@defau
 ### Choosing what appears, and in what order
 
 ```typescript
-import { Title, Subtitle, Description, Primary, Controls, Stories } from "@storybook/blocks";
+import { Title, Subtitle, Description, Primary, Controls, Stories } from "@storybook/addon-docs/blocks";
 
 const meta = {
   component: Button,
@@ -61,7 +61,7 @@ const meta = {
 ### Adding prose to the generated page
 
 ```typescript
-import { Markdown } from "@storybook/blocks";
+import { Markdown } from "@storybook/addon-docs/blocks";
 
 const USAGE_GUIDELINES = `
 ## Usage
@@ -105,7 +105,7 @@ const meta = {
 
 ```mdx
 {/* button.mdx */}
-import { Meta, Canvas, Controls, ArgTypes } from "@storybook/blocks";
+import { Meta, Canvas, Controls, ArgTypes } from "@storybook/addon-docs/blocks";
 import \* as ButtonStories from "./button.stories";
 
 <Meta of={ButtonStories} />
@@ -136,7 +136,7 @@ destructive for anything irreversible.
 
 ```mdx
 {/* docs/getting-started.mdx */}
-import { Meta } from "@storybook/blocks";
+import { Meta } from "@storybook/addon-docs/blocks";
 
 <Meta title="Getting Started/Introduction" />
 
@@ -149,7 +149,7 @@ import { Meta } from "@storybook/blocks";
 
 ```mdx
 {/* docs/tokens/colors.mdx */}
-import { Meta, ColorPalette, ColorItem } from "@storybook/blocks";
+import { Meta, ColorPalette, ColorItem } from "@storybook/addon-docs/blocks";
 
 <Meta title="Design Tokens/Colors" />
 

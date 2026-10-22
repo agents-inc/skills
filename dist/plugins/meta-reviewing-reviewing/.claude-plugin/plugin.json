@@ -1,6 +1,6 @@
 {
   "name": "meta-reviewing-reviewing",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "skills": "./skills/",
   "description": "Code review process — reading order, findings, severity, scope and the approval decision. Load when reviewing a diff or PR, writing review comments, or deciding whether to approve or request changes.",
   "author": {

@@ -990,58 +990,6 @@
       ],
       "path": "skills/ai-infrastructure-ollama/"
     },
-    "ai-infrastructure-together-ai": {
-      "id": "ai-infrastructure-together-ai",
-      "slug": "together-ai",
-      "displayName": "Together AI",
-      "description": "Multi-model inference API for open-source LLMs",
-      "activationDescription": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
-      "usageGuidance": "Use when running open-source LLMs on Together AI — chat completions, streaming, embeddings, image generation, function calling, JSON mode, structured output, fine-tuning, and OpenAI-compatible endpoints.",
-      "category": "ai-infrastructure",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "ai-provider-anthropic-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-openai-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-google-gemini-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-mistral-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-cohere-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-replicate",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-huggingface-inference",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-ollama",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-litellm",
-          "purpose": "AI Provider SDK"
-        }
-      ],
-      "path": "skills/ai-infrastructure-together-ai/"
-    },
     "ai-infrastructure-replicate": {
       "id": "ai-infrastructure-replicate",
       "slug": "replicate",
@@ -1093,6 +1041,58 @@
         }
       ],
       "path": "skills/ai-infrastructure-replicate/"
+    },
+    "ai-infrastructure-together-ai": {
+      "id": "ai-infrastructure-together-ai",
+      "slug": "together-ai",
+      "displayName": "Together AI",
+      "description": "Multi-model inference API for open-source LLMs",
+      "activationDescription": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
+      "usageGuidance": "Use when running open-source LLMs on Together AI — chat completions, streaming, embeddings, image generation, function calling, JSON mode, structured output, fine-tuning, and OpenAI-compatible endpoints.",
+      "category": "ai-infrastructure",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "ai-provider-anthropic-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-openai-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-google-gemini-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-mistral-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-cohere-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-replicate",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-huggingface-inference",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-ollama",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-litellm",
+          "purpose": "AI Provider SDK"
+        }
+      ],
+      "path": "skills/ai-infrastructure-together-ai/"
     },
     "ai-observability-langfuse": {
       "id": "ai-observability-langfuse",
@@ -1158,30 +1158,6 @@
       ],
       "path": "skills/ai-orchestration-langchain/"
     },
-    "ai-orchestration-vercel-ai-sdk": {
-      "id": "ai-orchestration-vercel-ai-sdk",
-      "slug": "vercel-ai-sdk",
-      "displayName": "Vercel AI SDK",
-      "description": "Vercel AI SDK for streaming AI applications",
-      "activationDescription": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
-      "usageGuidance": "Use when building AI-powered features with streaming, chat UIs, or multi-provider AI integrations. Covers generateText, streamText, structured output with Zod, tool calling, useChat/useCompletion hooks, embeddings, and RAG patterns.",
-      "category": "ai-orchestration",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "ai-orchestration-langchain",
-          "purpose": "AI SDK"
-        },
-        {
-          "skillId": "ai-orchestration-llamaindex",
-          "purpose": "AI SDK"
-        }
-      ],
-      "path": "skills/ai-orchestration-vercel-ai-sdk/"
-    },
     "ai-orchestration-llamaindex": {
       "id": "ai-orchestration-llamaindex",
       "slug": "llamaindex",
@@ -1205,6 +1181,30 @@
         }
       ],
       "path": "skills/ai-orchestration-llamaindex/"
+    },
+    "ai-orchestration-vercel-ai-sdk": {
+      "id": "ai-orchestration-vercel-ai-sdk",
+      "slug": "vercel-ai-sdk",
+      "displayName": "Vercel AI SDK",
+      "description": "Vercel AI SDK for streaming AI applications",
+      "activationDescription": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
+      "usageGuidance": "Use when building AI-powered features with streaming, chat UIs, or multi-provider AI integrations. Covers generateText, streamText, structured output with Zod, tool calling, useChat/useCompletion hooks, embeddings, and RAG patterns.",
+      "category": "ai-orchestration",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "ai-orchestration-langchain",
+          "purpose": "AI SDK"
+        },
+        {
+          "skillId": "ai-orchestration-llamaindex",
+          "purpose": "AI SDK"
+        }
+      ],
+      "path": "skills/ai-orchestration-vercel-ai-sdk/"
     },
     "ai-patterns-tool-use-patterns": {
       "id": "ai-patterns-tool-use-patterns",
@@ -2034,6 +2034,38 @@
       "alternatives": [],
       "path": "skills/api-database-edgedb/"
     },
+    "api-database-knex": {
+      "id": "api-database-knex",
+      "slug": "knex",
+      "displayName": "Knex.js",
+      "description": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL",
+      "activationDescription": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL -- fluent queries, schema builder, migrations, seeds, transactions, raw queries",
+      "usageGuidance": "Use when building SQL queries programmatically -- fluent query builder, schema builder, migrations, seeds, transactions, and raw queries with parameter binding.",
+      "category": "api-orm",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "api-database-drizzle",
+          "purpose": "SQL ORM / Query Builder"
+        },
+        {
+          "skillId": "api-database-prisma",
+          "purpose": "SQL ORM / Query Builder"
+        },
+        {
+          "skillId": "api-database-sequelize",
+          "purpose": "SQL ORM / Query Builder"
+        },
+        {
+          "skillId": "api-database-typeorm",
+          "purpose": "SQL ORM / Query Builder"
+        }
+      ],
+      "path": "skills/api-database-knex/"
+    },
     "api-database-mongodb": {
       "id": "api-database-mongodb",
       "slug": "mongodb",
@@ -2093,38 +2125,6 @@
         }
       ],
       "path": "skills/api-database-mysql/"
-    },
-    "api-database-knex": {
-      "id": "api-database-knex",
-      "slug": "knex",
-      "displayName": "Knex.js",
-      "description": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL",
-      "activationDescription": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL -- fluent queries, schema builder, migrations, seeds, transactions, raw queries",
-      "usageGuidance": "Use when building SQL queries programmatically -- fluent query builder, schema builder, migrations, seeds, transactions, and raw queries with parameter binding.",
-      "category": "api-orm",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "api-database-drizzle",
-          "purpose": "SQL ORM / Query Builder"
-        },
-        {
-          "skillId": "api-database-prisma",
-          "purpose": "SQL ORM / Query Builder"
-        },
-        {
-          "skillId": "api-database-sequelize",
-          "purpose": "SQL ORM / Query Builder"
-        },
-        {
-          "skillId": "api-database-typeorm",
-          "purpose": "SQL ORM / Query Builder"
-        }
-      ],
-      "path": "skills/api-database-knex/"
     },
     "api-database-postgresql": {
       "id": "api-database-postgresql",
@@ -3337,6 +3337,27 @@
       "alternatives": [],
       "path": "skills/desktop-storage-electron/"
     },
+    "desktop-testing-electron": {
+      "id": "desktop-testing-electron",
+      "slug": "electron-testing",
+      "displayName": "Electron Testing",
+      "description": "E2E, unit, and IPC testing for Electron",
+      "activationDescription": "E2E testing with Playwright, main process unit testing, IPC testing, dialog/menu mocking, CI headless setup",
+      "usageGuidance": "Use when writing E2E tests with Playwright for Electron apps (_electron.launch), unit testing main process code, testing IPC handlers, mocking Electron modules (dialog, BrowserWindow, ipcMain/ipcRenderer), testing preload scripts, running Electron tests in CI (xvfb), or migrating from Spectron.",
+      "category": "desktop-testing",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [
+        {
+          "skillIds": ["desktop-framework-electron"],
+          "needsAny": false,
+          "reason": "Playwright's _electron driver automates Electron apps"
+        }
+      ],
+      "alternatives": [],
+      "path": "skills/desktop-testing-electron/"
+    },
     "desktop-ui-electron": {
       "id": "desktop-ui-electron",
       "slug": "electron-ui",
@@ -3379,26 +3400,20 @@
       "alternatives": [],
       "path": "skills/desktop-updates-electron-updater/"
     },
-    "desktop-testing-electron": {
-      "id": "desktop-testing-electron",
-      "slug": "electron-testing",
-      "displayName": "Electron Testing",
-      "description": "E2E, unit, and IPC testing for Electron",
-      "activationDescription": "E2E testing with Playwright, main process unit testing, IPC testing, dialog/menu mocking, CI headless setup",
-      "usageGuidance": "Use when writing E2E tests with Playwright for Electron apps (_electron.launch), unit testing main process code, testing IPC handlers, mocking Electron modules (dialog, BrowserWindow, ipcMain/ipcRenderer), testing preload scripts, running Electron tests in CI (xvfb), or migrating from Spectron.",
-      "category": "desktop-testing",
+    "infra-ci-cd-docker": {
+      "id": "infra-ci-cd-docker",
+      "slug": "docker",
+      "displayName": "Docker",
+      "description": "Docker containerization for development and deployment",
+      "activationDescription": "Docker containerization patterns for Node.js/TypeScript development and production",
+      "usageGuidance": "Use when creating Dockerfiles, docker-compose configs, multi-stage builds, or containerized development environments for Node.js/TypeScript applications.",
+      "category": "infra-containers",
       "author": "@vince",
       "conflictsWith": [],
       "discourages": [],
-      "requires": [
-        {
-          "skillIds": ["desktop-framework-electron"],
-          "needsAny": false,
-          "reason": "Playwright's _electron driver automates Electron apps"
-        }
-      ],
+      "requires": [],
       "alternatives": [],
-      "path": "skills/desktop-testing-electron/"
+      "path": "skills/infra-ci-cd-docker/"
     },
     "infra-ci-cd-github-actions": {
       "id": "infra-ci-cd-github-actions",
@@ -3414,21 +3429,6 @@
       "requires": [],
       "alternatives": [],
       "path": "skills/infra-ci-cd-github-actions/"
-    },
-    "infra-ci-cd-docker": {
-      "id": "infra-ci-cd-docker",
-      "slug": "docker",
-      "displayName": "Docker",
-      "description": "Docker containerization for development and deployment",
-      "activationDescription": "Docker containerization patterns for Node.js/TypeScript development and production",
-      "usageGuidance": "Use when creating Dockerfiles, docker-compose configs, multi-stage builds, or containerized development environments for Node.js/TypeScript applications.",
-      "category": "infra-containers",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [],
-      "path": "skills/infra-ci-cd-docker/"
     },
     "infra-ci-cd-turborepo-ci": {
       "id": "infra-ci-cd-turborepo-ci",
@@ -3616,7 +3616,7 @@
         {
           "skillIds": ["web-framework-react"],
           "needsAny": false,
-          "reason": "Composition patterns are React surface — base-ui useRender/mergeProps, forwardRef, JSX parts"
+          "reason": "Composition patterns are React surface — JSX parts sharing context, ref as a prop, asChild/render via cloneElement, useId"
         }
       ],
       "alternatives": [],
@@ -4623,30 +4623,6 @@
       ],
       "path": "skills/web-animation-css-animations/"
     },
-    "web-animation-view-transitions": {
-      "id": "web-animation-view-transitions",
-      "slug": "view-transitions",
-      "displayName": "View Transitions",
-      "description": "Page transition animations",
-      "activationDescription": "View Transitions API patterns - same-document transitions, cross-document navigation, shared element animations, pseudo-element styling, transition types, reduced-motion handling",
-      "usageGuidance": "Use when implementing page transitions with View Transitions API.",
-      "category": "web-animation",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "web-animation-framer-motion",
-          "purpose": "Animation"
-        },
-        {
-          "skillId": "web-animation-css-animations",
-          "purpose": "Animation"
-        }
-      ],
-      "path": "skills/web-animation-view-transitions/"
-    },
     "web-animation-framer-motion": {
       "id": "web-animation-framer-motion",
       "slug": "framer-motion",
@@ -4680,6 +4656,30 @@
         }
       ],
       "path": "skills/web-animation-framer-motion/"
+    },
+    "web-animation-view-transitions": {
+      "id": "web-animation-view-transitions",
+      "slug": "view-transitions",
+      "displayName": "View Transitions",
+      "description": "Page transition animations",
+      "activationDescription": "View Transitions API patterns - same-document transitions, cross-document navigation, shared element animations, pseudo-element styling, transition types, reduced-motion handling",
+      "usageGuidance": "Use when implementing page transitions with View Transitions API.",
+      "category": "web-animation",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "web-animation-framer-motion",
+          "purpose": "Animation"
+        },
+        {
+          "skillId": "web-animation-css-animations",
+          "purpose": "Animation"
+        }
+      ],
+      "path": "skills/web-animation-view-transitions/"
     },
     "web-data-fetching-graphql-apollo": {
       "id": "web-data-fetching-graphql-apollo",
@@ -4885,21 +4885,6 @@
       "alternatives": [],
       "path": "skills/web-dnd-dnd-kit/"
     },
-    "web-editor-tiptap": {
-      "id": "web-editor-tiptap",
-      "slug": "tiptap",
-      "displayName": "TipTap",
-      "description": "Rich text editor framework with TipTap and ProseMirror",
-      "activationDescription": "Headless rich text editor framework built on ProseMirror. Use when building an editor with TipTap — setup, extensions, custom nodes and marks, menus, node views, serialization.",
-      "usageGuidance": "Use when building rich text editors with TipTap — editor setup, extensions, custom nodes/marks, menus (bubble/floating), collaborative editing, content serialization, keyboard shortcuts, and schema customization.",
-      "category": "web-editor",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [],
-      "path": "skills/web-editor-tiptap/"
-    },
     "web-editor-lexical": {
       "id": "web-editor-lexical",
       "slug": "lexical",
@@ -4924,6 +4909,21 @@
       ],
       "alternatives": [],
       "path": "skills/web-editor-lexical/"
+    },
+    "web-editor-tiptap": {
+      "id": "web-editor-tiptap",
+      "slug": "tiptap",
+      "displayName": "TipTap",
+      "description": "Rich text editor framework with TipTap and ProseMirror",
+      "activationDescription": "Headless rich text editor framework built on ProseMirror. Use when building an editor with TipTap — setup, extensions, custom nodes and marks, menus, node views, serialization.",
+      "usageGuidance": "Use when building rich text editors with TipTap — editor setup, extensions, custom nodes/marks, menus (bubble/floating), collaborative editing, content serialization, keyboard shortcuts, and schema customization.",
+      "category": "web-editor",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [],
+      "path": "skills/web-editor-tiptap/"
     },
     "web-error-handling-error-boundaries": {
       "id": "web-error-handling-error-boundaries",
@@ -4950,6 +4950,21 @@
       "alternatives": [],
       "path": "skills/web-error-handling-error-boundaries/"
     },
+    "web-error-handling-result-types": {
+      "id": "web-error-handling-result-types",
+      "slug": "result-types",
+      "displayName": "Result Types",
+      "description": "Type-safe error handling",
+      "activationDescription": "TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values",
+      "usageGuidance": "Use when implementing Result/Either types for type-safe error handling.",
+      "category": "web-error-handling",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [],
+      "path": "skills/web-error-handling-result-types/"
+    },
     "web-files-file-upload-patterns": {
       "id": "web-files-file-upload-patterns",
       "slug": "file-upload-patterns",
@@ -4975,20 +4990,30 @@
       "alternatives": [],
       "path": "skills/web-files-file-upload-patterns/"
     },
-    "web-error-handling-result-types": {
-      "id": "web-error-handling-result-types",
-      "slug": "result-types",
-      "displayName": "Result Types",
-      "description": "Type-safe error handling",
-      "activationDescription": "TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values",
-      "usageGuidance": "Use when implementing Result/Either types for type-safe error handling.",
-      "category": "web-error-handling",
+    "web-files-image-handling": {
+      "id": "web-files-image-handling",
+      "slug": "image-handling",
+      "displayName": "Image Handling",
+      "description": "Client-side image processing",
+      "activationDescription": "Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup",
+      "usageGuidance": "Use when processing images client-side, resizing, or format conversion.",
+      "category": "web-files",
       "author": "@vince",
       "conflictsWith": [],
       "discourages": [],
-      "requires": [],
+      "requires": [
+        {
+          "skillIds": [
+            "web-framework-react",
+            "web-meta-framework-nextjs",
+            "web-meta-framework-remix"
+          ],
+          "needsAny": true,
+          "reason": "Skill teaches React-based image handling hooks"
+        }
+      ],
       "alternatives": [],
-      "path": "skills/web-error-handling-result-types/"
+      "path": "skills/web-files-image-handling/"
     },
     "web-forms-react-hook-form": {
       "id": "web-forms-react-hook-form",
@@ -5152,31 +5177,6 @@
       ],
       "path": "skills/web-framework-angular-standalone/"
     },
-    "web-files-image-handling": {
-      "id": "web-files-image-handling",
-      "slug": "image-handling",
-      "displayName": "Image Handling",
-      "description": "Client-side image processing",
-      "activationDescription": "Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup",
-      "usageGuidance": "Use when processing images client-side, resizing, or format conversion.",
-      "category": "web-files",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [
-        {
-          "skillIds": [
-            "web-framework-react",
-            "web-meta-framework-nextjs",
-            "web-meta-framework-remix"
-          ],
-          "needsAny": true,
-          "reason": "Skill teaches React-based image handling hooks"
-        }
-      ],
-      "alternatives": [],
-      "path": "skills/web-files-image-handling/"
-    },
     "web-framework-react": {
       "id": "web-framework-react",
       "slug": "react",
@@ -5275,55 +5275,6 @@
       ],
       "path": "skills/web-framework-solidjs/"
     },
-    "web-framework-vue-composition-api": {
-      "id": "web-framework-vue-composition-api",
-      "slug": "vue-composition-api",
-      "displayName": "Vue",
-      "description": "Vue 3 Composition API",
-      "activationDescription": "Vue 3 Composition API — reactivity primitives, composables, lifecycle, the 3.4+ and 3.5+ macros. Load when writing Vue 3 components or composables.",
-      "usageGuidance": "Use when building Vue 3 apps with Composition API, composables, or reactivity.",
-      "category": "web-framework",
-      "author": "@vince",
-      "conflictsWith": [
-        {
-          "skillId": "web-framework-react",
-          "reason": "Base frameworks are mutually exclusive"
-        },
-        {
-          "skillId": "web-framework-angular-standalone",
-          "reason": "Base frameworks are mutually exclusive"
-        },
-        {
-          "skillId": "web-framework-solidjs",
-          "reason": "Base frameworks are mutually exclusive"
-        },
-        {
-          "skillId": "web-framework-svelte",
-          "reason": "Base frameworks are mutually exclusive"
-        }
-      ],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "web-framework-react",
-          "purpose": "Base Framework"
-        },
-        {
-          "skillId": "web-framework-angular-standalone",
-          "purpose": "Base Framework"
-        },
-        {
-          "skillId": "web-framework-solidjs",
-          "purpose": "Base Framework"
-        },
-        {
-          "skillId": "web-framework-svelte",
-          "purpose": "Base Framework"
-        }
-      ],
-      "path": "skills/web-framework-vue-composition-api/"
-    },
     "web-framework-svelte": {
       "id": "web-framework-svelte",
       "slug": "svelte",
@@ -5372,6 +5323,55 @@
         }
       ],
       "path": "skills/web-framework-svelte/"
+    },
+    "web-framework-vue-composition-api": {
+      "id": "web-framework-vue-composition-api",
+      "slug": "vue-composition-api",
+      "displayName": "Vue",
+      "description": "Vue 3 Composition API",
+      "activationDescription": "Vue 3 Composition API — reactivity primitives, composables, lifecycle, the 3.4+ and 3.5+ macros. Load when writing Vue 3 components or composables.",
+      "usageGuidance": "Use when building Vue 3 apps with Composition API, composables, or reactivity.",
+      "category": "web-framework",
+      "author": "@vince",
+      "conflictsWith": [
+        {
+          "skillId": "web-framework-react",
+          "reason": "Base frameworks are mutually exclusive"
+        },
+        {
+          "skillId": "web-framework-angular-standalone",
+          "reason": "Base frameworks are mutually exclusive"
+        },
+        {
+          "skillId": "web-framework-solidjs",
+          "reason": "Base frameworks are mutually exclusive"
+        },
+        {
+          "skillId": "web-framework-svelte",
+          "reason": "Base frameworks are mutually exclusive"
+        }
+      ],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "web-framework-react",
+          "purpose": "Base Framework"
+        },
+        {
+          "skillId": "web-framework-angular-standalone",
+          "purpose": "Base Framework"
+        },
+        {
+          "skillId": "web-framework-solidjs",
+          "purpose": "Base Framework"
+        },
+        {
+          "skillId": "web-framework-svelte",
+          "purpose": "Base Framework"
+        }
+      ],
+      "path": "skills/web-framework-vue-composition-api/"
     },
     "web-i18n-next-intl": {
       "id": "web-i18n-next-intl",
@@ -9558,13 +9558,13 @@
       "litellm": "ai-infrastructure-litellm",
       "modal": "ai-infrastructure-modal",
       "ollama": "ai-infrastructure-ollama",
-      "together-ai": "ai-infrastructure-together-ai",
       "replicate": "ai-infrastructure-replicate",
+      "together-ai": "ai-infrastructure-together-ai",
       "langfuse": "ai-observability-langfuse",
       "promptfoo": "ai-observability-promptfoo",
       "langchain": "ai-orchestration-langchain",
-      "vercel-ai-sdk": "ai-orchestration-vercel-ai-sdk",
       "llamaindex": "ai-orchestration-llamaindex",
+      "vercel-ai-sdk": "ai-orchestration-vercel-ai-sdk",
       "tool-use-patterns": "ai-patterns-tool-use-patterns",
       "anthropic-sdk": "ai-provider-anthropic-sdk",
       "claude-vision": "ai-provider-claude-vision",
@@ -9593,10 +9593,10 @@
       "cockroachdb": "api-database-cockroachdb",
       "drizzle": "api-database-drizzle",
       "edgedb": "api-database-edgedb",
+      "knex": "api-database-knex",
       "mongodb": "api-database-mongodb",
       "mongoose": "api-database-mongoose",
       "mysql": "api-database-mysql",
-      "knex": "api-database-knex",
       "postgresql": "api-database-postgresql",
       "prisma": "api-database-prisma",
       "redis": "api-database-redis",
@@ -9646,11 +9646,11 @@
       "electron-security": "desktop-security-electron",
       "tauri-security": "desktop-security-tauri",
       "electron-storage": "desktop-storage-electron",
+      "electron-testing": "desktop-testing-electron",
       "electron-ui": "desktop-ui-electron",
       "electron-updater": "desktop-updates-electron-updater",
-      "electron-testing": "desktop-testing-electron",
-      "github-actions": "infra-ci-cd-github-actions",
       "docker": "infra-ci-cd-docker",
+      "github-actions": "infra-ci-cd-github-actions",
       "turborepo-ci": "infra-ci-cd-turborepo-ci",
       "setup-env": "infra-config-setup-env",
       "kubernetes": "infra-containers-kubernetes",
@@ -9711,8 +9711,8 @@
       "react-three-fiber": "web-3d-react-three-fiber",
       "web-accessibility": "web-accessibility-web-accessibility",
       "css-animations": "web-animation-css-animations",
-      "view-transitions": "web-animation-view-transitions",
       "framer-motion": "web-animation-framer-motion",
+      "view-transitions": "web-animation-view-transitions",
       "graphql-apollo": "web-data-fetching-graphql-apollo",
       "graphql-urql": "web-data-fetching-graphql-urql",
       "swr": "web-data-fetching-swr",
@@ -9720,21 +9720,21 @@
       "d3": "web-dataviz-d3",
       "recharts": "web-dataviz-recharts",
       "dnd-kit": "web-dnd-dnd-kit",
-      "tiptap": "web-editor-tiptap",
       "lexical": "web-editor-lexical",
+      "tiptap": "web-editor-tiptap",
       "error-boundaries": "web-error-handling-error-boundaries",
-      "file-upload-patterns": "web-files-file-upload-patterns",
       "result-types": "web-error-handling-result-types",
+      "file-upload-patterns": "web-files-file-upload-patterns",
+      "image-handling": "web-files-image-handling",
       "react-hook-form": "web-forms-react-hook-form",
       "tanstack-form": "web-forms-tanstack-form",
       "vee-validate": "web-forms-vee-validate",
       "zod-validation": "web-forms-zod-validation",
       "angular-standalone": "web-framework-angular-standalone",
-      "image-handling": "web-files-image-handling",
       "react": "web-framework-react",
       "solidjs": "web-framework-solidjs",
-      "vue-composition-api": "web-framework-vue-composition-api",
       "svelte": "web-framework-svelte",
+      "vue-composition-api": "web-framework-vue-composition-api",
       "next-intl": "web-i18n-next-intl",
       "react-intl": "web-i18n-react-intl",
       "vue-i18n": "web-i18n-vue-i18n",

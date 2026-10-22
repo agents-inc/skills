@@ -67,9 +67,16 @@ function so the token is read at connect time rather than at module load.
 
 ```typescript
 // components/live-comments.tsx
-import { useQuery, useSubscription, gql } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useQuery, useSubscription } from "@apollo/client/react";
+import type {
+  GetCommentsQuery,
+  GetCommentsQueryVariables,
+  OnCommentAddedSubscription,
+  OnCommentAddedSubscriptionVariables,
+} from "../generated/graphql";
 
-const GET_COMMENTS = gql`
+const GET_COMMENTS: TypedDocumentNode<GetCommentsQuery, GetCommentsQueryVariables> = gql`
   query GetComments($postId: ID!) {
     comments(postId: $postId) {
       id
@@ -83,7 +90,10 @@ const GET_COMMENTS = gql`
   }
 `;
 
-const COMMENT_ADDED = gql`
+const COMMENT_ADDED: TypedDocumentNode<
+  OnCommentAddedSubscription,
+  OnCommentAddedSubscriptionVariables
+> = gql`
   subscription OnCommentAdded($postId: ID!) {
     commentAdded(postId: $postId) {
       id

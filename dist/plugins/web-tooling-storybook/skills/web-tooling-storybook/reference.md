@@ -29,18 +29,18 @@
 | Namespace     | Key fields                                                                           | Set at             |
 | ------------- | ------------------------------------------------------------------------------------ | ------------------ |
 | `layout`      | `"centered"`, `"fullscreen"`, `"padded"` (default)                                   | any level          |
-| `backgrounds` | `default`, `values[]`, `disable`                                                     | any level          |
-| `viewport`    | `viewports`, `defaultViewport`                                                       | any level          |
+| `backgrounds` | `options`, `disable`; the choice is the `backgrounds` global                         | any level          |
+| `viewport`    | `options`; the choice is the `viewport` global                                       | any level          |
 | `controls`    | `expanded`, `sort`, `matchers`                                                       | usually global     |
 | `docs`        | `description.component`, `description.story`, `source`, `page`, `canvas.sourceState` | any level          |
-| `a11y`        | `config.rules[]`, `element`, `disable`                                               | any level          |
+| `a11y`        | `config.rules[]`, `context`, `disable`                                               | any level          |
 | `chromatic`   | `viewports`, `modes`, `delay`, `disableSnapshot`                                     | component or story |
 
 A story's parameters override its component's, which override the global ones.
 
 ---
 
-## `@storybook/test`
+## `storybook/test`
 
 | Export      | Purpose                     | Example                                |
 | ----------- | --------------------------- | -------------------------------------- |
@@ -59,16 +59,16 @@ An `fn()` arg carries the call matchers: `toHaveBeenCalled`, `toHaveBeenCalledTi
 
 ## Addons
 
-Included in the essentials bundle: docs, controls, actions, viewport, backgrounds, toolbars, measure, outline.
+Built into `storybook` since 9: controls, actions, viewport, backgrounds, toolbars, measure, outline, interactions. Docs is its own addon.
 
-| Addon                           | Purpose             | Installation                                |
-| ------------------------------- | ------------------- | ------------------------------------------- |
-| `@storybook/addon-a11y`         | axe on every story  | `npm i -D @storybook/addon-a11y`            |
-| `@storybook/addon-interactions` | Play function panel | `npm i -D @storybook/addon-interactions`    |
-| `@storybook/addon-vitest`       | Stories as tests    | `npx storybook add @storybook/addon-vitest` |
-| `@storybook/addon-links`        | Story cross-linking | `npm i -D @storybook/addon-links`           |
-| `@storybook/addon-designs`      | Design file embeds  | `npm i -D @storybook/addon-designs`         |
-| `@chromatic-com/storybook`      | Visual testing      | `npm i -D @chromatic-com/storybook`         |
+| Addon                      | Purpose             | Installation                                |
+| -------------------------- | ------------------- | ------------------------------------------- |
+| `@storybook/addon-a11y`    | axe on every story  | `npm i -D @storybook/addon-a11y`            |
+| `@storybook/addon-docs`    | Docs pages and MDX  | `npx storybook add @storybook/addon-docs`   |
+| `@storybook/addon-vitest`  | Stories as tests    | `npx storybook add @storybook/addon-vitest` |
+| `@storybook/addon-links`   | Story cross-linking | `npm i -D @storybook/addon-links`           |
+| `@storybook/addon-designs` | Design file embeds  | `npm i -D @storybook/addon-designs`         |
+| `@chromatic-com/storybook` | Visual testing      | `npm i -D @chromatic-com/storybook`         |
 
 ---
 
@@ -129,6 +129,24 @@ src/
 ### Defaults changed in Storybook 8
 
 `react-docgen` replaced `react-docgen-typescript` for React prop analysis — roughly 50% faster startup, and unable to extract types imported from other files.
+
+### Storybook 9
+
+| Old                                     | New                                                      |
+| --------------------------------------- | -------------------------------------------------------- |
+| `@storybook/test`                       | `storybook/test`                                         |
+| `@storybook/blocks`                     | `@storybook/addon-docs/blocks`                           |
+| `@storybook/addon-essentials`           | Built in; add `@storybook/addon-docs` for docs           |
+| `@storybook/addon-interactions`         | Built in                                                 |
+| `@storybook/addon-actions`              | `storybook/actions`                                      |
+| `@storybook/addon-viewport`             | `storybook/viewport`                                     |
+| `@storybook/manager-api`                | `storybook/manager-api`                                  |
+| `@storybook/preview-api`                | `storybook/preview-api`                                  |
+| `@storybook/theming`                    | `storybook/theming`                                      |
+| Types from `@storybook/react`           | Types from the framework, e.g. `@storybook/react-vite`   |
+| `viewport.viewports`, `defaultViewport` | `viewport.options`; select with `globals.viewport`       |
+| `backgrounds.values`, `default`         | `backgrounds.options`; select with `globals.backgrounds` |
+| `a11y.element`                          | `a11y.context`                                           |
 
 ### Storybook 10
 

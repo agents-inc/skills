@@ -12,8 +12,11 @@ description: React Query server state — query keys and query options, caching 
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) — generated client output, provider and auth setup, consuming query options, fetch timeouts
+- [examples/core.md](examples/core.md) — generated client output, provider and auth setup, `staleTime` vs `gcTime`, consuming query options, fetch timeouts
 - [examples/error-handling.md](examples/error-handling.md) — component states, global handlers, retry backoff, error boundaries
+- [examples/mutations.md](examples/mutations.md) — `useMutation`, invalidation, optimistic updates via the UI or the cache
+- [examples/infinite-queries.md](examples/infinite-queries.md) — `useInfiniteQuery`, cursor paging, `maxPages`
+- [examples/suspense.md](examples/suspense.md) — `useSuspenseQuery`, `useSuspenseQueries`, dependent suspense queries
 - [reference.md](reference.md) — configuration and error-strategy lookup, v4 → v5 migration table
 
 ---

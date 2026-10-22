@@ -193,7 +193,7 @@
       "name": "ai-provider-openai-sdk",
       "source": "./dist/plugins/ai-provider-openai-sdk",
       "description": "Official OpenAI SDK patterns for TypeScript/Node.js — client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -213,7 +213,7 @@
       "name": "api-analytics-posthog-analytics",
       "source": "./dist/plugins/api-analytics-posthog-analytics",
       "description": "PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -223,7 +223,7 @@
       "name": "api-analytics-setup-posthog",
       "source": "./dist/plugins/api-analytics-setup-posthog",
       "description": "PostHog analytics and feature flags setup",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -233,7 +233,7 @@
       "name": "api-auth-better-auth-drizzle-hono",
       "source": "./dist/plugins/api-auth-better-auth-drizzle-hono",
       "description": "Better Auth patterns, sessions, OAuth",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -273,7 +273,7 @@
       "name": "api-baas-firebase",
       "source": "./dist/plugins/api-baas-firebase",
       "description": "Firebase backend-as-a-service — Firestore, Authentication, Cloud Functions v2, Storage, Hosting, Admin SDK, security rules, emulator suite",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -453,7 +453,7 @@
       "name": "api-database-prisma",
       "source": "./dist/plugins/api-database-prisma",
       "description": "Prisma ORM, type-safe queries, migrations, relations",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -463,7 +463,7 @@
       "name": "api-database-redis",
       "source": "./dist/plugins/api-database-redis",
       "description": "Redis in-memory data store patterns with ioredis and node-redis -- caching, sessions, rate limiting, pub/sub, streams, queues, transactions, cluster",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -533,7 +533,7 @@
       "name": "api-email-resend-react-email",
       "source": "./dist/plugins/api-email-resend-react-email",
       "description": "Resend + React Email templates",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -543,7 +543,7 @@
       "name": "api-email-setup-resend",
       "source": "./dist/plugins/api-email-setup-resend",
       "description": "Resend email setup, domain verification",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -553,7 +553,7 @@
       "name": "api-flags-posthog-flags",
       "source": "./dist/plugins/api-flags-posthog-flags",
       "description": "PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -673,7 +673,7 @@
       "name": "api-performance-api-performance",
       "source": "./dist/plugins/api-performance-api-performance",
       "description": "Query optimization, caching, indexing, connection pooling, async patterns",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1053,7 +1053,7 @@
       "name": "infra-platform-cloudflare-workers",
       "source": "./dist/plugins/infra-platform-cloudflare-workers",
       "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1203,7 +1203,7 @@
       "name": "meta-reviewing-reviewing",
       "source": "./dist/plugins/meta-reviewing-reviewing",
       "description": "Code review process — reading order, findings, severity, scope and the approval decision. Load when reviewing a diff or PR, writing review comments, or deciding whether to approve or request changes.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1463,7 +1463,7 @@
       "name": "shared-monorepo-nx",
       "source": "./dist/plugins/shared-monorepo-nx",
       "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1473,7 +1473,7 @@
       "name": "shared-monorepo-pnpm-workspaces",
       "source": "./dist/plugins/shared-monorepo-pnpm-workspaces",
       "description": "pnpm workspace protocol, filtering, catalogs, shared dependencies, publishing, and CI/CD for monorepo management",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1503,7 +1503,7 @@
       "name": "shared-tooling-biome",
       "source": "./dist/plugins/shared-tooling-biome",
       "description": "Biome v2 unified linter, formatter, and import organizer — single Rust-powered tool replacing ESLint + Prettier with 97% Prettier compatibility and 20x faster performance",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1533,7 +1533,7 @@
       "name": "shared-tooling-git-hooks",
       "source": "./dist/plugins/shared-tooling-git-hooks",
       "description": "Husky v9 setup, lint-staged v16 patterns, commitlint with conventional commits, CI/production handling, monorepo setup, migration from v8",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1543,7 +1543,7 @@
       "name": "shared-tooling-typescript-config",
       "source": "./dist/plugins/shared-tooling-typescript-config",
       "description": "TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1563,7 +1563,7 @@
       "name": "web-accessibility-web-accessibility",
       "source": "./dist/plugins/web-accessibility-web-accessibility",
       "description": "WCAG, ARIA, keyboard navigation",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1603,7 +1603,7 @@
       "name": "web-data-fetching-graphql-apollo",
       "source": "./dist/plugins/web-data-fetching-graphql-apollo",
       "description": "Apollo Client GraphQL patterns — normalized cache and type policies, queries, mutations with optimistic updates, pagination, fragments, subscriptions, and Suspense hooks",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1643,7 +1643,7 @@
       "name": "web-dataviz-d3",
       "source": "./dist/plugins/web-dataviz-d3",
       "description": "D3.js data visualization — selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1693,7 +1693,7 @@
       "name": "web-error-handling-error-boundaries",
       "source": "./dist/plugins/web-error-handling-error-boundaries",
       "description": "Error boundary patterns, fallback UI, reset/retry, react-error-boundary library, React 19 createRoot error hooks",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1703,7 +1703,7 @@
       "name": "web-error-handling-result-types",
       "source": "./dist/plugins/web-error-handling-result-types",
       "description": "TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1713,7 +1713,7 @@
       "name": "web-files-file-upload-patterns",
       "source": "./dist/plugins/web-files-file-upload-patterns",
       "description": "File upload patterns - drag-drop dropzones, chunked and resumable uploads, presigned URL flows, file validation (MIME type, magic bytes), progress tracking, accessibility (ARIA)",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1733,7 +1733,7 @@
       "name": "web-forms-react-hook-form",
       "source": "./dist/plugins/web-forms-react-hook-form",
       "description": "React Hook Form patterns - useForm, Controller, useFieldArray, validation resolver, performance optimization",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1743,7 +1743,7 @@
       "name": "web-forms-tanstack-form",
       "source": "./dist/plugins/web-forms-tanstack-form",
       "description": "TanStack Form patterns - useForm, form.Field, validators, arrays, linked fields, createFormHook, type safety",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1763,7 +1763,7 @@
       "name": "web-forms-zod-validation",
       "source": "./dist/plugins/web-forms-zod-validation",
       "description": "Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1783,7 +1783,7 @@
       "name": "web-framework-react",
       "source": "./dist/plugins/web-framework-react",
       "description": "Component architecture, hooks and React 19 patterns. Load when building or refactoring React components, custom hooks, forms, or async UI.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1823,7 +1823,7 @@
       "name": "web-i18n-next-intl",
       "source": "./dist/plugins/web-i18n-next-intl",
       "description": "Type-safe i18n for the App Router — locale routing, message rendering, formatting and static generation. Load when a project imports next-intl.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1893,7 +1893,7 @@
       "name": "web-meta-framework-nextjs",
       "source": "./dist/plugins/web-meta-framework-nextjs",
       "description": "Next.js App Router patterns (15-16) - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, Cache Components",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1953,7 +1953,7 @@
       "name": "web-mocks-msw",
       "source": "./dist/plugins/web-mocks-msw",
       "description": "MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1963,7 +1963,7 @@
       "name": "web-performance-web-performance",
       "source": "./dist/plugins/web-performance-web-performance",
       "description": "Bundle optimization, render performance, Core Web Vitals",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1973,7 +1973,7 @@
       "name": "web-pwa-offline-first",
       "source": "./dist/plugins/web-pwa-offline-first",
       "description": "Local-first architecture with sync queues",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2043,7 +2043,7 @@
       "name": "web-server-state-react-query",
       "source": "./dist/plugins/web-server-state-react-query",
       "description": "React Query server state — query keys and query options, caching policy, error handling, and typed clients generated from an API schema",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2093,7 +2093,7 @@
       "name": "web-state-redux-toolkit",
       "source": "./dist/plugins/web-state-redux-toolkit",
       "description": "Redux Toolkit patterns for complex client state. Use when managing enterprise-scale state, needing DevTools, entity normalization, or RTK Query for data fetching.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2113,7 +2113,7 @@
       "name": "web-styling-cva",
       "source": "./dist/plugins/web-styling-cva",
       "description": "Class Variance Authority - type-safe component variant styling with cva(), compound variants, and VariantProps",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2133,7 +2133,7 @@
       "name": "web-styling-scss-modules",
       "source": "./dist/plugins/web-styling-scss-modules",
       "description": "SCSS Modules - locally scoped component stylesheets, cascade layers, the Sass module system, mixins, and build-time versus runtime values",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2163,7 +2163,7 @@
       "name": "web-testing-cypress-e2e",
       "source": "./dist/plugins/web-testing-cypress-e2e",
       "description": "Cypress E2E testing patterns - test structure, data-cy selectors, cy.intercept() mocking, custom commands, fixtures, component testing, accessibility testing with cypress-axe, and CI/CD integration",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2173,7 +2173,7 @@
       "name": "web-testing-playwright-e2e",
       "source": "./dist/plugins/web-testing-playwright-e2e",
       "description": "Playwright E2E testing patterns - test structure, Page Object Model, locator strategies, assertions, network mocking, visual regression, parallel execution, fixtures, and configuration",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2183,7 +2183,7 @@
       "name": "web-testing-react-testing-library",
       "source": "./dist/plugins/web-testing-react-testing-library",
       "description": "React Testing Library — query hierarchy, userEvent, async utilities, renderHook, custom render with providers. Load when writing or reviewing tests that render React components or hooks.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2193,7 +2193,7 @@
       "name": "web-testing-visual-regression",
       "source": "./dist/plugins/web-testing-visual-regression",
       "description": "Visual regression testing — screenshot baselines, determinism, diff review, baseline custody and CI wiring. Load when adding, reviewing or debugging tests that compare a rendered subject against an approved image.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2203,7 +2203,7 @@
       "name": "web-testing-vitest",
       "source": "./dist/plugins/web-testing-vitest",
       "description": "Vitest test runner - configuration, assertions, mocking (vi.fn, vi.mock, vi.spyOn), fake timers, snapshot testing, coverage, workspace projects",
-      "version": "8.0.0",
+      "version": "9.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2233,7 +2233,7 @@
       "name": "web-tooling-storybook",
       "source": "./dist/plugins/web-tooling-storybook",
       "description": "Storybook patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2243,7 +2243,7 @@
       "name": "web-tooling-vite",
       "source": "./dist/plugins/web-tooling-vite",
       "description": "Vite config, path aliases, vendor chunk splitting, environment-specific builds, Rolldown codeSplitting, Sass modern API, build targets, module preload",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2253,7 +2253,7 @@
       "name": "web-ui-ant-design",
       "source": "./dist/plugins/web-ui-ant-design",
       "description": "Ant Design enterprise UI library for React",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2283,7 +2283,7 @@
       "name": "web-ui-headless-ui",
       "source": "./dist/plugins/web-ui-headless-ui",
       "description": "Unstyled accessible UI components by Tailwind Labs",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2303,7 +2303,7 @@
       "name": "web-ui-mui",
       "source": "./dist/plugins/web-ui-mui",
       "description": "Material UI component library patterns for React",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2353,7 +2353,7 @@
       "name": "web-utilities-date-fns",
       "source": "./dist/plugins/web-utilities-date-fns",
       "description": "date-fns patterns for TypeScript - formatting, parsing, manipulation, comparison, timezone handling, and internationalization",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
@@ -2390,5 +2390,5 @@
       "category": "web-utilities"
     }
   ],
-  "description": "Skills, stacks, and agents for Agents Inc"
+  "description": "Skills for Agents Inc"
 }

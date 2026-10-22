@@ -5,7 +5,7 @@ description: Storybook patterns - CSF 3.0, args, controls, autodocs, play functi
 
 # Storybook Patterns
 
-> **Quick Guide:** A story is a component in one state, written as a plain object in CSF 3.0: a default `meta` export describing the component, then one named export per state. Props come from `args` so the controls panel can edit them, `argTypes` shapes those controls, `tags: ["autodocs"]` turns the file into a documentation page, and a `play` function drives interactions with `@storybook/test` so the same story doubles as a test.
+> **Quick Guide:** A story is a component in one state, written as a plain object in CSF 3.0: a default `meta` export describing the component, then one named export per state. Props come from `args` so the controls panel can edit them, `argTypes` shapes those controls, `tags: ["autodocs"]` turns the file into a documentation page, and a `play` function drives interactions with `storybook/test` so the same story doubles as a test.
 
 **Detailed Resources:**
 
@@ -13,7 +13,7 @@ description: Storybook patterns - CSF 3.0, args, controls, autodocs, play functi
 - [examples/testing.md](examples/testing.md) — play functions, composed flows, keyboard navigation, visual and accessibility parameters
 - [examples/docs.md](examples/docs.md) — autodocs, custom docs pages, MDX, source display, descriptions
 - [examples/addons.md](examples/addons.md) — addon setup, viewports, backgrounds, the test addon, configuration decisions
-- [reference.md](reference.md) — control types, parameters, addon list, `@storybook/test` API, file naming, migration notes
+- [reference.md](reference.md) — control types, parameters, addon list, `storybook/test` API, file naming, migration notes
 
 ---
 
@@ -36,7 +36,7 @@ A story file usually serves both, but the two make different demands on how it i
 
 **Express state through `args`, not through JSX.** The controls panel edits args; props hardcoded in a `render` are invisible to it, and the story stops being explorable.
 
-**Drive interactions from a `play` function using `@storybook/test`.** Its `userEvent` reproduces the event sequence a real input produces, and `fn()` args record calls so the assertion can be about behaviour rather than markup.
+**Drive interactions from a `play` function using `storybook/test`.** Its `userEvent` reproduces the event sequence a real input produces, and `fn()` args record calls so the assertion can be about behaviour rather than markup.
 
 **Export stories as named exports.** The default export is the meta, and a file can only have one.
 
@@ -44,7 +44,7 @@ A story file usually serves both, but the two make different demands on how it i
 
 ---
 
-**Auto-detection:** Storybook, .stories.tsx, .stories.ts, CSF, Meta, StoryObj, satisfies Meta, args, argTypes, play function, canvasElement, within, autodocs, decorators, parameters, @storybook/test, .storybook/main.ts, .storybook/preview.ts
+**Auto-detection:** Storybook, .stories.tsx, .stories.ts, CSF, Meta, StoryObj, satisfies Meta, args, argTypes, play function, canvasElement, within, autodocs, decorators, parameters, storybook/test, .storybook/main.ts, .storybook/preview.ts
 
 **Applies to:**
 
@@ -92,7 +92,7 @@ A `render` that keeps growing is usually the component's API asking for the comp
 ## What to add to a story
 
 ```
-Interaction to verify?      → play function with @storybook/test
+Interaction to verify?      → play function with storybook/test
 Appearance to lock down?    → visual regression parameters on the story
 Accessibility to check?     → a11y parameters; the addon runs axe on every story
 Nothing to verify yet?      → leave it as a documented state
@@ -151,7 +151,7 @@ const meta = {
 } satisfies Meta<typeof Card>;
 ```
 
-Args must be serializable — a function arg is `fn()` from `@storybook/test`, and a non-serializable value such as a React element reaches a control through `mapping`.
+Args must be serializable — a function arg is `fn()` from `storybook/test`, and a non-serializable value such as a React element reaches a control through `mapping`.
 
 Full code, and the control type per prop type: [examples/core.md](examples/core.md) · [reference.md](reference.md)
 
@@ -187,7 +187,6 @@ Parameters configure Storybook and its addons, at whichever level the setting be
 ```typescript
 parameters: {
   layout: "centered",
-  viewport: { defaultViewport: "mobile1" },
   docs: { description: { component: "A modal dialog for confirmations." } },
 },
 ```

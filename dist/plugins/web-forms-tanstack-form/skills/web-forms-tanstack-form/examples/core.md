@@ -223,7 +223,9 @@ const form = useForm({
       await loginUser(value);
     } catch (error) {
       // handleSubmit does NOT catch errors in onSubmit — you must handle them
-      form.setErrorMap({ onSubmit: getErrorMessage(error) });
+      form.setErrorMap({
+        onSubmit: { form: getErrorMessage(error), fields: {} },
+      });
     }
   },
 });

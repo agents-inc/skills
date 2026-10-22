@@ -53,10 +53,12 @@ document — a duplicate definition is a GraphQL validation error at parse time.
 
 ```typescript
 // components/post-detail.tsx
-import { useQuery, gql } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { POST_WITH_AUTHOR } from "../graphql/fragments";
+import type { GetPostQuery, GetPostQueryVariables } from "../generated/graphql";
 
-const GET_POST = gql`
+const GET_POST: TypedDocumentNode<GetPostQuery, GetPostQueryVariables> = gql`
   query GetPost($id: ID!) {
     post(id: $id) {
       ...PostWithAuthor

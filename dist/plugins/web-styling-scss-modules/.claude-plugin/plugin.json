@@ -1,6 +1,6 @@
 {
   "name": "web-styling-scss-modules",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
   "description": "SCSS Modules - locally scoped component stylesheets, cascade layers, the Sass module system, mixins, and build-time versus runtime values",
   "author": {

@@ -131,8 +131,13 @@ boundary instead of coming back as a message.
 import { createPost } from '../../actions/posts'
 
 export default function NewPostPage() {
+  async function submit(formData: FormData) {
+    'use server'
+    await createPost({ success: false }, formData)
+  }
+
   return (
-    <form action={createPost}>
+    <form action={submit}>
       <div>
         <label htmlFor="title">Title</label>
         <input
@@ -262,8 +267,13 @@ import { createPost } from '../app/actions/posts'
 import { SubmitButton } from './submit-button'
 
 export function PostForm() {
+  async function submit(formData: FormData) {
+    'use server'
+    await createPost({ success: false }, formData)
+  }
+
   return (
-    <form action={createPost}>
+    <form action={submit}>
       {/* form fields */}
       <SubmitButton pendingText="Creating post...">
         Create Post

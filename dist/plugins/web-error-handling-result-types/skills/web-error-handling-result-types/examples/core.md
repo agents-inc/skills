@@ -345,6 +345,11 @@ import { match } from "../lib/result";
 import type { Result } from "../lib/result";
 import type { UserError } from "../errors/user-errors";
 
+interface User {
+  readonly id: string;
+  readonly name: string;
+}
+
 interface HttpResponse {
   status: number;
   body: unknown;
@@ -359,7 +364,7 @@ const HTTP_STATUS = {
 } as const;
 
 export function toHttpResponse(result: Result<User, UserError>): HttpResponse {
-  return match(result, {
+  return match<User, UserError, HttpResponse>(result, {
     ok: (user) => ({ status: HTTP_STATUS.OK, body: user }),
     err: (error) => {
       switch (error.code) {

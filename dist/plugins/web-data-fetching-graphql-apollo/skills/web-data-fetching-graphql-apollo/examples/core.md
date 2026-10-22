@@ -50,7 +50,8 @@ export { config as default };
 
 ```typescript
 // providers/apollo-provider.tsx
-import { ApolloClient, ApolloProvider, InMemoryCache, HttpLink, from } from "@apollo/client";
+import { ApolloClient, CombinedGraphQLErrors, InMemoryCache, HttpLink, from } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 import { onError } from "@apollo/client/link/error";
 import { setContext } from "@apollo/client/link/context";
 import type { ReactNode } from "react";
@@ -63,17 +64,18 @@ const authLink = setContext((_, { headers }) => {
   return { headers: { ...headers, authorization: token ? `Bearer ${token}` : "" } };
 });
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors) {
-    graphQLErrors.forEach(({ message, path, extensions }) => {
+const errorLink = onError(({ error }) => {
+  if (CombinedGraphQLErrors.is(error)) {
+    error.errors.forEach(({ message, path, extensions }) => {
       console.error(`[GraphQL error]: ${message}, Path: ${path}`);
       if (extensions?.code === "UNAUTHENTICATED") {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
         window.location.href = "/login";
       }
     });
+  } else {
+    console.error(`[Network error]: ${error.message}`);
   }
-  if (networkError) console.error(`[Network error]: ${networkError.message}`);
 });
 
 const httpLink = new HttpLink({ uri: GRAPHQL_ENDPOINT, credentials: "include" });
@@ -89,13 +91,12 @@ function createApolloClient() {
     }),
     defaultOptions: {
       watchQuery: { fetchPolicy: "cache-and-network" },
-      query: { fetchPolicy: "cache-first", errorPolicy: "all" },
-      mutate: { errorPolicy: "all" },
+      query: { fetchPolicy: "cache-first" },
     },
   });
 }
 
-let apolloClient: ApolloClient<object> | null = null;
+let apolloClient: ApolloClient | null = null;
 
 function getClient() {
   if (typeof window === "undefined") return createApolloClient();
@@ -122,10 +123,11 @@ returning a fresh client per server render.
 
 ```typescript
 // components/user-profile.tsx
-import { useQuery, gql } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import type { GetUserQuery, GetUserQueryVariables } from "../generated/graphql";
 
-const GET_USER = gql`
+const GET_USER: TypedDocumentNode<GetUserQuery, GetUserQueryVariables> = gql`
   query GetUser($id: ID!) {
     user(id: $id) {
       id
@@ -137,14 +139,11 @@ const GET_USER = gql`
 `;
 
 function UserProfile({ userId }: { userId: string }) {
-  const { data, loading, error, refetch } = useQuery<GetUserQuery, GetUserQueryVariables>(
-    GET_USER,
-    {
-      variables: { id: userId },
-      skip: !userId,
-      fetchPolicy: "cache-and-network",
-    }
-  );
+  const { data, loading, error, refetch } = useQuery(GET_USER, {
+    variables: { id: userId },
+    skip: !userId,
+    fetchPolicy: "cache-and-network",
+  });
 
   if (loading && !data) return <UserProfileSkeleton />;
   if (error && !data) return <ErrorCard message={error.message} onRetry={() => refetch()} />;
@@ -166,10 +165,12 @@ export { UserProfile, GET_USER };
 
 ```typescript
 // components/user-search.tsx
-import { useLazyQuery, gql } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useLazyQuery } from "@apollo/client/react";
 import { useState } from "react";
+import type { SearchUsersQuery, SearchUsersQueryVariables } from "../generated/graphql";
 
-const SEARCH_USERS = gql`
+const SEARCH_USERS: TypedDocumentNode<SearchUsersQuery, SearchUsersQueryVariables> = gql`
   query SearchUsers($query: String!, $limit: Int) {
     searchUsers(query: $query, limit: $limit) { id, name, email }
   }
@@ -215,10 +216,12 @@ export { UserSearch };
 
 ```typescript
 // components/create-post-form.tsx
-import { useMutation, gql, Reference } from "@apollo/client";
+import { gql, type Reference, type TypedDocumentNode } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { useState } from "react";
+import type { CreatePostMutation, CreatePostMutationVariables } from "../generated/graphql";
 
-const CREATE_POST = gql`
+const CREATE_POST: TypedDocumentNode<CreatePostMutation, CreatePostMutationVariables> = gql`
   mutation CreatePost($input: CreatePostInput!) {
     createPost(input: $input) {
       id
@@ -236,11 +239,12 @@ function CreatePostForm({ authorId, onSuccess }: { authorId: string; onSuccess?:
   const [createPost, { loading, error }] = useMutation(CREATE_POST, {
     variables: { input: { title, content, authorId } },
     update(cache, { data }) {
-      if (!data?.createPost) return;
+      const created = data?.createPost;
+      if (!created) return;
       cache.modify({
         fields: {
           posts(existing: readonly Reference[] = [], { toReference }) {
-            const newRef = toReference(data.createPost);
+            const newRef = toReference(created);
             return newRef ? [newRef, ...existing] : existing;
           },
         },
@@ -272,10 +276,11 @@ export { CreatePostForm, CREATE_POST };
 // components/edit-post-form.tsx
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useMutation, gql } from "@apollo/client";
-import type { Post } from "../generated/graphql";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+import type { Post, UpdatePostMutation, UpdatePostMutationVariables } from "../generated/graphql";
 
-const UPDATE_POST = gql`
+const UPDATE_POST: TypedDocumentNode<UpdatePostMutation, UpdatePostMutationVariables> = gql`
   mutation UpdatePost($id: ID!, $input: UpdatePostInput!) {
     updatePost(id: $id, input: $input) { id, title, content, updatedAt }
   }
@@ -320,9 +325,11 @@ export { EditPostForm };
 
 ```typescript
 // components/delete-post-button.tsx
-import { useMutation, gql, Reference } from "@apollo/client";
+import { gql, type Reference, type TypedDocumentNode } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+import type { DeletePostMutation, DeletePostMutationVariables } from "../generated/graphql";
 
-const DELETE_POST = gql`
+const DELETE_POST: TypedDocumentNode<DeletePostMutation, DeletePostMutationVariables> = gql`
   mutation DeletePost($id: ID!) { deletePost(id: $id) { id } }
 `;
 

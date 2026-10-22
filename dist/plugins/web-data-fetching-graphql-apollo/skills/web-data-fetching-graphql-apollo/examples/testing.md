@@ -13,21 +13,21 @@ updates) from [core.md](core.md).
 
 ```typescript
 // test/apollo-test-utils.tsx
-import { MockedProvider, MockedResponse } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { MockedResponse } from "@apollo/client/testing";
 import type { ReactElement, ReactNode } from "react";
 
 interface ApolloRenderOptions {
   mocks?: MockedResponse[];
-  addTypename?: boolean;
 }
 
 function renderWithApollo(
   ui: ReactElement,
-  { mocks = [], addTypename = true, ...renderOptions }: ApolloRenderOptions = {}
+  { mocks = [], ...renderOptions }: ApolloRenderOptions = {}
 ) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <MockedProvider mocks={mocks} addTypename={addTypename}>
+      <MockedProvider mocks={mocks}>
         {children}
       </MockedProvider>
     );
@@ -40,7 +40,7 @@ function renderWithApollo(
 export { renderWithApollo };
 ```
 
-`addTypename` defaults to `true` and matches the client, which adds `__typename` to every selection.
+The client adds `__typename` to every selection.
 A mock whose `result.data` omits `__typename` therefore fails to match — which is the commonest
 reason a mock "does not fire".
 
@@ -59,7 +59,7 @@ const mockUserResponse: MockedResponse = {
   result: {
     data: {
       user: {
-        __typename: "User", // required whenever addTypename is on
+        __typename: "User", // required: the client adds it to every selection
         id: TEST_USER_ID,
         name: "Test User",
         email: "test@example.com",
@@ -108,7 +108,7 @@ the component is still in its loading state.
 
 ---
 
-## Looser matching (v3.9+)
+## Looser matching
 
 ```typescript
 const reusableMock: MockedResponse = {
@@ -120,15 +120,17 @@ const reusableMock: MockedResponse = {
 };
 
 const dynamicMock: MockedResponse = {
-  request: { query: SEARCH_USERS },
-  variableMatcher: (variables) => variables.query?.startsWith("test"),
+  request: {
+    query: SEARCH_USERS,
+    variables: (variables) => variables.query?.startsWith("test"),
+  },
   result: {
     data: { searchUsers: [{ __typename: "User", id: "1", name: "Test User" }] },
   },
 };
 ```
 
-`variableMatcher` replaces the deep-equality check, which is what makes a debounced or paginated
+A `variables` function replaces the deep-equality check, which is what makes a debounced or paginated
 component testable without enumerating every variable set it will send.
 
 ---
@@ -176,70 +178,3 @@ expect(cachedPosts?.posts).toStrictEqual([
 
 Assert the remaining members rather than the length — a delete that removed the wrong row leaves the
 count right.
-
----
-
-## Schema-based testing (v3.10+)
-
-An alternative to `MockedProvider`: run the real link chain against an executable schema, so the
-test exercises the cache and the links rather than a stubbed response.
-
-```typescript
-// test/schema-test-utils.tsx
-import {
-  createTestSchema,
-  createSchemaFetch,
-} from "@apollo/client/testing/experimental";
-import { buildSchema } from "graphql";
-
-const typeDefs = `
-  type Query { user(id: ID!): User, users: [User!]! }
-  type User { id: ID!, name: String!, email: String! }
-  type Mutation { createUser(name: String!, email: String!): User! }
-`;
-
-const testSchema = createTestSchema(buildSchema(typeDefs), {
-  resolvers: {
-    Query: {
-      user: (_, { id }: { id: string }) => ({
-        id,
-        name: "Test User",
-        email: "test@example.com",
-      }),
-      users: () => [
-        { id: "1", name: "User 1", email: "user1@example.com" },
-        { id: "2", name: "User 2", email: "user2@example.com" },
-      ],
-    },
-  },
-  scalars: { DateTime: () => new Date().toISOString() },
-});
-
-export { testSchema, createSchemaFetch };
-```
-
-```typescript
-// One test overriding a resolver, without touching the shared schema
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-
-const customSchema = testSchema.fork({
-  resolvers: {
-    Query: {
-      users: () => [
-        { id: "custom", name: "Custom User", email: "custom@test.com" },
-      ],
-    },
-  },
-});
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new HttpLink({
-    uri: "/graphql",
-    fetch: createSchemaFetch(customSchema),
-  }),
-});
-```
-
-`fork` returns a new schema rather than mutating the shared one, so tests using it stay independent
-of their order. It adopts incrementally — a suite can hold both styles.

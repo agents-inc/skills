@@ -1,6 +1,6 @@
 {
   "name": "web-server-state-react-query",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
   "description": "React Query server state — query keys and query options, caching policy, error handling, and typed clients generated from an API schema",
   "author": {

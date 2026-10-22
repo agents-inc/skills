@@ -14,7 +14,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
-  addons: ["@storybook/addon-essentials", "@storybook/addon-a11y"],
+  addons: ["@storybook/addon-docs", "@storybook/addon-a11y"],
   framework: {
     // The package matching your renderer and builder
     name: "@storybook/react-vite",
@@ -46,7 +46,7 @@ typescript: {
 
 ```typescript
 // .storybook/preview.tsx
-import type { Preview } from "@storybook/react";
+import type { Preview } from "@storybook/react-vite";
 import "../src/styles/globals.css";
 
 const preview: Preview = {
@@ -93,7 +93,7 @@ const preview: Preview = {
           { id: "page-has-heading-one", enabled: false },
         ],
       },
-      element: "#storybook-root",
+      context: "#storybook-root",
     },
   },
 };
@@ -115,14 +115,17 @@ const CUSTOM_VIEWPORTS = {
 
 const preview: Preview = {
   parameters: {
-    viewport: { viewports: CUSTOM_VIEWPORTS, defaultViewport: "desktop" },
+    viewport: { options: CUSTOM_VIEWPORTS },
     backgrounds: {
-      default: "light",
-      values: [
-        { name: "light", value: "#ffffff" },
-        { name: "dark", value: "#1a1a1a" },
-      ],
+      options: {
+        light: { name: "light", value: "#ffffff" },
+        dark: { name: "dark", value: "#1a1a1a" },
+      },
     },
+  },
+  initialGlobals: {
+    viewport: { value: "desktop", isRotated: false },
+    backgrounds: { value: "light" },
   },
 };
 ```
@@ -130,9 +133,9 @@ const preview: Preview = {
 ```typescript
 // A story that only makes sense at one size, or on one surface
 export const MobileNav: Story = {
-  parameters: {
-    viewport: { defaultViewport: "mobile" },
-    backgrounds: { default: "dark" },
+  globals: {
+    viewport: { value: "mobile", isRotated: false },
+    backgrounds: { value: "dark" },
   },
 };
 

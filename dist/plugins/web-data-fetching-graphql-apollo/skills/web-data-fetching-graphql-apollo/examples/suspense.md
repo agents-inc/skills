@@ -13,10 +13,11 @@
 ```typescript
 // components/user-profile-suspense.tsx
 import { Suspense } from "react";
-import { useSuspenseQuery, gql } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useSuspenseQuery } from "@apollo/client/react";
 import type { GetUserQuery, GetUserQueryVariables } from "../generated/graphql";
 
-const GET_USER = gql`
+const GET_USER: TypedDocumentNode<GetUserQuery, GetUserQueryVariables> = gql`
   query GetUser($id: ID!) {
     user(id: $id) {
       id
@@ -30,10 +31,7 @@ const GET_USER = gql`
 // This component suspends while loading
 function UserProfileContent({ userId }: { userId: string }) {
   // No loading state needed - component suspends instead
-  const { data, error } = useSuspenseQuery<GetUserQuery, GetUserQueryVariables>(
-    GET_USER,
-    { variables: { id: userId } }
-  );
+  const { data, error } = useSuspenseQuery(GET_USER, { variables: { id: userId } });
 
   // Error boundary handles errors
   if (error) throw error;
@@ -71,10 +69,12 @@ Starts the fetch from an event — a hover or a click — rather than from a mou
 ```typescript
 // components/user-preview-link.tsx
 import { Suspense, useState } from "react";
-import { useLoadableQuery, useReadQuery, gql } from "@apollo/client";
-import type { GetUserQuery, GetUserQueryVariables, QueryRef } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useLoadableQuery, useReadQuery } from "@apollo/client/react";
+import type { QueryRef } from "@apollo/client/react";
+import type { GetUserPreviewQuery, GetUserPreviewQueryVariables } from "../generated/graphql";
 
-const GET_USER_PREVIEW = gql`
+const GET_USER_PREVIEW: TypedDocumentNode<GetUserPreviewQuery, GetUserPreviewQueryVariables> = gql`
   query GetUserPreview($id: ID!) {
     user(id: $id) {
       id
@@ -88,7 +88,7 @@ const GET_USER_PREVIEW = gql`
 const HOVER_DELAY_MS = 100;
 
 // Reads query data and suspends while loading
-function UserPreviewPopover({ queryRef }: { queryRef: QueryRef<GetUserQuery> }) {
+function UserPreviewPopover({ queryRef }: { queryRef: QueryRef<GetUserPreviewQuery> }) {
   const { data } = useReadQuery(queryRef);
 
   return (
@@ -104,9 +104,7 @@ function UserPreviewLink({ userId, userName }: { userId: string; userName: strin
   const [showPreview, setShowPreview] = useState(false);
 
   // loadQuery triggers the fetch, queryRef is used to read data
-  const [loadQuery, queryRef, { reset }] = useLoadableQuery<GetUserQuery, GetUserQueryVariables>(
-    GET_USER_PREVIEW
-  );
+  const [loadQuery, queryRef, { reset }] = useLoadableQuery(GET_USER_PREVIEW);
 
   const handleMouseEnter = () => {
     // Start fetching when user hovers
@@ -153,8 +151,9 @@ usually invisible.
 ```typescript
 // components/dashboard.tsx
 import { Suspense } from "react";
-import { useBackgroundQuery, useReadQuery, gql } from "@apollo/client";
-import type { QueryRef } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useBackgroundQuery, useReadQuery } from "@apollo/client/react";
+import type { QueryRef } from "@apollo/client/react";
 
 const GET_DASHBOARD_STATS = gql`
   query GetDashboardStats {
@@ -242,7 +241,7 @@ Runs outside the React tree, which is what makes it usable from a router loader.
 
 ```typescript
 // lib/apollo-preloader.ts
-import { createQueryPreloader, ApolloClient } from "@apollo/client";
+import { createQueryPreloader } from "@apollo/client/react";
 import { apolloClient } from "./apollo-client";
 
 // Create preloader bound to client
@@ -254,8 +253,9 @@ export { preloadQuery };
 ```typescript
 // routes/user-route.tsx
 import { Suspense } from "react";
-import { useReadQuery, gql } from "@apollo/client";
-import type { QueryRef } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useReadQuery } from "@apollo/client/react";
+import type { QueryRef } from "@apollo/client/react";
 import { preloadQuery } from "../lib/apollo-preloader";
 
 const GET_USER_PROFILE = gql`
@@ -325,8 +325,9 @@ round trip removed from the waterfall.
 ```typescript
 // components/user-posts.tsx
 import { Suspense, useState } from "react";
-import { useReadQuery, useQueryRefHandlers, gql } from "@apollo/client";
-import type { QueryRef } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useReadQuery, useQueryRefHandlers } from "@apollo/client/react";
+import type { QueryRef } from "@apollo/client/react";
 
 const GET_USER_POSTS = gql`
   query GetUserPosts($userId: ID!, $first: Int!, $after: String) {

@@ -272,7 +272,8 @@ Full code: [examples/core.md](examples/core.md)
 - Client Components rendered outside `NextIntlClientProvider` — no messages reach them
 - Using an unvalidated locale segment — the message import fails on a path the route never declared
 - A proxy still named `middleware.ts` on Next.js 16 — it is not picked up, so no locale is detected
-- `t()` on a message containing markup — it returns the tags as literal text
+- `t()` on a message containing markup — development reports `FORMATTING_ERROR` and renders
+  `namespace.key`; in production a call without values renders the tags as literal text
 - `useTranslations` inside `generateMetadata` or a Server Action — it is a hook, and both run outside
   the component tree; `getTranslations({ locale, namespace })` is what works there
 
