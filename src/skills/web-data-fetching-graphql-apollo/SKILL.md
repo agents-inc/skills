@@ -19,7 +19,7 @@ description: Apollo Client GraphQL patterns — normalized cache and type polici
 - [examples/error-handling.md](examples/error-handling.md) — partial data rendering, global error link
 - [examples/subscriptions.md](examples/subscriptions.md) — split link over `graphql-ws`, `useSubscription` writing to cache
 - [examples/suspense.md](examples/suspense.md) — `useSuspenseQuery`, `useLoadableQuery`, `useBackgroundQuery`, `createQueryPreloader`
-- [examples/testing.md](examples/testing.md) — `MockedProvider`, mock shapes, asserting cache updates, schema-based testing
+- [examples/testing.md](examples/testing.md) — `MockedProvider`, mock shapes, asserting cache updates
 - [reference.md](reference.md) — fetch/error policy, network status and cache method tables, v3 → v4 migration
 
 ---
@@ -129,15 +129,23 @@ singleton
 ### Pattern 2: Queries
 
 ```typescript
-const { data, loading, error, refetch } = useQuery<GetUsersQuery, GetUsersQueryVariables>(
-  GET_USERS,
-  { variables: { limit: DEFAULT_PAGE_SIZE }, fetchPolicy: "cache-and-network", skip: !shouldFetch },
-);
+const GET_USERS: TypedDocumentNode<GetUsersQuery, GetUsersQueryVariables> = gql`
+  query GetUsers($limit: Int) { users(limit: $limit) { id name } }
+`;
+
+const { data, loading, error, refetch } = useQuery(GET_USERS, {
+  variables: { limit: DEFAULT_PAGE_SIZE },
+  fetchPolicy: "cache-and-network",
+  skip: !shouldFetch,
+});
 
 if (loading && !data) return <Skeleton />;
 if (error) return <Error message={error.message} onRetry={() => refetch()} />;
 if (!data?.users?.length) return <EmptyState />;
 ```
+
+Type the document, not the hook: the hooks infer `data` and the variables from a
+`TypedDocumentNode`, and type arguments on the query and mutation hooks are deprecated.
 
 `loading && !data` shows the skeleton on first load only, so a background refetch does not blank the
 screen. `cache-and-network` renders the cached value immediately and revalidates behind it.

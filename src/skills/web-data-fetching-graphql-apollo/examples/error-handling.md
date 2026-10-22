@@ -10,9 +10,11 @@
 
 ```typescript
 // components/user-dashboard.tsx
-import { useQuery, gql } from "@apollo/client";
+import { gql, type TypedDocumentNode } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+import type { GetDashboardQuery, GetDashboardQueryVariables } from "../generated/graphql";
 
-const GET_DASHBOARD = gql`
+const GET_DASHBOARD: TypedDocumentNode<GetDashboardQuery, GetDashboardQueryVariables> = gql`
   query GetDashboard {
     me {
       id
@@ -114,64 +116,60 @@ Two failure renders, not one: `error && !data` is a dead screen and gets the ful
 
 ```typescript
 // lib/apollo-error-link.ts
+import { CombinedGraphQLErrors } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 
 const AUTH_ERROR_CODES = ["UNAUTHENTICATED", "FORBIDDEN"];
 
-const errorLink = onError(
-  ({ graphQLErrors, networkError, operation, forward }) => {
-    if (graphQLErrors) {
-      for (const error of graphQLErrors) {
-        const { message, locations, path, extensions } = error;
-        const errorCode = extensions?.code as string;
+const errorLink = onError(({ error, operation, forward }) => {
+  if (CombinedGraphQLErrors.is(error)) {
+    for (const { message, locations, path, extensions } of error.errors) {
+      const errorCode = extensions?.code as string;
 
-        // Log to monitoring service
-        console.error(`[GraphQL Error] ${errorCode}: ${message}`, {
-          operationName: operation.operationName,
-          path,
-          locations,
-          variables: operation.variables,
-        });
-
-        // Handle authentication errors
-        if (AUTH_ERROR_CODES.includes(errorCode)) {
-          // Clear auth state
-          localStorage.removeItem("auth_token");
-
-          // Redirect to login
-          if (typeof window !== "undefined") {
-            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-          }
-
-          return;
-        }
-
-        // Handle rate limiting
-        if (errorCode === "RATE_LIMITED") {
-          const retryAfter = extensions?.retryAfter as number;
-          console.warn(`Rate limited. Retry after ${retryAfter}ms`);
-          // Could implement automatic retry here
-        }
-      }
-    }
-
-    if (networkError) {
-      console.error(`[Network Error] ${networkError.message}`, {
+      // Log to monitoring service
+      console.error(`[GraphQL Error] ${errorCode}: ${message}`, {
         operationName: operation.operationName,
+        path,
+        locations,
+        variables: operation.variables,
       });
 
-      // Could show offline indicator
-      if (!navigator.onLine) {
-        // Dispatch offline event
-        window.dispatchEvent(new CustomEvent("app:offline"));
+      // Handle authentication errors
+      if (AUTH_ERROR_CODES.includes(errorCode)) {
+        // Clear auth state
+        localStorage.removeItem("auth_token");
+
+        // Redirect to login
+        if (typeof window !== "undefined") {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
+
+        return;
+      }
+
+      // Handle rate limiting
+      if (errorCode === "RATE_LIMITED") {
+        const retryAfter = extensions?.retryAfter as number;
+        console.warn(`Rate limited. Retry after ${retryAfter}ms`);
+        // Could implement automatic retry here
       }
     }
-  },
-);
+  } else {
+    console.error(`[Network Error] ${error.message}`, {
+      operationName: operation.operationName,
+    });
+
+    // Could show offline indicator
+    if (!navigator.onLine) {
+      // Dispatch offline event
+      window.dispatchEvent(new CustomEvent("app:offline"));
+    }
+  }
+});
 
 export { errorLink };
 ```
 
-GraphQL errors and network errors arrive on separate arguments and mean different things: the first
-is a 200 response carrying an `errors` array, the second is a request that never completed. Handling
-only `networkError` misses every authorization failure.
+GraphQL errors and network errors arrive on one `error` argument and mean different things: a
+`CombinedGraphQLErrors` is a 200 response carrying an `errors` array, anything else is a request that
+never completed. Handling only the second misses every authorization failure.
