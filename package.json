@@ -1,7 +1,7 @@
 {
   "name": "@agents-inc/skills",
   "version": "1.0.0",
-  "description": "Skills, stacks, and agents for Agents Inc",
+  "description": "Skills for Agents Inc",
   "type": "module",
   "repository": {
     "type": "git",
