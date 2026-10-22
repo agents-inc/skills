@@ -66,8 +66,10 @@ targets on top of each other, and whichever is later in the DOM wins.
 ```
 
 **Why good:** 2.5.8 is satisfied either by the size or by the spacing, which is what makes dense
-toolbars and inline controls achievable at all. The measurement is between the closest points of
-adjacent targets.
+toolbars and inline controls achievable at all. Undersized targets pass when "positioned so that
+if a 24 CSS pixel diameter circle is centered on the bounding box of each, the circles do not
+intersect another target or the circle for another undersized target"
+([WCAG 2.2, SC 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum)).
 
 ```css
 /* Bad — small and crowded */
