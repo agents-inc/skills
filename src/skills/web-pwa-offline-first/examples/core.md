@@ -87,6 +87,12 @@ class TodoRepository implements DataRepository<Todo> {
     return this.localDb.filter((todo) => !todo._deletedAt).toArray();
   }
 
+  async query(filter: (item: Todo) => boolean): Promise<Todo[]> {
+    return this.localDb
+      .filter((todo) => !todo._deletedAt && filter(todo))
+      .toArray();
+  }
+
   async save(todo: Todo): Promise<void> {
     const now = Date.now();
 

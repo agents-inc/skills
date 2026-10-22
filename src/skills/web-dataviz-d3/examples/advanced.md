@@ -18,6 +18,8 @@ import {
 } from "d3-force";
 import { drag } from "d3-drag";
 import { select } from "d3-selection";
+import { scaleOrdinal } from "d3-scale";
+import { schemeCategory10 } from "d3-scale-chromatic";
 import type { SimulationNodeDatum, SimulationLinkDatum } from "d3-force";
 import type { D3DragEvent } from "d3-drag";
 
@@ -46,6 +48,10 @@ function renderForceGraph(
   height: number,
 ): () => void {
   const svg = select(svgEl);
+  const colorScale = scaleOrdinal(
+    nodes.map((d) => d.group),
+    schemeCategory10,
+  );
 
   // Create simulation
   const simulation = forceSimulation<GraphNode>(nodes)
