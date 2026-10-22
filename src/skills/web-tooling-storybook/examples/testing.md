@@ -8,8 +8,8 @@
 
 ```typescript
 // button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, fn, userEvent, within } from "@storybook/test";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "./button";
 
 const meta = {
@@ -41,7 +41,7 @@ export const Clicked: Story = {
 ## Forms
 
 ```typescript
-import { expect, fn, userEvent, waitFor, within } from "@storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 // meta carries args: { onSubmit: fn() }
 const TEST_EMAIL = "test@example.com";
@@ -241,4 +241,4 @@ export const LowContrast: Story = {
 
 ---
 
-_See also:_ [core.md](core.md) · [docs.md](docs.md) · [addons.md](addons.md), and [../reference.md](../reference.md) for the `@storybook/test` API table.
+_See also:_ [core.md](core.md) · [docs.md](docs.md) · [addons.md](addons.md), and [../reference.md](../reference.md) for the `storybook/test` API table.
