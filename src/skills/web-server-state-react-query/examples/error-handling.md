@@ -137,7 +137,7 @@ refetches instead of re-rendering the same error.
 
 ```typescript
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, getErrorMessage } from "react-error-boundary";
 import type { ReactNode } from "react";
 
 export function QueryErrorBoundaryWrapper({ children }: { children: ReactNode }) {
@@ -148,7 +148,7 @@ export function QueryErrorBoundaryWrapper({ children }: { children: ReactNode })
           onReset={reset}
           fallbackRender={({ error, resetErrorBoundary }) => (
             <div>
-              <p>Something went wrong: {error.message}</p>
+              <p>Something went wrong: {getErrorMessage(error)}</p>
               <button onClick={resetErrorBoundary}>Try again</button>
             </div>
           )}

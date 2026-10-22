@@ -5,6 +5,9 @@
 **Extended examples:**
 
 - [error-handling.md](error-handling.md) — component states, global handlers, retry logic, error boundaries
+- [mutations.md](mutations.md) — `useMutation`, invalidation, optimistic updates with rollback
+- [infinite-queries.md](infinite-queries.md) — `useInfiniteQuery`, cursor paging, `maxPages`
+- [suspense.md](suspense.md) — `useSuspenseQuery`, `useSuspenseQueries`, dependent suspense queries
 
 ---
 
@@ -177,6 +180,58 @@ new QueryClient({
 });
 
 client.setConfig({ baseUrl: "http://localhost:3000/api/v1" }); // ships to production as-is
+```
+
+### staleTime and gcTime
+
+Two clocks on one cache entry. `staleTime` (default `0`) is how long a result counts as fresh: while
+it is, a mount, a window focus or a reconnect reads the cache and sends nothing. `gcTime` (default
+five minutes) starts once no mounted component uses the key, and removes the entry when it runs out.
+
+```typescript
+import { queryOptions } from "@tanstack/react-query";
+
+type Product = { id: string; name: string; price: number };
+
+const THIRTY_SECONDS_MS = 30 * 1000;
+const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+
+export const productOptions = (id: string) =>
+  queryOptions({
+    queryKey: ["products", id],
+    queryFn: async ({ signal }): Promise<Product> => {
+      const response = await fetch(`/api/products/${id}`, { signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    },
+    staleTime: THIRTY_SECONDS_MS,
+    gcTime: THIRTY_MINUTES_MS,
+  });
+```
+
+One entry under those values:
+
+| Time   | Event                                  | Result                                                |
+| ------ | -------------------------------------- | ----------------------------------------------------- |
+| 0 s    | The product page mounts                | No entry: `isPending`, one request                    |
+| 10 s   | A second component mounts the key      | Fresh: served from the cache, no request              |
+| 45 s   | A third component mounts the key       | Stale: cached data renders at once, refetch behind it |
+| 2 min  | Every component using the key unmounts | `gcTime` starts                                       |
+| 20 min | The product page mounts again          | Still cached: renders at once, refetch behind it      |
+| —      | 30 minutes pass with nothing mounted   | Entry removed; the next mount is `isPending` again    |
+
+Raise `staleTime` to send fewer requests; `gcTime` rarely needs changing.
+
+### Bad example — gcTime for freshness
+
+```typescript
+// BAD: gcTime only delays removing an entry nothing is using; it never makes data fresh.
+// Fewer refetches come from staleTime.
+useQuery({
+  queryKey: ["products", id],
+  queryFn: () => fetchProduct(id),
+  gcTime: Infinity,
+});
 ```
 
 ---
