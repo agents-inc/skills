@@ -7,14 +7,14 @@
 </p>
 -->
 
-# Agents Inc Skills: 150+ expert-level atomic skills for Claude Code
+# Agents Inc Skills: 230+ expert-level atomic skills for Claude Code
 
 The official skills marketplace for [Agents Inc](https://github.com/agents-inc/cli).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Skills: 150+](https://img.shields.io/badge/Skills-150%2B-green.svg)](./src/skills)
+[![Skills: 230+](https://img.shields.io/badge/Skills-230%2B-green.svg)](./src/skills)
 
-150+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `agents-inc` CLI lets you choose between plugin or eject mode, scoped to a single project or your entire machine.
+230+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `agents-inc` CLI lets you choose between plugin or eject mode, scoped to a single project or your entire machine.
 
 ## Install
 
@@ -31,7 +31,7 @@ The official skills marketplace for [Agents Inc](https://github.com/agents-inc/c
 npx agents-inc init
 ```
 
-Select your domains, skills and subagents, and configure everything in TypeScript. See the [Agents Inc CLI](https://github.com/agents-inc/cli).
+See the [Agents Inc CLI](https://github.com/agents-inc/cli).
 
 ## Web
 
@@ -57,13 +57,13 @@ Forms & Validation<br>
 `React Hook Form` `TanStack Form` `Vee Validate` `Zod`
 
 UI Libraries<br>
-`shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI` `Vuetify`
+`shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI` `Vuetify` `Base UI`
 
 Styling<br>
-`Tailwind` `SCSS Modules` `CVA`
+`Tailwind` `SCSS Modules` `CVA` `Runtime Theming` `Design Tokens`
 
 Testing<br>
-`Vitest` `Playwright` `Cypress` `React Testing Library` `Vue Test Utils`
+`Vitest` `Playwright` `Cypress` `React Testing Library` `Vue Test Utils` `Visual Regression`
 
 Mocks<br>
 `MSW`
@@ -72,7 +72,7 @@ Animation<br>
 `Framer Motion` `CSS Animations` `View Transitions`
 
 Tooling<br>
-`Storybook` `Vite`
+`Storybook` `Vite` `Component Library Packaging`
 
 i18n<br>
 `next-intl` `react-intl` `vue-i18n`
@@ -94,6 +94,21 @@ Performance & Accessibility<br>
 
 Utilities<br>
 `date-fns` `Native JS` `RxJS` `VueUse`
+
+Editors<br>
+`Lexical` `TipTap`
+
+Maps<br>
+`Leaflet` `Mapbox GL JS`
+
+Data Visualization<br>
+`D3.js` `Recharts`
+
+3D<br>
+`React Three Fiber`
+
+Drag and Drop<br>
+`dnd-kit`
 
 ## API
 
@@ -119,7 +134,7 @@ Email<br>
 `Resend + React Email` `Resend Setup`
 
 Search<br>
-`Elasticsearch` `Meilisearch`
+`Elasticsearch` `Meilisearch` `Xquik`
 
 Vector DBs<br>
 `Pinecone` `Qdrant` `Chroma` `Weaviate`
@@ -135,6 +150,21 @@ Observability<br>
 
 Performance<br>
 `API Performance`
+
+GraphQL<br>
+`Apollo Server` `GraphQL Yoga` `Mercurius`
+
+Queues<br>
+`BullMQ`
+
+Messaging<br>
+`Webhooks`
+
+API Specs<br>
+`OpenAPI`
+
+Caching<br>
+`Caching`
 
 ## AI
 
@@ -156,13 +186,19 @@ Patterns<br>
 ## Infra
 
 CI/CD<br>
-`GitHub Actions` `Docker`
+`GitHub Actions` `Docker` `Turborepo CI`
 
 Platform<br>
-`Cloudflare Workers`
+`Cloudflare Workers` `AWS SDK` `Vercel` `Netlify`
 
 Config<br>
 `Env Config`
+
+Infrastructure as Code<br>
+`Terraform` `Pulumi` `SST`
+
+Containers<br>
+`Kubernetes`
 
 ## Shared
 
@@ -173,23 +209,114 @@ Security<br>
 `Auth Security`
 
 Tooling<br>
-`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config`
+`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config` `Changesets` `Stack Detection`
 
 ## Desktop
 
 Frameworks<br>
 `Electron` `Tauri`
 
+IPC<br>
+`Electron Type-Safe IPC`
+
+Backend<br>
+`Tauri Rust Backend`
+
+UI<br>
+`Electron Desktop UI`
+
+Multi-Window<br>
+`Electron Multi-Window` `Tauri Multi-Window & Events`
+
+Storage<br>
+`Electron Storage & Credentials`
+
+Security<br>
+`Electron Security & Fuses` `Tauri Capabilities & ACL`
+
+Plugins<br>
+`Tauri Plugins`
+
+Packaging<br>
+`Electron Forge` `Tauri Bundling & Distribution`
+
+Updates<br>
+`Electron Auto-Updates`
+
+Testing<br>
+`Electron Testing`
+
+Mobile<br>
+`Tauri Mobile`
+
+## Mobile
+
+Frameworks<br>
+`React Native` `Expo`
+
+Navigation<br>
+`React Navigation` `Expo Router`
+
+Styling<br>
+`NativeWind` `Unistyles`
+
+UI Libraries<br>
+`React Native Paper` `Tamagui`
+
+Animation<br>
+`Reanimated` `Gesture Handler` `Skia`
+
+Storage<br>
+`MMKV` `SQLite + PowerSync` `WatermelonDB`
+
+Testing<br>
+`Detox` `Maestro`
+
+Deployment<br>
+`EAS`
+
+Notifications<br>
+`Push Notifications`
+
+Deep Linking<br>
+`Deep Linking & App Links`
+
+Camera<br>
+`VisionCamera`
+
+Hardware<br>
+`BLE & NFC`
+
+Background<br>
+`Background Tasks`
+
+Performance<br>
+`React Native Performance`
+
+Security<br>
+`React Native Security`
+
+## CLI
+
+Frameworks<br>
+`CLI Commander` `oclif + Ink`
+
+Prompts<br>
+`Clack`
+
 ## Meta
 
 Design<br>
-`Expressive TypeScript`
+`Expressive TypeScript` `Composable Components`
 
 Reviewing<br>
-`Code Reviewing` `CLI Reviewing`
+`Code Reviewing` `CLI Reviewing` `Web Reviewing` `API Reviewing` `AI Reviewing` `Infra Reviewing`
 
 Methodology<br>
 `Research Methodology`
+
+Planning<br>
+`Web Planning` `API Planning` `CLI Planning` `AI Planning`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
 
