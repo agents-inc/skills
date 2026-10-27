@@ -17,7 +17,7 @@
 | `if (a) { if (b) { if (c) { ... } else { ... } } }`                         | Guard clauses: `if (!a) return; if (!b) return;`   |
 | `if (status === "a") ... else if (status === "b") ...`                      | Discriminated union + exhaustive `switch`          |
 | Sequential `await` on independent operations                                | `Promise.all([op1(), op2()])`                      |
-| `const config: Config = { ... }`                                            | `const config = { ... } as const satisfies Config` |
+| `const config: Config = { ... }` whose literal types are needed             | `const config = { ... } as const satisfies Config` |
 
 ---
 

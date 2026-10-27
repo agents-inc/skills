@@ -210,6 +210,8 @@ Full code: [examples/core.md](examples/core.md#pattern-5-async-orchestrators)
 
 `as const` keeps every literal; `satisfies` then checks the shape without widening it. A misspelled field fails compilation, and `ROUTES.home.path` types as `"/"` rather than `string`.
 
+Under mutation testing it costs the constant all its mutants: StrykerJS (as of 10.1.1) makes none inside `as const`, and its report does not say so. Keep the pattern for constants whose literal types are read, as `keyof typeof ROUTES` reads them below; elsewhere a type annotation or `satisfies` alone checks the same shape and is still mutated.
+
 ```typescript
 const ROUTES = {
   home: { path: "/", auth: false },
