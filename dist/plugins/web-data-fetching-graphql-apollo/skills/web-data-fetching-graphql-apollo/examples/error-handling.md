@@ -121,53 +121,51 @@ import { onError } from "@apollo/client/link/error";
 
 const AUTH_ERROR_CODES = ["UNAUTHENTICATED", "FORBIDDEN"];
 
-const errorLink = onError(
-  ({ error, operation, forward }) => {
-    if (CombinedGraphQLErrors.is(error)) {
-      for (const { message, locations, path, extensions } of error.errors) {
-        const errorCode = extensions?.code as string;
+const errorLink = onError(({ error, operation, forward }) => {
+  if (CombinedGraphQLErrors.is(error)) {
+    for (const { message, locations, path, extensions } of error.errors) {
+      const errorCode = extensions?.code as string;
 
-        // Log to monitoring service
-        console.error(`[GraphQL Error] ${errorCode}: ${message}`, {
-          operationName: operation.operationName,
-          path,
-          locations,
-          variables: operation.variables,
-        });
-
-        // Handle authentication errors
-        if (AUTH_ERROR_CODES.includes(errorCode)) {
-          // Clear auth state
-          localStorage.removeItem("auth_token");
-
-          // Redirect to login
-          if (typeof window !== "undefined") {
-            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-          }
-
-          return;
-        }
-
-        // Handle rate limiting
-        if (errorCode === "RATE_LIMITED") {
-          const retryAfter = extensions?.retryAfter as number;
-          console.warn(`Rate limited. Retry after ${retryAfter}ms`);
-          // Could implement automatic retry here
-        }
-      }
-    } else {
-      console.error(`[Network Error] ${error.message}`, {
+      // Log to monitoring service
+      console.error(`[GraphQL Error] ${errorCode}: ${message}`, {
         operationName: operation.operationName,
+        path,
+        locations,
+        variables: operation.variables,
       });
 
-      // Could show offline indicator
-      if (!navigator.onLine) {
-        // Dispatch offline event
-        window.dispatchEvent(new CustomEvent("app:offline"));
+      // Handle authentication errors
+      if (AUTH_ERROR_CODES.includes(errorCode)) {
+        // Clear auth state
+        localStorage.removeItem("auth_token");
+
+        // Redirect to login
+        if (typeof window !== "undefined") {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
+
+        return;
+      }
+
+      // Handle rate limiting
+      if (errorCode === "RATE_LIMITED") {
+        const retryAfter = extensions?.retryAfter as number;
+        console.warn(`Rate limited. Retry after ${retryAfter}ms`);
+        // Could implement automatic retry here
       }
     }
-  },
-);
+  } else {
+    console.error(`[Network Error] ${error.message}`, {
+      operationName: operation.operationName,
+    });
+
+    // Could show offline indicator
+    if (!navigator.onLine) {
+      // Dispatch offline event
+      window.dispatchEvent(new CustomEvent("app:offline"));
+    }
+  }
+});
 
 export { errorLink };
 ```

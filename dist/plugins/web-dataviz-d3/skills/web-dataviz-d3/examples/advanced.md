@@ -48,7 +48,10 @@ function renderForceGraph(
   height: number,
 ): () => void {
   const svg = select(svgEl);
-  const colorScale = scaleOrdinal(nodes.map((d) => d.group), schemeCategory10);
+  const colorScale = scaleOrdinal(
+    nodes.map((d) => d.group),
+    schemeCategory10,
+  );
 
   // Create simulation
   const simulation = forceSimulation<GraphNode>(nodes)

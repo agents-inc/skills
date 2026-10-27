@@ -1,6 +1,6 @@
 {
   "name": "meta-design-expressive-typescript",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Readable TypeScript functions — orchestrators over pure helpers, named predicates and transforms, guard clauses, exhaustive unions. Load when writing or refactoring a function that mixes validation, transformation and assembly, or when deciding whether an expression should be extracted.",
   "author": {

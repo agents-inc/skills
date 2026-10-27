@@ -1103,7 +1103,7 @@
       "name": "meta-design-expressive-typescript",
       "source": "./dist/plugins/meta-design-expressive-typescript",
       "description": "Readable TypeScript functions — orchestrators over pure helpers, named predicates and transforms, guard clauses, exhaustive unions. Load when writing or refactoring a function that mixes validation, transformation and assembly, or when deciding whether an expression should be extracted.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1603,7 +1603,7 @@
       "name": "web-data-fetching-graphql-apollo",
       "source": "./dist/plugins/web-data-fetching-graphql-apollo",
       "description": "Apollo Client GraphQL patterns — normalized cache and type policies, queries, mutations with optimistic updates, pagination, fragments, subscriptions, and Suspense hooks",
-      "version": "6.0.0",
+      "version": "7.0.0",
       "author": {
         "name": "@vince"
       },
@@ -1643,7 +1643,7 @@
       "name": "web-dataviz-d3",
       "source": "./dist/plugins/web-dataviz-d3",
       "description": "D3.js data visualization — selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
       },
