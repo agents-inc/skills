@@ -6,14 +6,14 @@
 
 ## Environment Variables
 
-| Variable                   | Source                         | Description                                            |
-| -------------------------- | ------------------------------ | ------------------------------------------------------ |
-| `UPSTASH_REDIS_REST_URL`   | Upstash console                | REST API endpoint (`https://<name>.upstash.io`)        |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash console                | Bearer token for REST API authentication               |
-| `KV_REST_API_URL`          | Vercel Marketplace integration | Same REST endpoint; `Redis.fromEnv()` falls back to it |
-| `KV_REST_API_TOKEN`        | Vercel Marketplace integration | Same REST token; `Redis.fromEnv()` falls back to it    |
+| Variable                   | Source                        | Description                                            |
+| -------------------------- | ----------------------------- | ------------------------------------------------------ |
+| `UPSTASH_REDIS_REST_URL`   | Upstash console               | REST API endpoint (`https://<name>.upstash.io`)        |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash console               | Bearer token for REST API authentication               |
+| `KV_REST_API_URL`          | Upstash integration on Vercel | Same REST endpoint; `Redis.fromEnv()` falls back to it |
+| `KV_REST_API_TOKEN`        | Upstash integration on Vercel | Same REST token; `Redis.fromEnv()` falls back to it    |
 
-**On Vercel:** The Upstash Redis integration from the Marketplace injects the `KV_REST_API_*` variables. `Redis.fromEnv()` reads `UPSTASH_REDIS_REST_*` first and falls back to `KV_REST_API_*`, so no renaming is needed.
+**On Vercel:** The Upstash integration injects the `KV_REST_API_*` variables. `Redis.fromEnv()` reads `UPSTASH_REDIS_REST_*` first and falls back to `KV_REST_API_*`, so no renaming is needed.
 
 **Locally:** Copy from Upstash console to `.env.local` or use `vercel env pull`.
 
@@ -142,7 +142,7 @@ const data = await redis.get("key");
 
 No changes needed. `Redis.fromEnv()` reads `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` and falls back to the existing `KV_REST_API_URL`/`KV_REST_API_TOKEN`.
 
-**API compatibility:** The command API is identical -- `@vercel/kv` was a thin wrapper around `@upstash/redis`. Only the import and client initialization change.
+**API compatibility:** The command API is identical. Only the import and client initialization change.
 
 ---
 

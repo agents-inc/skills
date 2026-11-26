@@ -12,7 +12,7 @@
 import { Redis } from "@upstash/redis";
 
 // Reads UPSTASH_REDIS_REST_URL/TOKEN, falling back to KV_REST_API_URL/TOKEN
-// (the names the Vercel Marketplace integration sets)
+// (the names the Upstash integration on Vercel sets)
 const redis = Redis.fromEnv();
 
 export { redis };
