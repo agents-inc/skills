@@ -11,7 +11,8 @@
 ```typescript
 import { Redis } from "@upstash/redis";
 
-// Reads UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN from process.env
+// Reads UPSTASH_REDIS_REST_URL/TOKEN, falling back to KV_REST_API_URL/TOKEN
+// (the names the Upstash integration on Vercel sets)
 const redis = Redis.fromEnv();
 
 export { redis };
@@ -48,11 +49,7 @@ export { createRedisClient };
 import { Redis } from "@upstash/redis";
 
 // Returns raw strings instead of parsed JSON
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  automaticDeserialization: false,
-});
+const redis = Redis.fromEnv({ automaticDeserialization: false });
 ```
 
 **When to use:** Only when you need raw string responses (e.g., interoperating with non-JSON data written by another client). Breaks many TypeScript types -- handle with care.

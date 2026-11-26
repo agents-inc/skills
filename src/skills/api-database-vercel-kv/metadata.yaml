@@ -7,5 +7,5 @@ displayName: Vercel KV
 cliDescription: Serverless Redis-compatible key-value store on Vercel
 usageGuidance: >-
   Use when deploying Redis-compatible KV storage on Vercel -- automatic
-  connection via UPSTASH_REDIS_REST_URL env vars, edge-compatible REST API,
+  connection via Redis.fromEnv(), edge-compatible REST API,
   Redis command compatibility, and TTL-based caching.
