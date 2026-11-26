@@ -88,7 +88,7 @@ Upstash Redis (formerly Vercel KV) is a **serverless, REST-based Redis** designe
 
 ### Pattern 1: Client Initialization
 
-Two approaches: `Redis.fromEnv()` (preferred on Vercel -- reads `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` automatically) or `new Redis({ url, token })` for explicit configuration. Never hardcode credentials.
+Two approaches: `Redis.fromEnv()` (preferred on Vercel -- reads `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, falling back to the `KV_REST_API_URL`/`KV_REST_API_TOKEN` vars the Vercel integration sets) or `new Redis({ url, token })` for explicit configuration. Never hardcode credentials.
 
 ```typescript
 import { Redis } from "@upstash/redis";
