@@ -6,14 +6,14 @@
 
 ## Environment Variables
 
-| Variable                   | Source                                     | Description                                            |
-| -------------------------- | ------------------------------------------ | ------------------------------------------------------ |
-| `UPSTASH_REDIS_REST_URL`   | Upstash console                            | REST API endpoint (`https://<name>.upstash.io`)        |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash console                            | Bearer token for REST API authentication               |
-| `KV_REST_API_URL`          | Vercel Marketplace integration / Vercel KV | Same REST endpoint; `Redis.fromEnv()` falls back to it |
-| `KV_REST_API_TOKEN`        | Vercel Marketplace integration / Vercel KV | Same REST token; `Redis.fromEnv()` falls back to it    |
+| Variable                   | Source                         | Description                                            |
+| -------------------------- | ------------------------------ | ------------------------------------------------------ |
+| `UPSTASH_REDIS_REST_URL`   | Upstash console                | REST API endpoint (`https://<name>.upstash.io`)        |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash console                | Bearer token for REST API authentication               |
+| `KV_REST_API_URL`          | Vercel Marketplace integration | Same REST endpoint; `Redis.fromEnv()` falls back to it |
+| `KV_REST_API_TOKEN`        | Vercel Marketplace integration | Same REST token; `Redis.fromEnv()` falls back to it    |
 
-**On Vercel:** The Upstash Redis integration from the Marketplace (and every former Vercel KV store) injects the `KV_REST_API_*` variables. `Redis.fromEnv()` reads `UPSTASH_REDIS_REST_*` first and falls back to `KV_REST_API_*`, so no renaming is needed.
+**On Vercel:** The Upstash Redis integration from the Marketplace injects the `KV_REST_API_*` variables. `Redis.fromEnv()` reads `UPSTASH_REDIS_REST_*` first and falls back to `KV_REST_API_*`, so no renaming is needed.
 
 **Locally:** Copy from Upstash console to `.env.local` or use `vercel env pull`.
 
